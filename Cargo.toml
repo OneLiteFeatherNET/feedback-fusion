@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+utoipa = "4.0.0"
+
+[build-dependencies]
+utoipa = { version = "4.0.0", features = ["yaml"] }

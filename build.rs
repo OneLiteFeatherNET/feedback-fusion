@@ -20,3 +20,26 @@
  * SOFTWARE.
  *
  */
+
+use std::fs;
+use std::path::Path;
+use utoipa::OpenApi;
+
+fn main() {
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+
+    #[derive(OpenApi)]
+    #[openapi(paths(), components(), tags())]
+    struct OpenApiSpecification;
+
+    let destination = Path::new(&out_dir).join("openapi.yaml");
+    // write the spec file
+    fs::write(
+        &destination,
+        OpenApiSpecification::openapi().to_yaml().unwrap(),
+    )
+    .unwrap();
+
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:warning={:?}", destination);
+}
