@@ -6,6 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+axum = "0.6.20"
+envy = "0.4.2"
+kanal = "0.1.0-pre8"
+lazy_static = "1.4.0"
+serde = { version = "1.0.189", features = ["derive"] }
+tokio = { version = "1.33.0", features = ["full"] }
+tower = { version = "0.4.13", features = ["limit", "buffer"] }
+tower-http = { version = "0.4.4", features = ["trace"] }
+tracing = "0.1.39"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 utoipa = "4.0.0"
 
 [build-dependencies]
