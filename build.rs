@@ -26,13 +26,11 @@ use std::path::Path;
 use utoipa::OpenApi;
 
 fn main() {
-    let out_dir = std::env::var("OUT_DIR").unwrap();
-
     #[derive(OpenApi)]
     #[openapi(paths(), components(), tags())]
     struct OpenApiSpecification;
 
-    let destination = Path::new(&out_dir).join("openapi.yaml");
+    let destination = Path::new("./target").join("openapi.yaml");
     // write the spec file
     fs::write(
         &destination,

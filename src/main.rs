@@ -94,10 +94,10 @@ async fn main() {
 fn router() -> Router {
     Router::new().layer(
         ServiceBuilder::new()
-            .layer(HandleErrorLayer::new(|err: BoxError| async move {
+            .layer(HandleErrorLayer::new(|error: BoxError| async move {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    error!("Unhandled error occurred: {}", err),
+                    error!("Unhandled error occurred: {}", error),
                 )
             }))
             .layer(BufferLayer::new(1024))

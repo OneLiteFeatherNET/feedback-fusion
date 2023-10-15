@@ -75,3 +75,31 @@ jobs:
         env:
           GLOBAL_RATE_LIMIT: 1000
         run: cargo test
+
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: Checkout Sources
+        uses: actions/checkout@v3
+
+      - name: Setup cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-make
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-make
+
+      - name: Run docs lint
+        uses: actions-rs/cargo@v1
+        with:
+          command: make
+          args: docs_lint
