@@ -29,6 +29,8 @@ extern crate getset;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
+extern crate nanoid;
+#[macro_use]
 extern crate paste;
 #[macro_use]
 extern crate rbatis;
@@ -124,3 +126,4 @@ pub mod prelude {
     pub use crate::{config::*, error::*, CONFIG, DATABASE_CONFIG};
     pub use axum::extract::{Json, Query};
 }
+

@@ -21,17 +21,14 @@
  *
  */
 
-use crate::database::schema::account::InternalAccount;
-use crate::prelude::*;
-use argon2::password_hash::SaltString;
-use argon2::Argon2;
+use crate::{database::schema::{account::InternalAccount, auth::TOTPChallenge}, prelude::*};
+use argon2::{password_hash::SaltString, Argon2, PasswordVerifier};
 
-#[async_trait]
 pub trait Authenticate {
-    async fn login(&self, password: &str, token: Option<&str>) -> Result<()>;
-    async fn derive_key(&self, password: &str) -> Result<[u8; 32]>;
-    async fn secret(&self, password: &str) -> Result<String>;
-    async fn regenerate_secret(&self, password: &str) -> Result<()>;
+    fn login(&self, password: &str, token: Option<&str>) -> Result<()>;
+    fn derive_key(&self, password: &str) -> Result<[u8; 32]>;
+    fn secret(&self, password: &str) -> Result<String>;
+    fn regenerate_secret(&self, password: &str) -> Result<()>;
 }
 
 #[instrument(skip_all)]
@@ -45,15 +42,36 @@ pub fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
     Ok(buffer)
 }
 
-#[async_trait]
 impl Authenticate for InternalAccount {
     #[instrument(skip_all)]
-    async fn login(&self, password: &str, token: Option<&str>) -> Result<()> {
-        todo!()
+    fn login(&self, password: &str, token: Option<&str>) -> Result<()> {
+        // try to derive the key from the given password
+        let key = self.derive_key(password)?;
+
+        // compare the key with the stored hash
+        Argon2::default()
+            .verify_password(
+                &key,
+                &argon2::PasswordHash::new(self.password_hash().as_str())
+                .map_err(|_|FeedbackFusionError::Unauthorized)?,
+            )
+            .map_err(|_| FeedbackFusionError::Unauthorized)?;
+
+        // process 2fa 
+        if *self.totp() {
+            return if let Some(token) = token {
+                Ok(())
+            } else {
+                let challenge = TOTPChallenge::from(self.id().clone());
+                return Err(FeedbackFusionError::TOTPChallenge(challenge));
+            }
+        }
+
+        Ok(())
     }
 
     #[instrument(skip_all)]
-    async fn derive_key(&self, password: &str) -> Result<[u8; 32]> {
+    fn derive_key(&self, password: &str) -> Result<[u8; 32]> {
         let salt = SaltString::from_b64(self.salt().as_str())
             .map_err(|_| FeedbackFusionError::Unauthorized)?;
 
@@ -61,12 +79,12 @@ impl Authenticate for InternalAccount {
     }
 
     #[instrument(skip_all)]
-    async fn secret(&self, password: &str) -> Result<String> {
+    fn secret(&self, password: &str) -> Result<String> {
         todo!()
     }
 
     #[instrument(skip_all)]
-    async fn regenerate_secret(&self, password: &str) -> Result<()> {
+    fn regenerate_secret(&self, password: &str) -> Result<()> {
         todo!()
     }
 }

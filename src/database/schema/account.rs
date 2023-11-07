@@ -23,12 +23,14 @@
 
 use chrono::{DateTime, Utc};
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum Account {
     Internal(InternalAccount),
     OAuth(ExternalAccount),
 }
+
+crud!(Account {});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters)]
 #[get = "pub"]
@@ -38,6 +40,7 @@ pub struct InternalAccount {
     password_hash: String,
     secret: String,
     salt: String,
+    totp: bool,
     updated_at: DateTime<Utc>,
     created_at: DateTime<Utc>,
 }
