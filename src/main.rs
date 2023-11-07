@@ -18,48 +18,53 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 #[macro_use]
+extern crate async_trait;
+#[macro_use]
+extern crate delegate;
+#[macro_use]
+extern crate getset;
+#[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate paste;
+#[macro_use]
+extern crate rbatis;
 #[macro_use]
 extern crate serde;
 #[macro_use]
 extern crate tracing;
 #[macro_use]
+extern crate typed_builder;
+#[macro_use]
 extern crate utoipa;
 
-use axum::error_handling::HandleErrorLayer;
-use axum::http::StatusCode;
-use axum::{BoxError, Router, Server};
-use std::net::SocketAddr;
-use std::time::Duration;
-use tower::buffer::BufferLayer;
-use tower::limit::RateLimitLayer;
-use tower::ServiceBuilder;
+use crate::{config::Config, database::{DatabaseConfiguration, DatabaseConnection}, state::FeedbackFusionState};
+use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};
+use std::{net::SocketAddr, time::Duration};
+use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::trace::TraceLayer;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct Config {
-    #[serde(default = "default_global_rate_limit")]
-    global_rate_limit: u64,
-}
-
-fn default_global_rate_limit() -> u64 {
-    10
-}
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 lazy_static! {
     pub static ref CONFIG: Config = envy::from_env::<Config>().unwrap();
+    pub static ref DATABASE_CONFIG: DatabaseConfiguration =
+        DatabaseConfiguration::extract().unwrap();
 }
+
+pub mod auth;
+pub mod config;
+pub mod database;
+pub mod error;
+pub mod state;
 
 #[tokio::main]
 async fn main() {
     // init config
     lazy_static::initialize(&CONFIG);
+    lazy_static::initialize(&DATABASE_CONFIG);
 
     // init the tracing subscriber with the `RUST_LOG` env filter
     tracing_subscriber::registry()
@@ -68,11 +73,14 @@ async fn main() {
         .init();
 
     let (sender, receiver) = kanal::oneshot_async::<()>();
-
     let address = SocketAddr::from(([0, 0, 0, 0], 8000));
+
+    // connect to the database
+    let connection = DATABASE_CONFIG.connect().await.unwrap();
+
     tokio::spawn(async move {
         Server::bind(&address)
-            .serve(router().into_make_service())
+            .serve(router(connection).into_make_service())
             .with_graceful_shutdown(async move {
                 receiver.recv().await.ok();
             })
@@ -91,21 +99,28 @@ async fn main() {
     sender.send(()).await.unwrap();
 }
 
-fn router() -> Router {
-    Router::new().layer(
-        ServiceBuilder::new()
-            .layer(HandleErrorLayer::new(|error: BoxError| async move {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    error!("Unhandled error occurred: {}", error),
-                )
-            }))
-            .layer(BufferLayer::new(1024))
-            // set the max requests per sec for all incoming calls
-            .layer(RateLimitLayer::new(
-                CONFIG.global_rate_limit.clone(),
-                Duration::from_secs(1),
-            ))
-            .layer(TraceLayer::new_for_http()),
-    )
+fn router(connection: DatabaseConnection) -> Router {
+    Router::new()
+        .layer(
+            ServiceBuilder::new()
+                .layer(HandleErrorLayer::new(|error: BoxError| async move {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        error!("Unhandled error occurred: {}", error),
+                    )
+                }))
+                .layer(BufferLayer::new(1024))
+                // set the max requests per sec for all incoming calls
+                .layer(RateLimitLayer::new(
+                    CONFIG.global_rate_limit().clone(),
+                    Duration::from_secs(1),
+                ))
+                .layer(TraceLayer::new_for_http()),
+        )
+        .with_state(FeedbackFusionState::new(connection))
+}
+
+pub mod prelude {
+    pub use crate::{config::*, error::*, CONFIG, DATABASE_CONFIG};
+    pub use axum::extract::{Json, Query};
 }

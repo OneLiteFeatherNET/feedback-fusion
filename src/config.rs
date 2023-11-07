@@ -20,3 +20,14 @@
  * SOFTWARE.
  *
  */
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct Config {
+    #[serde(default = "default_global_rate_limit")]
+    global_rate_limit: u64,
+}
+
+fn default_global_rate_limit() -> u64 {
+    10
+}

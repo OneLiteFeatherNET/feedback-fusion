@@ -1,6 +1,10 @@
+# Setup
+
 [tasks.docs_init]
 command = "pnpm"
 args = ["i"]
+
+# Development
 
 [tasks.dev_build]
 command = "cargo"
@@ -10,6 +14,8 @@ args = ["build"]
 dependencies = ["docs_init", "dev_build"]
 command = "npx"
 args = ["redocly", "preview-docs", "target/openapi.yaml"]
+
+# OpenAPI build
 
 [tasks.docs_lint]
 dependencies = ["dev_build"]
