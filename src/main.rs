@@ -62,6 +62,9 @@ pub mod database;
 pub mod error;
 pub mod state;
 
+#[cfg(test)]
+pub mod tests;
+
 #[tokio::main]
 async fn main() {
     // init config

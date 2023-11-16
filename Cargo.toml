@@ -25,6 +25,7 @@ rbs = "4.4.3"
 serde = { version = "1.0.189", features = ["derive"] }
 thiserror = "1.0.49"
 tokio = { version = "1.33.0", features = ["full"] }
+totp-rs = { version = "5.4.0", features = ["qr", "gen_secret"] }
 tower = { version = "0.4.13", features = ["limit", "buffer"] }
 tower-http = { version = "0.4.4", features = ["trace"] }
 tracing = "0.1.39"

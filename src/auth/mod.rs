@@ -21,70 +21,66 @@
  *
  */
 
-use crate::{database::schema::{account::InternalAccount, auth::TOTPChallenge}, prelude::*};
-use argon2::{password_hash::SaltString, Argon2, PasswordVerifier};
+use crate::{
+    database::schema::{account::{InternalAccount, MachineAccount}, auth::TOTPChallenge},
+    prelude::*,
+};
+use argon2::{Argon2, PasswordVerifier};
+use totp_rs::{Algorithm, TOTP};
 
 pub trait Authenticate {
     fn login(&self, password: &str, token: Option<&str>) -> Result<()>;
-    fn derive_key(&self, password: &str) -> Result<[u8; 32]>;
-    fn secret(&self, password: &str) -> Result<String>;
-    fn regenerate_secret(&self, password: &str) -> Result<()>;
-}
-
-#[instrument(skip_all)]
-pub fn derive_key(password: &str, salt: &SaltString) -> Result<[u8; 32]> {
-    let mut buffer = [0u8; 32];
-
-    Argon2::default()
-        .hash_password_into(password.as_bytes(), salt.as_str().as_bytes(), &mut buffer)
-        .map_err(|_| FeedbackFusionError::Unauthorized)?;
-
-    Ok(buffer)
 }
 
 impl Authenticate for InternalAccount {
     #[instrument(skip_all)]
     fn login(&self, password: &str, token: Option<&str>) -> Result<()> {
-        // try to derive the key from the given password
-        let key = self.derive_key(password)?;
-
-        // compare the key with the stored hash
+        // compare the password with the stored hash
         Argon2::default()
             .verify_password(
-                &key,
+                password.as_bytes(),
                 &argon2::PasswordHash::new(self.password_hash().as_str())
-                .map_err(|_|FeedbackFusionError::Unauthorized)?,
+                    .map_err(|_| FeedbackFusionError::Unauthorized)?,
             )
             .map_err(|_| FeedbackFusionError::Unauthorized)?;
 
-        // process 2fa 
+        // process 2fa
         if *self.totp() {
-            return if let Some(token) = token {
-                Ok(())
+            if let Some(token) = token {
+                // verify the token
+                TOTP::new(
+                    Algorithm::SHA1,
+                    6,
+                    1,
+                    30,
+                    self.secret().as_bytes().to_vec(),
+                    None,
+                    "".to_owned(),
+                )
+                .unwrap()
+                .check_current(token)
+                .map_err(|_| FeedbackFusionError::Unauthorized)?;
             } else {
                 let challenge = TOTPChallenge::from(self.id().clone());
                 return Err(FeedbackFusionError::TOTPChallenge(challenge));
-            }
+            };
         }
 
         Ok(())
     }
+}
 
-    #[instrument(skip_all)]
-    fn derive_key(&self, password: &str) -> Result<[u8; 32]> {
-        let salt = SaltString::from_b64(self.salt().as_str())
+impl Authenticate for MachineAccount {
+    fn login(&self, password: &str, _token: Option<&str>) -> Result<()>  {
+        // compare the password with the stored hash
+        Argon2::default()
+            .verify_password(
+                password.as_bytes(),
+                &argon2::PasswordHash::new(self.password_hash().as_str())
+                    .map_err(|_| FeedbackFusionError::Unauthorized)?,
+            )
             .map_err(|_| FeedbackFusionError::Unauthorized)?;
 
-        derive_key(password, &salt)
-    }
-
-    #[instrument(skip_all)]
-    fn secret(&self, password: &str) -> Result<String> {
-        todo!()
-    }
-
-    #[instrument(skip_all)]
-    fn regenerate_secret(&self, password: &str) -> Result<()> {
-        todo!()
+        Ok(())
     }
 }

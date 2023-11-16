@@ -21,36 +21,124 @@
  *
  */
 
-use chrono::{DateTime, Utc};
+use rbatis::rbdc::DateTime;
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, ToSchema)]
 #[serde(untagged)]
 pub enum Account {
     Internal(InternalAccount),
-    OAuth(ExternalAccount),
+    External(ExternalAccount),
+    Machine(MachineAccount),
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum AccountType {
+    Internal,
+    External,
+    Machine,
+}
+
+impl_select!(Account {select_by_id(id: &str) -> Option => "WHERE id = #{id} LIMIT 1"});
 crud!(Account {});
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters, ToSchema)]
 #[get = "pub"]
 pub struct InternalAccount {
     id: String,
     username: String,
     password_hash: String,
     secret: String,
-    salt: String,
     totp: bool,
-    updated_at: DateTime<Utc>,
-    created_at: DateTime<Utc>,
+    /// always matches "internal"
+    r#type: AccountType,
+    updated_at: DateTime,
+    created_at: DateTime,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters, ToSchema)]
 #[get = "pub"]
 pub struct ExternalAccount {
     id: String,
     username: String,
-    updated_at: DateTime<Utc>,
-    created_at: DateTime<Utc>
+    /// "external"
+    r#type: AccountType,
+    updated_at: DateTime,
+    created_at: DateTime,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters, ToSchema)]
+#[get = "pub"]
+pub struct MachineAccount {
+    id: String,
+    password_hash: String,
+    /// "machine"
+    r#type: AccountType,
+    updated_at: DateTime,
+    created_at: DateTime,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! gain_id {
+        ($variant:path, $var:expr) => {
+            if let $variant(account) = $var {
+                account.id.clone()
+            } else {
+                "".to_owned()
+            }
+        };
+    }
+
+    #[tokio::test]
+    async fn test_parsing() {
+        let connection = crate::tests::connect().await;
+
+        let internal = Account::Internal(InternalAccount {
+            id: nanoid!(),
+            username: "internal".to_owned(),
+            password_hash: "".to_owned(),
+            secret: "".to_owned(),
+            totp: false,
+            r#type: AccountType::Internal,
+            updated_at: DateTime::now(),
+            created_at: DateTime::now(),
+        });
+        let external = Account::External(ExternalAccount {
+            id: nanoid!(),
+            username: "".to_owned(),
+            r#type: AccountType::External,
+            updated_at: DateTime::now(),
+            created_at: DateTime::now(),
+        });
+        let machine = Account::Machine(MachineAccount {
+            id: nanoid!(),
+            password_hash: "".to_owned(),
+            r#type: AccountType::Machine,
+            updated_at: DateTime::now(),
+            created_at: DateTime::now(),
+        });
+
+        Account::insert_batch(&connection, &[internal.clone(), external.clone(), machine.clone()], 3).await.unwrap();
+
+        let internal_id = gain_id!(Account::Internal, internal.clone());
+        let external_id = gain_id!(Account::External, external.clone());
+        let machine_id = gain_id!(Account::Machine, machine.clone());
+
+        let internal_parsed = Account::select_by_id(&connection, internal_id.as_str()).await.unwrap().unwrap();
+        let external_parsed = Account::select_by_id(&connection, external_id.as_str()).await.unwrap().unwrap();
+        let machine_parsed = Account::select_by_id(&connection, machine_id.as_str()).await.unwrap().unwrap();
+
+        assert_eq!(internal, internal_parsed);
+        assert_ne!(external, internal_parsed);
+        assert_ne!(machine, internal_parsed);
+
+        assert_eq!(external, external_parsed);
+        assert_ne!(machine, external_parsed);
+
+        assert_eq!(machine, machine_parsed);
+    }
 }
 

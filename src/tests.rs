@@ -20,44 +20,12 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
+use crate::database::{DatabaseConnection, BaseConfiguration, DatabaseConfiguration};
 
-use crate::{database::DatabaseConnection, prelude::*};
+pub async fn connect() -> DatabaseConnection {
+    let mut config = envy::from_env::<BaseConfiguration>().unwrap();
+    let connection = DatabaseConfiguration::Postgres(config).connect().await.unwrap();
 
-pub mod session;
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum TOTPChallengeState {
-    Pending,
-    Passed,
-    Failed,
+    connection
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TOTPChallenge {
-    id: String,
-    account: String,
-    state: TOTPChallengeState,
-    created_at: DateTime,
-}
-
-crud!(TOTPChallenge {});
-
-impl From<String> for TOTPChallenge {
-    fn from(value: String) -> Self {
-        Self {
-            id: nanoid!(),
-            account: value,
-            state: TOTPChallengeState::Pending,
-            created_at: DateTime::now(),
-        }
-    }
-}
-
-impl TOTPChallenge {
-    #[instrument(skip_all)]
-    pub async fn challenge(&mut self, token: &str, connection: &DatabaseConnection) -> Result<()> {
-        todo!()
-    }
-}

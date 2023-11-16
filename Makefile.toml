@@ -15,6 +15,24 @@ dependencies = ["docs_init", "dev_build"]
 command = "npx"
 args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
+# Tests
+
+# Postgres
+[tasks.postgres_database]
+command = "docker"
+args = ["run", "--name", "postgres", "-e", "POSTGRES_PASSWORD=password", "-p", "5432:5432", "-d", "postgres"]
+
+[tasks.postgres_tests]
+env = { username = "postgres", password = "password", endpoint = "localhost:5432", database = "postgres" }
+command = "cargo"
+args = ["test", "--features", "postgres"]
+
+[tasks.postgres]
+run_task = { name = ["postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
+
+[tasks.postgres_cleanup]
+script = "docker kill postgres;docker rm postgres"
+
 # OpenAPI build
 
 [tasks.docs_lint]

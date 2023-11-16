@@ -31,10 +31,10 @@ pub type DatabaseConnection = RBatis;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct BaseConfiguration {
-    endpoint: String,
-    username: String,
-    password: String,
-    database: String,
+    pub endpoint: String,
+    pub username: String,
+    pub password: String,
+    pub database: String,
 }
 
 impl BaseConfiguration {
@@ -47,7 +47,7 @@ impl BaseConfiguration {
 }
 
 macro_rules! database_configuration {
-    ($(($ident:ident, $config:path, $driver:path $(, $scheme:literal)?) $(,)?)*) => {
+    ($(($ident:ident, $config:path, $driver:path, $scheme:literal) $(,)?)*) => {
         paste! {
             #[derive(Debug, Clone)]
             pub enum DatabaseConfiguration {
@@ -74,7 +74,7 @@ macro_rules! database_configuration {
                     match self {
                         $(
                             Self::$ident(config) => {
-                                let url = config.to_url("");
+                                let url = config.to_url($scheme);
                                 connection.init($driver {}, url.as_str())?;
 
                                 // perform migrations
