@@ -23,8 +23,6 @@
 #[macro_use]
 extern crate async_trait;
 #[macro_use]
-extern crate delegate;
-#[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate getset;
@@ -40,8 +38,6 @@ extern crate rbatis;
 extern crate serde;
 #[macro_use]
 extern crate tracing;
-#[macro_use]
-extern crate typed_builder;
 #[macro_use]
 extern crate utoipa;
 

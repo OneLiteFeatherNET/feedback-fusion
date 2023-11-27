@@ -9,9 +9,7 @@ edition = "2021"
 argon2 = "0.5.2"
 async-trait = "0.1.74"
 axum = "0.6.20"
-chacha20poly1305 = "0.10.1"
 chrono = { version = "0.4.31", features = ["serde"] }
-delegate = "0.10.0"
 derivative = "2.2.0"
 envy = "0.4.2"
 getset = "0.1.2"
@@ -32,7 +30,6 @@ tower = { version = "0.4.13", features = ["limit", "buffer"] }
 tower-http = { version = "0.4.4", features = ["trace"] }
 tracing = "0.1.39"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-typed-builder = "0.18.0"
 utoipa = "4.0.0"
 version-compare = "0.1.1"
 
