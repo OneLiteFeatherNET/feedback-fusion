@@ -12,3 +12,13 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+.idea/
+
+# for redocly
+node_modules/
+docs/
+
+# nvim config
+.sqllsrc.json
+

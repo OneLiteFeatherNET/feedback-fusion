@@ -1,0 +1,49 @@
+[package]
+name = "feedback-fusion"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+argon2 = "0.5.2"
+async-trait = "0.1.74"
+axum = "0.6.20"
+chrono = { version = "0.4.31", features = ["serde"] }
+derivative = "2.2.0"
+envy = "0.4.2"
+getset = "0.1.2"
+kanal = "0.1.0-pre8"
+lazy_static = "1.4.0"
+nanoid = "0.4.0"
+paste = "1.0.14"
+rbatis = "4.4.20"
+rbdc-pg = { version = "4.4.19", optional = true }
+rbdc-mysql = { version = "4.4.19", optional = true }
+rbs = "4.4.3"
+serde = { version = "1.0.189", features = ["derive"] }
+serde_json = "1.0.108"
+thiserror = "1.0.49"
+tokio = { version = "1.33.0", features = ["full"] }
+totp-rs = { version = "5.4.0", features = ["qr", "gen_secret"] }
+tower = { version = "0.4.13", features = ["limit", "buffer"] }
+tower-http = { version = "0.4.4", features = ["trace"] }
+tracing = "0.1.39"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+utoipa = "4.0.0"
+version-compare = "0.1.1"
+
+[build-dependencies]
+utoipa = { version = "4.0.0", features = ["yaml"] }
+
+[dev-dependencies]
+dotenvy = "0.15.7"
+fast_log = "1.6.10"
+
+[features]
+default = ["all-databases"]
+
+all-databases = ["postgres", "mysql"]
+postgres = ["rbdc-pg"]
+mysql = ["rbdc-mysql"]
+

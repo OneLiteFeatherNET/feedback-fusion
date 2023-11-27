@@ -1,0 +1,52 @@
+# Setup
+
+[config]
+skip_core_tasks = true
+
+[tasks.docs_init]
+command = "pnpm"
+args = ["i"]
+
+# Development
+
+[tasks.dev_build]
+dependencies = ["docs_init"]
+command = "cargo"
+args = ["build"]
+
+[tasks.docs_preview]
+dependencies = ["dev_build"]
+command = "npx"
+args = ["redocly", "preview-docs", "target/openapi.yaml"]
+
+# Tests
+
+# Postgres
+[tasks.postgres_database]
+script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5432:5432 -d postgres && sleep 1"
+
+[tasks.postgres_tests]
+env = { username = "postgres", password = "password", endpoint = "localhost:5432", database = "postgres" }
+command = "cargo"
+args = ["test", "--features", "postgres", "--", "--show-output", "--test-threads=1"]
+
+[tasks.postgres]
+run_task = { name = ["postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
+
+[tasks.postgres_cleanup]
+script = "docker kill postgres;docker rm postgres"
+
+[tasks.test]
+run_task = { name = ["postgres"] }
+
+# OpenAPI build
+
+[tasks.docs_lint]
+dependencies = ["dev_build"]
+command = "npx"
+args = ["redocly", "lint", "target/openapi.yaml"]
+
+[tasks.docs_build]
+dependencies = ["docs_lint"]
+command = "npx"
+args = ["redocly", "build-docs", "target/openapi.yaml", "-o", "docs/index.html"]
