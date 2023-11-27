@@ -71,10 +71,14 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Install cargo-make
+        uses: actions-rs/cargo@v1
+        with:
+          command: Install
+          args: cargo-make
+
       - name: Tests
-        env:
-          GLOBAL_RATE_LIMIT: 1000
-        run: cargo test
+        run: cargo make test
 
   docs:
     name: docs
