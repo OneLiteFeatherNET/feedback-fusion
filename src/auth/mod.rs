@@ -71,6 +71,7 @@ impl Authenticate for InternalAccount {
 }
 
 impl Authenticate for MachineAccount {
+    #[instrument(skip_all)]
     fn login(&self, password: &str, _token: Option<&str>) -> Result<()>  {
         // compare the password with the stored hash
         Argon2::default()

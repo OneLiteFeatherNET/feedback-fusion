@@ -37,6 +37,6 @@ impl From<String> for Migration {
     }
 }
 
-impl_select!(Migration {select_latest() -> Option => "ORDER BY created_at DESC LIMIT 1"});
+impl_select!(Migration {select_latest() -> Option => "`ORDER BY created_at DESC LIMIT 1`"});
 impl_insert!(Migration {});
 
