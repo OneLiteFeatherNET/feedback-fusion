@@ -21,8 +21,6 @@
  */
 
 #[macro_use]
-extern crate async_trait;
-#[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate getset;
@@ -43,7 +41,11 @@ extern crate typed_builder;
 #[macro_use]
 extern crate utoipa;
 
-use crate::{config::Config, database::{DatabaseConfiguration, DatabaseConnection}, state::FeedbackFusionState};
+use crate::{
+    config::Config,
+    database::{DatabaseConfiguration, DatabaseConnection},
+    state::FeedbackFusionState,
+};
 use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};
 use std::{net::SocketAddr, time::Duration};
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
@@ -60,6 +62,7 @@ pub mod auth;
 pub mod config;
 pub mod database;
 pub mod error;
+pub mod routes;
 pub mod state;
 
 #[cfg(test)]
@@ -105,7 +108,10 @@ async fn main() {
 }
 
 fn router(connection: DatabaseConnection) -> Router {
+    let state = FeedbackFusionState::new(connection);
+
     Router::new()
+        .nest("/", routes::router(state))
         .layer(
             ServiceBuilder::new()
                 .layer(HandleErrorLayer::new(|error: BoxError| async move {
@@ -122,11 +128,16 @@ fn router(connection: DatabaseConnection) -> Router {
                 ))
                 .layer(TraceLayer::new_for_http()),
         )
-        .with_state(FeedbackFusionState::new(connection))
 }
 
 pub mod prelude {
-    pub use crate::{config::*, error::*, CONFIG, DATABASE_CONFIG};
-    pub use axum::extract::{Json, Query};
+    pub use crate::{
+        config::*, database::DatabaseConnection, error::*, state::FeedbackFusionState, CONFIG,
+        DATABASE_CONFIG,
+    };
+    pub use axum::{
+        extract::{Json, Query, State},
+        Router,
+        routing::*
+    };
 }
-

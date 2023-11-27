@@ -51,6 +51,7 @@ pub enum AccountType {
 }
 
 impl_select!(Account {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select!(Account {select_by_username(username: &str) -> Option => "`WHERE username = #{username} AND type = 'internal' LIMIT 1`"});
 crud!(Account {});
 
 #[derive(Deserialize, Serialize, Debug, Clone, Getters, ToSchema, Derivative, TypedBuilder)]

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS account(
 
 CREATE TABLE IF NOT EXISTS totp_challenge(
   id            varchar(64) UNIQUE NOT NULL,
-  account       varchar(20) NOT NULL,
+  account       varchar(32) NOT NULL,
   state         varchar(20)  NOT NULL DEFAULT 'pending',
   updated_at    timestamp,
   created_at    timestamp   DEFAULT CURRENT_TIMESTAMP
