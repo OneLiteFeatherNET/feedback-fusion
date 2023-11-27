@@ -22,19 +22,28 @@
  */
 
 use crate::{
-    database::schema::{account::{InternalAccount, MachineAccount}, auth::TOTPChallenge},
+    database::{
+        schema::{
+            account::{InternalAccount, MachineAccount},
+            auth::TOTPChallenge,
+        },
+        DatabaseConnection,
+    },
     prelude::*,
 };
 use argon2::{Argon2, PasswordVerifier};
-use totp_rs::{Algorithm, TOTP};
 
+pub mod totp;
+
+#[async_trait]
 pub trait Authenticate {
-    fn login(&self, password: &str, token: Option<&str>) -> Result<()>;
+    async fn login(&self, password: &str, connection: &DatabaseConnection) -> Result<()>;
 }
 
+#[async_trait]
 impl Authenticate for InternalAccount {
     #[instrument(skip_all)]
-    fn login(&self, password: &str, token: Option<&str>) -> Result<()> {
+    async fn login(&self, password: &str, connection: &DatabaseConnection) -> Result<()> {
         // compare the password with the stored hash
         Argon2::default()
             .verify_password(
@@ -46,33 +55,20 @@ impl Authenticate for InternalAccount {
 
         // process 2fa
         if *self.totp() {
-            if let Some(token) = token {
-                // verify the token
-                TOTP::new(
-                    Algorithm::SHA1,
-                    6,
-                    1,
-                    30,
-                    self.secret().as_bytes().to_vec(),
-                    None,
-                    "".to_owned(),
-                )
-                .unwrap()
-                .check_current(token)
-                .map_err(|_| FeedbackFusionError::Unauthorized)?;
-            } else {
-                let challenge = TOTPChallenge::from(self.id().clone());
-                return Err(FeedbackFusionError::TOTPChallenge(challenge));
-            };
-        }
+            // start new totp challenge
+            let challenge = TOTPChallenge::start(self.id().clone(), connection).await?;
 
-        Ok(())
+            Err(FeedbackFusionError::TOTPChallenge(challenge))
+        } else {
+            Ok(())
+        }
     }
 }
 
+#[async_trait]
 impl Authenticate for MachineAccount {
     #[instrument(skip_all)]
-    fn login(&self, password: &str, _token: Option<&str>) -> Result<()>  {
+    async fn login(&self, password: &str, _connection: &DatabaseConnection) -> Result<()> {
         // compare the password with the stored hash
         Argon2::default()
             .verify_password(
@@ -83,5 +79,23 @@ impl Authenticate for MachineAccount {
             .map_err(|_| FeedbackFusionError::Unauthorized)?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{database::schema::account::InternalAccount, auth::Authenticate};
+
+    #[tokio::test]
+    async fn login() {
+        let connection = crate::tests::connect().await;
+
+        let account = InternalAccount::builder()
+            .username("username")
+            .password_hash("password")
+            .build();
+
+        assert!(account.login("password", &connection).await.is_ok());
+        assert!(account.login("passwor", &connection).await.is_err());
     }
 }

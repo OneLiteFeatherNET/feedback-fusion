@@ -37,27 +37,24 @@ pub enum TOTPChallengeState {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TOTPChallenge {
     id: String,
-    account: String,
-    state: TOTPChallengeState,
+    pub account: String,
+    pub state: TOTPChallengeState,
     created_at: DateTime,
 }
 
 crud!(TOTPChallenge {});
 
-impl From<String> for TOTPChallenge {
-    fn from(value: String) -> Self {
-        Self {
+impl TOTPChallenge {
+    pub async fn start(id: String, connection: &DatabaseConnection) -> Result<Self> {
+        let challenge = TOTPChallenge {
             id: nanoid!(),
-            account: value,
+            account: id,
             state: TOTPChallengeState::Pending,
             created_at: DateTime::now(),
-        }
-    }
-}
+        };
 
-impl TOTPChallenge {
-    #[instrument(skip_all)]
-    pub async fn challenge(&mut self, _token: &str, _connection: &DatabaseConnection) -> Result<()> {
-        todo!()
+        // insert the challenge
+        TOTPChallenge::insert(&connection, &challenge).await?;
+        Ok(challenge)
     }
 }

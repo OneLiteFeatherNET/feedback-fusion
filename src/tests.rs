@@ -23,7 +23,7 @@
 use crate::database::{DatabaseConnection, BaseConfiguration, DatabaseConfiguration};
 
 pub async fn connect() -> DatabaseConnection {
-    fast_log::init(fast_log::Config::new().console()).unwrap(); 
+    fast_log::init(fast_log::Config::new().console()).ok(); 
     let config = envy::from_env::<BaseConfiguration>().unwrap();
     let connection = DatabaseConfiguration::Postgres(config).connect().await.unwrap();
 
