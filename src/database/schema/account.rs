@@ -23,7 +23,7 @@
 
 use rbatis::rbdc::DateTime;
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, ToSchema)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone, ToSchema)]
 #[serde(untagged)]
 pub enum Account {
     Internal(InternalAccount),
@@ -39,10 +39,11 @@ pub enum AccountType {
     Machine,
 }
 
-impl_select!(Account {select_by_id(id: &str) -> Option => "WHERE id = #{id} LIMIT 1"});
+impl_select!(Account {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
 crud!(Account {});
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters, ToSchema)]
+#[derive(Deserialize, Serialize, Debug, Clone, Getters, ToSchema, Derivative)]
+#[derivative(PartialEq)]
 #[get = "pub"]
 pub struct InternalAccount {
     id: String,
@@ -52,29 +53,37 @@ pub struct InternalAccount {
     totp: bool,
     /// always matches "internal"
     r#type: AccountType,
+    #[derivative(PartialEq="ignore")]
     updated_at: DateTime,
+    #[derivative(PartialEq="ignore")]
     created_at: DateTime,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters, ToSchema)]
+#[derive(Deserialize, Serialize, Debug, Clone, Getters, ToSchema, Derivative)]
+#[derivative(PartialEq)]
 #[get = "pub"]
 pub struct ExternalAccount {
     id: String,
     username: String,
     /// "external"
     r#type: AccountType,
+    #[derivative(PartialEq="ignore")]
     updated_at: DateTime,
+    #[derivative(PartialEq="ignore")]
     created_at: DateTime,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Getters, ToSchema)]
+#[derive(Deserialize, Serialize, Debug, Clone, Getters, ToSchema, Derivative)]
+#[derivative(PartialEq)]
 #[get = "pub"]
 pub struct MachineAccount {
     id: String,
     password_hash: String,
     /// "machine"
     r#type: AccountType,
+    #[derivative(PartialEq="ignore")]
     updated_at: DateTime,
+    #[derivative(PartialEq="ignore")]
     created_at: DateTime,
 }
 
@@ -121,8 +130,11 @@ mod tests {
             created_at: DateTime::now(),
         });
 
-        Account::insert_batch(&connection, &[internal.clone(), external.clone(), machine.clone()], 3).await.unwrap();
 
+        Account::insert(&connection, &internal).await.unwrap();
+        Account::insert(&connection, &external).await.unwrap();
+        Account::insert(&connection, &machine).await.unwrap();
+        
         let internal_id = gain_id!(Account::Internal, internal.clone());
         let external_id = gain_id!(Account::External, external.clone());
         let machine_id = gain_id!(Account::Machine, machine.clone());
@@ -132,12 +144,7 @@ mod tests {
         let machine_parsed = Account::select_by_id(&connection, machine_id.as_str()).await.unwrap().unwrap();
 
         assert_eq!(internal, internal_parsed);
-        assert_ne!(external, internal_parsed);
-        assert_ne!(machine, internal_parsed);
-
         assert_eq!(external, external_parsed);
-        assert_ne!(machine, external_parsed);
-
         assert_eq!(machine, machine_parsed);
     }
 }

@@ -34,7 +34,7 @@ pub struct Session {
 
 impl_insert!(Session {});
 impl_delete!(Session {});
-impl_select!(Session {select_by_id(id: &str) -> Option => "where id = #{id} limit 1"});
+impl_select!(Session {select_by_id(id: &str) -> Option => "`where id = #{id} limit 1`"});
 
 impl Session {
     #[instrument(skip(connection))]

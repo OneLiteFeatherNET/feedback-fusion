@@ -19,13 +19,12 @@ args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
 # Postgres
 [tasks.postgres_database]
-command = "docker"
-args = ["run", "--name", "postgres", "-e", "POSTGRES_PASSWORD=password", "-p", "5432:5432", "-d", "postgres"]
+script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5432:5432 -d postgres && sleep 1"
 
 [tasks.postgres_tests]
 env = { username = "postgres", password = "password", endpoint = "localhost:5432", database = "postgres" }
 command = "cargo"
-args = ["test", "--features", "postgres"]
+args = ["test", "--features", "postgres", "--", "--show-output", "--test-threads=1"]
 
 [tasks.postgres]
 run_task = { name = ["postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}

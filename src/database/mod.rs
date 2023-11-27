@@ -78,7 +78,7 @@ macro_rules! database_configuration {
                                 connection.init($driver {}, url.as_str())?;
 
                                 // perform migrations
-                                let last: Option<Migration> = Migration::select_latest(&connection).await?;
+                                let last: Option<Migration> = Migration::select_latest(&connection).await.unwrap_or_default();
                                 if let Some(last) = last {
                                     if !version.eq(last.version.as_str()) {
                                         // perform all pending migrations
