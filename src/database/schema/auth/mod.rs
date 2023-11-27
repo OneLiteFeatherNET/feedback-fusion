@@ -35,6 +35,7 @@ pub enum TOTPChallengeState {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+
 pub struct TOTPChallenge {
     id: String,
     pub account: String,
@@ -42,12 +43,12 @@ pub struct TOTPChallenge {
     created_at: DateTime,
 }
 
-crud!(TOTPChallenge {});
+crud!(TOTPChallenge {}, "totp_challenge");
 
 impl TOTPChallenge {
     pub async fn start(id: String, connection: &DatabaseConnection) -> Result<Self> {
         let challenge = TOTPChallenge {
-            id: nanoid!(),
+            id: nanoid!(64),
             account: id,
             state: TOTPChallengeState::Pending,
             created_at: DateTime::now(),

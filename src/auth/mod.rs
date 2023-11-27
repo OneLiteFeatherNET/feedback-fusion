@@ -84,10 +84,20 @@ impl Authenticate for MachineAccount {
 
 #[cfg(test)]
 mod tests {
-    use crate::{database::schema::account::InternalAccount, auth::Authenticate};
+    use crate::{database::schema::account::{InternalAccount, MachineAccount}, auth::Authenticate};
 
     #[tokio::test]
-    async fn login() {
+    async fn machine_login() {
+        let connection = crate::tests::connect().await;
+
+        let account = MachineAccount::builder().password_hash("password").build();
+        
+        assert!(account.login("password", &connection).await.is_ok());
+        assert!(account.login("passwor", &connection).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn internal_login() {
         let connection = crate::tests::connect().await;
 
         let account = InternalAccount::builder()
@@ -97,5 +107,14 @@ mod tests {
 
         assert!(account.login("password", &connection).await.is_ok());
         assert!(account.login("passwor", &connection).await.is_err());
+
+        let account = InternalAccount::builder()
+            .username("username")
+            .password_hash("password")
+            .totp(true)
+            .build();
+        
+        assert!(account.login("password", &connection).await.is_err());
     }
 }
+
