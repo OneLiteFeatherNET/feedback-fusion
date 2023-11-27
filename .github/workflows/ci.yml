@@ -84,6 +84,10 @@ jobs:
     name: docs
     runs-on: ubuntu-latest
     steps:
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+     
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
