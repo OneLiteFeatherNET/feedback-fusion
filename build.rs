@@ -33,7 +33,7 @@ fn main() {
     let destination = Path::new("./target").join("openapi.yaml");
     // write the spec file
     fs::write(
-        &destination,
+        destination,
         OpenApiSpecification::openapi().to_yaml().unwrap(),
     )
     .unwrap();

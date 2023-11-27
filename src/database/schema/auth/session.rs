@@ -63,7 +63,7 @@ impl Session {
     }
 
     #[instrument(skip_all)]
-    pub async fn is_valid(&self, connection: &DatabaseConnection) -> Result<()> {
+    pub async fn is_valid(&self, _connection: &DatabaseConnection) -> Result<()> {
         if chrono::Utc::now().timestamp_millis() >= self.exp {
             Err(FeedbackFusionError::Unauthorized)
         } else {

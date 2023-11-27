@@ -21,8 +21,6 @@
  */
 
 #[macro_use]
-extern crate async_trait;
-#[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate getset;
@@ -115,7 +113,7 @@ fn router(connection: DatabaseConnection) -> Router {
                 .layer(BufferLayer::new(1024))
                 // set the max requests per sec for all incoming calls
                 .layer(RateLimitLayer::new(
-                    CONFIG.global_rate_limit().clone(),
+                    *CONFIG.global_rate_limit(),
                     Duration::from_secs(1),
                 ))
                 .layer(TraceLayer::new_for_http()),

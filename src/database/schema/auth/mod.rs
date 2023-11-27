@@ -57,7 +57,7 @@ impl From<String> for TOTPChallenge {
 
 impl TOTPChallenge {
     #[instrument(skip_all)]
-    pub async fn challenge(&mut self, token: &str, connection: &DatabaseConnection) -> Result<()> {
+    pub async fn challenge(&mut self, _token: &str, _connection: &DatabaseConnection) -> Result<()> {
         todo!()
     }
 }

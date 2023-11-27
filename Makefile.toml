@@ -10,11 +10,12 @@ args = ["i"]
 # Development
 
 [tasks.dev_build]
+dependencies = ["docs_init"]
 command = "cargo"
 args = ["build"]
 
 [tasks.docs_preview]
-dependencies = ["docs_init", "dev_build"]
+dependencies = ["dev_build"]
 command = "npx"
 args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
