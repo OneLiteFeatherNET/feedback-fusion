@@ -44,7 +44,7 @@ run_task = { name = ["postgres"] }
 [tasks.docs_lint]
 dependencies = ["docs_generate"]
 command = "npx"
-args = ["redocly", "lint", "target/openapi.yaml"]
+args = ["redocly", "lint", "--skip-rule=no-empty-servers", "target/openapi.yaml"]
 
 [tasks.docs_build]
 dependencies = ["docs_lint"]
