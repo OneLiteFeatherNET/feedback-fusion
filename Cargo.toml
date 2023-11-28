@@ -31,11 +31,8 @@ tower-http = { version = "0.4.4", features = ["trace"] }
 tracing = "0.1.39"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 typed-builder = "0.18.0"
-utoipa = "4.0.0"
+utoipa = { version = "4.1.0", features = ["yaml"] }
 version-compare = "0.1.1"
-
-[build-dependencies]
-utoipa = { version = "4.0.0", features = ["yaml"] }
 
 [dev-dependencies]
 axum-test-helper = { version = "0.3.0", features = ["cookies"] }
@@ -46,6 +43,7 @@ tracing-test = "0.2.4"
 [features]
 default = ["all-databases"]
 
+docs = []
 all-databases = ["postgres", "mysql"]
 postgres = ["rbdc-pg"]
 mysql = ["rbdc-mysql"]

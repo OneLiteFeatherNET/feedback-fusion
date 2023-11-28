@@ -9,13 +9,13 @@ args = ["i"]
 
 # Development
 
-[tasks.dev_build]
+[tasks.docs_generate]
 dependencies = ["docs_init"]
 command = "cargo"
-args = ["build"]
+args = ["run", "--features", "docs"]
 
 [tasks.docs_preview]
-dependencies = ["dev_build"]
+dependencies = ["docs_generate"]
 command = "npx"
 args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
@@ -42,7 +42,7 @@ run_task = { name = ["postgres"] }
 # OpenAPI build
 
 [tasks.docs_lint]
-dependencies = ["dev_build"]
+dependencies = ["docs_generate"]
 command = "npx"
 args = ["redocly", "lint", "target/openapi.yaml"]
 

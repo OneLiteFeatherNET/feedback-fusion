@@ -69,69 +69,76 @@ pub mod error;
 pub mod routes;
 pub mod state;
 
+#[cfg(feature = "docs")]
+pub mod docs;
+
 #[cfg(test)]
 pub mod tests;
 
 #[tokio::main]
 async fn main() {
-    // init config
-    lazy_static::initialize(&CONFIG);
-    lazy_static::initialize(&DATABASE_CONFIG);
+    #[cfg(feature = "docs")]
+    docs::generate();
 
-    // init the tracing subscriber with the `RUST_LOG` env filter
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    #[cfg(not(feature = "docs"))]
+    {
+        // init config
+        lazy_static::initialize(&CONFIG);
+        lazy_static::initialize(&DATABASE_CONFIG);
 
-    let (sender, receiver) = kanal::oneshot_async::<()>();
-    let address = SocketAddr::from(([0, 0, 0, 0], 8000));
+        // init the tracing subscriber with the `RUST_LOG` env filter
+        tracing_subscriber::registry()
+            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(tracing_subscriber::fmt::layer())
+            .init();
 
-    // connect to the database
-    let connection = DATABASE_CONFIG.connect().await.unwrap();
+        let (sender, receiver) = kanal::oneshot_async::<()>();
+        let address = SocketAddr::from(([0, 0, 0, 0], 8000));
 
-    tokio::spawn(async move {
-        Server::bind(&address)
-            .serve(router(connection).into_make_service())
-            .with_graceful_shutdown(async move {
-                receiver.recv().await.ok();
-            })
-            .await
-            .unwrap();
-    });
+        // connect to the database
+        let connection = DATABASE_CONFIG.connect().await.unwrap();
 
-    match tokio::signal::ctrl_c().await {
-        Ok(()) => {}
-        Err(error) => {
-            error!("Unable to listen for the shutdown signal: {}", error);
+        tokio::spawn(async move {
+            Server::bind(&address)
+                .serve(router(connection).into_make_service())
+                .with_graceful_shutdown(async move {
+                    receiver.recv().await.ok();
+                })
+                .await
+                .unwrap();
+        });
+
+        match tokio::signal::ctrl_c().await {
+            Ok(()) => {}
+            Err(error) => {
+                error!("Unable to listen for the shutdown signal: {}", error);
+            }
         }
-    }
 
-    info!("Received shutdown signal... shutting down...");
-    sender.send(()).await.unwrap();
+        info!("Received shutdown signal... shutting down...");
+        sender.send(()).await.unwrap();
+    }
 }
 
 fn router(connection: DatabaseConnection) -> Router {
     let state = FeedbackFusionState::new(connection);
 
-    Router::new()
-        .nest("/", routes::router(state))
-        .layer(
-            ServiceBuilder::new()
-                .layer(HandleErrorLayer::new(|error: BoxError| async move {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        error!("Unhandled error occurred: {}", error),
-                    )
-                }))
-                .layer(BufferLayer::new(1024))
-                // set the max requests per sec for all incoming calls
-                .layer(RateLimitLayer::new(
-                    *CONFIG.global_rate_limit(),
-                    Duration::from_secs(1),
-                ))
-                .layer(TraceLayer::new_for_http()),
-        )
+    Router::new().nest("/", routes::router(state)).layer(
+        ServiceBuilder::new()
+            .layer(HandleErrorLayer::new(|error: BoxError| async move {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    error!("Unhandled error occurred: {}", error),
+                )
+            }))
+            .layer(BufferLayer::new(1024))
+            // set the max requests per sec for all incoming calls
+            .layer(RateLimitLayer::new(
+                *CONFIG.global_rate_limit(),
+                Duration::from_secs(1),
+            ))
+            .layer(TraceLayer::new_for_http()),
+    )
 }
 
 pub mod prelude {
@@ -141,7 +148,7 @@ pub mod prelude {
     };
     pub use axum::{
         extract::{Json, Query, State},
+        routing::*,
         Router,
-        routing::*
     };
 }

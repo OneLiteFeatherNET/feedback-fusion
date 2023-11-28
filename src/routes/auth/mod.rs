@@ -44,7 +44,7 @@ pub struct TOTPChallengePrompt {
 #[utoipa::path(post, path = "/auth/login", request_body = InternalLoginRequest, responses(
     (status = 200, description = "Login successful", body = Session),
     (status = 413, description = "TOTP challenge required", body = TOTPChallengePrompt)
-))]
+), tag = "Authentication")]
 pub async fn login(
     State(state): State<FeedbackFusionState>,
     Json(data): Json<InternalLoginRequest>,
