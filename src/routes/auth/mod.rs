@@ -71,3 +71,49 @@ pub async fn login(
         Err(FeedbackFusionError::Unauthorized)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use axum::http::StatusCode;
+
+    use crate::tests::TestSuite;
+
+    #[tokio::test]
+    async fn test_login() {
+        let suite = TestSuite::new().await;
+
+        let response = suite
+            .connector()
+            .post("/auth/login")
+            .json(&serde_json::json! ({
+                "username": "wfaf",
+                "password": TestSuite::PASSWORD
+            }))
+            .send()
+            .await;
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        let response = suite
+            .connector()
+            .post("/auth/login")
+            .json(&serde_json::json!({
+                "username": TestSuite::USERNAME,
+                "password": "dwadwd"
+            }))
+            .send()
+            .await;
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        let response = suite
+            .connector()
+            .post("/auth/login")
+            .json(&serde_json::json!({
+                "username": TestSuite::USERNAME,
+                "password": TestSuite::PASSWORD
+            }))
+            .send()
+            .await;
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+}
+

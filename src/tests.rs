@@ -28,7 +28,6 @@ use crate::database::{
 };
 
 pub async fn connect() -> DatabaseConnection {
-    fast_log::init(fast_log::Config::new().console()).ok();
     let config = envy::from_env::<BaseConfiguration>().unwrap();
     let connection = DatabaseConfiguration::Postgres(config)
         .connect()
@@ -54,12 +53,13 @@ impl TestSuite {
         let connection = connect().await;
 
         // create a new account
-        let account = Account::Internal(InternalAccount::builder()
-            .username(Self::USERNAME)
-            .password_hash(Self::PASSWORD)
-            .build());
+        let account = Account::Internal(
+            InternalAccount::builder()
+                .username(Self::USERNAME)
+                .password_hash(Self::PASSWORD)
+                .build(),
+        );
         Account::insert(&connection, &account).await.unwrap();
-    
 
         // init the client connector
         let connector = TestClient::new(crate::router(connection.clone()));
@@ -67,8 +67,7 @@ impl TestSuite {
         Self {
             connector,
             connection,
-            account
+            account,
         }
     }
 }
-

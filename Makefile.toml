@@ -28,7 +28,7 @@ script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_U
 [tasks.postgres_tests]
 env = { username = "postgres", password = "password", endpoint = "localhost:5432", database = "postgres" }
 command = "cargo"
-args = ["test", "--features", "postgres", "--", "--show-output", "--test-threads=1"]
+args = ["test", "--features", "postgres", "--", "--test-threads=1"]
 
 [tasks.postgres]
 run_task = { name = ["postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}

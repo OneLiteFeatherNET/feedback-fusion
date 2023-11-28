@@ -42,11 +42,11 @@ impl Session {
         let now = chrono::Utc::now().timestamp_millis();
 
         let session = Self {
-            id: nanoid!(32),
+            id: nanoid!(64),
             account: account.to_string(),
             iat: now,
             exp: now + *CONFIG.session_length() as i64,
-            refresh_token: nanoid!(48),
+            refresh_token: nanoid!(64),
             refresh_exp: now + *CONFIG.session_length() as i64
         };
 

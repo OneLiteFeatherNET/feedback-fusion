@@ -41,6 +41,10 @@ extern crate typed_builder;
 #[macro_use]
 extern crate utoipa;
 
+#[cfg(test)]
+#[macro_use]
+extern crate tracing_test;
+
 use crate::{
     config::Config,
     database::{DatabaseConfiguration, DatabaseConnection},

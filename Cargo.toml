@@ -41,6 +41,7 @@ utoipa = { version = "4.0.0", features = ["yaml"] }
 axum-test-helper = { version = "0.3.0", features = ["cookies"] }
 dotenvy = "0.15.7"
 fast_log = "1.6.10"
+tracing-test = "0.2.4"
 
 [features]
 default = ["all-databases"]

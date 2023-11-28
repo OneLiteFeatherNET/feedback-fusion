@@ -18,3 +18,12 @@ CREATE TABLE IF NOT EXISTS totp_challenge(
   created_at    timestamp   DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS session(
+  id            varchar(64) UNIQUE NOT NULL,
+  account       varchar(32) UNIQUE NOT NULL,
+  iat           bigint     NOT NULL,
+  exp           bigint     NOT NULL,
+  refresh_token varchar(64) UNIQUE NOT NULL,
+  refresh_exp   bigint     NOT NULL
+);
+
