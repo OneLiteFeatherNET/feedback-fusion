@@ -20,13 +20,55 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::database::{DatabaseConnection, BaseConfiguration, DatabaseConfiguration};
+use axum_test_helper::TestClient;
+
+use crate::database::{
+    schema::account::{Account, InternalAccount},
+    BaseConfiguration, DatabaseConfiguration, DatabaseConnection,
+};
 
 pub async fn connect() -> DatabaseConnection {
-    fast_log::init(fast_log::Config::new().console()).ok(); 
+    fast_log::init(fast_log::Config::new().console()).ok();
     let config = envy::from_env::<BaseConfiguration>().unwrap();
-    let connection = DatabaseConfiguration::Postgres(config).connect().await.unwrap();
+    let connection = DatabaseConfiguration::Postgres(config)
+        .connect()
+        .await
+        .unwrap();
 
     connection
+}
+
+#[derive(Getters)]
+#[get = "pub"]
+pub struct TestSuite {
+    connector: TestClient,
+    connection: DatabaseConnection,
+    account: Account,
+}
+
+impl TestSuite {
+    pub const USERNAME: &'static str = "username";
+    pub const PASSWORD: &'static str = "password";
+
+    pub async fn new() -> Self {
+        let connection = connect().await;
+
+        // create a new account
+        let account = Account::Internal(InternalAccount::builder()
+            .username(Self::USERNAME)
+            .password_hash(Self::PASSWORD)
+            .build());
+        Account::insert(&connection, &account).await.unwrap();
+    
+
+        // init the client connector
+        let connector = TestClient::new(crate::router(connection.clone()));
+
+        Self {
+            connector,
+            connection,
+            account
+        }
+    }
 }
 

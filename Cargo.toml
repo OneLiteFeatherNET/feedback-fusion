@@ -38,6 +38,7 @@ version-compare = "0.1.1"
 utoipa = { version = "4.0.0", features = ["yaml"] }
 
 [dev-dependencies]
+axum-test-helper = { version = "0.3.0", features = ["cookies"] }
 dotenvy = "0.15.7"
 fast_log = "1.6.10"
 
