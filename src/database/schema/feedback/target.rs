@@ -20,13 +20,26 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::prelude::*;
-use axum::Router;
+use rbatis::rbdc::DateTime;
 
-mod feedback;
-
-pub fn router(state: FeedbackFusionState) -> Router {
-    Router::new()
-        .nest("/feedback", feedback::router(state))
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder)]
+#[derivative(PartialEq)]
+#[get = "pub"]
+#[get_mut = "pub"]
+#[builder(field_defaults(setter(into)))]
+pub struct FeedbackTarget {
+    #[builder(default_code = r#"nanoid::nanoid!()"#)]
+    id: String,
+    name: String,
+    #[builder(default)]
+    description: Option<String>,
+    #[derivative(PartialEq = "ignore")]
+    #[builder(default)]
+    updated_at: DateTime,
+    #[derivative(PartialEq = "ignore")]
+    #[builder(default)]
+    created_at: DateTime
 }
+
+crud!(FeedbackTarget {});
 

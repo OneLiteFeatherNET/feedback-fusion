@@ -31,6 +31,9 @@ pub struct FeedbackFusionState {
 
 impl FeedbackFusionState {
     pub fn new(connection: DatabaseConnection) -> Self {
-        Self { connection }
+        Self { 
+            connection,
+        }
     }
 }
+

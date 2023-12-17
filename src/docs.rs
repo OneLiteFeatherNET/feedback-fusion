@@ -26,17 +26,11 @@ use utoipa::OpenApi;
 pub fn generate() {
     #[derive(OpenApi)]
     #[openapi(
-        paths(crate::routes::auth::login),
+        paths(),
         components(
             schemas(
-                crate::database::schema::auth::session::Session,
-                crate::routes::auth::InternalLoginRequest,
-                crate::routes::auth::TOTPChallengePrompt
             )
         ),
-        tags(
-            (name = "Authentication")
-        )
     )]
     struct OpenApiSpecification;
 

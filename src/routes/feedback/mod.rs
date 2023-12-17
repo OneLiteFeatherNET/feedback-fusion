@@ -20,42 +20,9 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
+use crate::prelude::*;
 
-use crate::{database::DatabaseConnection, prelude::*};
-
-pub mod session;
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum TOTPChallengeState {
-    Pending,
-    Passed,
-    Failed,
+pub fn router(state: FeedbackFusionState) -> Router {
+    Router::new().with_state(state)
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-
-pub struct TOTPChallenge {
-    id: String,
-    pub account: String,
-    pub state: TOTPChallengeState,
-    created_at: DateTime,
-}
-
-crud!(TOTPChallenge {}, "totp_challenge");
-
-impl TOTPChallenge {
-    pub async fn start(id: String, connection: &DatabaseConnection) -> Result<Self> {
-        let challenge = TOTPChallenge {
-            id: nanoid!(64),
-            account: id,
-            state: TOTPChallengeState::Pending,
-            created_at: DateTime::now(),
-        };
-
-        // insert the challenge
-        TOTPChallenge::insert(&connection, &challenge).await?;
-        Ok(challenge)
-    }
-}

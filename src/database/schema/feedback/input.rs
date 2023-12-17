@@ -20,13 +20,24 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::prelude::*;
-use axum::Router;
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(untagged)]
+pub enum FeedbackPromptInputOptions {
+    Text(TextOptions),
+    Rating(RatingOptions)
+}
 
-mod feedback;
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder)]
+#[builder(field_defaults(setter(into)))]
+pub struct TextOptions {
+    description: String,
+    placeholder: String
+}
 
-pub fn router(state: FeedbackFusionState) -> Router {
-    Router::new()
-        .nest("/feedback", feedback::router(state))
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder)]
+#[builder(field_defaults(setter(into)))]
+pub struct RatingOptions {
+    description: String,
+    max: u8
 }
 

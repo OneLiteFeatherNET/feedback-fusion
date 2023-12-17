@@ -28,7 +28,6 @@ use axum::{
 };
 use thiserror::Error;
 
-use crate::database::schema::auth::TOTPChallenge;
 
 #[derive(Error, Debug)]
 pub enum FeedbackFusionError {
@@ -38,8 +37,6 @@ pub enum FeedbackFusionError {
     ConfigurationError(String),
     #[error(transparent)]
     DatabaseError(#[from] rbatis::Error),
-    #[error("totp required")]
-    TOTPChallenge(TOTPChallenge),
     #[error("unauthorized")]
     Unauthorized,
 }
