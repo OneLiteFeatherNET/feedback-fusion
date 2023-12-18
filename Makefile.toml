@@ -21,20 +21,23 @@ args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
 # Tests
 
+[tasks.oidc-mock-server]
+script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d && sleep 5"
+
 # Postgres
 [tasks.postgres_database]
-script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5432:5432 -d postgres && sleep 1"
+script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres && sleep 5"
 
 [tasks.postgres_tests]
-env = { username = "postgres", password = "password", endpoint = "localhost:5432", database = "postgres" }
+env = { username = "postgres", password = "password", endpoint = "localhost:5150", database = "postgres", "jwks_discovery_url" = "http://localhost:5151/.well-known/openid-configuration" }
 command = "cargo"
-args = ["test", "--features", "postgres", "--", "--test-threads=1"]
+args = ["test", "--features", "postgres"]
 
 [tasks.postgres]
 run_task = { name = ["postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
 
 [tasks.postgres_cleanup]
-script = "docker kill postgres;docker rm postgres"
+script = "docker kill postgres;docker rm postgres;docker kill oidc-mock-server;docker rm oidc-mock-server"
 
 [tasks.test]
 run_task = { name = ["postgres"] }

@@ -25,4 +25,3 @@ use crate::prelude::*;
 pub fn router(state: FeedbackFusionState) -> Router {
     Router::new().with_state(state)
 }
-

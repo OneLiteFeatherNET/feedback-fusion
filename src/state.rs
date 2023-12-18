@@ -21,7 +21,7 @@
  *
  */
 
-use crate::database::DatabaseConnection;
+use crate::prelude::*;
 
 #[derive(Getters, Clone)]
 #[get = "pub"]
@@ -31,9 +31,6 @@ pub struct FeedbackFusionState {
 
 impl FeedbackFusionState {
     pub fn new(connection: DatabaseConnection) -> Self {
-        Self { 
-            connection,
-        }
+        Self { connection }
     }
 }
-

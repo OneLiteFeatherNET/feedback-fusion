@@ -25,18 +25,17 @@ use rbatis::rbdc::DateTime;
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Migration {
     pub version: String,
-    pub created_at: DateTime
+    pub created_at: DateTime,
 }
 
 impl From<String> for Migration {
     fn from(value: String) -> Self {
         Migration {
             version: value,
-            created_at: DateTime::now()
+            created_at: DateTime::now(),
         }
     }
 }
 
 impl_select!(Migration {select_latest() -> Option => "`ORDER BY created_at DESC LIMIT 1`"});
 impl_insert!(Migration {});
-

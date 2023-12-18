@@ -15,6 +15,7 @@ chrono = { version = "0.4.31", features = ["serde"] }
 derivative = "2.2.0"
 envy = "0.4.2"
 getset = "0.1.2"
+jwt-authorizer = "0.13.0"
 kanal = "0.1.0-pre8"
 lazy_static = "1.4.0"
 nanoid = "0.4.0"
@@ -35,12 +36,6 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 typed-builder = "0.18.0"
 utoipa = { version = "4.1.0", features = ["yaml"] }
 version-compare = "0.1.1"
-
-[dev-dependencies]
-axum-test-helper = { version = "0.3.0", features = ["cookies"] }
-dotenvy = "0.15.7"
-fast_log = "1.6.10"
-tracing-test = "0.2.4"
 
 [features]
 default = ["all-databases"]

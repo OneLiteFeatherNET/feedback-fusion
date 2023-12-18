@@ -67,7 +67,7 @@ macro_rules! database_configuration {
                 }
 
                 #[inline(always)]
-                pub async fn connect(&self) -> Result<DatabaseConnection> {
+                pub async fn connect(&self) -> Result<RBatis> {
                     let connection = RBatis::new();
                     let version = env!("CARGO_PKG_VERSION");
 
@@ -90,8 +90,8 @@ macro_rules! database_configuration {
                                         for(v, sql) in migrations {
                                             if version_compare::compare_to(v, version, version_compare::Cmp::Gt).unwrap() {
                                                 connection.exec(sql, vec![]).await?;
-                                                // insert the migratin 
-                                               Migration::insert(&connection, &Migration::from(v.to_string())).await?; 
+                                                // insert the migratin
+                                               Migration::insert(&connection, &Migration::from(v.to_string())).await?;
                                             }
                                         }
                                     }

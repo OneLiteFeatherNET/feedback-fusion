@@ -1,0 +1,10 @@
+[
+  {
+    "ClientId": "client",
+    "ClientSecrets": ["secret"],
+    "Description": "mock client",
+    "AllowedGrantTypes": ["client_credentials"],
+    "AllowedScopes": ["openid"],
+    "ClientClaimsPrefix": ""
+  }
+]

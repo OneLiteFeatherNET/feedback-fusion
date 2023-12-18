@@ -27,8 +27,6 @@ extern crate getset;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate nanoid;
-#[macro_use]
 extern crate paste;
 #[macro_use]
 extern crate rbatis;
@@ -41,16 +39,9 @@ extern crate typed_builder;
 #[macro_use]
 extern crate utoipa;
 
-#[cfg(test)]
-#[macro_use]
-extern crate tracing_test;
-
-use crate::{
-    config::Config,
-    database::{DatabaseConfiguration, DatabaseConnection},
-    state::FeedbackFusionState,
-};
+use crate::{config::Config, database::DatabaseConfiguration, prelude::*};
 use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};
+use jwt_authorizer::{Authorizer, IntoLayer, JwtAuthorizer};
 use std::{net::SocketAddr, time::Duration};
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::trace::TraceLayer;
@@ -70,9 +61,6 @@ pub mod state;
 
 #[cfg(feature = "docs")]
 pub mod docs;
-
-#[cfg(test)]
-pub mod tests;
 
 #[tokio::main]
 async fn main() {
@@ -96,10 +84,11 @@ async fn main() {
 
         // connect to the database
         let connection = DATABASE_CONFIG.connect().await.unwrap();
+        let connection = DatabaseConnection::from(connection);
 
         tokio::spawn(async move {
             Server::bind(&address)
-                .serve(router(connection).into_make_service())
+                .serve(router(connection).await.into_make_service())
                 .with_graceful_shutdown(async move {
                     receiver.recv().await.ok();
                 })
@@ -119,10 +108,17 @@ async fn main() {
     }
 }
 
-fn router(connection: DatabaseConnection) -> Router {
+async fn router(connection: DatabaseConnection) -> Router {
     let state = FeedbackFusionState::new(connection);
 
-    Router::new().nest("/", routes::router(state)).layer(
+    // init the oidc authorizer
+    let authorizer: Authorizer = JwtAuthorizer::from_jwks_url("http://localhost:3000/oidc/jwks")
+        .build()
+        .await
+        .unwrap();
+
+    Router::new().nest("/", routes::router(state))
+                    .layer(authorizer.into_layer()).layer(
         ServiceBuilder::new()
             .layer(HandleErrorLayer::new(|error: BoxError| async move {
                 (
@@ -131,6 +127,7 @@ fn router(connection: DatabaseConnection) -> Router {
                 )
             }))
             .layer(BufferLayer::new(1024))
+
             // set the max requests per sec for all incoming calls
             .layer(RateLimitLayer::new(
                 *CONFIG.global_rate_limit(),
@@ -151,4 +148,3 @@ pub mod prelude {
         Router,
     };
 }
-
