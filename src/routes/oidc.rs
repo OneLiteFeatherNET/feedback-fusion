@@ -20,24 +20,17 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
-#[serde(tag = "type")]
-pub enum FeedbackPromptInputOptions {
-    Text(TextOptions),
-    Rating(RatingOptions)
-}
+#[macro_export]
+macro_rules! oidc_layer {
+    () => {{
+        use jwt_authorizer::{Authorizer, IntoLayer, JwtAuthorizer};
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema)]
-#[builder(field_defaults(setter(into)))]
-pub struct TextOptions {
-    description: String,
-    placeholder: String
-}
+        // init the oidc authorizer
+        let authorizer: Authorizer = JwtAuthorizer::from_oidc(CONFIG.oidc_discovery_url())
+            .build()
+            .await
+            .unwrap();
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema)]
-#[builder(field_defaults(setter(into)))]
-pub struct RatingOptions {
-    description: String,
-    max: u8
+        authorizer.into_layer()
+    }}; // we can add here support for scopes later :)
 }
-

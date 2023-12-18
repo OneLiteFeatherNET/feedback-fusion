@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS prompt (
   title       VARCHAR(32) NOT NULL,
   target      VARCHAR(32) REFERENCES target(id) NOT NULL,
   active      BOOLEAN NOT NULL,
-  updated_at  TIMESTAMP
+  updated_at  TIMESTAMP,
   created_at  TIMESTAMP
 );
 

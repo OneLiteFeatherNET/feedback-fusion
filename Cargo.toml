@@ -34,7 +34,7 @@ tower-http = { version = "0.4.4", features = ["trace"] }
 tracing = "0.1.39"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 typed-builder = "0.18.0"
-utoipa = { version = "4.1.0", features = ["yaml"] }
+utoipa = { version = "4.1.0", features = ["yaml", "chrono"] }
 version-compare = "0.1.1"
 
 [features]

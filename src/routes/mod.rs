@@ -21,12 +21,39 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use axum::Router;
+use rbatis::sql::PageRequest;
 
-mod feedback;
+pub mod feedback;
+mod oidc;
 
-pub fn router(state: FeedbackFusionState) -> Router {
-    Router::new()
-        .nest("/feedback", feedback::router(state))
+pub async fn router(state: FeedbackFusionState) -> Router {
+    Router::new().nest("/feedback", feedback::router(state).await)
 }
 
+#[derive(Debug, Clone, Deserialize, IntoParams)]
+pub struct SearchQuery {
+    #[serde(default)]
+    query: String,
+}
+
+#[derive(Debug, Clone, Deserialize, IntoParams)]
+pub struct Pagination {
+    #[serde(default = "page")]
+    page: usize,
+    #[serde(default = "page_size")]
+    page_size: usize,
+}
+
+fn page() -> usize {
+    1
+}
+
+fn page_size() -> usize {
+    20
+}
+
+impl Pagination {
+    pub fn request(self) -> PageRequest {
+        PageRequest::new(self.page as u64, self.page_size as u64)
+    }
+}

@@ -22,7 +22,7 @@
 
 use rbatis::rbdc::DateTime;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[get_mut = "pub"]
@@ -42,4 +42,6 @@ pub struct FeedbackTarget {
 }
 
 crud!(FeedbackTarget {});
+impl_select!(FeedbackTarget {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page!(FeedbackTarget {select_page(query: &str) => "`WHERE name LIKE '%#{query}%' ORDER BY created_at DESC`"});
 

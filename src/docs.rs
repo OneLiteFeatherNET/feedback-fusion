@@ -20,17 +20,34 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use crate::{database::schema, routes};
 use std::{fs, path::Path};
-use utoipa::OpenApi;
+use utoipa::{OpenApi, ToSchema};
+
+#[derive(ToSchema)]
+pub struct PageResult<T: for<'a> ToSchema<'a>>{
+    records: Vec<T>,
+    total: u64,
+    page_no: u64,
+}
 
 pub fn generate() {
     #[derive(OpenApi)]
     #[openapi(
-        paths(),
+        paths(
+            routes::feedback::target::post_target,
+            routes::feedback::target::get_targets
+        ),
         components(
             schemas(
+                schema::feedback::FeedbackTarget,
+                routes::feedback::target::CreateFeedbackTargetRequest,
+                PageResult
             )
         ),
+        tags(
+            (name = "FeedbackTarget")
+        )
     )]
     struct OpenApiSpecification;
 
@@ -42,4 +59,3 @@ pub fn generate() {
     )
     .unwrap();
 }
-

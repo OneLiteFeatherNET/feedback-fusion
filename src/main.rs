@@ -41,7 +41,6 @@ extern crate utoipa;
 
 use crate::{config::Config, database::DatabaseConfiguration, prelude::*};
 use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};
-use jwt_authorizer::{Authorizer, IntoLayer, JwtAuthorizer};
 use std::{net::SocketAddr, time::Duration};
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::trace::TraceLayer;
@@ -111,14 +110,7 @@ async fn main() {
 async fn router(connection: DatabaseConnection) -> Router {
     let state = FeedbackFusionState::new(connection);
 
-    // init the oidc authorizer
-    let authorizer: Authorizer = JwtAuthorizer::from_jwks_url("http://localhost:3000/oidc/jwks")
-        .build()
-        .await
-        .unwrap();
-
-    Router::new().nest("/", routes::router(state))
-                    .layer(authorizer.into_layer()).layer(
+    Router::new().nest("/", routes::router(state).await).layer(
         ServiceBuilder::new()
             .layer(HandleErrorLayer::new(|error: BoxError| async move {
                 (
@@ -127,7 +119,6 @@ async fn router(connection: DatabaseConnection) -> Router {
                 )
             }))
             .layer(BufferLayer::new(1024))
-
             // set the max requests per sec for all incoming calls
             .layer(RateLimitLayer::new(
                 *CONFIG.global_rate_limit(),
@@ -139,8 +130,14 @@ async fn router(connection: DatabaseConnection) -> Router {
 
 pub mod prelude {
     pub use crate::{
-        config::*, database::DatabaseConnection, error::*, state::FeedbackFusionState, CONFIG,
-        DATABASE_CONFIG,
+        config::*,
+        database::DatabaseConnection,
+        database_request,
+        error::*,
+        oidc_layer,
+        routes::*,
+        state::FeedbackFusionState,
+        CONFIG, DATABASE_CONFIG,
     };
     pub use axum::{
         extract::{Json, Query, State},

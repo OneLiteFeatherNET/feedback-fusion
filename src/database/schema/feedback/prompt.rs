@@ -24,7 +24,7 @@ use rbatis::rbdc::DateTime;
 
 use super::input::FeedbackPromptInputOptions;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[get_mut = "pub"]
@@ -46,13 +46,13 @@ pub struct FeedbackPrompt {
 
 crud!(FeedbackPrompt {});
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
 pub enum FeedbackPromptInputType {
     Text,
     Rating,
 }
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[get_mut = "pub"]

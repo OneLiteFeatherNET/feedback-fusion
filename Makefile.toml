@@ -19,25 +19,24 @@ dependencies = ["docs_generate"]
 command = "npx"
 args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
-# Tests
 
-[tasks.oidc-mock-server]
-script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d && sleep 5"
+[tasks.oidc-server-mock]
+script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d"
 
 # Postgres
 [tasks.postgres_database]
-script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres && sleep 5"
+script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres && sleep 1"
 
 [tasks.postgres_tests]
-env = { username = "postgres", password = "password", endpoint = "localhost:5150", database = "postgres", "jwks_discovery_url" = "http://localhost:5151/.well-known/openid-configuration" }
+env = { postgres_username = "postgres", postgres_password = "password", postgres_endpoint = "localhost:5150", postgres_database = "postgres", "oidc_discovery_url" = "http://localhost:5151/" }
 command = "cargo"
 args = ["test", "--features", "postgres"]
 
 [tasks.postgres]
-run_task = { name = ["postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
+run_task = { name = ["oidc-server-mock", "postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
 
 [tasks.postgres_cleanup]
-script = "docker kill postgres;docker rm postgres;docker kill oidc-mock-server;docker rm oidc-mock-server"
+script = "docker kill postgres;docker rm postgres;docker kill oidc-server-mock;docker rm oidc-server-mock"
 
 [tasks.test]
 run_task = { name = ["postgres"] }
