@@ -25,7 +25,7 @@ use std::{fs, path::Path};
 use utoipa::{OpenApi, ToSchema};
 
 #[derive(ToSchema)]
-pub struct PageResult<T: for<'a> ToSchema<'a>>{
+pub struct PageResult<T: for<'a> ToSchema<'a>> {
     records: Vec<T>,
     total: u64,
     page_no: u64,
@@ -44,13 +44,12 @@ pub fn generate() {
             routes::feedback::prompt::post_field,
             routes::feedback::prompt::put_field,
             routes::feedback::prompt::get_fields,
-            routes::feedback::prompt::delete_fields,
+            routes::feedback::prompt::delete_field,
         ),
         components(
             schemas(
                 schema::feedback::FeedbackTarget,
-                routes::feedback::target::CreateFeedbackTargetRequest,
-                PageResult
+                routes::feedback::CreateFeedbackTargetRequest,
             )
         ),
         tags(
