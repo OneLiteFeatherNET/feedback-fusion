@@ -27,10 +27,14 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Run check
+      - name: Install cargo-make
         uses: actions-rs/cargo@v1
         with:
-          command: check
+          command: install
+          args: cargo-make
+
+      - name: Run check
+        run: cargo make check
 
   clippy:
     name: clippy
@@ -50,8 +54,14 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Install cargo-make
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-make
+
       - name: Run clippy
-        run: cargo clippy --all-features -- -D warnings
+        run: cargo make clippy 
 
   test:
     needs: [ clippy, check ]

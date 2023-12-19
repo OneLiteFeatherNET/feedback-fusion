@@ -26,23 +26,10 @@
 pub struct Config {
     #[serde(default = "default_global_rate_limit")]
     global_rate_limit: u64,
-    /// session length in milliseconds
-    #[serde(default = "default_session_length")]
-    session_length: u64,
-    /// in millis
-    #[serde(default = "default_refresh_session_length")]
-    refresh_session_length: u64,
+    oidc_discovery_url: String,
 }
 
 fn default_global_rate_limit() -> u64 {
     10
-}
-
-fn default_session_length() -> u64 {
-    1000 * 60 * 30
-}
-
-fn default_refresh_session_length() -> u64 {
-    1000 * 60 * 60
 }
 

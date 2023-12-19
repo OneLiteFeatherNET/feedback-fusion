@@ -20,22 +20,11 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
+mod input;
+mod prompt;
+mod target;
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct Migration {
-    pub version: String,
-    pub created_at: DateTime,
-}
+pub use input::*;
+pub use prompt::*;
+pub use target::*;
 
-impl From<String> for Migration {
-    fn from(value: String) -> Self {
-        Migration {
-            version: value,
-            created_at: DateTime::now(),
-        }
-    }
-}
-
-impl_select!(Migration {select_latest() -> Option => "`ORDER BY created_at DESC LIMIT 1`"});
-impl_insert!(Migration {});

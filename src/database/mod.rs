@@ -51,13 +51,17 @@ macro_rules! database_configuration {
         paste! {
             #[derive(Debug, Clone)]
             pub enum DatabaseConfiguration {
-                $($ident($config),)*
+                $(
+                    #[cfg(feature = "" $ident:lower)]
+                    $ident($config),
+                )*
             }
 
             impl DatabaseConfiguration {
                 #[inline(always)]
                 pub fn extract() -> crate::error::Result<Self> {
                     $(
+                       #[cfg(feature = "" $ident:lower)] 
                        if let Ok(config) = envy::prefixed(stringify!([<$ident:lower _>]).trim()).from_env::<$config>() {
                            return Ok(Self::$ident(config));
                       }
@@ -67,12 +71,13 @@ macro_rules! database_configuration {
                 }
 
                 #[inline(always)]
-                pub async fn connect(&self) -> Result<DatabaseConnection> {
+                pub async fn connect(&self) -> Result<RBatis> {
                     let connection = RBatis::new();
                     let version = env!("CARGO_PKG_VERSION");
 
                     match self {
                         $(
+                            #[cfg(feature = "" $ident:lower)]
                             Self::$ident(config) => {
                                 let url = config.to_url($scheme);
                                 connection.init($driver {}, url.as_str())?;
@@ -90,8 +95,8 @@ macro_rules! database_configuration {
                                         for(v, sql) in migrations {
                                             if version_compare::compare_to(v, version, version_compare::Cmp::Gt).unwrap() {
                                                 connection.exec(sql, vec![]).await?;
-                                                // insert the migratin 
-                                               Migration::insert(&connection, &Migration::from(v.to_string())).await?; 
+                                                // insert the migration
+                                               Migration::insert(&connection, &Migration::from(v.to_string())).await?;
                                             }
                                         }
                                     }
@@ -125,3 +130,18 @@ database_configuration!(
         "mysql"
     )
 );
+
+#[macro_export]
+macro_rules! database_request {
+    ($expr: expr) => {{
+        let span = info_span!("Database Request");
+        let _ = span.enter();
+        $expr
+    }};
+    ($expr: expr, $title: expr) => {{
+        let span = info_span!(concat!("Database Request: ", $title));
+        let _ = span.enter();
+        $expr
+    }};
+}
+

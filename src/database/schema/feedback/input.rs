@@ -20,13 +20,27 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::database::{DatabaseConnection, BaseConfiguration, DatabaseConfiguration};
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
+#[serde(tag = "type")]
+pub enum FeedbackPromptInputOptions {
+    Text(TextOptions),
+    Rating(RatingOptions)
+}
 
-pub async fn connect() -> DatabaseConnection {
-    fast_log::init(fast_log::Config::new().console()).unwrap(); 
-    let config = envy::from_env::<BaseConfiguration>().unwrap();
-    let connection = DatabaseConfiguration::Postgres(config).connect().await.unwrap();
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
+#[builder(field_defaults(setter(into)))]
+pub struct TextOptions {
+    #[validate(length(max = 255))]
+    description: String,
+    #[validate(length(max = 255))]
+    placeholder: String
+}
 
-    connection
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
+#[builder(field_defaults(setter(into)))]
+pub struct RatingOptions {
+    #[validate(length(max = 255))]
+    description: String,
+    max: u8
 }
 

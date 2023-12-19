@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#![allow(clippy::too_many_arguments)]
 
 #[macro_use]
 extern crate derivative;
@@ -26,8 +27,6 @@ extern crate derivative;
 extern crate getset;
 #[macro_use]
 extern crate lazy_static;
-#[macro_use]
-extern crate nanoid;
 #[macro_use]
 extern crate paste;
 #[macro_use]
@@ -37,9 +36,13 @@ extern crate serde;
 #[macro_use]
 extern crate tracing;
 #[macro_use]
+extern crate typed_builder;
+#[macro_use]
 extern crate utoipa;
+#[macro_use]
+extern crate validator;
 
-use crate::{config::Config, database::{DatabaseConfiguration, DatabaseConnection}, state::FeedbackFusionState};
+use crate::{config::Config, database::DatabaseConfiguration, prelude::*};
 use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};
 use std::{net::SocketAddr, time::Duration};
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
@@ -52,77 +55,96 @@ lazy_static! {
         DatabaseConfiguration::extract().unwrap();
 }
 
-pub mod auth;
 pub mod config;
 pub mod database;
 pub mod error;
+pub mod routes;
 pub mod state;
 
-#[cfg(test)]
-pub mod tests;
+#[cfg(feature = "docs")]
+pub mod docs;
 
 #[tokio::main]
 async fn main() {
-    // init config
-    lazy_static::initialize(&CONFIG);
-    lazy_static::initialize(&DATABASE_CONFIG);
+    #[cfg(feature = "docs")]
+    docs::generate();
 
-    // init the tracing subscriber with the `RUST_LOG` env filter
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    #[cfg(not(feature = "docs"))]
+    {
+        // init config
+        lazy_static::initialize(&CONFIG);
+        lazy_static::initialize(&DATABASE_CONFIG);
 
-    let (sender, receiver) = kanal::oneshot_async::<()>();
-    let address = SocketAddr::from(([0, 0, 0, 0], 8000));
+        // init the tracing subscriber with the `RUST_LOG` env filter
+        tracing_subscriber::registry()
+            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(tracing_subscriber::fmt::layer())
+            .init();
 
-    // connect to the database
-    let connection = DATABASE_CONFIG.connect().await.unwrap();
+        let (sender, receiver) = kanal::oneshot_async::<()>();
+        let address = SocketAddr::from(([0, 0, 0, 0], 8000));
 
-    tokio::spawn(async move {
-        Server::bind(&address)
-            .serve(router(connection).into_make_service())
-            .with_graceful_shutdown(async move {
-                receiver.recv().await.ok();
-            })
-            .await
-            .unwrap();
-    });
+        // connect to the database
+        let connection = DATABASE_CONFIG.connect().await.unwrap();
+        let connection = DatabaseConnection::from(connection);
 
-    match tokio::signal::ctrl_c().await {
-        Ok(()) => {}
-        Err(error) => {
-            error!("Unable to listen for the shutdown signal: {}", error);
+        tokio::spawn(async move {
+            Server::bind(&address)
+                .serve(router(connection).await.into_make_service())
+                .with_graceful_shutdown(async move {
+                    receiver.recv().await.ok();
+                })
+                .await
+                .unwrap();
+        });
+
+        match tokio::signal::ctrl_c().await {
+            Ok(()) => {}
+            Err(error) => {
+                error!("Unable to listen for the shutdown signal: {}", error);
+            }
         }
-    }
 
-    info!("Received shutdown signal... shutting down...");
-    sender.send(()).await.unwrap();
+        info!("Received shutdown signal... shutting down...");
+        sender.send(()).await.unwrap();
+    }
 }
 
-fn router(connection: DatabaseConnection) -> Router {
-    Router::new()
-        .layer(
-            ServiceBuilder::new()
-                .layer(HandleErrorLayer::new(|error: BoxError| async move {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        error!("Unhandled error occurred: {}", error),
-                    )
-                }))
-                .layer(BufferLayer::new(1024))
-                // set the max requests per sec for all incoming calls
-                .layer(RateLimitLayer::new(
-                    *CONFIG.global_rate_limit(),
-                    Duration::from_secs(1),
-                ))
-                .layer(TraceLayer::new_for_http()),
-        )
-        .with_state(FeedbackFusionState::new(connection))
+async fn router(connection: DatabaseConnection) -> Router {
+    let state = FeedbackFusionState::new(connection);
+
+    Router::new().nest("/", routes::router(state).await).layer(
+        ServiceBuilder::new()
+            .layer(HandleErrorLayer::new(|error: BoxError| async move {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    error!("Unhandled error occurred: {}", error),
+                )
+            }))
+            .layer(BufferLayer::new(1024))
+            // set the max requests per sec for all incoming calls
+            .layer(RateLimitLayer::new(
+                *CONFIG.global_rate_limit(),
+                Duration::from_secs(1),
+            ))
+            .layer(TraceLayer::new_for_http()),
+    )
 }
 
 pub mod prelude {
-    pub use crate::{config::*, error::*, CONFIG, DATABASE_CONFIG};
-    pub use axum::extract::{Json, Query};
+    pub use crate::{
+        config::*,
+        database::DatabaseConnection,
+        database_request,
+        error::*,
+        oidc_layer,
+        routes::*,
+        state::FeedbackFusionState,
+        CONFIG, DATABASE_CONFIG,
+    };
+    pub use axum::{
+        extract::{Json, Query, State},
+        routing::*,
+        Router,
+    };
 }
-

@@ -21,7 +21,7 @@
  *
  */
 
-use crate::database::DatabaseConnection;
+use crate::prelude::*;
 
 #[derive(Getters, Clone)]
 #[get = "pub"]

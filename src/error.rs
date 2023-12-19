@@ -27,8 +27,7 @@ use axum::{
     Json,
 };
 use thiserror::Error;
-
-use crate::database::schema::auth::TOTPChallenge;
+use validator::ValidationErrors;
 
 #[derive(Error, Debug)]
 pub enum FeedbackFusionError {
@@ -38,10 +37,14 @@ pub enum FeedbackFusionError {
     ConfigurationError(String),
     #[error(transparent)]
     DatabaseError(#[from] rbatis::Error),
-    #[error("totp required")]
-    TOTPChallenge(TOTPChallenge),
     #[error("unauthorized")]
     Unauthorized,
+}
+
+impl From<ValidationErrors> for FeedbackFusionError {
+    fn from(value: ValidationErrors) -> Self {
+        Self::BadRequest(value.to_string())
+    }
 }
 
 #[derive(Serialize, Debug, Clone)]

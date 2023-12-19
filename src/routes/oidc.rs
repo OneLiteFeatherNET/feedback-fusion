@@ -20,44 +20,17 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
+#[macro_export]
+macro_rules! oidc_layer {
+    () => {{
+        use jwt_authorizer::{Authorizer, IntoLayer, JwtAuthorizer};
 
-use crate::{database::DatabaseConnection, prelude::*};
+        // init the oidc authorizer
+        let authorizer: Authorizer = JwtAuthorizer::from_oidc(CONFIG.oidc_discovery_url())
+            .build()
+            .await
+            .unwrap();
 
-pub mod session;
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum TOTPChallengeState {
-    Pending,
-    Passed,
-    Failed,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TOTPChallenge {
-    id: String,
-    account: String,
-    state: TOTPChallengeState,
-    created_at: DateTime,
-}
-
-crud!(TOTPChallenge {});
-
-impl From<String> for TOTPChallenge {
-    fn from(value: String) -> Self {
-        Self {
-            id: nanoid!(),
-            account: value,
-            state: TOTPChallengeState::Pending,
-            created_at: DateTime::now(),
-        }
-    }
-}
-
-impl TOTPChallenge {
-    #[instrument(skip_all)]
-    pub async fn challenge(&mut self, _token: &str, _connection: &DatabaseConnection) -> Result<()> {
-        todo!()
-    }
+        authorizer.into_layer()
+    }}; // we can add here support for scopes later :)
 }

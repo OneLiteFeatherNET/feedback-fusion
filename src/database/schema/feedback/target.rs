@@ -22,20 +22,27 @@
 
 use rbatis::rbdc::DateTime;
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct Migration {
-    pub version: String,
-    pub created_at: DateTime,
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema, Validate)]
+#[derivative(PartialEq)]
+#[get = "pub"]
+#[get_mut = "pub"]
+#[builder(field_defaults(setter(into)))]
+pub struct FeedbackTarget {
+    #[builder(default_code = r#"nanoid::nanoid!()"#)]
+    id: String,
+    #[validate(length(max = 255))]
+    name: String,
+    #[builder(default)]
+    description: Option<String>,
+    #[derivative(PartialEq = "ignore")]
+    #[builder(default)]
+    updated_at: DateTime,
+    #[derivative(PartialEq = "ignore")]
+    #[builder(default)]
+    created_at: DateTime
 }
 
-impl From<String> for Migration {
-    fn from(value: String) -> Self {
-        Migration {
-            version: value,
-            created_at: DateTime::now(),
-        }
-    }
-}
+crud!(FeedbackTarget {});
+impl_select!(FeedbackTarget {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page!(FeedbackTarget {select_page(query: &str) => "`WHERE name LIKE '%#{query}%' ORDER BY created_at DESC`"});
 
-impl_select!(Migration {select_latest() -> Option => "`ORDER BY created_at DESC LIMIT 1`"});
-impl_insert!(Migration {});

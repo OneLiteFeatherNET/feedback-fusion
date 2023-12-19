@@ -9,32 +9,41 @@ args = ["i"]
 
 # Development
 
-[tasks.dev_build]
+[tasks.docs_generate]
 dependencies = ["docs_init"]
 command = "cargo"
-args = ["build"]
+args = ["run", "--features", "docs"]
 
 [tasks.docs_preview]
-dependencies = ["dev_build"]
+dependencies = ["docs_generate"]
 command = "npx"
 args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
-# Tests
+[tasks.check]
+command = "cargo"
+args = ["check"]
+
+[tasks.clippy]
+command = "cargo"
+args = ["clippy", "--features", "postgres", "--", "-D", "warnings"]
+
+[tasks.oidc-server-mock]
+script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d"
 
 # Postgres
 [tasks.postgres_database]
-script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5432:5432 -d postgres && sleep 1"
+script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres && sleep 1"
 
 [tasks.postgres_tests]
-env = { username = "postgres", password = "password", endpoint = "localhost:5432", database = "postgres" }
+env = { postgres_username = "postgres", postgres_password = "password", postgres_endpoint = "localhost:5150", postgres_database = "postgres", "oidc_discovery_url" = "http://localhost:5151/" }
 command = "cargo"
-args = ["test", "--features", "postgres", "--", "--show-output", "--test-threads=1"]
+args = ["test", "--features", "postgres"]
 
 [tasks.postgres]
-run_task = { name = ["postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
+run_task = { name = ["oidc-server-mock", "postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
 
 [tasks.postgres_cleanup]
-script = "docker kill postgres;docker rm postgres"
+script = "docker kill postgres;docker rm postgres;docker kill oidc-server-mock;docker rm oidc-server-mock"
 
 [tasks.test]
 run_task = { name = ["postgres"] }
@@ -42,9 +51,9 @@ run_task = { name = ["postgres"] }
 # OpenAPI build
 
 [tasks.docs_lint]
-dependencies = ["dev_build"]
+dependencies = ["docs_generate"]
 command = "npx"
-args = ["redocly", "lint", "target/openapi.yaml"]
+args = ["redocly", "lint", "--skip-rule=no-empty-servers", "target/openapi.yaml"]
 
 [tasks.docs_build]
 dependencies = ["docs_lint"]

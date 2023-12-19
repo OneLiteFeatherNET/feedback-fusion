@@ -20,22 +20,40 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
+use crate::prelude::*;
+use rbatis::sql::PageRequest;
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct Migration {
-    pub version: String,
-    pub created_at: DateTime,
+pub mod feedback;
+mod oidc;
+
+pub async fn router(state: FeedbackFusionState) -> Router {
+    Router::new().nest("/feedback", feedback::router(state).await)
 }
 
-impl From<String> for Migration {
-    fn from(value: String) -> Self {
-        Migration {
-            version: value,
-            created_at: DateTime::now(),
-        }
+#[derive(Debug, Clone, Deserialize, IntoParams)]
+pub struct SearchQuery {
+    #[serde(default)]
+    query: String,
+}
+
+#[derive(Debug, Clone, Deserialize, IntoParams)]
+pub struct Pagination {
+    #[serde(default = "page")]
+    page: usize,
+    #[serde(default = "page_size")]
+    page_size: usize,
+}
+
+fn page() -> usize {
+    1
+}
+
+fn page_size() -> usize {
+    20
+}
+
+impl Pagination {
+    pub fn request(self) -> PageRequest {
+        PageRequest::new(self.page as u64, self.page_size as u64)
     }
 }
-
-impl_select!(Migration {select_latest() -> Option => "`ORDER BY created_at DESC LIMIT 1`"});
-impl_insert!(Migration {});
