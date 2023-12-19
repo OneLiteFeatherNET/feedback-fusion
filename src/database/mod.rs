@@ -51,13 +51,17 @@ macro_rules! database_configuration {
         paste! {
             #[derive(Debug, Clone)]
             pub enum DatabaseConfiguration {
-                $($ident($config),)*
+                $(
+                    #[cfg(feature = "" $ident:lower)]
+                    $ident($config),
+                )*
             }
 
             impl DatabaseConfiguration {
                 #[inline(always)]
                 pub fn extract() -> crate::error::Result<Self> {
                     $(
+                       #[cfg(feature = "" $ident:lower)] 
                        if let Ok(config) = envy::prefixed(stringify!([<$ident:lower _>]).trim()).from_env::<$config>() {
                            return Ok(Self::$ident(config));
                       }
@@ -73,6 +77,7 @@ macro_rules! database_configuration {
 
                     match self {
                         $(
+                            #[cfg(feature = "" $ident:lower)]
                             Self::$ident(config) => {
                                 let url = config.to_url($scheme);
                                 connection.init($driver {}, url.as_str())?;
