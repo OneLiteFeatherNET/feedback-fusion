@@ -27,16 +27,19 @@ pub enum FeedbackPromptInputOptions {
     Rating(RatingOptions)
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
 pub struct TextOptions {
+    #[validate(length(max = 255))]
     description: String,
+    #[validate(length(max = 255))]
     placeholder: String
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
 pub struct RatingOptions {
+    #[validate(length(max = 255))]
     description: String,
     max: u8
 }

@@ -24,18 +24,23 @@ use axum::{extract::Path, http::StatusCode};
 use rbatis::sql::Page;
 use validator::Validate;
 
-use crate::{database::schema::feedback::FeedbackPrompt, prelude::*};
+use crate::{
+    database::schema::feedback::{
+        FeedbackPrompt, FeedbackPromptField, FeedbackPromptInputOptions, FeedbackPromptInputType,
+    },
+    prelude::*,
+};
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
+        .route("/", post(post_prompt).get(get_prompts).put(put_prompt))
+        .route("/:prompt", delete(delete_prompt))
         .route(
-            "/",
-            post(post_prompt)
-                .get(get_prompts)
-                .put(put_prompt)
-                .layer(oidc_layer!()),
+            "/:prompt/field",
+            post(post_field).put(put_field).get(get_fields),
         )
-        .route("/:prompt", delete(delete_prompt).layer(oidc_layer!()))
+            .route("/:prompt/field/:field", delete(delete_field))
+        .layer(oidc_layer!())
         .with_state(state)
 }
 
@@ -115,5 +120,75 @@ pub async fn delete_prompt(
     database_request!(
         FeedbackPrompt::delete_by_column(state.connection(), "id", prompt.as_str()).await?
     );
+    Ok(StatusCode::OK)
+}
+
+#[derive(Debug, Clone, ToSchema, Deserialize, Validate)]
+pub struct CreateFeedbackPromptFieldRequest {
+    title: String,
+    r#type: FeedbackPromptInputType,
+    options: FeedbackPromptInputOptions,
+}
+
+/// POST /feedback/target/:target/prompt/:prompt/field
+pub async fn post_field(
+    State(state): State<FeedbackFusionState>,
+    Path((_, prompt)): Path<(String, String)>,
+    Json(data): Json<CreateFeedbackPromptFieldRequest>,
+) -> Result<(StatusCode, Json<FeedbackPromptField>)> {
+    data.validate()?;
+
+    // build the field
+    let field = FeedbackPromptField::builder()
+        .title(data.title)
+        .r#type(data.r#type)
+        .options(data.options)
+        .prompt(prompt)
+        .build();
+    database_request!(FeedbackPromptField::insert(state.connection(), &field).await?);
+
+    Ok((StatusCode::CREATED, Json(field)))
+}
+
+/// GET /feedback/target/:target/prompt/:prompt/field
+pub async fn get_fields(
+    State(state): State<FeedbackFusionState>,
+    Query(pagination): Query<Pagination>,
+    Path((_, prompt)): Path<(String, String)>,
+) -> Result<Json<Page<FeedbackPromptField>>> {
+    let page = database_request!(
+        FeedbackPromptField::select_page_by_prompt(
+            state.connection(),
+            &pagination.request(),
+            prompt.as_str()
+        )
+        .await?
+    );
+
+    Ok(Json(page))
+}
+
+/// PUT /feedback/target/:target/prompt/:prompt/field
+pub async fn put_field(
+    State(state): State<FeedbackFusionState>,
+    Json(data): Json<FeedbackPromptField>,
+) -> Result<Json<FeedbackPromptField>> {
+    data.validate()?;
+
+    database_request!(
+        FeedbackPromptField::update_by_column(state.connection(), &data, "id").await?
+    );
+    Ok(Json(data))
+}
+
+/// DELETE /feedback/target/:target/prompt/:prompt/field/:field
+pub async fn delete_field(
+    State(state): State<FeedbackFusionState>,
+    Path((_, _, field)): Path<(String, String, String)>,
+) -> Result<StatusCode> {
+    database_request!(
+        FeedbackPromptField::delete_by_column(state.connection(), "id", field.as_str()).await?
+    );
+
     Ok(StatusCode::OK)
 }
