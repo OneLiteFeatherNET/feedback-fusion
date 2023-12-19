@@ -27,7 +27,7 @@ use axum::{
     Json,
 };
 use thiserror::Error;
-
+use validator::ValidationErrors;
 
 #[derive(Error, Debug)]
 pub enum FeedbackFusionError {
@@ -39,6 +39,12 @@ pub enum FeedbackFusionError {
     DatabaseError(#[from] rbatis::Error),
     #[error("unauthorized")]
     Unauthorized,
+}
+
+impl From<ValidationErrors> for FeedbackFusionError {
+    fn from(value: ValidationErrors) -> Self {
+        Self::BadRequest(value.to_string())
+    }
 }
 
 #[derive(Serialize, Debug, Clone)]

@@ -38,6 +38,8 @@ extern crate tracing;
 extern crate typed_builder;
 #[macro_use]
 extern crate utoipa;
+#[macro_use]
+extern crate validator;
 
 use crate::{config::Config, database::DatabaseConfiguration, prelude::*};
 use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};

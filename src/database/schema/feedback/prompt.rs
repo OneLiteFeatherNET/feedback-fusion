@@ -24,7 +24,7 @@ use rbatis::rbdc::DateTime;
 
 use super::input::FeedbackPromptInputOptions;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema, Validate)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[get_mut = "pub"]
@@ -32,6 +32,7 @@ use super::input::FeedbackPromptInputOptions;
 pub struct FeedbackPrompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
+    #[validate(length(max = 255))]
     title: String,
     target: String,
     #[builder(default = true)]
@@ -45,6 +46,7 @@ pub struct FeedbackPrompt {
 }
 
 crud!(FeedbackPrompt {});
+impl_select_page!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
 pub enum FeedbackPromptInputType {

@@ -22,7 +22,7 @@
 
 use rbatis::rbdc::DateTime;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema, Validate)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[get_mut = "pub"]
@@ -30,6 +30,7 @@ use rbatis::rbdc::DateTime;
 pub struct FeedbackTarget {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
+    #[validate(length(max = 255))]
     name: String,
     #[builder(default)]
     description: Option<String>,
