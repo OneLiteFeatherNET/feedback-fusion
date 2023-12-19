@@ -64,7 +64,7 @@ pub async fn post_prompt(
         .active(data.active)
         .target(target)
         .build();
-    FeedbackPrompt::insert(state.connection(), &prompt).await?;
+    database_request!(FeedbackPrompt::insert(state.connection(), &prompt).await?);
 
     Ok((StatusCode::CREATED, Json(prompt)))
 }
@@ -78,12 +78,14 @@ pub async fn get_prompts(
     Query(pagination): Query<Pagination>,
     Path(target): Path<String>,
 ) -> Result<Json<Page<FeedbackPrompt>>> {
-    let prompts = FeedbackPrompt::select_page_by_target(
-        state.connection(),
-        &pagination.request(),
-        target.as_str(),
-    )
-    .await?;
+    let prompts = database_request!(
+        FeedbackPrompt::select_page_by_target(
+            state.connection(),
+            &pagination.request(),
+            target.as_str(),
+        )
+        .await?
+    );
 
     Ok(Json(prompts))
 }
@@ -98,7 +100,7 @@ pub async fn put_prompt(
 ) -> Result<Json<FeedbackPrompt>> {
     prompt.validate()?;
 
-    FeedbackPrompt::update_by_column(state.connection(), &prompt, "id").await?;
+    database_request!(FeedbackPrompt::update_by_column(state.connection(), &prompt, "id").await?);
     Ok(Json(prompt))
 }
 
@@ -110,6 +112,8 @@ pub async fn delete_prompt(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
 ) -> Result<StatusCode> {
-    FeedbackPrompt::delete_by_column(state.connection(), "id", prompt.as_str()).await?;
+    database_request!(
+        FeedbackPrompt::delete_by_column(state.connection(), "id", prompt.as_str()).await?
+    );
     Ok(StatusCode::OK)
 }

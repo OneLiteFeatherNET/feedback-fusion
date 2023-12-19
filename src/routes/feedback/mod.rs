@@ -30,7 +30,6 @@ pub mod prompt;
 
 pub async fn router(state: FeedbackFusionState) -> Router {
     Router::new()
-
         .route(
             "/target",
             post(post_target)
@@ -40,7 +39,7 @@ pub async fn router(state: FeedbackFusionState) -> Router {
                 .delete(delete_target)
                 .layer(oidc_layer!()),
         )
-                    .nest(
+        .nest(
             "/target/:target/prompt",
             prompt::router(state.clone()).await,
         )
@@ -108,7 +107,7 @@ pub async fn get_target(
 ) -> Result<Json<FeedbackTarget>> {
     let connection = state.connection();
 
-    let target = FeedbackTarget::select_by_id(connection, id.as_str()).await?;
+    let target = database_request!(FeedbackTarget::select_by_id(connection, id.as_str()).await?);
     match target {
         Some(target) => Ok(Json(target)),
         None => Err(FeedbackFusionError::BadRequest(
@@ -129,7 +128,7 @@ pub async fn put_target(
 
     target.validate()?;
 
-    FeedbackTarget::update_by_column(connection, &target, "id").await?;
+    database_request!(FeedbackTarget::update_by_column(connection, &target, "id").await?);
     Ok(Json(target))
 }
 
@@ -143,6 +142,6 @@ pub async fn delete_target(
 ) -> Result<StatusCode> {
     let connection = state.connection();
 
-    FeedbackTarget::delete_by_column(connection, "id", id.as_str()).await?;
+    database_request!(FeedbackTarget::delete_by_column(connection, "id", id.as_str()).await?);
     Ok(StatusCode::OK)
 }
