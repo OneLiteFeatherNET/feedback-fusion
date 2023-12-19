@@ -24,7 +24,18 @@ use rbatis::rbdc::DateTime;
 
 use super::input::FeedbackPromptInputOptions;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema, Validate)]
+#[derive(
+    Deserialize,
+    Serialize,
+    Clone,
+    Derivative,
+    Debug,
+    Getters,
+    MutGetters,
+    TypedBuilder,
+    ToSchema,
+    Validate,
+)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[get_mut = "pub"]
@@ -54,7 +65,18 @@ pub enum FeedbackPromptInputType {
     Rating,
 }
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema, Validate)]
+#[derive(
+    Deserialize,
+    Serialize,
+    Clone,
+    Derivative,
+    Debug,
+    Getters,
+    MutGetters,
+    TypedBuilder,
+    ToSchema,
+    Validate,
+)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[get_mut = "pub"]
@@ -77,4 +99,3 @@ pub struct FeedbackPromptField {
 
 crud!(FeedbackPromptField {});
 impl_select_page!(FeedbackPromptField {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
-
