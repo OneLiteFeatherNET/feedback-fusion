@@ -35,8 +35,16 @@ pub fn generate() {
     #[derive(OpenApi)]
     #[openapi(
         paths(
-            routes::feedback::target::post_target,
-            routes::feedback::target::get_targets
+            routes::feedback::post_target,
+            routes::feedback::get_targets,
+            routes::feedback::prompt::post_prompt,
+            routes::feedback::prompt::get_prompts,
+            routes::feedback::prompt::put_prompt,
+            routes::feedback::prompt::delete_prompt,
+            routes::feedback::prompt::post_field,
+            routes::feedback::prompt::put_field,
+            routes::feedback::prompt::get_fields,
+            routes::feedback::prompt::delete_fields,
         ),
         components(
             schemas(

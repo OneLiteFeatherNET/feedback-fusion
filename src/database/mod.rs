@@ -95,7 +95,7 @@ macro_rules! database_configuration {
                                         for(v, sql) in migrations {
                                             if version_compare::compare_to(v, version, version_compare::Cmp::Gt).unwrap() {
                                                 connection.exec(sql, vec![]).await?;
-                                                // insert the migratin
+                                                // insert the migration
                                                Migration::insert(&connection, &Migration::from(v.to_string())).await?;
                                             }
                                         }
