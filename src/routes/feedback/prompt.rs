@@ -39,7 +39,7 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
             "/:prompt/field",
             post(post_field).put(put_field).get(get_fields),
         )
-            .route("/:prompt/field/:field", delete(delete_field))
+        .route("/:prompt/field/:field", delete(delete_field))
         .layer(oidc_layer!())
         .with_state(state)
 }
@@ -131,6 +131,9 @@ pub struct CreateFeedbackPromptFieldRequest {
 }
 
 /// POST /feedback/target/:target/prompt/:prompt/field
+#[utoipa::path(post, path = "/feedback/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
+    (status = 201, description = "Created", body = FeedbackPromptField)
+))]
 pub async fn post_field(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -151,6 +154,9 @@ pub async fn post_field(
 }
 
 /// GET /feedback/target/:target/prompt/:prompt/field
+#[utoipa::path(get, path = "/feedback/target/:target/prompt/:prompt/field", params(Pagination), responses(
+    (status = 200, body = Page<FeedbackPromptField>)
+))]
 pub async fn get_fields(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
@@ -169,6 +175,9 @@ pub async fn get_fields(
 }
 
 /// PUT /feedback/target/:target/prompt/:prompt/field
+#[utoipa::path(put, path = "/feedback/target/:target/prompt/:prompt/field", request_body = FeedbackPromptField, responses(
+    (status = 200, body = FeedbackPromptField, description = "updated")
+))]
 pub async fn put_field(
     State(state): State<FeedbackFusionState>,
     Json(data): Json<FeedbackPromptField>,
@@ -182,6 +191,9 @@ pub async fn put_field(
 }
 
 /// DELETE /feedback/target/:target/prompt/:prompt/field/:field
+#[utoipa::path(delete, path = "/feedback/target/:target/prompt/:prompt/field/:field", responses(
+    (status = 200, description = "Deleted")
+))]
 pub async fn delete_field(
     State(state): State<FeedbackFusionState>,
     Path((_, _, field)): Path<(String, String, String)>,
