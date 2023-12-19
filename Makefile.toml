@@ -19,6 +19,13 @@ dependencies = ["docs_generate"]
 command = "npx"
 args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
+[tasks.check]
+command = "cargo"
+args = ["check"]
+
+[tasks.clippy]
+command = "cargo"
+args = ["clippy", "--features", "postgres", "--", "-D", "warnings"]
 
 [tasks.oidc-server-mock]
 script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d"
