@@ -20,20 +20,22 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use rbatis::rbdc::DateTime;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
 #[serde(tag = "type")]
 pub enum FeedbackPromptInputOptions {
     Text(TextOptions),
-    Rating(RatingOptions)
+    Rating(RatingOptions),
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
 pub struct TextOptions {
-    #[validate(length(max = 255))]
+  #[validate(length(max = 255))]
     description: String,
-    #[validate(length(max = 255))]
-    placeholder: String
+  #[validate(length(max = 255))]
+    placeholder: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
@@ -41,6 +43,42 @@ pub struct TextOptions {
 pub struct RatingOptions {
     #[validate(length(max = 255))]
     description: String,
-    max: u8
+    max: u8,
 }
 
+#[derive(
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema,
+)]
+#[derivative(PartialEq)]
+#[get = "pub"]
+#[get_mut = "pub"]
+#[builder(field_defaults(setter(into)))]
+pub struct FeedbackPromptResponse {
+    #[builder(default_code = r#"nanoid::nanoid!()"#)]
+    id: String,
+    prompt: String,
+    #[derivative(PartialEq = "ignore")]
+    #[builder(default)]
+    created_at: DateTime,
+}
+
+#[derive(
+    Deserialize, Serialize, Clone, PartialEq, Debug, Getters, MutGetters, TypedBuilder, ToSchema,
+)]
+#[get = "pub"]
+#[get_mut = "pub"]
+#[builder(field_defaults(setter(into)))]
+pub struct FeedbackPromptFieldResponse {
+    #[builder(default_code = r#"nanoid::nanoid!()"#)]
+    id: String,
+    response: String,
+    field: String,
+    data: FeedbackPromptFieldData,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, ToSchema)]
+#[serde(tag = "type")]
+pub enum FeedbackPromptFieldData {
+    Text(String),
+    Rating(u8)
+}
