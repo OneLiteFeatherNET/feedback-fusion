@@ -31,15 +31,20 @@ pub async fn router(state: FeedbackFusionState) -> Router {
 }
 
 #[derive(Debug, Clone, Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 pub struct SearchQuery {
     #[serde(default)]
+    #[param(nullable)]
     query: String,
 }
 
 #[derive(Debug, Clone, Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 pub struct Pagination {
+    #[param(default = 1)]
     #[serde(default = "page")]
     page: usize,
+    #[param(default = 20)]
     #[serde(default = "page_size")]
     page_size: usize,
 }

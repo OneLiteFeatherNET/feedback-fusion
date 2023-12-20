@@ -55,7 +55,7 @@ pub struct CreateFeedbackPromptRequest {
 /// POST /feedback/target/:target/prompt
 #[utoipa::path(post, path = "/feedback/target/:target/prompt", request_body = CreateFeedbackPromptRequest, responses(
     (status = 201, body = FeedbackPrompt)
-))]
+), tag = "FeedbackTargetPrompt")]
 pub async fn post_prompt(
     State(state): State<FeedbackFusionState>,
     Path(target): Path<String>,
@@ -76,8 +76,8 @@ pub async fn post_prompt(
 
 /// GET /feedback/target/:target/prompt
 #[utoipa::path(get, path = "/feedback/target/:target/prompt", params(Pagination), responses(
-    (status = 200, body = Page<FeedbackPrompt>)
-))]
+    (status = 200, body = FeedbackPromptPage)
+), tag = "FeedbackTargetPrompt")]
 pub async fn get_prompts(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
@@ -98,7 +98,7 @@ pub async fn get_prompts(
 /// PUT /feedback/target/:target/prompt
 #[utoipa::path(put, path = "/feedback/target/:target/prompt", request_body = FeedbackPrompt, responses(
     (status = 200, body = FeedbackPrompt)
-))]
+), tag = "FeedbackTargetPrompt")]
 pub async fn put_prompt(
     State(state): State<FeedbackFusionState>,
     Json(prompt): Json<FeedbackPrompt>,
@@ -112,7 +112,7 @@ pub async fn put_prompt(
 /// DELETE /feedback/target/:target/prompt/:prompt
 #[utoipa::path(delete, path = "/feedback/target/:target/prompt/:prompt", responses(
     (status = 200, description = "Deleted")
-))]
+), tag = "FeedbackTargetPrompt")]
 pub async fn delete_prompt(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -133,7 +133,7 @@ pub struct CreateFeedbackPromptFieldRequest {
 /// POST /feedback/target/:target/prompt/:prompt/field
 #[utoipa::path(post, path = "/feedback/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
     (status = 201, description = "Created", body = FeedbackPromptField)
-))]
+), tag = "FeedbackTargetPromptField")]
 pub async fn post_field(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -155,8 +155,8 @@ pub async fn post_field(
 
 /// GET /feedback/target/:target/prompt/:prompt/field
 #[utoipa::path(get, path = "/feedback/target/:target/prompt/:prompt/field", params(Pagination), responses(
-    (status = 200, body = Page<FeedbackPromptField>)
-))]
+    (status = 200, body = FeedbackPromptFieldPage)
+), tag = "FeedbackTargetPromptField")]
 pub async fn get_fields(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
@@ -177,7 +177,7 @@ pub async fn get_fields(
 /// PUT /feedback/target/:target/prompt/:prompt/field
 #[utoipa::path(put, path = "/feedback/target/:target/prompt/:prompt/field", request_body = FeedbackPromptField, responses(
     (status = 200, body = FeedbackPromptField, description = "updated")
-))]
+), tag = "FeedbackTargetPromptField")]
 pub async fn put_field(
     State(state): State<FeedbackFusionState>,
     Json(data): Json<FeedbackPromptField>,
@@ -193,7 +193,7 @@ pub async fn put_field(
 /// DELETE /feedback/target/:target/prompt/:prompt/field/:field
 #[utoipa::path(delete, path = "/feedback/target/:target/prompt/:prompt/field/:field", responses(
     (status = 200, description = "Deleted")
-))]
+), tag = "FeedbackTargetPromptField")]
 pub async fn delete_field(
     State(state): State<FeedbackFusionState>,
     Path((_, _, field)): Path<(String, String, String)>,

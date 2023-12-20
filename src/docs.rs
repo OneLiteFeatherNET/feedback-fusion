@@ -20,12 +20,20 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema, routes};
+use crate::{
+    database::schema::feedback::*,
+    routes::feedback::{prompt::*, *},
+};
 use std::{fs, path::Path};
 use utoipa::{OpenApi, ToSchema};
 
 #[derive(ToSchema)]
-pub struct PageResult<T: for<'a> ToSchema<'a>> {
+#[aliases(
+    FeedbackTargetPage = Page<FeedbackTarget>,
+    FeedbackPromptPage = Page<FeedbackPrompt>,
+    FeedbackPromptFieldPage = Page<FeedbackPromptField>
+)]
+pub struct Page<T: for<'a> ToSchema<'a>> {
     records: Vec<T>,
     total: u64,
     page_no: u64,
@@ -35,25 +43,45 @@ pub fn generate() {
     #[derive(OpenApi)]
     #[openapi(
         paths(
-            routes::feedback::post_target,
-            routes::feedback::get_targets,
-            routes::feedback::prompt::post_prompt,
-            routes::feedback::prompt::get_prompts,
-            routes::feedback::prompt::put_prompt,
-            routes::feedback::prompt::delete_prompt,
-            routes::feedback::prompt::post_field,
-            routes::feedback::prompt::put_field,
-            routes::feedback::prompt::get_fields,
-            routes::feedback::prompt::delete_field,
+            post_target,
+            get_targets,
+            put_target,
+            delete_target,
+            post_prompt,
+            get_prompts,
+            put_prompt,
+            delete_prompt,
+            post_field,
+            put_field,
+            get_fields,
+            delete_field,
         ),
         components(
             schemas(
-                schema::feedback::FeedbackTarget,
-                routes::feedback::CreateFeedbackTargetRequest,
+                FeedbackTarget,
+                FeedbackPrompt,
+                FeedbackPromptField,
+                FeedbackPromptInputType,
+                FeedbackPromptField,
+                FeedbackPromptInputOptions,
+                TextOptions,
+                RatingOptions,
+                FeedbackPromptResponse,
+                FeedbackPromptFieldResponse,
+                FeedbackPromptFieldData,
+                CreateFeedbackTargetRequest,
+                CreateFeedbackPromptRequest,
+                CreateFeedbackPromptFieldRequest,
+                FeedbackTargetPage,
+                FeedbackPromptPage,
+                FeedbackPromptFieldPage
             )
         ),
         tags(
-            (name = "FeedbackTarget")
+            (name = "FeedbackTarget"),
+            (name = "FeedbackTargetPrompt"),
+            (name = "FeedbackTargetPromptField"),
+            (name = "FeedbackTargetPromptResponse")
         )
     )]
     struct OpenApiSpecification;

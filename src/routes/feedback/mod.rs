@@ -79,7 +79,7 @@ pub async fn post_target(
 
 /// GET /feedback/target
 #[utoipa::path(get, path = "/feedback/target", params(SearchQuery, Pagination ), tag = "FeedbackTarget", responses(
-    (status = 200, description = "Page of Targets", body = PageResult<FeedbackTarget>)
+    (status = 200, description = "Page of Targets", body = FeedbackTargetPage)
 ))]
 pub async fn get_targets(
     State(state): State<FeedbackFusionState>,
