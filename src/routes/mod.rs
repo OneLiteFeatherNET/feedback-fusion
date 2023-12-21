@@ -23,11 +23,11 @@
 use crate::prelude::*;
 use rbatis::sql::PageRequest;
 
-pub mod feedback;
+pub mod v1;
 mod oidc;
 
 pub async fn router(state: FeedbackFusionState) -> Router {
-    Router::new().nest("/feedback", feedback::router(state).await)
+    Router::new().nest("/v1", v1::router(state).await)
 }
 
 #[derive(Debug, Clone, Deserialize, IntoParams)]

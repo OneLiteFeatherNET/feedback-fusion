@@ -4,7 +4,7 @@
     "ClientSecrets": ["secret"],
     "Description": "mock client",
     "AllowedGrantTypes": ["client_credentials"],
-    "AllowedScopes": ["openid"],
+    "AllowedScopes": ["api"],
     "ClientClaimsPrefix": ""
   }
 ]

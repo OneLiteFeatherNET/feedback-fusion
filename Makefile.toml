@@ -35,12 +35,23 @@ script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d"
 script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres && sleep 1"
 
 [tasks.postgres_tests]
-env = { postgres_username = "postgres", postgres_password = "password", postgres_endpoint = "localhost:5150", postgres_database = "postgres", "oidc_discovery_url" = "http://localhost:5151/" }
+env = { DATABASE = "POSTGRES", POSTGRES_USERNAME = "postgres", POSTGRES_PASSWORD = "password", POSTGRES_ENDPOINT = "localhost:5150", POSTGRES_DATABASE = "postgres", "OIDC_DISCOVERY_URL" = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "debug" }
 command = "cargo"
-args = ["test", "--features", "postgres"]
+args = [
+  "test",
+  "--no-default-features",
+  "--features",
+  "postgres",
+  "--",
+  "--nocapture",
+]
 
 [tasks.postgres]
-run_task = { name = ["oidc-server-mock", "postgres_database", "postgres_tests"], fork = true, cleanup_task = "postgres_cleanup"}
+run_task = { name = [
+  "oidc-server-mock",
+  "postgres_database",
+  "postgres_tests",
+], fork = true, cleanup_task = "postgres_cleanup" }
 
 [tasks.postgres_cleanup]
 script = "docker kill postgres;docker rm postgres;docker kill oidc-server-mock;docker rm oidc-server-mock"
@@ -53,7 +64,12 @@ run_task = { name = ["postgres"] }
 [tasks.docs_lint]
 dependencies = ["docs_generate"]
 command = "npx"
-args = ["redocly", "lint", "--skip-rule=no-empty-servers", "target/openapi.yaml"]
+args = [
+  "redocly",
+  "lint",
+  "--skip-rule=no-empty-servers",
+  "target/openapi.yaml",
+]
 
 [tasks.docs_build]
 dependencies = ["docs_lint"]

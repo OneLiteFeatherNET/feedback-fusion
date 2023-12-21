@@ -35,9 +35,11 @@ pub async fn router(state: FeedbackFusionState) -> Router {
             post(post_target)
                 .put(put_target)
                 .get(get_targets)
-                .get(get_target)
-                .delete(delete_target)
                 .layer(oidc_layer!()),
+        )
+        .route(
+            "/target/:target",
+            get(get_target).delete(delete_target).layer(oidc_layer!()),
         )
         .nest(
             "/target/:target/prompt",
@@ -53,8 +55,8 @@ pub struct CreateFeedbackTargetRequest {
     description: Option<String>,
 }
 
-/// POST /feedback/target
-#[utoipa::path(post, path = "/feedback/target", request_body = CreateFeedbackTargetRequest, tag = "FeedbackTarget", responses(
+/// POST /v1/target
+#[utoipa::path(post, path = "/v1/target", request_body = CreateFeedbackTargetRequest, tag = "FeedbackTarget", responses(
     (status = 201, description = "Target created", body = FeedbackTarget)
 ))]
 pub async fn post_target(
@@ -77,8 +79,8 @@ pub async fn post_target(
     Ok((StatusCode::CREATED, Json(target)))
 }
 
-/// GET /feedback/target
-#[utoipa::path(get, path = "/feedback/target", params(SearchQuery, Pagination ), tag = "FeedbackTarget", responses(
+/// GET /v1/target
+#[utoipa::path(get, path = "/v1/target", params(SearchQuery, Pagination ), tag = "FeedbackTarget", responses(
     (status = 200, description = "Page of Targets", body = FeedbackTargetPage)
 ))]
 pub async fn get_targets(
@@ -90,24 +92,25 @@ pub async fn get_targets(
 
     // fetch the Page
     let page = database_request!(
-        FeedbackTarget::select_page(connection, &pagination.request(), search.query.as_str())
+        FeedbackTarget::select_page_wrapper(connection, &pagination.request(), search.query.as_str())
             .await?
     );
     Ok(Json(page))
 }
 
-/// GET /feedback/target/:id
-#[utoipa::path(get, path = "/feedback/target/:id", tag = "FeedbackTarget", responses(
+/// GET /v1/target/:target
+#[utoipa::path(get, path = "/v1/target/:id", tag = "FeedbackTarget", responses(
     (status = 200, description = "Target", body = FeedbackTarget),
     (status = 400, description = "Target not found")
 ))]
 pub async fn get_target(
     State(state): State<FeedbackFusionState>,
-    Path(id): Path<String>,
+    Path(target): Path<String>,
 ) -> Result<Json<FeedbackTarget>> {
     let connection = state.connection();
 
-    let target = database_request!(FeedbackTarget::select_by_id(connection, id.as_str()).await?);
+    let target =
+        database_request!(FeedbackTarget::select_by_id(connection, target.as_str()).await?);
     match target {
         Some(target) => Ok(Json(target)),
         None => Err(FeedbackFusionError::BadRequest(
@@ -116,8 +119,8 @@ pub async fn get_target(
     }
 }
 
-/// PUT /feedback/target
-#[utoipa::path(put, path = "/feedback/target", request_body = FeedbackTarget, tag = "FeedbackTarget", responses(
+/// PUT /v1/target
+#[utoipa::path(put, path = "/v1/target", request_body = FeedbackTarget, tag = "FeedbackTarget", responses(
     (status = 200, description = "Updated", body = FeedbackTarget)
 ))]
 pub async fn put_target(
@@ -132,16 +135,16 @@ pub async fn put_target(
     Ok(Json(target))
 }
 
-/// DELETE /feedback/target/:id
-#[utoipa::path(delete, path = "/feedback/target/:id", tag = "FeedbackTarget", responses(
+/// DELETE /v1/target/:target
+#[utoipa::path(delete, path = "/v1/target/:target", tag = "FeedbackTarget", responses(
     (status = 200, description = "Deleted")
 ))]
 pub async fn delete_target(
     State(state): State<FeedbackFusionState>,
-    Path(id): Path<String>,
+    Path(target): Path<String>,
 ) -> Result<StatusCode> {
     let connection = state.connection();
 
-    database_request!(FeedbackTarget::delete_by_column(connection, "id", id.as_str()).await?);
+    database_request!(FeedbackTarget::delete_by_column(connection, "id", target.as_str()).await?);
     Ok(StatusCode::OK)
 }

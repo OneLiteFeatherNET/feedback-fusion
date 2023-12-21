@@ -20,6 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use crate::prelude::*;
 use rbatis::rbdc::DateTime;
 
 use super::input::FeedbackPromptInputOptions;
@@ -57,7 +58,7 @@ pub struct FeedbackPrompt {
 }
 
 crud!(FeedbackPrompt {});
-impl_select_page!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
+impl_select_page_wrapper!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
 pub enum FeedbackPromptInputType {
@@ -98,4 +99,4 @@ pub struct FeedbackPromptField {
 }
 
 crud!(FeedbackPromptField {});
-impl_select_page!(FeedbackPromptField {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
+impl_select_page_wrapper!(FeedbackPromptField {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});

@@ -1,4 +1,3 @@
-//SPDX-FileCopyrightText: 2023 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
@@ -52,8 +51,8 @@ pub struct CreateFeedbackPromptRequest {
     active: bool,
 }
 
-/// POST /feedback/target/:target/prompt
-#[utoipa::path(post, path = "/feedback/target/:target/prompt", request_body = CreateFeedbackPromptRequest, responses(
+/// POST /v1/target/:target/prompt
+#[utoipa::path(post, path = "/v1/target/:target/prompt", request_body = CreateFeedbackPromptRequest, responses(
     (status = 201, body = FeedbackPrompt)
 ), tag = "FeedbackTargetPrompt")]
 pub async fn post_prompt(
@@ -74,8 +73,8 @@ pub async fn post_prompt(
     Ok((StatusCode::CREATED, Json(prompt)))
 }
 
-/// GET /feedback/target/:target/prompt
-#[utoipa::path(get, path = "/feedback/target/:target/prompt", params(Pagination), responses(
+/// GET /v1/target/:target/prompt
+#[utoipa::path(get, path = "/v1/target/:target/prompt", params(Pagination), responses(
     (status = 200, body = FeedbackPromptPage)
 ), tag = "FeedbackTargetPrompt")]
 pub async fn get_prompts(
@@ -84,7 +83,7 @@ pub async fn get_prompts(
     Path(target): Path<String>,
 ) -> Result<Json<Page<FeedbackPrompt>>> {
     let prompts = database_request!(
-        FeedbackPrompt::select_page_by_target(
+        FeedbackPrompt::select_page_by_target_wrapper(
             state.connection(),
             &pagination.request(),
             target.as_str(),
@@ -95,8 +94,8 @@ pub async fn get_prompts(
     Ok(Json(prompts))
 }
 
-/// PUT /feedback/target/:target/prompt
-#[utoipa::path(put, path = "/feedback/target/:target/prompt", request_body = FeedbackPrompt, responses(
+/// PUT /v1/target/:target/prompt
+#[utoipa::path(put, path = "/v1/target/:target/prompt", request_body = FeedbackPrompt, responses(
     (status = 200, body = FeedbackPrompt)
 ), tag = "FeedbackTargetPrompt")]
 pub async fn put_prompt(
@@ -109,8 +108,8 @@ pub async fn put_prompt(
     Ok(Json(prompt))
 }
 
-/// DELETE /feedback/target/:target/prompt/:prompt
-#[utoipa::path(delete, path = "/feedback/target/:target/prompt/:prompt", responses(
+/// DELETE /v1/target/:target/prompt/:prompt
+#[utoipa::path(delete, path = "/v1/target/:target/prompt/:prompt", responses(
     (status = 200, description = "Deleted")
 ), tag = "FeedbackTargetPrompt")]
 pub async fn delete_prompt(
@@ -130,8 +129,8 @@ pub struct CreateFeedbackPromptFieldRequest {
     options: FeedbackPromptInputOptions,
 }
 
-/// POST /feedback/target/:target/prompt/:prompt/field
-#[utoipa::path(post, path = "/feedback/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
+/// POST /v1/target/:target/prompt/:prompt/field
+#[utoipa::path(post, path = "/v1/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
     (status = 201, description = "Created", body = FeedbackPromptField)
 ), tag = "FeedbackTargetPromptField")]
 pub async fn post_field(
@@ -153,8 +152,8 @@ pub async fn post_field(
     Ok((StatusCode::CREATED, Json(field)))
 }
 
-/// GET /feedback/target/:target/prompt/:prompt/field
-#[utoipa::path(get, path = "/feedback/target/:target/prompt/:prompt/field", params(Pagination), responses(
+/// GET /v1/target/:target/prompt/:prompt/field
+#[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt/field", params(Pagination), responses(
     (status = 200, body = FeedbackPromptFieldPage)
 ), tag = "FeedbackTargetPromptField")]
 pub async fn get_fields(
@@ -163,7 +162,7 @@ pub async fn get_fields(
     Path((_, prompt)): Path<(String, String)>,
 ) -> Result<Json<Page<FeedbackPromptField>>> {
     let page = database_request!(
-        FeedbackPromptField::select_page_by_prompt(
+        FeedbackPromptField::select_page_by_prompt_wrapper(
             state.connection(),
             &pagination.request(),
             prompt.as_str()
@@ -174,8 +173,8 @@ pub async fn get_fields(
     Ok(Json(page))
 }
 
-/// PUT /feedback/target/:target/prompt/:prompt/field
-#[utoipa::path(put, path = "/feedback/target/:target/prompt/:prompt/field", request_body = FeedbackPromptField, responses(
+/// PUT /v1/target/:target/prompt/:prompt/field
+#[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt/field", request_body = FeedbackPromptField, responses(
     (status = 200, body = FeedbackPromptField, description = "updated")
 ), tag = "FeedbackTargetPromptField")]
 pub async fn put_field(
@@ -190,8 +189,8 @@ pub async fn put_field(
     Ok(Json(data))
 }
 
-/// DELETE /feedback/target/:target/prompt/:prompt/field/:field
-#[utoipa::path(delete, path = "/feedback/target/:target/prompt/:prompt/field/:field", responses(
+/// DELETE /v1/target/:target/prompt/:prompt/field/:field
+#[utoipa::path(delete, path = "/v1/target/:target/prompt/:prompt/field/:field", responses(
     (status = 200, description = "Deleted")
 ), tag = "FeedbackTargetPromptField")]
 pub async fn delete_field(

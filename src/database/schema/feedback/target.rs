@@ -21,6 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use rbatis::rbdc::DateTime;
+use crate::prelude::*;
 
 #[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema, Validate)]
 #[derivative(PartialEq)]
@@ -44,5 +45,4 @@ pub struct FeedbackTarget {
 
 crud!(FeedbackTarget {});
 impl_select!(FeedbackTarget {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
-impl_select_page!(FeedbackTarget {select_page(query: &str) => "`WHERE name LIKE '%#{query}%' ORDER BY created_at DESC`"});
-
+impl_select_page_wrapper!(FeedbackTarget {select_page(query: &str) => "`WHERE name ILIKE COALESCE('%' || NULLIF(#{query}, '') || '%', '%%')`"});

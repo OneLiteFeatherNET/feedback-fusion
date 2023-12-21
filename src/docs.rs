@@ -22,7 +22,7 @@
 
 use crate::{
     database::schema::feedback::*,
-    routes::feedback::{prompt::*, *},
+    routes::v1::{prompt::*, *},
 };
 use std::{fs, path::Path};
 use utoipa::{OpenApi, ToSchema};
