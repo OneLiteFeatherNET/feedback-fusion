@@ -82,7 +82,7 @@ macro_rules! database_configuration {
                                 let url = config.to_url($scheme);
                                 connection.init($driver {}, url.as_str())?;
 
-                                #[cfg(test)]
+                                #[cfg(feature = "test")]
                                 connection.exec(include_str!("drop.sql"), vec![]).await?;
 
                                 // perform migrations
@@ -165,9 +165,9 @@ macro_rules! impl_select_page_wrapper {
 
                   match crate::DATABASE_CONFIG.deref() {
                      #[cfg(feature = "postgres")]
-                     crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!("LIMIT {} OFFSET {}", limit, offset).as_str()).await,
+                     crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!( " LIMIT {} OFFSET {} ", limit, offset).as_str()).await,
                     #[allow(unreachable_patterns)]                
-                    _ => Self::$ident(executor, page_request, $($arg,)* format!("LIMIT {},{}", limit, offset).as_str()).await
+                    _ => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {},{} ", limit, offset).as_str()).await
                  }
                }
             }

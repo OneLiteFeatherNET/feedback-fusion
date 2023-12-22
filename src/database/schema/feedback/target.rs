@@ -23,10 +23,10 @@
 use rbatis::rbdc::DateTime;
 use crate::prelude::*;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema, Validate)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, ToSchema, Validate)]
 #[derivative(PartialEq)]
 #[get = "pub"]
-#[get_mut = "pub"]
+#[set = "pub"]
 #[builder(field_defaults(setter(into)))]
 pub struct FeedbackTarget {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]

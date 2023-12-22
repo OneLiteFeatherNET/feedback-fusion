@@ -32,14 +32,14 @@ use super::input::FeedbackPromptInputOptions;
     Derivative,
     Debug,
     Getters,
-    MutGetters,
+    Setters,
     TypedBuilder,
     ToSchema,
     Validate,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
-#[get_mut = "pub"]
+#[set = "pub"]
 #[builder(field_defaults(setter(into)))]
 pub struct FeedbackPrompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
@@ -58,6 +58,7 @@ pub struct FeedbackPrompt {
 }
 
 crud!(FeedbackPrompt {});
+impl_select!(FeedbackPrompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
 impl_select_page_wrapper!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
@@ -73,14 +74,14 @@ pub enum FeedbackPromptInputType {
     Derivative,
     Debug,
     Getters,
-    MutGetters,
+    Setters,
     TypedBuilder,
     ToSchema,
     Validate,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
-#[get_mut = "pub"]
+#[set = "pub"]
 #[builder(field_defaults(setter(into)))]
 pub struct FeedbackPromptField {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
@@ -99,4 +100,5 @@ pub struct FeedbackPromptField {
 }
 
 crud!(FeedbackPromptField {});
+impl_select!(FeedbackPromptField {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
 impl_select_page_wrapper!(FeedbackPromptField {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});

@@ -32,14 +32,14 @@ pub async fn router(state: FeedbackFusionState) -> Router {
     Router::new()
         .route(
             "/target",
-            post(post_target)
-                .put(put_target)
-                .get(get_targets)
-                .layer(oidc_layer!()),
+            post(post_target).get(get_targets).layer(oidc_layer!()),
         )
         .route(
             "/target/:target",
-            get(get_target).delete(delete_target).layer(oidc_layer!()),
+            get(get_target)
+                .delete(delete_target)
+                .put(put_target)
+                .layer(oidc_layer!()),
         )
         .nest(
             "/target/:target/prompt",
@@ -92,8 +92,12 @@ pub async fn get_targets(
 
     // fetch the Page
     let page = database_request!(
-        FeedbackTarget::select_page_wrapper(connection, &pagination.request(), search.query.as_str())
-            .await?
+        FeedbackTarget::select_page_wrapper(
+            connection,
+            &pagination.request(),
+            search.query.as_str()
+        )
+        .await?
     );
     Ok(Json(page))
 }
@@ -119,19 +123,35 @@ pub async fn get_target(
     }
 }
 
-/// PUT /v1/target
-#[utoipa::path(put, path = "/v1/target", request_body = FeedbackTarget, tag = "FeedbackTarget", responses(
+#[derive(Clone, Debug, Deserialize, ToSchema, Validate)]
+pub struct PutFeedbackTargetRequest {
+    #[validate(length(max = 255))]
+    name: Option<String>,
+    #[validate(length(max = 255))]
+    description: Option<String>,
+}
+
+/// PUT /v1/target/:target
+#[utoipa::path(put, path = "/v1/target/:target", request_body = PutFeedbackTargetRequest, tag = "FeedbackTarget", responses(
     (status = 200, description = "Updated", body = FeedbackTarget)
 ))]
 pub async fn put_target(
     State(state): State<FeedbackFusionState>,
-    Json(target): Json<FeedbackTarget>,
+    Path(target): Path<String>,
+    Json(data): Json<PutFeedbackTargetRequest>,
 ) -> Result<Json<FeedbackTarget>> {
-    let connection = state.connection();
+    data.validate()?;
 
-    target.validate()?;
+    let mut target = database_request!(FeedbackTarget::select_by_id(
+        state.connection(),
+        target.as_str()
+    )
+    .await?
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+    target.set_name(data.name.unwrap_or(target.name().clone()));
+    target.set_description(data.description.or(target.description().clone()));
 
-    database_request!(FeedbackTarget::update_by_column(connection, &target, "id").await?);
+    database_request!(FeedbackTarget::update_by_column(state.connection(), &target, "id").await?);
     Ok(Json(target))
 }
 

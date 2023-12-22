@@ -98,6 +98,7 @@ async fn main() {
                 .await
                 .unwrap();
         });
+        info!("Listening for incoming requests");
 
         match tokio::signal::ctrl_c().await {
             Ok(()) => {}

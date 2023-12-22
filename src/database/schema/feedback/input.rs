@@ -22,6 +22,8 @@
 
 use rbatis::rbdc::DateTime;
 
+use super::FeedbackPromptInputType;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
 #[serde(tag = "type")]
 pub enum FeedbackPromptInputOptions {
@@ -29,12 +31,21 @@ pub enum FeedbackPromptInputOptions {
     Rating(RatingOptions),
 }
 
+impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
+    fn eq(&self, other: &FeedbackPromptInputOptions) -> bool {
+        match self { 
+            Self::Text => matches!(other, FeedbackPromptInputOptions::Text(_)),
+            Self::Rating => matches!(other, FeedbackPromptInputOptions::Rating(_))
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
 pub struct TextOptions {
-  #[validate(length(max = 255))]
+    #[validate(length(max = 255))]
     description: String,
-  #[validate(length(max = 255))]
+    #[validate(length(max = 255))]
     placeholder: String,
 }
 
@@ -80,5 +91,5 @@ pub struct FeedbackPromptFieldResponse {
 #[serde(tag = "type")]
 pub enum FeedbackPromptFieldData {
     Text(String),
-    Rating(u8)
+    Rating(u8),
 }

@@ -32,13 +32,13 @@ use crate::{
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
-        .route("/", post(post_prompt).get(get_prompts).put(put_prompt))
-        .route("/:prompt", delete(delete_prompt))
+        .route("/", post(post_prompt).get(get_prompts))
+        .route("/:prompt", delete(delete_prompt).put(put_prompt))
         .route(
             "/:prompt/field",
-            post(post_field).put(put_field).get(get_fields),
+            post(post_field).get(get_fields),
         )
-        .route("/:prompt/field/:field", delete(delete_field))
+        .route("/:prompt/field/:field", delete(delete_field).put(put_field))
         .layer(oidc_layer!())
         .with_state(state)
 }
@@ -94,15 +94,32 @@ pub async fn get_prompts(
     Ok(Json(prompts))
 }
 
-/// PUT /v1/target/:target/prompt
-#[utoipa::path(put, path = "/v1/target/:target/prompt", request_body = FeedbackPrompt, responses(
+#[derive(Deserialize, Debug, Clone, ToSchema, Validate)]
+pub struct PutFeedbackPromptRequest {
+    #[validate(length(max = 255))]
+    title: Option<String>,
+    active: Option<bool>,
+}
+
+/// PUT /v1/target/:target/prompt/:prompt
+#[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt", request_body = PutFeedbackPromptRequest, responses(
     (status = 200, body = FeedbackPrompt)
 ), tag = "FeedbackTargetPrompt")]
 pub async fn put_prompt(
     State(state): State<FeedbackFusionState>,
-    Json(prompt): Json<FeedbackPrompt>,
+    Path((_, prompt)): Path<(String, String)>,
+    Json(data): Json<PutFeedbackPromptRequest>,
 ) -> Result<Json<FeedbackPrompt>> {
-    prompt.validate()?;
+    data.validate()?;
+    let mut prompt = database_request!(FeedbackPrompt::select_by_id(
+        state.connection(),
+        prompt.as_str()
+    )
+    .await?
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+
+    prompt.set_title(data.title.unwrap_or(prompt.title().clone()));
+    prompt.set_active(data.active.unwrap_or(prompt.active().clone()));
 
     database_request!(FeedbackPrompt::update_by_column(state.connection(), &prompt, "id").await?);
     Ok(Json(prompt))
@@ -173,20 +190,41 @@ pub async fn get_fields(
     Ok(Json(page))
 }
 
+#[derive(Debug, Clone, Deserialize, Validate, ToSchema)]
+pub struct PutFeedbackPromptFieldRequest {
+    #[validate(length(max = 255))]
+    title: Option<String>,
+    options: Option<FeedbackPromptInputOptions>,
+}
+
 /// PUT /v1/target/:target/prompt/:prompt/field
-#[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt/field", request_body = FeedbackPromptField, responses(
+#[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt/field/:field", request_body = PutFeedbackPromptFieldRequest, responses(
     (status = 200, body = FeedbackPromptField, description = "updated")
 ), tag = "FeedbackTargetPromptField")]
 pub async fn put_field(
     State(state): State<FeedbackFusionState>,
-    Json(data): Json<FeedbackPromptField>,
+    Path((_, _, field)): Path<(String, String, String)>,
+    Json(data): Json<PutFeedbackPromptFieldRequest>,
 ) -> Result<Json<FeedbackPromptField>> {
     data.validate()?;
+    let mut field = database_request!(FeedbackPromptField::select_by_id(
+        state.connection(),
+        field.as_str()
+    )
+    .await?
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+
+    field.set_title(data.title.unwrap_or(field.title().to_string()));
+    if let Some(options) = data.options {
+        if field.r#type().eq(&options) {
+            field.set_options(options);
+        }
+    }
 
     database_request!(
-        FeedbackPromptField::update_by_column(state.connection(), &data, "id").await?
+        FeedbackPromptField::update_by_column(state.connection(), &field, "id").await?
     );
-    Ok(Json(data))
+    Ok(Json(field))
 }
 
 /// DELETE /v1/target/:target/prompt/:prompt/field/:field

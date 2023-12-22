@@ -1,4 +1,6 @@
-DROP TABLE IF EXISTS field;
-DROP TABLE IF EXISTS prompt;
-DROP TABLE IF EXISTS target;
+DROP TABLE IF EXISTS feedback_prompt_field_response;
+DROP TABLE IF EXISTS response;
+DROP TABLE IF EXISTS feedback_prompt_field;
+DROP TABLE IF EXISTS feedback_prompt;
+DROP TABLE IF EXISTS feedback_target;
 

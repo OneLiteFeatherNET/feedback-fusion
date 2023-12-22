@@ -41,9 +41,12 @@ args = [
   "test",
   "--no-default-features",
   "--features",
-  "postgres",
+  "postgres,test",
+  "--test",
+  "http_tests",
   "--",
   "--nocapture",
+  "--test-threads=1"
 ]
 
 [tasks.postgres]

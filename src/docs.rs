@@ -59,8 +59,11 @@ pub fn generate() {
         components(
             schemas(
                 FeedbackTarget,
+                PutFeedbackTargetRequest,
                 FeedbackPrompt,
+                PutFeedbackPromptRequest,
                 FeedbackPromptField,
+                PutFeedbackPromptFieldRequest,
                 FeedbackPromptInputType,
                 FeedbackPromptField,
                 FeedbackPromptInputOptions,

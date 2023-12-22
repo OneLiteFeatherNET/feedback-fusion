@@ -25,6 +25,10 @@ use openidconnect::{
     reqwest::async_http_client,
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Client,
+};
 use std::{
     fs::File,
     path::Path,
@@ -51,9 +55,10 @@ pub fn run_server() -> BackendServer {
 
     // prepare the command
     let mut command = Command::new(path);
-    let stdout = Stdio::from(File::create(Path::new(env!("OUT_DIR")).join("stdout")).unwrap());
-    let stderr = Stdio::from(File::create(Path::new(env!("OUT_DIR")).join("stderr")).unwrap());
-    debug!("OUT={}", env!("OUT_DIR"));
+    let seed = rand::random::<u16>();
+    let stdout = Stdio::from(File::create(Path::new(env!("OUT_DIR")).join(format!("{}stdout", seed))).unwrap());
+    let stderr = Stdio::from(File::create(Path::new(env!("OUT_DIR")).join(format!("{}stderr", seed))).unwrap());
+    debug!("OUT={} SEED={}", env!("OUT_DIR"), seed);
 
     command.stdin(Stdio::piped());
     command.stdout(stdout);
@@ -75,7 +80,10 @@ pub fn run_server() -> BackendServer {
     }
     command.env("RUST_LOG", "DEBUG");
 
-    BackendServer(command.spawn().unwrap())
+    let child = command.spawn().unwrap();
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    BackendServer(child)
 }
 
 pub async fn authenticate() -> String {
@@ -97,4 +105,15 @@ pub async fn authenticate() -> String {
         .unwrap();
 
     token_response.access_token().secret().clone()
+}
+
+pub async fn client() -> Client {
+    let access_token = authenticate().await;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Authorization",
+        HeaderValue::from_str(format!("Bearer {}", access_token).as_str()).unwrap(),
+    );
+    Client::builder().default_headers(headers).build().unwrap()
 }
