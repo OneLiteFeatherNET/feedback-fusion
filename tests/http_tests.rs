@@ -42,6 +42,13 @@ struct PromptResponse {
     title: String,
 }
 
+#[derive(Debug, Clone, Deserialize, PartialEq)]
+struct FieldResponse {
+    id: String,
+    prompt: String,
+    title: String,
+}
+
 #[test(tokio::test)]
 async fn test_target_endpoints() {
     let _server = run_server();
@@ -217,8 +224,7 @@ async fn test_prompt_endpoints() {
         let response = client
             .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
             .json(&serde_json::json!({
-                "title": "title",
-                "target": &target.id
+                "title": "title"
             }))
             .send()
             .await
@@ -304,5 +310,206 @@ async fn test_prompt_endpoints() {
                 .records
                 .len()
         );
+    }
+}
+
+#[test(tokio::test)]
+async fn test_prompt_field_endpoints() {
+    let _server = run_server();
+    let client = client().await;
+
+    // prepare dependencies
+    let (target, prompt) = {
+        let target = {
+            let response = client
+                .post(format!("{}/v1/target", HTTP_ENDPOINT))
+                .json(&serde_json::json!({
+                    "name": "Name"
+                }))
+                .send()
+                .await
+                .unwrap();
+            response.json::<TargetResponse>().await.unwrap()
+        };
+
+        let prompt = {
+            let response = client
+                .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
+                .json(&serde_json::json!({
+                    "title": "title"
+                }))
+                .send()
+                .await
+                .unwrap();
+            response.json::<PromptResponse>().await.unwrap()
+        };
+
+        (target, prompt)
+    };
+
+    // test auth
+    {
+        let response = reqwest::Client::default()
+            .post(format!(
+                "{}/v1/target/test/prompt/test/field",
+                HTTP_ENDPOINT
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::UNAUTHORIZED, response.status());
+
+        let response = reqwest::Client::default()
+            .get(format!(
+                "{}/v1/target/test/prompt/test/field",
+                HTTP_ENDPOINT
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::UNAUTHORIZED, response.status());
+
+        let response = reqwest::Client::default()
+            .put(format!(
+                "{}/v1/target/test/prompt/test/field/test",
+                HTTP_ENDPOINT
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::UNAUTHORIZED, response.status());
+
+        let response = reqwest::Client::default()
+            .delete(format!(
+                "{}/v1/target/test/prompt/test/field/test",
+                HTTP_ENDPOINT
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::UNAUTHORIZED, response.status());
+    }
+
+    // test post
+    let field = {
+        // test wrong type
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "test",
+                "type": "text",
+                "options": {"max": 5, "description": "hell yea"}
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        // test insert
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "Test",
+                "type": "text",
+                "options": {
+                    "placeholder": "placeholder",
+                    "description": "description",
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::CREATED, response.status());
+
+        let field = response.json::<FieldResponse>().await.unwrap();
+        assert_eq!(&prompt.id, &field.prompt);
+        field
+    };
+
+    // test get
+    {
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::OK, response.status());
+
+        let data = response.json::<Page<FieldResponse>>().await.unwrap();
+        assert_eq!(1, data.total);
+        assert_eq!(&&field, data.records.first().as_ref().unwrap());
+    }
+
+    // test put
+    {
+        // test put invalid options
+        let response = client
+            .put(format!(
+                "{}/v1/target/{}/prompt/{}/field/{}",
+                HTTP_ENDPOINT, &target.id, &prompt.id, &field.id
+            ))
+            .json(&serde_json::json!({
+                "options": {"max": 5, "description": "test"}
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        // test put title
+        let response = client
+            .put(format!(
+                "{}/v1/target/{}/prompt/{}/field/{}",
+                HTTP_ENDPOINT, &target.id, &prompt.id, &field.id
+            ))
+            .json(&serde_json::json!({ "title": "Updated" }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::OK, response.status());
+
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        let data = response.json::<Page<FieldResponse>>().await.unwrap();
+        assert_eq!("Updated", data.records.first().unwrap().title.as_str());
+    }
+
+    // test delete
+    {
+        let response = client
+            .delete(format!(
+                "{}/v1/target/{}/prompt/{}/field/{}",
+                HTTP_ENDPOINT, &target.id, &prompt.id, &field.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::OK, response.status());
+
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        let page = response.json::<Page<FieldResponse>>().await.unwrap();
+        assert_eq!(0, page.total);
     }
 }

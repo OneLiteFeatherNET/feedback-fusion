@@ -25,7 +25,8 @@ use rbatis::rbdc::DateTime;
 use super::FeedbackPromptInputType;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
-#[serde(tag = "type")]
+#[serde(untagged)]
+#[serde(rename_all = "lowercase")]
 pub enum FeedbackPromptInputOptions {
     Text(TextOptions),
     Rating(RatingOptions),

@@ -163,10 +163,10 @@ macro_rules! impl_select_page_wrapper {
                   let limit = page_request.page_size();
                   let offset = limit * (page_request.page_no() - 1);
 
-                  match crate::DATABASE_CONFIG.deref() {
+                  match $crate::DATABASE_CONFIG.deref() {
                      #[cfg(feature = "postgres")]
-                     crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!( " LIMIT {} OFFSET {} ", limit, offset).as_str()).await,
-                    #[allow(unreachable_patterns)]                
+                     $crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {} OFFSET {} ", limit, offset).as_str()).await,
+                    #[allow(unreachable_patterns)]
                     _ => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {},{} ", limit, offset).as_str()).await
                  }
                }

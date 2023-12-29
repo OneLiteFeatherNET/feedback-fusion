@@ -21,7 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use rbatis::rbdc::DateTime;
+use rbatis::rbdc::{DateTime, JsonV};
 
 use super::input::FeedbackPromptInputOptions;
 
@@ -62,6 +62,7 @@ impl_select!(FeedbackPrompt {select_by_id(id: &str) -> Option => "`WHERE id = #{
 impl_select_page_wrapper!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
+#[serde(rename_all = "lowercase")]
 pub enum FeedbackPromptInputType {
     Text,
     Rating,
@@ -90,7 +91,7 @@ pub struct FeedbackPromptField {
     title: String,
     prompt: String,
     r#type: FeedbackPromptInputType,
-    options: FeedbackPromptInputOptions,
+    options: JsonV<FeedbackPromptInputOptions>,
     #[builder(default)]
     #[derivative(PartialEq = "ignore")]
     updated_at: DateTime,

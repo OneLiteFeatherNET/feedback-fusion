@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use axum::{extract::Path, http::StatusCode};
-use rbatis::sql::Page;
+use rbatis::{sql::Page, rbdc::JsonV};
 use validator::Validate;
 
 use crate::{
@@ -34,10 +34,7 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
         .route("/", post(post_prompt).get(get_prompts))
         .route("/:prompt", delete(delete_prompt).put(put_prompt))
-        .route(
-            "/:prompt/field",
-            post(post_field).get(get_fields),
-        )
+        .route("/:prompt/field", post(post_field).get(get_fields))
         .route("/:prompt/field/:field", delete(delete_field).put(put_field))
         .layer(oidc_layer!())
         .with_state(state)
@@ -119,7 +116,7 @@ pub async fn put_prompt(
     .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
 
     prompt.set_title(data.title.unwrap_or(prompt.title().clone()));
-    prompt.set_active(data.active.unwrap_or(prompt.active().clone()));
+    prompt.set_active(data.active.unwrap_or(*prompt.active()));
 
     database_request!(FeedbackPrompt::update_by_column(state.connection(), &prompt, "id").await?);
     Ok(Json(prompt))
@@ -141,6 +138,7 @@ pub async fn delete_prompt(
 
 #[derive(Debug, Clone, ToSchema, Deserialize, Validate)]
 pub struct CreateFeedbackPromptFieldRequest {
+    #[validate(length(max = 255))]
     title: String,
     r#type: FeedbackPromptInputType,
     options: FeedbackPromptInputOptions,
@@ -156,12 +154,17 @@ pub async fn post_field(
     Json(data): Json<CreateFeedbackPromptFieldRequest>,
 ) -> Result<(StatusCode, Json<FeedbackPromptField>)> {
     data.validate()?;
+    // validate type and enum 
+    if !data.r#type.eq(&data.options) {
+        return Err(FeedbackFusionError::BadRequest("type does not match".to_owned()));
+    };
+
 
     // build the field
     let field = FeedbackPromptField::builder()
         .title(data.title)
         .r#type(data.r#type)
-        .options(data.options)
+        .options(JsonV(data.options))
         .prompt(prompt)
         .build();
     database_request!(FeedbackPromptField::insert(state.connection(), &field).await?);
@@ -197,7 +200,7 @@ pub struct PutFeedbackPromptFieldRequest {
     options: Option<FeedbackPromptInputOptions>,
 }
 
-/// PUT /v1/target/:target/prompt/:prompt/field
+/// PUT /v1/target/:target/prompt/:prompt/field/:field
 #[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt/field/:field", request_body = PutFeedbackPromptFieldRequest, responses(
     (status = 200, body = FeedbackPromptField, description = "updated")
 ), tag = "FeedbackTargetPromptField")]
@@ -207,17 +210,23 @@ pub async fn put_field(
     Json(data): Json<PutFeedbackPromptFieldRequest>,
 ) -> Result<Json<FeedbackPromptField>> {
     data.validate()?;
+    
     let mut field = database_request!(FeedbackPromptField::select_by_id(
         state.connection(),
         field.as_str()
     )
     .await?
     .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+    // validate type and enum 
+    if data.options.as_ref().is_some_and(|options|!field.r#type().eq(options)) {
+        return Err(FeedbackFusionError::BadRequest("type does not match".to_owned()));
+    };
+
 
     field.set_title(data.title.unwrap_or(field.title().to_string()));
     if let Some(options) = data.options {
         if field.r#type().eq(&options) {
-            field.set_options(options);
+            field.set_options(JsonV(options));
         }
     }
 
