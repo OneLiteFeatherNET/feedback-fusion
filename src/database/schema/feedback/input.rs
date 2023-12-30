@@ -20,11 +20,27 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use crate::prelude::*;
+use rbatis::rbdc::{DateTime, JsonV};
+
+use super::FeedbackPromptInputType;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
-#[serde(tag = "type")]
+#[serde(untagged)]
+#[serde(rename_all = "lowercase")]
 pub enum FeedbackPromptInputOptions {
     Text(TextOptions),
-    Rating(RatingOptions)
+    Rating(RatingOptions),
+}
+
+// TODO: gen with macro
+impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
+    fn eq(&self, other: &FeedbackPromptInputOptions) -> bool {
+        match self {
+            Self::Text => matches!(other, FeedbackPromptInputOptions::Text(_)),
+            Self::Rating => matches!(other, FeedbackPromptInputOptions::Rating(_)),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
@@ -33,7 +49,7 @@ pub struct TextOptions {
     #[validate(length(max = 255))]
     description: String,
     #[validate(length(max = 255))]
-    placeholder: String
+    placeholder: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
@@ -41,6 +57,68 @@ pub struct TextOptions {
 pub struct RatingOptions {
     #[validate(length(max = 255))]
     description: String,
-    max: u8
+    max: u8,
 }
 
+#[derive(
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, MutGetters, TypedBuilder, ToSchema,
+)]
+#[derivative(PartialEq)]
+#[get = "pub"]
+#[get_mut = "pub"]
+#[builder(field_defaults(setter(into)))]
+pub struct FeedbackPromptResponse {
+    #[builder(default_code = r#"nanoid::nanoid!()"#)]
+    id: String,
+    prompt: String,
+    #[derivative(PartialEq = "ignore")]
+    #[builder(default)]
+    created_at: DateTime,
+}
+
+crud!(FeedbackPromptResponse {});
+impl_select_page_wrapper!(FeedbackPromptResponse {select_page_by_prompt(prompt: &str) => "WHERE prompt = #{prompt}"});
+
+#[derive(
+    Deserialize, Serialize, Clone, PartialEq, Debug, Getters, MutGetters, TypedBuilder, ToSchema,
+)]
+#[get = "pub"]
+#[get_mut = "pub"]
+#[builder(field_defaults(setter(into)))]
+pub struct FeedbackPromptFieldResponse {
+    #[builder(default_code = r#"nanoid::nanoid!()"#)]
+    id: String,
+    response: String,
+    field: String,
+    #[schema(value_type = FeedbackPromptFieldData)]
+    data: JsonV<FeedbackPromptFieldData>,
+}
+
+crud!(FeedbackPromptFieldResponse {});
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, ToSchema)]
+#[serde(untagged)]
+pub enum FeedbackPromptFieldData {
+    Text(TextResponse),
+    Rating(RatingResponse),
+}
+
+// TODO: use macro
+impl PartialEq<FeedbackPromptFieldData> for FeedbackPromptInputType {
+    fn eq(&self, other: &FeedbackPromptFieldData) -> bool {
+        match self {
+            Self::Text => matches!(other, FeedbackPromptFieldData::Text(_)),
+            Self::Rating => matches!(other, FeedbackPromptFieldData::Rating(_)),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+pub struct TextResponse {
+    data: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+pub struct RatingResponse {
+    data: u8,
+}

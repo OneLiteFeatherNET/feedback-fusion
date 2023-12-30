@@ -20,7 +20,8 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
+use crate::prelude::*;
+use rbatis::rbdc::{DateTime, JsonV};
 
 use super::input::FeedbackPromptInputOptions;
 
@@ -31,14 +32,14 @@ use super::input::FeedbackPromptInputOptions;
     Derivative,
     Debug,
     Getters,
-    MutGetters,
+    Setters,
     TypedBuilder,
     ToSchema,
     Validate,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
-#[get_mut = "pub"]
+#[set = "pub"]
 #[builder(field_defaults(setter(into)))]
 pub struct FeedbackPrompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
@@ -57,9 +58,11 @@ pub struct FeedbackPrompt {
 }
 
 crud!(FeedbackPrompt {});
-impl_select_page!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
+impl_select!(FeedbackPrompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page_wrapper!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
+#[serde(rename_all = "lowercase")]
 pub enum FeedbackPromptInputType {
     Text,
     Rating,
@@ -72,14 +75,14 @@ pub enum FeedbackPromptInputType {
     Derivative,
     Debug,
     Getters,
-    MutGetters,
+    Setters,
     TypedBuilder,
     ToSchema,
     Validate,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
-#[get_mut = "pub"]
+#[set = "pub"]
 #[builder(field_defaults(setter(into)))]
 pub struct FeedbackPromptField {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
@@ -88,7 +91,8 @@ pub struct FeedbackPromptField {
     title: String,
     prompt: String,
     r#type: FeedbackPromptInputType,
-    options: FeedbackPromptInputOptions,
+    #[schema(value_type = FeedbackPromptInputOptions)]
+    options: JsonV<FeedbackPromptInputOptions>,
     #[builder(default)]
     #[derivative(PartialEq = "ignore")]
     updated_at: DateTime,
@@ -98,4 +102,5 @@ pub struct FeedbackPromptField {
 }
 
 crud!(FeedbackPromptField {});
-impl_select_page!(FeedbackPromptField {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
+impl_select!(FeedbackPromptField {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page_wrapper!(FeedbackPromptField {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});

@@ -26,6 +26,8 @@ services:
         {
           "AutomaticRedirectAfterSignOut": true
         }
+      API_SCOPES_INLINE: |
+        - Name: api
       USERS_CONFIGURATION_INLINE: |
         [
           {

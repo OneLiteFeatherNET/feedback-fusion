@@ -21,25 +21,31 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use rbatis::sql::PageRequest;
 
-pub mod feedback;
+use rbatis::plugin::page::PageRequest;
+
+pub mod v1;
 mod oidc;
 
 pub async fn router(state: FeedbackFusionState) -> Router {
-    Router::new().nest("/feedback", feedback::router(state).await)
+    Router::new().nest("/v1", v1::router(state).await)
 }
 
 #[derive(Debug, Clone, Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 pub struct SearchQuery {
     #[serde(default)]
+    #[param(nullable)]
     query: String,
 }
 
 #[derive(Debug, Clone, Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 pub struct Pagination {
+    #[param(default = 1)]
     #[serde(default = "page")]
     page: usize,
+    #[param(default = 20)]
     #[serde(default = "page_size")]
     page_size: usize,
 }
@@ -55,5 +61,11 @@ fn page_size() -> usize {
 impl Pagination {
     pub fn request(self) -> PageRequest {
         PageRequest::new(self.page as u64, self.page_size as u64)
+    }
+
+    pub fn eval(&self) -> (u64, u64) {
+        let request = self.clone().request();
+
+        (request.page_size(), request.offset())
     }
 }

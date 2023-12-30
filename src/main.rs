@@ -71,15 +71,16 @@ async fn main() {
 
     #[cfg(not(feature = "docs"))]
     {
-        // init config
-        lazy_static::initialize(&CONFIG);
-        lazy_static::initialize(&DATABASE_CONFIG);
-
         // init the tracing subscriber with the `RUST_LOG` env filter
         tracing_subscriber::registry()
             .with(tracing_subscriber::EnvFilter::from_default_env())
             .with(tracing_subscriber::fmt::layer())
             .init();
+        debug!("{:?}", std::env::vars());
+
+        // init config
+        lazy_static::initialize(&CONFIG);
+        lazy_static::initialize(&DATABASE_CONFIG);
 
         let (sender, receiver) = kanal::oneshot_async::<()>();
         let address = SocketAddr::from(([0, 0, 0, 0], 8000));
@@ -97,6 +98,7 @@ async fn main() {
                 .await
                 .unwrap();
         });
+        info!("Listening for incoming requests");
 
         match tokio::signal::ctrl_c().await {
             Ok(()) => {}
@@ -110,10 +112,10 @@ async fn main() {
     }
 }
 
-async fn router(connection: DatabaseConnection) -> Router {
+pub(crate) async fn router(connection: DatabaseConnection) -> Router {
     let state = FeedbackFusionState::new(connection);
 
-    Router::new().nest("/", routes::router(state).await).layer(
+    routes::router(state).await.layer(
         ServiceBuilder::new()
             .layer(HandleErrorLayer::new(|error: BoxError| async move {
                 (
@@ -133,18 +135,13 @@ async fn router(connection: DatabaseConnection) -> Router {
 
 pub mod prelude {
     pub use crate::{
-        config::*,
-        database::DatabaseConnection,
-        database_request,
-        error::*,
-        oidc_layer,
-        routes::*,
-        state::FeedbackFusionState,
-        CONFIG, DATABASE_CONFIG,
+        config::*, database::DatabaseConnection, database_request, error::*, oidc_layer, routes::*,
+        impl_select_page_wrapper, state::FeedbackFusionState, CONFIG, DATABASE_CONFIG,
     };
     pub use axum::{
         extract::{Json, Query, State},
         routing::*,
         Router,
     };
+    pub use rbatis::{rbdc::JsonV, plugin::page::Page, IPageRequest};
 }

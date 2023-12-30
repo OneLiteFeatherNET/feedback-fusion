@@ -1,4 +1,3 @@
-//SPDX-FileCopyrightText: 2023 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
@@ -21,7 +20,6 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use axum::{extract::Path, http::StatusCode};
-use rbatis::sql::Page;
 use validator::Validate;
 
 use crate::{
@@ -33,13 +31,10 @@ use crate::{
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
-        .route("/", post(post_prompt).get(get_prompts).put(put_prompt))
-        .route("/:prompt", delete(delete_prompt))
-        .route(
-            "/:prompt/field",
-            post(post_field).put(put_field).get(get_fields),
-        )
-        .route("/:prompt/field/:field", delete(delete_field))
+        .route("/", post(post_prompt).get(get_prompts))
+        .route("/:prompt", delete(delete_prompt).put(put_prompt))
+        .route("/:prompt/field", post(post_field).get(get_fields))
+        .route("/:prompt/field/:field", delete(delete_field).put(put_field))
         .layer(oidc_layer!())
         .with_state(state)
 }
@@ -52,10 +47,10 @@ pub struct CreateFeedbackPromptRequest {
     active: bool,
 }
 
-/// POST /feedback/target/:target/prompt
-#[utoipa::path(post, path = "/feedback/target/:target/prompt", request_body = CreateFeedbackPromptRequest, responses(
+/// POST /v1/target/:target/prompt
+#[utoipa::path(post, path = "/v1/target/:target/prompt", request_body = CreateFeedbackPromptRequest, responses(
     (status = 201, body = FeedbackPrompt)
-))]
+), tag = "FeedbackTargetPrompt")]
 pub async fn post_prompt(
     State(state): State<FeedbackFusionState>,
     Path(target): Path<String>,
@@ -74,17 +69,17 @@ pub async fn post_prompt(
     Ok((StatusCode::CREATED, Json(prompt)))
 }
 
-/// GET /feedback/target/:target/prompt
-#[utoipa::path(get, path = "/feedback/target/:target/prompt", params(Pagination), responses(
-    (status = 200, body = Page<FeedbackPrompt>)
-))]
+/// GET /v1/target/:target/prompt
+#[utoipa::path(get, path = "/v1/target/:target/prompt", params(Pagination), responses(
+    (status = 200, body = FeedbackPromptPage)
+), tag = "FeedbackTargetPrompt")]
 pub async fn get_prompts(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
     Path(target): Path<String>,
 ) -> Result<Json<Page<FeedbackPrompt>>> {
     let prompts = database_request!(
-        FeedbackPrompt::select_page_by_target(
+        FeedbackPrompt::select_page_by_target_wrapper(
             state.connection(),
             &pagination.request(),
             target.as_str(),
@@ -95,24 +90,41 @@ pub async fn get_prompts(
     Ok(Json(prompts))
 }
 
-/// PUT /feedback/target/:target/prompt
-#[utoipa::path(put, path = "/feedback/target/:target/prompt", request_body = FeedbackPrompt, responses(
+#[derive(Deserialize, Debug, Clone, ToSchema, Validate)]
+pub struct PutFeedbackPromptRequest {
+    #[validate(length(max = 255))]
+    title: Option<String>,
+    active: Option<bool>,
+}
+
+/// PUT /v1/target/:target/prompt/:prompt
+#[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt", request_body = PutFeedbackPromptRequest, responses(
     (status = 200, body = FeedbackPrompt)
-))]
+), tag = "FeedbackTargetPrompt")]
 pub async fn put_prompt(
     State(state): State<FeedbackFusionState>,
-    Json(prompt): Json<FeedbackPrompt>,
+    Path((_, prompt)): Path<(String, String)>,
+    Json(data): Json<PutFeedbackPromptRequest>,
 ) -> Result<Json<FeedbackPrompt>> {
-    prompt.validate()?;
+    data.validate()?;
+    let mut prompt = database_request!(FeedbackPrompt::select_by_id(
+        state.connection(),
+        prompt.as_str()
+    )
+    .await?
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+
+    prompt.set_title(data.title.unwrap_or(prompt.title().clone()));
+    prompt.set_active(data.active.unwrap_or(*prompt.active()));
 
     database_request!(FeedbackPrompt::update_by_column(state.connection(), &prompt, "id").await?);
     Ok(Json(prompt))
 }
 
-/// DELETE /feedback/target/:target/prompt/:prompt
-#[utoipa::path(delete, path = "/feedback/target/:target/prompt/:prompt", responses(
+/// DELETE /v1/target/:target/prompt/:prompt
+#[utoipa::path(delete, path = "/v1/target/:target/prompt/:prompt", responses(
     (status = 200, description = "Deleted")
-))]
+), tag = "FeedbackTargetPrompt")]
 pub async fn delete_prompt(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -125,27 +137,33 @@ pub async fn delete_prompt(
 
 #[derive(Debug, Clone, ToSchema, Deserialize, Validate)]
 pub struct CreateFeedbackPromptFieldRequest {
+    #[validate(length(max = 255))]
     title: String,
     r#type: FeedbackPromptInputType,
     options: FeedbackPromptInputOptions,
 }
 
-/// POST /feedback/target/:target/prompt/:prompt/field
-#[utoipa::path(post, path = "/feedback/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
+/// POST /v1/target/:target/prompt/:prompt/field
+#[utoipa::path(post, path = "/v1/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
     (status = 201, description = "Created", body = FeedbackPromptField)
-))]
+), tag = "FeedbackTargetPromptField")]
 pub async fn post_field(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
     Json(data): Json<CreateFeedbackPromptFieldRequest>,
 ) -> Result<(StatusCode, Json<FeedbackPromptField>)> {
     data.validate()?;
+    // validate type and enum 
+    if !data.r#type.eq(&data.options) {
+        return Err(FeedbackFusionError::BadRequest("type does not match".to_owned()));
+    };
+
 
     // build the field
     let field = FeedbackPromptField::builder()
         .title(data.title)
         .r#type(data.r#type)
-        .options(data.options)
+        .options(JsonV(data.options))
         .prompt(prompt)
         .build();
     database_request!(FeedbackPromptField::insert(state.connection(), &field).await?);
@@ -153,17 +171,17 @@ pub async fn post_field(
     Ok((StatusCode::CREATED, Json(field)))
 }
 
-/// GET /feedback/target/:target/prompt/:prompt/field
-#[utoipa::path(get, path = "/feedback/target/:target/prompt/:prompt/field", params(Pagination), responses(
-    (status = 200, body = Page<FeedbackPromptField>)
-))]
+/// GET /v1/target/:target/prompt/:prompt/field
+#[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt/field", params(Pagination), responses(
+    (status = 200, body = FeedbackPromptFieldPage)
+), tag = "FeedbackTargetPromptField")]
 pub async fn get_fields(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
     Path((_, prompt)): Path<(String, String)>,
 ) -> Result<Json<Page<FeedbackPromptField>>> {
     let page = database_request!(
-        FeedbackPromptField::select_page_by_prompt(
+        FeedbackPromptField::select_page_by_prompt_wrapper(
             state.connection(),
             &pagination.request(),
             prompt.as_str()
@@ -174,26 +192,53 @@ pub async fn get_fields(
     Ok(Json(page))
 }
 
-/// PUT /feedback/target/:target/prompt/:prompt/field
-#[utoipa::path(put, path = "/feedback/target/:target/prompt/:prompt/field", request_body = FeedbackPromptField, responses(
-    (status = 200, body = FeedbackPromptField, description = "updated")
-))]
-pub async fn put_field(
-    State(state): State<FeedbackFusionState>,
-    Json(data): Json<FeedbackPromptField>,
-) -> Result<Json<FeedbackPromptField>> {
-    data.validate()?;
-
-    database_request!(
-        FeedbackPromptField::update_by_column(state.connection(), &data, "id").await?
-    );
-    Ok(Json(data))
+#[derive(Debug, Clone, Deserialize, Validate, ToSchema)]
+pub struct PutFeedbackPromptFieldRequest {
+    #[validate(length(max = 255))]
+    title: Option<String>,
+    options: Option<FeedbackPromptInputOptions>,
 }
 
-/// DELETE /feedback/target/:target/prompt/:prompt/field/:field
-#[utoipa::path(delete, path = "/feedback/target/:target/prompt/:prompt/field/:field", responses(
+/// PUT /v1/target/:target/prompt/:prompt/field/:field
+#[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt/field/:field", request_body = PutFeedbackPromptFieldRequest, responses(
+    (status = 200, body = FeedbackPromptField, description = "updated")
+), tag = "FeedbackTargetPromptField")]
+pub async fn put_field(
+    State(state): State<FeedbackFusionState>,
+    Path((_, _, field)): Path<(String, String, String)>,
+    Json(data): Json<PutFeedbackPromptFieldRequest>,
+) -> Result<Json<FeedbackPromptField>> {
+    data.validate()?;
+    
+    let mut field = database_request!(FeedbackPromptField::select_by_id(
+        state.connection(),
+        field.as_str()
+    )
+    .await?
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+    // validate type and enum 
+    if data.options.as_ref().is_some_and(|options|!field.r#type().eq(options)) {
+        return Err(FeedbackFusionError::BadRequest("type does not match".to_owned()));
+    };
+
+
+    field.set_title(data.title.unwrap_or(field.title().to_string()));
+    if let Some(options) = data.options {
+        if field.r#type().eq(&options) {
+            field.set_options(JsonV(options));
+        }
+    }
+
+    database_request!(
+        FeedbackPromptField::update_by_column(state.connection(), &field, "id").await?
+    );
+    Ok(Json(field))
+}
+
+/// DELETE /v1/target/:target/prompt/:prompt/field/:field
+#[utoipa::path(delete, path = "/v1/target/:target/prompt/:prompt/field/:field", responses(
     (status = 200, description = "Deleted")
-))]
+), tag = "FeedbackTargetPromptField")]
 pub async fn delete_field(
     State(state): State<FeedbackFusionState>,
     Path((_, _, field)): Path<(String, String, String)>,

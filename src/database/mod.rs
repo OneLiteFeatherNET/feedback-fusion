@@ -52,7 +52,7 @@ macro_rules! database_configuration {
             #[derive(Debug, Clone)]
             pub enum DatabaseConfiguration {
                 $(
-                    #[cfg(feature = "" $ident:lower)]
+                    #[cfg(feature = $scheme)]
                     $ident($config),
                 )*
             }
@@ -61,8 +61,8 @@ macro_rules! database_configuration {
                 #[inline(always)]
                 pub fn extract() -> crate::error::Result<Self> {
                     $(
-                       #[cfg(feature = "" $ident:lower)] 
-                       if let Ok(config) = envy::prefixed(stringify!([<$ident:lower _>]).trim()).from_env::<$config>() {
+                       #[cfg(feature = $scheme)]
+                       if let Ok(config) = envy::prefixed(stringify!([<$ident:upper _>])).from_env::<$config>() {
                            return Ok(Self::$ident(config));
                       }
                  )*
@@ -77,12 +77,12 @@ macro_rules! database_configuration {
 
                     match self {
                         $(
-                            #[cfg(feature = "" $ident:lower)]
+                            #[cfg(feature = $scheme)]
                             Self::$ident(config) => {
                                 let url = config.to_url($scheme);
                                 connection.init($driver {}, url.as_str())?;
 
-                                #[cfg(test)]
+                                #[cfg(feature = "test")]
                                 connection.exec(include_str!("drop.sql"), vec![]).await?;
 
                                 // perform migrations
@@ -145,3 +145,33 @@ macro_rules! database_request {
     }};
 }
 
+/// rbatis doesnt convert the LIMIT statements for postgres and mssql therefore we need a wrapper
+/// REF: https://rbatis.github.io/rbatis.io/#/v4/?id=macros-select-page
+#[macro_export]
+macro_rules! impl_select_page_wrapper {
+    ($table:path {}) => {
+        impl_select_page_wrapper!($table{select_page() => ""});
+    };
+    ($table:path {$ident:ident ($($arg:ident: $ty:ty $(,)?)*) => $expr:expr}) => {
+        paste!{
+            impl_select_page!($table {$ident($($arg: $ty,)* limit_sql: &str) => $expr});
+
+            impl $table {
+                pub async fn [<$ident _wrapper>](executor: &dyn rbatis::executor::Executor, page_request: &dyn rbatis::IPageRequest, $($arg: $ty,)*) -> std::result::Result<rbatis::plugin::page::Page<$table>, rbatis::rbdc::Error> {
+
+                  use std::ops::Deref;
+                  let limit = page_request.page_size();
+                  let offset = page_request.offset();
+
+                  match $crate::DATABASE_CONFIG.deref() {
+                     #[cfg(feature = "postgres")]
+                     $crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {} OFFSET {} ", limit, offset).as_str()).await,
+                    #[allow(unreachable_patterns)]
+                    _ => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {},{} ", limit, offset).as_str()).await
+                 }
+               }
+            }
+        }
+
+    }
+}
