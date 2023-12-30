@@ -513,3 +513,158 @@ async fn test_prompt_field_endpoints() {
         assert_eq!(0, page.total);
     }
 }
+
+#[test(tokio::test)]
+async fn test_response_endpoints() {
+    let _server = run_server();
+    let client = client().await;
+
+    let (target, prompt) = {
+        let target = {
+            let response = client
+                .post(format!("{}/v1/target", HTTP_ENDPOINT))
+                .json(&serde_json::json!({
+                    "name": "Name"
+                }))
+                .send()
+                .await
+                .unwrap();
+            response.json::<TargetResponse>().await.unwrap()
+        };
+
+        let prompt = {
+            let response = client
+                .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
+                .json(&serde_json::json!({
+                    "title": "title"
+                }))
+                .send()
+                .await
+                .unwrap();
+            response.json::<PromptResponse>().await.unwrap()
+        };
+
+        (target, prompt)
+    };
+
+    // test auth
+    {
+        let response = reqwest::Client::default()
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::UNSUPPORTED_MEDIA_TYPE, response.status());
+
+        let response = reqwest::Client::default()
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::UNAUTHORIZED, response.status());
+    }
+
+    // test post response on empty prompt and non existing prompt
+    {
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/test/response",
+                HTTP_ENDPOINT, &target.id
+            ))
+            .json(&serde_json::json!({ "responses": {} }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({ "responses": {} }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+    }
+
+    // create testing fields
+    let (text_field, rating_field) = {
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "Test",
+                "type": "text",
+                "options": {
+                    "placeholder": "placeholder",
+                    "description": "description",
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        let text_field = response.json::<FieldResponse>().await.unwrap();
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "Test",
+                "type": "rating",
+                "options": {
+                    "max": 10,
+                    "description": "description",
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        let rating_field = response.json::<FieldResponse>().await.unwrap();
+
+        (text_field, rating_field)
+    };
+
+    // test post response
+    {
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &text_field.id: {"data": "Yea"},
+                    &rating_field.id: {"data": 5}
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::CREATED, response.status());
+    }
+
+    // test get
+    {
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::OK, response.status());
+    }
+}

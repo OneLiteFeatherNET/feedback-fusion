@@ -22,7 +22,7 @@
 
 use crate::{
     database::schema::feedback::*,
-    routes::v1::{prompt::*, *},
+    routes::v1::{prompt::*, response::*, *},
 };
 use std::{fs, path::Path};
 use utoipa::{OpenApi, ToSchema};
@@ -31,7 +31,9 @@ use utoipa::{OpenApi, ToSchema};
 #[aliases(
     FeedbackTargetPage = Page<FeedbackTarget>,
     FeedbackPromptPage = Page<FeedbackPrompt>,
-    FeedbackPromptFieldPage = Page<FeedbackPromptField>
+    FeedbackPromptFieldPage = Page<FeedbackPromptField>,
+    GetFeedbackPromptResponsesPage = Page<GetFeedbackPromptResponsesResponse>
+
 )]
 pub struct Page<T: for<'a> ToSchema<'a>> {
     records: Vec<T>,
@@ -55,6 +57,8 @@ pub fn generate() {
             put_field,
             get_fields,
             delete_field,
+            post_response,
+            get_responses
         ),
         components(
             schemas(
@@ -77,14 +81,17 @@ pub fn generate() {
                 CreateFeedbackPromptFieldRequest,
                 FeedbackTargetPage,
                 FeedbackPromptPage,
-                FeedbackPromptFieldPage
+                FeedbackPromptFieldPage,
+                GetFeedbackPromptResponsesPage,
+                SubmitFeedbackPromptResponseRequest
             )
         ),
         tags(
             (name = "FeedbackTarget"),
             (name = "FeedbackTargetPrompt"),
             (name = "FeedbackTargetPromptField"),
-            (name = "FeedbackTargetPromptResponse")
+            (name = "FeedbackTargetPromptResponse"), 
+            (name = "FeedbackPromptResponse")
         )
     )]
     struct OpenApiSpecification;

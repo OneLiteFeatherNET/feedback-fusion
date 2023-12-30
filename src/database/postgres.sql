@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS feedback_prompt_field (
   created_at  TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS response (
+CREATE TABLE IF NOT EXISTS feedback_prompt_response (
   id          VARCHAR(32) UNIQUE NOT NULL,
   prompt      VARCHAR(32) REFERENCES feedback_prompt(id) NOT NULL,
   created_at  TIMESTAMP
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS response (
 
 CREATE TABLE IF NOT EXISTS feedback_prompt_field_response (
   id          VARCHAR(32) UNIQUE NOT NULL,
-  response    VARCHAR(32) REFERENCES response(id) NOT NULL,
+  response    VARCHAR(32) REFERENCES feedback_prompt_response(id) NOT NULL,
   field       VARCHAR(32) REFERENCES feedback_prompt_field(id) NOT NULL,
   data        JSON NOT NULL
 );

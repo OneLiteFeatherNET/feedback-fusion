@@ -22,9 +22,6 @@
 
 use std::collections::HashMap;
 
-use axum::extract::Path;
-use rbatis::{rbdc::JsonV, sql::Page};
-
 use crate::{
     database::schema::feedback::{
         FeedbackPromptField, FeedbackPromptFieldData, FeedbackPromptFieldResponse,
@@ -33,9 +30,16 @@ use crate::{
     prelude::*,
 };
 
+use axum::{extract::Path, http::StatusCode};
+use rbatis::{
+    rbdc::JsonV,
+    sql::{IntoSql, Page},
+};
+
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
         .route("/", post(post_response))
+        .route("/", get(get_responses).layer(oidc_layer!()))
         .with_state(state)
 }
 
@@ -45,11 +49,14 @@ pub struct SubmitFeedbackPromptResponseRequest {
 }
 
 /// POST /target/:target/prompt/:prompt/response
+#[utoipa::path(post, path = "/target/:target/prompt/:prompt/response", request_body = SubmitFeedbackPromptResponseRequest, responses(
+    (status = 200, description = "Created", body = FeedbackPromptResponse)
+), tag = "FeedbackPromptResponse")]
 pub async fn post_response(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
     Json(data): Json<SubmitFeedbackPromptResponseRequest>,
-) -> Result<Json<FeedbackPromptResponse>> {
+) -> Result<(StatusCode, Json<FeedbackPromptResponse>)> {
     // start transaction
     let mut transaction = state.connection().acquire_begin().await?;
     // fetch the fields of the prompt
@@ -97,6 +104,68 @@ pub async fn post_response(
     // commit the transaction
     transaction.commit().await?;
 
-    Ok(Json(response))
+    Ok((StatusCode::CREATED, Json(response)))
 }
 
+pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FeedbackPromptFieldResponse>>;
+#[derive(Deserialize, Debug, Clone)]
+struct DatabaseResult {
+    result: JsonV<GetFeedbackPromptResponsesResponse>,
+}
+
+#[py_sql(
+    "`SELECT jsonb_object_agg(response, rows) AS RESULT FROM (`
+        `SELECT response, `
+        `jsonb_agg(jsonb_build_object('id', id, 'response', response, 'field', field, 'data', data)) AS ROWS `
+            `FROM feedback_prompt_field_response `
+                ` WHERE response IN `
+                    ${responses.sql()} 
+    ` GROUP BY response) subquery`"
+)]
+async fn group_field_responses(
+    rb: &dyn rbatis::executor::Executor,
+    responses: &[String],
+) -> rbatis::Result<DatabaseResult> {
+    impled!()
+}
+
+/// GET /target/:target/prompt/:prompt/response
+#[utoipa::path(get, path = "/target/:target/prompt/:prompt/response", params(Pagination), responses(
+    (status = 200, body = GetFeedbackPromptResponsesResponse)
+), tag = "FeedbackPromptResponse")]
+pub async fn get_responses(
+    State(state): State<FeedbackFusionState>,
+    Path((_, prompt)): Path<(String, String)>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Json<GetFeedbackPromptResponsesResponse>> {
+    // select a page of responses
+    let responses = database_request!(
+        FeedbackPromptResponse::select_page_by_prompt_wrapper(
+            state.connection(),
+            &pagination.request(),
+            prompt.as_str()
+        )
+        .await?
+    );
+
+    let records = if responses.total > 0 {
+        database_request!(
+            group_field_responses(
+                state.connection(),
+                responses
+                    .records
+                    .iter()
+                    .map(|response| response.id().clone())
+                    .collect::<Vec<String>>()
+                    .as_slice(),
+            )
+            .await?
+            .result
+            .0
+        )
+    } else {
+        HashMap::new()
+    };
+
+    Ok(Json(records))
+}

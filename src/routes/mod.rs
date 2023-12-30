@@ -21,7 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use rbatis::sql::PageRequest;
+use rbatis::sql::{PageRequest, IPageRequest};
 
 pub mod v1;
 mod oidc;
@@ -60,5 +60,11 @@ fn page_size() -> usize {
 impl Pagination {
     pub fn request(self) -> PageRequest {
         PageRequest::new(self.page as u64, self.page_size as u64)
+    }
+
+    pub fn eval(&self) -> (u64, u64) {
+        let request = self.clone().request();
+
+        (request.page_size(), request.offset())
     }
 }

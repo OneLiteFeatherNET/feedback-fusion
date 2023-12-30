@@ -161,7 +161,7 @@ macro_rules! impl_select_page_wrapper {
 
                   use std::ops::Deref;
                   let limit = page_request.page_size();
-                  let offset = limit * (page_request.page_no() - 1);
+                  let offset = page_request.offset();
 
                   match $crate::DATABASE_CONFIG.deref() {
                      #[cfg(feature = "postgres")]

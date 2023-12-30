@@ -20,6 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use crate::prelude::*;
 use rbatis::rbdc::{DateTime, JsonV};
 
 use super::FeedbackPromptInputType;
@@ -76,6 +77,7 @@ pub struct FeedbackPromptResponse {
 }
 
 crud!(FeedbackPromptResponse {});
+impl_select_page_wrapper!(FeedbackPromptResponse {select_page_by_prompt(prompt: &str) => "WHERE prompt = #{prompt}"});
 
 #[derive(
     Deserialize, Serialize, Clone, PartialEq, Debug, Getters, MutGetters, TypedBuilder, ToSchema,
@@ -95,13 +97,13 @@ pub struct FeedbackPromptFieldResponse {
 crud!(FeedbackPromptFieldResponse {});
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, ToSchema)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum FeedbackPromptFieldData {
     Text(TextResponse),
     Rating(RatingResponse),
 }
 
-// TODO: use macro 
+// TODO: use macro
 impl PartialEq<FeedbackPromptFieldData> for FeedbackPromptInputType {
     fn eq(&self, other: &FeedbackPromptFieldData) -> bool {
         match self {
