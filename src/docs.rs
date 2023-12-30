@@ -31,8 +31,7 @@ use utoipa::{OpenApi, ToSchema};
 #[aliases(
     FeedbackTargetPage = Page<FeedbackTarget>,
     FeedbackPromptPage = Page<FeedbackPrompt>,
-    FeedbackPromptFieldPage = Page<FeedbackPromptField>,
-    GetFeedbackPromptResponsesPage = Page<GetFeedbackPromptResponsesResponse>
+    FeedbackPromptFieldPage = Page<FeedbackPromptField>
 
 )]
 pub struct Page<T: for<'a> ToSchema<'a>> {
@@ -82,7 +81,7 @@ pub fn generate() {
                 FeedbackTargetPage,
                 FeedbackPromptPage,
                 FeedbackPromptFieldPage,
-                GetFeedbackPromptResponsesPage,
+                GetFeedbackPromptResponsesResponse,
                 SubmitFeedbackPromptResponseRequest
             )
         ),
