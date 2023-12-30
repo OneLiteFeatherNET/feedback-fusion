@@ -143,4 +143,5 @@ pub mod prelude {
         routing::*,
         Router,
     };
+    pub use rbatis::{rbdc::JsonV, plugin::page::Page, IPageRequest};
 }

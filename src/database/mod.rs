@@ -157,7 +157,7 @@ macro_rules! impl_select_page_wrapper {
             impl_select_page!($table {$ident($($arg: $ty,)* limit_sql: &str) => $expr});
 
             impl $table {
-                pub async fn [<$ident _wrapper>](executor: &dyn rbatis::executor::Executor, page_request: &dyn rbatis::sql::IPageRequest, $($arg: $ty,)*) -> std::result::Result<rbatis::sql::Page<$table>, rbatis::rbdc::Error> {
+                pub async fn [<$ident _wrapper>](executor: &dyn rbatis::executor::Executor, page_request: &dyn rbatis::IPageRequest, $($arg: $ty,)*) -> std::result::Result<rbatis::plugin::page::Page<$table>, rbatis::rbdc::Error> {
 
                   use std::ops::Deref;
                   let limit = page_request.page_size();

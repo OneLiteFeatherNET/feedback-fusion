@@ -21,7 +21,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use rbatis::sql::{PageRequest, IPageRequest};
+
+use rbatis::plugin::page::PageRequest;
 
 pub mod v1;
 mod oidc;

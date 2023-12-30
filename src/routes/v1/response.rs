@@ -31,7 +31,7 @@ use crate::{
 };
 
 use axum::{extract::Path, http::StatusCode};
-use rbatis::{rbdc::JsonV, sql::IntoSql};
+use rbatis::rbatis_codegen::IntoSql;
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
