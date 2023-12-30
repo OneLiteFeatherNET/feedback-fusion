@@ -31,10 +31,7 @@ use crate::{
 };
 
 use axum::{extract::Path, http::StatusCode};
-use rbatis::{
-    rbdc::JsonV,
-    sql::{IntoSql, Page},
-};
+use rbatis::{rbdc::JsonV, sql::IntoSql};
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
@@ -64,7 +61,7 @@ pub async fn post_response(
         FeedbackPromptField::select_by_column(&transaction, "prompt", prompt.as_str()).await?
     );
     // as we can assume a prompt has to have at least 1 field we can throw the 400 here
-    if fields.len() == 0 {
+    if fields.is_empty() {
         return Err(FeedbackFusionError::BadRequest("invalid prompt".to_owned()));
     }
 
@@ -80,8 +77,7 @@ pub async fn post_response(
             // validate the type of field and response
             if fields
                 .iter()
-                .find(|f| field.eq(f.id()) && f.r#type().eq(&value))
-                .is_some()
+                .any(|f| field.eq(f.id()) && f.r#type().eq(&value))
             {
                 Some(
                     FeedbackPromptFieldResponse::builder()
