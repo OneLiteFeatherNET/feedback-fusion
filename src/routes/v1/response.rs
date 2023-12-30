@@ -73,7 +73,7 @@ pub async fn post_response(
             // validate the type of field and response
             if fields
                 .iter()
-                .find(|field| field.r#type().eq(&value))
+                .find(|f| field.eq(f.id()) && f.r#type().eq(&value))
                 .is_some()
             {
                 Some(
