@@ -91,6 +91,7 @@ pub struct FeedbackPromptField {
     title: String,
     prompt: String,
     r#type: FeedbackPromptInputType,
+    #[schema(value_type = FeedbackPromptInputOptions)]
     options: JsonV<FeedbackPromptInputOptions>,
     #[builder(default)]
     #[derivative(PartialEq = "ignore")]

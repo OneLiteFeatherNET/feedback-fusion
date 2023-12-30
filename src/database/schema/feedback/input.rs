@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
+use rbatis::rbdc::{DateTime, JsonV};
 
 use super::FeedbackPromptInputType;
 
@@ -32,11 +32,12 @@ pub enum FeedbackPromptInputOptions {
     Rating(RatingOptions),
 }
 
+// TODO: gen with macro
 impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
     fn eq(&self, other: &FeedbackPromptInputOptions) -> bool {
-        match self { 
+        match self {
             Self::Text => matches!(other, FeedbackPromptInputOptions::Text(_)),
-            Self::Rating => matches!(other, FeedbackPromptInputOptions::Rating(_))
+            Self::Rating => matches!(other, FeedbackPromptInputOptions::Rating(_)),
         }
     }
 }
@@ -74,6 +75,8 @@ pub struct FeedbackPromptResponse {
     created_at: DateTime,
 }
 
+crud!(FeedbackPromptResponse {});
+
 #[derive(
     Deserialize, Serialize, Clone, PartialEq, Debug, Getters, MutGetters, TypedBuilder, ToSchema,
 )]
@@ -85,12 +88,35 @@ pub struct FeedbackPromptFieldResponse {
     id: String,
     response: String,
     field: String,
-    data: FeedbackPromptFieldData,
+    #[schema(value_type = FeedbackPromptFieldData)]
+    data: JsonV<FeedbackPromptFieldData>,
 }
+
+crud!(FeedbackPromptFieldResponse {});
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, ToSchema)]
 #[serde(tag = "type")]
 pub enum FeedbackPromptFieldData {
-    Text(String),
-    Rating(u8),
+    Text(TextResponse),
+    Rating(RatingResponse),
+}
+
+// TODO: use macro 
+impl PartialEq<FeedbackPromptFieldData> for FeedbackPromptInputType {
+    fn eq(&self, other: &FeedbackPromptFieldData) -> bool {
+        match self {
+            Self::Text => matches!(other, FeedbackPromptFieldData::Text(_)),
+            Self::Rating => matches!(other, FeedbackPromptFieldData::Rating(_)),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+pub struct TextResponse {
+    data: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+pub struct RatingResponse {
+    data: u8,
 }

@@ -27,6 +27,7 @@ use validator::Validate;
 use crate::{database::schema::feedback::FeedbackTarget, prelude::*};
 
 pub mod prompt;
+pub mod response;
 
 pub async fn router(state: FeedbackFusionState) -> Router {
     Router::new()
@@ -44,6 +45,10 @@ pub async fn router(state: FeedbackFusionState) -> Router {
         .nest(
             "/target/:target/prompt",
             prompt::router(state.clone()).await,
+        )
+        .nest(
+            "/target/:target/prompt/:prompt/response",
+            response::router(state.clone()).await,
         )
         .with_state(state)
 }
