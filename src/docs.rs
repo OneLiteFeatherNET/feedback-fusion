@@ -57,7 +57,8 @@ pub fn generate() {
             get_fields,
             delete_field,
             post_response,
-            get_responses
+            get_responses,
+            fetch
         ),
         components(
             schemas(
