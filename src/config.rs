@@ -26,7 +26,7 @@
 pub struct Config {
     #[serde(default = "default_global_rate_limit")]
     global_rate_limit: u64,
-    oidc_discovery_url: String,
+    oidc_discovery_url: String
 }
 
 fn default_global_rate_limit() -> u64 {

@@ -35,8 +35,7 @@ use rbatis::rbatis_codegen::IntoSql;
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
     Router::new()
-        .route("/", post(post_response))
-        .route("/", get(get_responses).layer(oidc_layer!()))
+        .route("/", get(get_responses))
         .with_state(state)
 }
 
@@ -48,7 +47,7 @@ pub struct SubmitFeedbackPromptResponseRequest {
 /// POST /v1/target/:target/prompt/:prompt/response
 #[utoipa::path(post, path = "/v1/target/:target/prompt/:prompt/response", request_body = SubmitFeedbackPromptResponseRequest, responses(
     (status = 200, description = "Created", body = FeedbackPromptResponse)
-), tag = "FeedbackPromptResponse")]
+), security(()), tag = "FeedbackPromptResponse")]
 pub async fn post_response(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -134,11 +133,12 @@ async fn group_field_responses(
 /// GET /v1/target/:target/prompt/:prompt/response
 #[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt/response", params(Pagination), responses(
     (status = 200, body = GetFeedbackPromptResponsesResponseWrapper)
-), tag = "FeedbackPromptResponse")]
+), tag = "FeedbackPromptResponse", security(("oidc" = ["feedback-fusion:read"])))]
 pub async fn get_responses(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
     Query(pagination): Query<Pagination>,
+    _guard: scope::Read,
 ) -> Result<Json<GetFeedbackPromptResponsesResponse>> {
     // select a page of responses
     let responses = database_request!(

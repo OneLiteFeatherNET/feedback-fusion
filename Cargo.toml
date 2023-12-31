@@ -7,16 +7,21 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+aliri = "0.6.2"
+aliri_axum = "0.3.0"
+aliri_clock = "0.1.4"
+aliri_oauth2 = "0.10.0"
+aliri_tower = "0.5.0"
 async-trait = "0.1.74"
 axum = "0.6.20"
 chrono = { version = "0.4.31", features = ["serde"] }
 derivative = "2.2.0"
 envy = "0.4.2"
 getset = "0.1.2"
-jwt-authorizer = "0.13.0"
 kanal = "0.1.0-pre8"
 lazy_static = "1.4.0"
 nanoid = "0.4.0"
+openidconnect = "3.4.0"
 paste = "1.0.14"
 rbatis = "4.4.20"
 rbdc-pg = { version = "4.4.19", optional = true }
@@ -39,7 +44,6 @@ version-compare = "0.1.1"
 rand = "0.8.5"
 reqwest = { version = "0.11.23", features = ["json"] }
 test-log = "0.2.14"
-openidconnect = "3.4.0"
 
 [features]
 default = ["all-databases"]

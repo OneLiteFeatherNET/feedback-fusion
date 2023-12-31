@@ -22,13 +22,24 @@
 
 use crate::prelude::*;
 
+use aliri_tower::Oauth2Authorizer;
 use rbatis::plugin::page::PageRequest;
 
+pub mod oidc;
 pub mod v1;
-mod oidc;
 
 pub async fn router(state: FeedbackFusionState) -> Router {
-    Router::new().nest("/v1", v1::router(state).await)
+    let (authorized, unauthorized) = v1::router(state).await;
+
+    // build the authority
+    let authority = oidc::authority().await.unwrap();
+    let authorizer = Oauth2Authorizer::new()
+        .with_claims::<OIDCClaims>()
+        .with_terse_error_handler();
+
+    Router::new()
+        .nest("/v1", authorized.layer(authorizer.jwt_layer(authority)))
+        .nest("/v1", unauthorized)
 }
 
 #[derive(Debug, Clone, Deserialize, IntoParams)]

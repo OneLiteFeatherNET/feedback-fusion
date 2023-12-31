@@ -20,17 +20,74 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#[macro_export]
-macro_rules! oidc_layer {
-    () => {{
-        use jwt_authorizer::{Authorizer, IntoLayer, JwtAuthorizer};
+use crate::prelude::*;
 
-        // init the oidc authorizer
-        let authorizer: Authorizer = JwtAuthorizer::from_oidc(CONFIG.oidc_discovery_url())
-            .build()
+use aliri::jwt::{self, CoreValidator};
+use aliri_clock::UnixTime;
+use aliri_oauth2::{Authority, HasScope, Scope};
+use openidconnect::{core::CoreProviderMetadata, IssuerUrl};
+
+pub async fn authority() -> Result<Authority> {
+    // discover the oidc endpoints
+    let issuer = IssuerUrl::new(CONFIG.oidc_discovery_url().clone())
+        .map_err(|_| FeedbackFusionError::ConfigurationError("invalid discovery url".to_owned()))?;
+    let metadata =
+        CoreProviderMetadata::discover_async(issuer, openidconnect::reqwest::async_http_client)
             .await
-            .unwrap();
+            .map_err(|_| {
+                FeedbackFusionError::ConfigurationError("invalid oidc endpoint".to_owned())
+            })?;
+    // extract the jwks
+    let jwks_url = metadata.jwks_uri().url();
 
-        authorizer.into_layer()
-    }}; // we can add here support for scopes later :)
+    // build the validator
+    let validator = CoreValidator::default();
+    // build the authority
+    let authority = Authority::new_from_url(jwks_url.to_string(), validator)
+        .await
+        .unwrap();
+
+    Ok(authority)
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct OIDCClaims {
+    iss: jwt::Issuer,
+    aud: jwt::Audiences,
+    sub: jwt::Subject,
+    scope: Scope,
+}
+
+impl jwt::CoreClaims for OIDCClaims {
+    fn nbf(&self) -> Option<UnixTime> {
+        None
+    }
+    fn exp(&self) -> Option<UnixTime> {
+        None
+    }
+    fn aud(&self) -> &jwt::Audiences {
+        &self.aud
+    }
+    fn iss(&self) -> Option<&jwt::IssuerRef> {
+        Some(&self.iss)
+    }
+    fn sub(&self) -> Option<&jwt::SubjectRef> {
+        Some(&self.sub)
+    }
+}
+
+impl HasScope for OIDCClaims {
+    fn scope(&self) -> &Scope {
+        &self.scope
+    }
+}
+
+pub mod scope {
+    aliri_axum::scope_guards! {
+        type Claims = super::OIDCClaims;
+
+        pub scope API = "api:feedback-fusion";
+        pub scope Read = ["api:feedback-fusion" || "feedback-fusion:read"];
+        pub scope Write = ["api:feedback-fusion" || "feedback-fusion:write"];
+    }
 }

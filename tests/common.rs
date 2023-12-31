@@ -99,7 +99,7 @@ pub async fn authenticate() -> String {
 
     let token_response = client
         .exchange_client_credentials()
-        .add_scope(Scope::new("api".to_owned()))
+        .add_scope(Scope::new(env!("OIDC_SCOPE").to_owned()))
         .request_async(async_http_client)
         .await
         .unwrap();

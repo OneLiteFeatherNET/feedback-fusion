@@ -76,7 +76,6 @@ async fn main() {
             .with(tracing_subscriber::EnvFilter::from_default_env())
             .with(tracing_subscriber::fmt::layer())
             .init();
-        debug!("{:?}", std::env::vars());
 
         // init config
         lazy_static::initialize(&CONFIG);
@@ -135,13 +134,19 @@ pub(crate) async fn router(connection: DatabaseConnection) -> Router {
 
 pub mod prelude {
     pub use crate::{
-        config::*, database::DatabaseConnection, database_request, error::*, oidc_layer, routes::*,
-        impl_select_page_wrapper, state::FeedbackFusionState, CONFIG, DATABASE_CONFIG,
+        config::*,
+        database::DatabaseConnection,
+        database_request,
+        error::*,
+        impl_select_page_wrapper,
+        routes::{oidc::*, *},
+        state::FeedbackFusionState,
+        CONFIG, DATABASE_CONFIG,
     };
     pub use axum::{
         extract::{Json, Query, State},
         routing::*,
         Router,
     };
-    pub use rbatis::{rbdc::JsonV, plugin::page::Page, IPageRequest};
+    pub use rbatis::{plugin::page::Page, rbdc::JsonV, IPageRequest};
 }

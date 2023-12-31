@@ -27,7 +27,7 @@ services:
           "AutomaticRedirectAfterSignOut": true
         }
       API_SCOPES_INLINE: |
-        - Name: api
+        - Name: api:feedback-fusion
       USERS_CONFIGURATION_INLINE: |
         [
           {
