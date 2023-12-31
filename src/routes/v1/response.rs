@@ -104,6 +104,12 @@ pub async fn post_response(
 }
 
 pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FeedbackPromptFieldResponse>>;
+
+#[derive(ToSchema)]
+pub struct GetFeedbackPromptResponsesResponseWrapper(
+    HashMap<String, Vec<FeedbackPromptFieldResponse>>,
+);
+
 #[derive(Deserialize, Debug, Clone)]
 struct DatabaseResult {
     result: JsonV<GetFeedbackPromptResponsesResponse>,
@@ -127,7 +133,7 @@ async fn group_field_responses(
 
 /// GET /v1/target/:target/prompt/:prompt/response
 #[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt/response", params(Pagination), responses(
-    (status = 200, body = GetFeedbackPromptResponsesResponse)
+    (status = 200, body = GetFeedbackPromptResponsesResponseWrapper)
 ), tag = "FeedbackPromptResponse")]
 pub async fn get_responses(
     State(state): State<FeedbackFusionState>,

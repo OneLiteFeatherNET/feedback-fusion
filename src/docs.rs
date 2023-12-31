@@ -82,8 +82,10 @@ pub fn generate() {
                 FeedbackTargetPage,
                 FeedbackPromptPage,
                 FeedbackPromptFieldPage,
-                GetFeedbackPromptResponsesResponse,
-                SubmitFeedbackPromptResponseRequest
+                GetFeedbackPromptResponsesResponseWrapper,
+                SubmitFeedbackPromptResponseRequest,
+                TextResponse,
+                RatingResponse
             )
         ),
         tags(
