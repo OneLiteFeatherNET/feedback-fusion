@@ -25,7 +25,7 @@ use crate::{
     routes::v1::{prompt::*, response::*, *},
 };
 use std::{fs, path::Path};
-use utoipa::{OpenApi, ToSchema};
+use utoipa::{OpenApi, ToSchema, Modify, openapi::security::{SecurityScheme, OpenIdConnect}};
 
 #[derive(ToSchema)]
 #[aliases(
@@ -57,7 +57,8 @@ pub fn generate() {
             get_fields,
             delete_field,
             post_response,
-            get_responses
+            get_responses,
+            fetch
         ),
         components(
             schemas(
@@ -81,19 +82,33 @@ pub fn generate() {
                 FeedbackTargetPage,
                 FeedbackPromptPage,
                 FeedbackPromptFieldPage,
-                GetFeedbackPromptResponsesResponse,
-                SubmitFeedbackPromptResponseRequest
+                GetFeedbackPromptResponsesResponseWrapper,
+                SubmitFeedbackPromptResponseRequest,
+                TextResponse,
+                RatingResponse
             )
         ),
         tags(
-            (name = "FeedbackTarget"),
-            (name = "FeedbackTargetPrompt"),
-            (name = "FeedbackTargetPromptField"),
-            (name = "FeedbackTargetPromptResponse"), 
-            (name = "FeedbackPromptResponse")
-        )
+            (name = "FeedbackTarget", description = "A Target contains multiple prompts and is therefore used in order to manage multiple projects with the same instance."),
+            (name = "FeedbackTargetPrompt", description = "A Prompt contains multiple fields and collects the feedback for your project."),
+            (name = "FeedbackTargetPromptField", description = "A Field is a input prompt for the clients visiting ur website and rating ur project or whatever."),
+            (name = "FeedbackPromptResponse", description = "Collect responses from clients and manage / view them"), 
+        ),
+        modifiers(&Security)
     )]
     struct OpenApiSpecification;
+    struct Security;
+
+    impl Modify for Security {
+        fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+            if let Some(components) = openapi.components.as_mut() {
+                components.add_security_scheme(
+                    "oidc",
+                    SecurityScheme::OpenIdConnect(OpenIdConnect::new("https://your-oidc-provider.tld"))
+                )
+            }
+        }
+    }
 
     let destination = Path::new("./target").join("openapi.yaml");
     // write the spec file

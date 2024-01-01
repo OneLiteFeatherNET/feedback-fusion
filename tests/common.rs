@@ -26,7 +26,7 @@ use openidconnect::{
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
 use reqwest::{
-    header::{HeaderMap, HeaderValue},
+    header::{HeaderMap, HeaderValue, AUTHORIZATION},
     Client,
 };
 use std::{
@@ -56,8 +56,12 @@ pub fn run_server() -> BackendServer {
     // prepare the command
     let mut command = Command::new(path);
     let seed = rand::random::<u16>();
-    let stdout = Stdio::from(File::create(Path::new(env!("OUT_DIR")).join(format!("{}stdout", seed))).unwrap());
-    let stderr = Stdio::from(File::create(Path::new(env!("OUT_DIR")).join(format!("{}stderr", seed))).unwrap());
+    let stdout = Stdio::from(
+        File::create(Path::new(env!("OUT_DIR")).join(format!("{}stdout", seed))).unwrap(),
+    );
+    let stderr = Stdio::from(
+        File::create(Path::new(env!("OUT_DIR")).join(format!("{}stderr", seed))).unwrap(),
+    );
     debug!("OUT={} SEED={}", env!("OUT_DIR"), seed);
 
     command.stdin(Stdio::piped());
@@ -99,7 +103,7 @@ pub async fn authenticate() -> String {
 
     let token_response = client
         .exchange_client_credentials()
-        .add_scope(Scope::new("api".to_owned()))
+        .add_scope(Scope::new(env!("OIDC_SCOPE").to_owned()))
         .request_async(async_http_client)
         .await
         .unwrap();
@@ -112,7 +116,7 @@ pub async fn client() -> Client {
 
     let mut headers = HeaderMap::new();
     headers.insert(
-        "Authorization",
+        AUTHORIZATION,
         HeaderValue::from_str(format!("Bearer {}", access_token).as_str()).unwrap(),
     );
     Client::builder().default_headers(headers).build().unwrap()

@@ -27,27 +27,12 @@ services:
           "AutomaticRedirectAfterSignOut": true
         }
       API_SCOPES_INLINE: |
-        - Name: api
-      USERS_CONFIGURATION_INLINE: |
-        [
-          {
-            "SubjectId":"1",
-            "Username":"MaxMustermann",
-            "Password":"MustermannMax",
-            "Claims": [
-              {
-                "Type": "name",
-                "Value": "Max Mustermann",
-                "ValueType": "string"
-              },
-              {
-                "Type": "email",
-                "Value": "max.mustermann@example.com",
-                "ValueType": "string"
-              },
-            ]
-          }
-        ]
+        - Name: api:feedback-fusion
+        - Name: feedback-fusion:write 
+        - Name: feedback-fusion:read
+      API_RESOURCES_INLINE: |
+        - Name: feedback-fusion 
+          Scopes: ["api:feedback-fusion", "feedback-fusion:write", "feedback-fusion:read"]
       CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
       ASPNET_SERVICES_OPTIONS_INLINE: |
         { 

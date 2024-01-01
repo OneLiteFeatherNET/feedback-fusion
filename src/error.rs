@@ -39,6 +39,8 @@ pub enum FeedbackFusionError {
     DatabaseError(#[from] rbatis::Error),
     #[error("unauthorized")]
     Unauthorized,
+    #[error("{0}")]
+    Forbidden(String),
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {
@@ -70,6 +72,10 @@ impl IntoResponse for FeedbackFusionError {
             FeedbackFusionError::Unauthorized => (
                 StatusCode::UNAUTHORIZED,
                 Json(FeedbackFusionErrorResponse::from("Unauthorized".to_owned())),
+            ),
+            FeedbackFusionError::Forbidden(error) => (
+                StatusCode::FORBIDDEN,
+                Json(FeedbackFusionErrorResponse::from(error)),
             ),
             _ => {
                 error!("Error occurred while processing request: {:?}", self);

@@ -28,28 +28,31 @@ use crate::{database::schema::feedback::FeedbackTarget, prelude::*};
 pub mod prompt;
 pub mod response;
 
-pub async fn router(state: FeedbackFusionState) -> Router {
-    Router::new()
-        .route(
-            "/target",
-            post(post_target).get(get_targets).layer(oidc_layer!()),
-        )
-        .route(
-            "/target/:target",
-            get(get_target)
-                .delete(delete_target)
-                .put(put_target)
-                .layer(oidc_layer!()),
-        )
-        .nest(
-            "/target/:target/prompt",
-            prompt::router(state.clone()).await,
-        )
-        .nest(
-            "/target/:target/prompt/:prompt/response",
-            response::router(state.clone()).await,
-        )
-        .with_state(state)
+pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
+    (
+        Router::new()
+            .route("/target", post(post_target).get(get_targets))
+            .route(
+                "/target/:target",
+                get(get_target).delete(delete_target).put(put_target),
+            )
+            .nest(
+                "/target/:target/prompt",
+                prompt::router(state.clone()).await,
+            )
+            .nest(
+                "/target/:target/prompt/:prompt/response",
+                response::router(state.clone()).await,
+            )
+            .with_state(state.clone()),
+        Router::new()
+            .route("/target/:target/prompt/:prompt/fetch", get(prompt::fetch))
+            .route(
+                "/target/:target/prompt/:prompt/response",
+                post(response::post_response),
+            )
+            .with_state(state),
+    )
 }
 
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
@@ -62,9 +65,10 @@ pub struct CreateFeedbackTargetRequest {
 /// POST /v1/target
 #[utoipa::path(post, path = "/v1/target", request_body = CreateFeedbackTargetRequest, tag = "FeedbackTarget", responses(
     (status = 201, description = "Target created", body = FeedbackTarget)
-))]
+), security(("oidc" = ["feedback-fusion:write"])))]
 pub async fn post_target(
     State(state): State<FeedbackFusionState>,
+    _guard: scope::Write,
     Json(data): Json<CreateFeedbackTargetRequest>,
 ) -> Result<(StatusCode, Json<FeedbackTarget>)> {
     let connection = state.connection();
@@ -86,11 +90,12 @@ pub async fn post_target(
 /// GET /v1/target
 #[utoipa::path(get, path = "/v1/target", params(SearchQuery, Pagination ), tag = "FeedbackTarget", responses(
     (status = 200, description = "Page of Targets", body = FeedbackTargetPage)
-))]
+), security(("oidc" = ["feedback-fusion:read"])))]
 pub async fn get_targets(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
     Query(search): Query<SearchQuery>,
+    _guard: scope::Read,
 ) -> Result<Json<Page<FeedbackTarget>>> {
     let connection = state.connection();
 
@@ -110,10 +115,11 @@ pub async fn get_targets(
 #[utoipa::path(get, path = "/v1/target/:id", tag = "FeedbackTarget", responses(
     (status = 200, description = "Target", body = FeedbackTarget),
     (status = 400, description = "Target not found")
-))]
+), security(("oidc" = ["feedback-fusion:read"])))]
 pub async fn get_target(
     State(state): State<FeedbackFusionState>,
     Path(target): Path<String>,
+    _guard: scope::Read,
 ) -> Result<Json<FeedbackTarget>> {
     let connection = state.connection();
 
@@ -138,10 +144,11 @@ pub struct PutFeedbackTargetRequest {
 /// PUT /v1/target/:target
 #[utoipa::path(put, path = "/v1/target/:target", request_body = PutFeedbackTargetRequest, tag = "FeedbackTarget", responses(
     (status = 200, description = "Updated", body = FeedbackTarget)
-))]
+), security(("oidc" = ["feedback-fusion:write"])))]
 pub async fn put_target(
     State(state): State<FeedbackFusionState>,
     Path(target): Path<String>,
+    _guard: scope::Write,
     Json(data): Json<PutFeedbackTargetRequest>,
 ) -> Result<Json<FeedbackTarget>> {
     data.validate()?;
@@ -162,10 +169,11 @@ pub async fn put_target(
 /// DELETE /v1/target/:target
 #[utoipa::path(delete, path = "/v1/target/:target", tag = "FeedbackTarget", responses(
     (status = 200, description = "Deleted")
-))]
+), security(("oidc" = ["feedback-fusion:write"])))]
 pub async fn delete_target(
     State(state): State<FeedbackFusionState>,
     Path(target): Path<String>,
+    _guard: scope::Write,
 ) -> Result<StatusCode> {
     let connection = state.connection();
 
