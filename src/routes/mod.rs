@@ -38,11 +38,7 @@ pub async fn router(state: FeedbackFusionState) -> Router {
         .with_terse_error_handler();
 
     Router::new()
-        .nest(
-            "/v1",
-            authorized
-                .layer(authorizer.jwt_layer(authority))
-        )
+        .nest("/v1", authorized.layer(authorizer.jwt_layer(authority)))
         .nest("/v1", unauthorized)
 }
 
