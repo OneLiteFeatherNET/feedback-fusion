@@ -68,7 +68,7 @@ pub struct CreateFeedbackTargetRequest {
 ), security(("oidc" = ["feedback-fusion:write"])))]
 pub async fn post_target(
     State(state): State<FeedbackFusionState>,
-    _guard: scope::API,
+    _guard: scope::Write,
     Json(data): Json<CreateFeedbackTargetRequest>,
 ) -> Result<(StatusCode, Json<FeedbackTarget>)> {
     let connection = state.connection();

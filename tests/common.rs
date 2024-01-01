@@ -82,7 +82,7 @@ pub fn run_server() -> BackendServer {
             command.env(key, value);
         }
     }
-    command.env("RUST_LOG", "TRACE");
+    command.env("RUST_LOG", "DEBUG");
 
     let child = command.spawn().unwrap();
     std::thread::sleep(std::time::Duration::from_secs(1));
