@@ -39,6 +39,8 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 }
 
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct CreateFeedbackPromptRequest {
     #[validate(length(max = 255))]
     title: String,
@@ -92,6 +94,8 @@ pub async fn get_prompts(
 }
 
 #[derive(Deserialize, Debug, Clone, ToSchema, Validate)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct PutFeedbackPromptRequest {
     #[validate(length(max = 255))]
     title: Option<String>,
@@ -139,6 +143,8 @@ pub async fn delete_prompt(
 }
 
 #[derive(Debug, Clone, ToSchema, Deserialize, Validate)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct CreateFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     title: String,
@@ -234,6 +240,8 @@ pub async fn get_fields(
 }
 
 #[derive(Debug, Clone, Deserialize, Validate, ToSchema)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct PutFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     title: Option<String>,

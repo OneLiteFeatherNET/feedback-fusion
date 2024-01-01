@@ -41,6 +41,9 @@ extern crate typed_builder;
 extern crate utoipa;
 #[macro_use]
 extern crate validator;
+#[cfg(test)]
+#[macro_use]
+extern crate ts_rs;
 
 use crate::{config::Config, database::DatabaseConfiguration, prelude::*};
 use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};

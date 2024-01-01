@@ -42,8 +42,6 @@ args = [
   "--no-default-features",
   "--features",
   "postgres,test",
-  "--test",
-  "http_tests",
   "--",
   "--nocapture",
   "--test-threads=1",

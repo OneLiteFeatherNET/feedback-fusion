@@ -40,6 +40,8 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 }
 
 #[derive(Deserialize, Clone, Debug, ToSchema)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct SubmitFeedbackPromptResponseRequest {
     responses: HashMap<String, FeedbackPromptFieldData>,
 }
@@ -105,6 +107,8 @@ pub async fn post_response(
 pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FeedbackPromptFieldResponse>>;
 
 #[derive(ToSchema)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct GetFeedbackPromptResponsesResponseWrapper(
     HashMap<String, Vec<FeedbackPromptFieldResponse>>,
 );

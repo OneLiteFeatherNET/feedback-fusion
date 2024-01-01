@@ -56,6 +56,8 @@ pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
 }
 
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct CreateFeedbackTargetRequest {
     #[validate(length(max = 255))]
     name: String,
@@ -134,6 +136,8 @@ pub async fn get_target(
 }
 
 #[derive(Clone, Debug, Deserialize, ToSchema, Validate)]
+#[cfg_attr(test, derive(TS))]
+#[cfg_attr(test, ts(export))]
 pub struct PutFeedbackTargetRequest {
     #[validate(length(max = 255))]
     name: Option<String>,
