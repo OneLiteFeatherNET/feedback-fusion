@@ -26,10 +26,30 @@
 pub struct Config {
     #[serde(default = "default_global_rate_limit")]
     global_rate_limit: u64,
-    oidc_discovery_url: String
+    oidc_discovery_url: String,
+    #[serde(default = "default_oidc_scope_admin")]
+    oidc_scope_admin: String,
+    #[serde(default = "default_oidc_scope_write")]
+    oidc_scope_write: String,
+    #[serde(default = "default_oidc_scope_read")]
+    oidc_scope_read: String,
+    #[serde(default = "default_oidc_audience")]
+    oidc_audience: String
 }
 
+#[inline]
 fn default_global_rate_limit() -> u64 {
     10
 }
+#[inline]
+fn default_oidc_scope_admin() -> String { "api:feedback-fusion".to_owned() }
 
+#[inline]
+fn default_oidc_scope_write() -> String { "feedback-fusion:write".to_owned() }
+
+#[inline]
+fn default_oidc_scope_read() -> String { "feedback-fusion:read".to_owned() }
+
+#[inline]
+fn default_oidc_audience() -> String { "feedback-fusion".to_owned() }
+ 

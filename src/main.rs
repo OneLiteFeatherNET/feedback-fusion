@@ -128,7 +128,7 @@ pub(crate) async fn router(connection: DatabaseConnection) -> Router {
                 *CONFIG.global_rate_limit(),
                 Duration::from_secs(1),
             ))
-            .layer(TraceLayer::new_for_http()),
+            .layer(TraceLayer::new_for_http())
     )
 }
 

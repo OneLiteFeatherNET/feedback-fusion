@@ -46,7 +46,7 @@ pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
             )
             .with_state(state.clone()),
         Router::new()
-            .route("target/:target/prompt/:prompt/fetch", get(prompt::fetch))
+            .route("/target/:target/prompt/:prompt/fetch", get(prompt::fetch))
             .route(
                 "/target/:target/prompt/:prompt/response",
                 post(response::post_response),
@@ -68,7 +68,7 @@ pub struct CreateFeedbackTargetRequest {
 ), security(("oidc" = ["feedback-fusion:write"])))]
 pub async fn post_target(
     State(state): State<FeedbackFusionState>,
-    _guard: scope::Write,
+    _guard: scope::API,
     Json(data): Json<CreateFeedbackTargetRequest>,
 ) -> Result<(StatusCode, Json<FeedbackTarget>)> {
     let connection = state.connection();

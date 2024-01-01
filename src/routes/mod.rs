@@ -35,10 +35,10 @@ pub async fn router(state: FeedbackFusionState) -> Router {
     let authority = oidc::authority().await.unwrap();
     let authorizer = Oauth2Authorizer::new()
         .with_claims::<OIDCClaims>()
-        .with_terse_error_handler();
+        .with_verbose_error_handler();
 
     Router::new()
-        .nest("/v1", authorized.layer(authorizer.jwt_layer(authority)))
+        .nest("/v1", authorized.layer(authorizer.jwt_layer(authority)).layer(axum::Extension(aliri_axum::VerboseAuthxErrors)))
         .nest("/v1", unauthorized)
 }
 
