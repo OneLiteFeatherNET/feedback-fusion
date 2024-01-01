@@ -42,7 +42,6 @@ pub async fn router(state: FeedbackFusionState) -> Router {
             "/v1",
             authorized
                 .layer(authorizer.jwt_layer(authority))
-                .layer(axum::Extension(aliri_axum::VerboseAuthxErrors)),
         )
         .nest("/v1", unauthorized)
 }
