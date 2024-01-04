@@ -39,8 +39,7 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 }
 
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct CreateFeedbackPromptRequest {
     #[validate(length(max = 255))]
     title: String,
@@ -94,8 +93,7 @@ pub async fn get_prompts(
 }
 
 #[derive(Deserialize, Debug, Clone, ToSchema, Validate)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct PutFeedbackPromptRequest {
     #[validate(length(max = 255))]
     title: Option<String>,
@@ -143,8 +141,7 @@ pub async fn delete_prompt(
 }
 
 #[derive(Debug, Clone, ToSchema, Deserialize, Validate)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct CreateFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     title: String,
@@ -171,10 +168,14 @@ pub async fn post_field(
     };
 
     // build the field
+    #[cfg(not(feature = "bindings"))]
+    let options = JsonV(data.options);
+    #[cfg(feature = "bindings")]
+    let options = data.options;
     let field = FeedbackPromptField::builder()
         .title(data.title)
         .r#type(data.r#type)
-        .options(JsonV(data.options))
+        .options(options)
         .prompt(prompt)
         .build();
     database_request!(FeedbackPromptField::insert(state.connection(), &field).await?);
@@ -240,8 +241,7 @@ pub async fn get_fields(
 }
 
 #[derive(Debug, Clone, Deserialize, Validate, ToSchema)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct PutFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     title: Option<String>,
@@ -280,6 +280,7 @@ pub async fn put_field(
     field.set_title(data.title.unwrap_or(field.title().to_string()));
     if let Some(options) = data.options {
         if field.r#type().eq(&options) {
+            #[cfg(not(feature = "bindings"))]
             field.set_options(JsonV(options));
         }
     }

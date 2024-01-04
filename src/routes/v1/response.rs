@@ -40,8 +40,7 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 }
 
 #[derive(Deserialize, Clone, Debug, ToSchema)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct SubmitFeedbackPromptResponseRequest {
     responses: HashMap<String, FeedbackPromptFieldData>,
 }
@@ -80,11 +79,14 @@ pub async fn post_response(
                 .iter()
                 .any(|f| field.eq(f.id()) && f.r#type().eq(&value))
             {
+                #[cfg(not(feature = "bindings"))]
+                let value = JsonV(value);
+
                 Some(
                     FeedbackPromptFieldResponse::builder()
                         .response(response.id().as_str())
                         .field(field)
-                        .data(JsonV(value))
+                        .data(value)
                         .build(),
                 )
             } else {
@@ -107,8 +109,7 @@ pub async fn post_response(
 pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FeedbackPromptFieldResponse>>;
 
 #[derive(ToSchema)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct GetFeedbackPromptResponsesResponseWrapper(
     HashMap<String, Vec<FeedbackPromptFieldResponse>>,
 );

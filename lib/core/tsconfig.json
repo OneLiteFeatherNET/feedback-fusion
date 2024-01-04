@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "esnext", /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "module": "commonjs", /* Specify what module code is generated. */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "../../*"
+      ]
+    },
+    "declaration": true,
+    "outDir": "./dist", /* Specify an output folder for all emitted files. */
+    "forceConsistentCasingInFileNames": true, /* Ensure that casing is correct in imports. */
+    "strict": true, /* Enable all strict type-checking options. */
+    "noImplicitAny": true, /* Enable error reporting for expressions and declarations with an implied 'any' type. */
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

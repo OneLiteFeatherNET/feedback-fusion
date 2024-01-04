@@ -28,8 +28,7 @@ use super::FeedbackPromptInputType;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
 #[serde(untagged)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub enum FeedbackPromptInputOptions {
     Text(TextOptions),
     Rating(RatingOptions),
@@ -47,8 +46,7 @@ impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct TextOptions {
     #[validate(length(max = 255))]
     description: String,
@@ -58,8 +56,7 @@ pub struct TextOptions {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct RatingOptions {
     #[validate(length(max = 255))]
     description: String,
@@ -73,15 +70,14 @@ pub struct RatingOptions {
 #[get = "pub"]
 #[get_mut = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct FeedbackPromptResponse {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
     prompt: String,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(test, ts(type = "Date"))]
+    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     created_at: DateTime,
 }
 
@@ -94,24 +90,24 @@ impl_select_page_wrapper!(FeedbackPromptResponse {select_page_by_prompt(prompt: 
 #[get = "pub"]
 #[get_mut = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct FeedbackPromptFieldResponse {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
     response: String,
     field: String,
+    #[cfg(not(feature = "bindings"))]
     #[schema(value_type = FeedbackPromptFieldData)]
-    #[cfg_attr(test, ts(type = "FeedbackPromptFieldData"))]
     data: JsonV<FeedbackPromptFieldData>,
+    #[cfg(feature = "bindings")]
+    data: FeedbackPromptFieldData
 }
 
 crud!(FeedbackPromptFieldResponse {});
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, ToSchema)]
 #[serde(untagged)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub enum FeedbackPromptFieldData {
     Text(TextResponse),
     Rating(RatingResponse),
@@ -128,15 +124,13 @@ impl PartialEq<FeedbackPromptFieldData> for FeedbackPromptInputType {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct TextResponse {
     data: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct RatingResponse {
     data: u8,
 }

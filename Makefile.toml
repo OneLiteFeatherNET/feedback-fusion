@@ -12,7 +12,7 @@ args = ["i"]
 [tasks.docs_generate]
 dependencies = ["docs_init"]
 command = "cargo"
-args = ["run", "--features", "docs"]
+args = ["run", "--bin", "docs", "--features", "docs"]
 
 [tasks.docs_preview]
 dependencies = ["docs_generate"]
@@ -21,11 +21,20 @@ args = ["redocly", "preview-docs", "target/openapi.yaml"]
 
 [tasks.check]
 command = "cargo"
-args = ["check"]
+args = ["check", "--bin", "main"]
 
 [tasks.clippy]
 command = "cargo"
-args = ["clippy", "--features", "postgres", "--", "-D", "warnings"]
+args = [
+  "clippy",
+  "--bin",
+  "main",
+  "--features",
+  "postgres",
+  "--",
+  "-D",
+  "warnings",
+]
 
 [tasks.oidc-server-mock]
 script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d"
@@ -39,6 +48,8 @@ env = { DATABASE = "POSTGRES", POSTGRES_USERNAME = "postgres", POSTGRES_PASSWORD
 command = "cargo"
 args = [
   "test",
+  "--bin",
+  "main",
   "--no-default-features",
   "--features",
   "postgres,test",
@@ -77,3 +88,20 @@ args = [
 dependencies = ["docs_lint"]
 command = "npx"
 args = ["redocly", "build-docs", "target/openapi.yaml", "-o", "docs/index.html"]
+
+[tasks.generate_bindings]
+command = "cargo"
+args = [
+  "run",
+  "--bin",
+  "bindings",
+  "--no-default-features",
+  "--features",
+  "bindings,postgres",
+]
+
+[tasks.export_bindings]
+script = '''for f in bindings/*.ts; do [ "$f" != "bindings/index.ts" ] && echo "export * from './$(basename "$f" .ts)';" ; done > bindings/index.ts'''
+
+[tasks.bindings]
+run_task = { name = ["generate_bindings", "export_bindings"] }

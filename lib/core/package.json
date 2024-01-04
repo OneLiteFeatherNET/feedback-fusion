@@ -1,0 +1,26 @@
+{
+  "name": "feedback-fusion-core",
+  "version": "0.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OneLiteFeatherNET/feedback-fusion.git"
+  },
+  "author": "OneLiteFeatherNET",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OneLiteFeatherNET/feedback-fusion/issues"
+  },
+  "homepage": "https://github.com/OneLiteFeatherNET/feedback-fusion#readme",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

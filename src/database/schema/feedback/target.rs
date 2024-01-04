@@ -28,8 +28,7 @@ use crate::prelude::*;
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(test, derive(TS))]
-#[cfg_attr(test, ts(export))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct FeedbackTarget {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -39,11 +38,11 @@ pub struct FeedbackTarget {
     description: Option<String>,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(test, ts(type = "Date"))]
+    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(test, ts(type = "Date"))]
+    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     created_at: DateTime
 }
 

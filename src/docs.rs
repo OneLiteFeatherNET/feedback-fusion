@@ -25,7 +25,10 @@ use crate::{
     routes::v1::{prompt::*, response::*, *},
 };
 use std::{fs, path::Path};
-use utoipa::{OpenApi, ToSchema, Modify, openapi::security::{SecurityScheme, OpenIdConnect}};
+use utoipa::{
+    openapi::security::{OpenIdConnect, SecurityScheme},
+    Modify, OpenApi, ToSchema,
+};
 
 #[derive(ToSchema)]
 #[aliases(
@@ -34,13 +37,21 @@ use utoipa::{OpenApi, ToSchema, Modify, openapi::security::{SecurityScheme, Open
     FeedbackPromptFieldPage = Page<FeedbackPromptField>
 
 )]
+#[allow(unused)]
 pub struct Page<T: for<'a> ToSchema<'a>> {
     records: Vec<T>,
     total: u64,
     page_no: u64,
 }
 
-pub fn generate() {
+pub mod database;
+pub mod error;
+pub mod routes;
+pub mod state;
+pub mod config;
+pub mod prelude;
+
+pub fn main() {
     #[derive(OpenApi)]
     #[openapi(
         paths(
@@ -104,7 +115,9 @@ pub fn generate() {
             if let Some(components) = openapi.components.as_mut() {
                 components.add_security_scheme(
                     "oidc",
-                    SecurityScheme::OpenIdConnect(OpenIdConnect::new("https://your-oidc-provider.tld"))
+                    SecurityScheme::OpenIdConnect(OpenIdConnect::new(
+                        "https://your-oidc-provider.tld",
+                    )),
                 )
             }
         }
