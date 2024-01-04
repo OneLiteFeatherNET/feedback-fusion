@@ -152,10 +152,10 @@ jobs:
 
         - name: Archive artifact
           run: |
-          tar \
-            --dereference --hard-dereference \
-            -cvf "$RUNNER_TEMP/pages.tar" \
-            docs/
+            tar \
+              --dereference --hard-dereference \
+              -cvf "$RUNNER_TEMP/pages.tar" \
+              docs/
 
         - name: Upload artifact
           id: upload-artifact
