@@ -2,8 +2,9 @@ name: Continuous integration
 
 on:
   workflow_dispatch:
-  pull_request:
-  merge_group:
+  push:
+    branches:
+      - main
 
 jobs:
   check:
@@ -85,8 +86,8 @@ jobs:
       - name: Tests
         run: cargo make test
 
-  docs:
-    name: docs
+  docs-lint:
+    name: lint docs
     runs-on: ubuntu-latest
     steps:
       - uses: pnpm/action-setup@v2
@@ -116,3 +117,67 @@ jobs:
         with:
           command: make
           args: docs_lint
+
+    build-docs:
+      name: build docs
+      runs-on: ubuntu-latest
+      steps: 
+        - uses: pnpm/action-setup@v2
+          with:
+            version: 8
+     
+        - name: Install toolchain
+          uses: actions-rs/toolchain@v1
+          with:
+            toolchain: nightly
+            override: true
+
+        - name: Checkout Sources
+          uses: actions/checkout@v3
+
+        - name: Setup cache
+          uses: Swatinem/rust-cache@v2
+
+        - name: Install cargo-make
+          uses: actions-rs/cargo@v1
+          with:
+             command: install
+          args: cargo-make
+
+        - name: Build docs
+          uses: actions-rs/cargo@v1
+          with:
+           command: make
+           args: docs_build
+
+        - name: Archive artifact
+          run: |
+          tar \
+            --dereference --hard-dereference \
+            -cvf "$RUNNER_TEMP/pages.tar" \
+            docs/
+
+        - name: Upload artifact
+          id: upload-artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: pages
+            path: ${{ runner.temp }}/pages.tar
+            retention-days: 1
+            if-no-files-found: error
+              
+    deploy-docs:
+      needs: [build-docs]
+      runs-on: ubuntu-latest
+      permissions:
+        pages: write
+        id-token: write
+      environment: 
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}/nightly
+      steps:
+        - name: Deploy to pages 
+          id: deployment 
+          uses: actions/deploy-pages@v4
+          with: 
+            artifact_name: "pages"
