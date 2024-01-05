@@ -1,7 +1,7 @@
 {
-  "name": "feedback-fusion-core",
+  "name": "@onelitefeathernet/feedback-fusion-core",
   "version": "0.0.0",
-  "description": "",
+  "description": "Core lib containing the http client in order to interact with the feedback-fusion backend",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
