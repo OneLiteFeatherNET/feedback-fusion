@@ -10,6 +10,7 @@ export * from './FeedbackPromptInputType';
 export * from './FeedbackPromptResponse';
 export * from './FeedbackTarget';
 export * from './GetFeedbackPromptResponsesResponseWrapper';
+export * from './Page';
 export * from './PutFeedbackPromptFieldRequest';
 export * from './PutFeedbackPromptRequest';
 export * from './PutFeedbackTargetRequest';

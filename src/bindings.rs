@@ -41,6 +41,14 @@ macro_rules! export {
     };
 }
 
+#[cfg(feature = "bindings")]
+#[derive(serde::Serialize, TS)]
+pub struct Page<T: TS> {
+    records: Vec<T>,
+    total: u64,
+    page_no: u64,
+}
+
 pub fn main() {
     #[cfg(feature = "bindings")]
     export!(
@@ -64,6 +72,7 @@ pub fn main() {
         GetFeedbackPromptResponsesResponseWrapper,
         SubmitFeedbackPromptResponseRequest,
         TextResponse,
-        RatingResponse
+        RatingResponse,
+        Page<FeedbackPromptField>
     );
 }

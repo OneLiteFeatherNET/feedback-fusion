@@ -21,14 +21,13 @@
  */
 
 import { FeedbackFusionClient } from "@onelitefeathernet/feedback-fusion-core";
-import { App, provide } from "vue";
-import { FeedbackFusionConfig } from "./config";
 
-export const FeedbackFusion = {
-  install(Vue: App, config: FeedbackFusionConfig) {
-    provide("feedbackFusionState", {
-      config,
-      client: new FeedbackFusionClient(config.baseURL, config.target),
-    });
-  },
-};
+export interface FeedbackFusionConfig {
+  baseURL: string;
+  target: string;
+}
+
+export interface FeedbackFusionState {
+  config: FeedbackFusionConfig,
+  client: FeedbackFusionClient
+}
