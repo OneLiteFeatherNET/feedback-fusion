@@ -21,16 +21,20 @@
  */
 
 import { FeedbackFusionClient } from "./";
+import { I18n } from "i18n";
 
 export interface FeedbackFusionConfig {
   baseURL: string;
   target: string;
   behaviour?: {
-    storage?: "localstorage" | "cookie"
-  }
+    storage?: "localstorage" | "cookie";
+  };
+  locales?: { locale: string; translations: Object }[];
+  defaultLocale?: string;
 }
 
 export interface FeedbackFusionState {
-  config: FeedbackFusionConfig,
-  client: FeedbackFusionClient
+  config: FeedbackFusionConfig;
+  client: FeedbackFusionClient;
+  i18n: I18n;
 }

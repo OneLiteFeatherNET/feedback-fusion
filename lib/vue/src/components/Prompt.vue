@@ -1,7 +1,23 @@
-<template></template>
+<template>
+  <slot v-bind="childProps">
+    <VContainer>
+      <VCard :loading="!!prompt">
+        <VCardTitle>
+          {{ prompt?.title || "Loading..." }}
+        </VCardTitle>
+
+        <VCardSubtitle>
+
+        </VCardSubtitle>
+      </VCard>
+    </VContainer>
+  </slot>
+</template>
 
 <script setup lang="ts">
 import { FeedbackPromptField, FeedbackFusionState, FeedbackPrompt } from "@onelitefeathernet/feedback-fusion-core"
+import { VContainer } from "vuetify/components/VGrid";
+import { VCard, VCardText, VCardTitle, VCardActions, VCardSubtitle } from "vuetify/components/VCard";
 import { inject, onMounted, ref } from "vue";
 
 interface PromptProps {
@@ -15,6 +31,13 @@ const fieldPage = ref(0);
 const fieldPages = ref(1);
 const prompt = ref(undefined as FeedbackPrompt | undefined)
 const fields = ref([] as FeedbackPromptField[]);
+
+const childProps = ref({
+  prompt,
+  fields,
+  fieldPage,
+  fieldPages
+});
 
 onMounted(async () => {
   // fetch the prompt information

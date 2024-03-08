@@ -20,14 +20,21 @@
  * SOFTWARE.
  */
 
-import { FeedbackFusionClient, FeedbackFusionConfig } from "@onelitefeathernet/feedback-fusion-core";
+import {
+  FeedbackFusionClient,
+  FeedbackFusionConfig,
+  initI18n
+} from "@onelitefeathernet/feedback-fusion-core";
 import { App, provide } from "vue";
+
+import "vuetify/styles";
 
 export const FeedbackFusion = {
   install(Vue: App, config: FeedbackFusionConfig) {
     provide("feedbackFusionState", {
       config,
       client: new FeedbackFusionClient(config.baseURL, config.target),
+      i18n: initI18n(config.locales, config.defaultLocale)
     });
   },
 };
