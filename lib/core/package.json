@@ -8,8 +8,7 @@
     "tsc": "tsc"
   },
   "files": [
-    "dist/",
-    "locales/"
+    "dist/"
   ],
   "repository": {
     "type": "git",
