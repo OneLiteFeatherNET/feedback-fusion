@@ -70,6 +70,23 @@ pub async fn post_prompt(
     Ok((StatusCode::CREATED, Json(prompt)))
 }
 
+/// GET /v1/target/:target/prompt/:prompt
+#[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt", responses(
+    (status = 200, body = FeedbackPrompt)
+), tag = "FeedbackTargetPrompt")]
+pub async fn get_prompt(
+    State(state): State<FeedbackFusionState>,
+    Path((_, prompt)): Path<(String, String)>,
+) -> Result<Json<FeedbackPrompt>> {
+    let prompt: Option<FeedbackPrompt> =
+        database_request!(FeedbackPrompt::select_by_id(state.connection(), prompt.as_str()).await?);
+
+    match prompt {
+        Some(prompt) => Ok(Json(prompt)),
+        None => Err(FeedbackFusionError::BadRequest("invalid prompt".to_string()))
+    }
+}
+
 /// GET /v1/target/:target/prompt
 #[utoipa::path(get, path = "/v1/target/:target/prompt", params(Pagination), responses(
     (status = 200, body = FeedbackPromptPage)

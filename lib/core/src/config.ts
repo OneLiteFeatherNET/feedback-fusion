@@ -20,11 +20,14 @@
  * SOFTWARE.
  */
 
-import { FeedbackFusionClient } from "@onelitefeathernet/feedback-fusion-core";
+import { FeedbackFusionClient } from "./";
 
 export interface FeedbackFusionConfig {
   baseURL: string;
   target: string;
+  behaviour?: {
+    storage?: "localstorage" | "cookie"
+  }
 }
 
 export interface FeedbackFusionState {

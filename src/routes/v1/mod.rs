@@ -46,6 +46,7 @@ pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
             )
             .with_state(state.clone()),
         Router::new()
+            .route("/target/:target/prompt/:prompt", get(prompt::get_prompt))
             .route("/target/:target/prompt/:prompt/fetch", get(prompt::fetch))
             .route(
                 "/target/:target/prompt/:prompt/response",

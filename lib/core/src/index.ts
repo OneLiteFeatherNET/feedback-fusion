@@ -25,13 +25,14 @@ import {
   SubmitFeedbackPromptResponseRequest,
   FeedbackPromptField,
   Page,
+  FeedbackPrompt,
 } from "../../../bindings";
 
 export class FeedbackFusionClient {
   public baseURL: string;
 
   public constructor(baseURL: string, target: String) {
-    this.baseURL = `${baseURL}/v1/target/${target}/`;
+    this.baseURL = `${baseURL}/v1/target/${target}`;
   }
 
   /**
@@ -52,6 +53,15 @@ export class FeedbackFusionClient {
   }
 
   /**
+   * Fetch a specific prompt
+   */
+  public async getPrompt(prompt: string): Promise<FeedbackPrompt> {
+    return await fetch(`${this.baseURL}/prompt/${prompt}`)
+      .then((response) => response.json() as Promise<FeedbackPrompt>)
+      .then((response: FeedbackPrompt) => response)
+  }
+
+  /**
   * Fetch a page of fields 
   */
   public async getFields(prompt: string, page = 1, page_size = 20): Promise<Page<FeedbackPromptField>> {
@@ -61,4 +71,7 @@ export class FeedbackFusionClient {
   }
 }
 
+export * from "./config";
+
+// export bindings generated via ts-rs
 export * from "../../../bindings";

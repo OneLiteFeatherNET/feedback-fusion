@@ -45,8 +45,8 @@ macro_rules! export {
 #[derive(serde::Serialize, TS)]
 pub struct Page<T: TS> {
     records: Vec<T>,
-    total: u64,
-    page_no: u64,
+    total: u16,
+    page_no: u16,
 }
 
 pub fn main() {

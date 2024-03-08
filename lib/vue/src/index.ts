@@ -20,9 +20,8 @@
  * SOFTWARE.
  */
 
-import { FeedbackFusionClient } from "@onelitefeathernet/feedback-fusion-core";
+import { FeedbackFusionClient, FeedbackFusionConfig } from "@onelitefeathernet/feedback-fusion-core";
 import { App, provide } from "vue";
-import { FeedbackFusionConfig } from "./config";
 
 export const FeedbackFusion = {
   install(Vue: App, config: FeedbackFusionConfig) {

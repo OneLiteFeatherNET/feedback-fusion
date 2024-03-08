@@ -251,6 +251,32 @@ async fn test_prompt_endpoints() {
         assert_eq!(&prompt, data.records.first().unwrap());
     }
 
+    // test get specific prompt
+    {
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/invalid",
+                HTTP_ENDPOINT, &target.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::OK, response.status());
+
+        let data = response.json::<PromptResponse>().await.unwrap();
+        assert_eq!(&prompt, &data);
+    }
+
     // test put
     {
         let response = client

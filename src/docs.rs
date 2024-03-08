@@ -40,8 +40,8 @@ use utoipa::{
 #[allow(unused)]
 pub struct Page<T: for<'a> ToSchema<'a>> {
     records: Vec<T>,
-    total: u64,
-    page_no: u64,
+    total: u16,
+    page_no: u16,
 }
 
 pub mod database;
@@ -60,6 +60,7 @@ pub fn main() {
             put_target,
             delete_target,
             post_prompt,
+            get_prompt,
             get_prompts,
             put_prompt,
             delete_prompt,
