@@ -1,27 +1,17 @@
 <template>
   <slot v-bind="childProps">
-    <VContainer>
-      <VCard :loading="!!prompt">
-        <VCardTitle>
-          {{ prompt?.title || "Loading..." }}
-        </VCardTitle>
-
-        <VCardSubtitle>
-
-        </VCardSubtitle>
-      </VCard>
-    </VContainer>
+    {{ prompt?.title }} 
   </slot>
 </template>
 
 <script setup lang="ts">
 import { FeedbackPromptField, FeedbackFusionState, FeedbackPrompt } from "@onelitefeathernet/feedback-fusion-core"
-import { VContainer } from "vuetify/components/VGrid";
-import { VCard, VCardText, VCardTitle, VCardActions, VCardSubtitle } from "vuetify/components/VCard";
 import { inject, onMounted, ref } from "vue";
+import i18next from "i18next"
 
 interface PromptProps {
   prompt: string;
+  locale?: string;
 }
 
 const props = defineProps<PromptProps>();

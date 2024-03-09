@@ -20,7 +20,6 @@
  * SOFTWARE.
  */
 
-import { GlobalCatalog, I18n, LocaleCatalog } from "i18n";
 import {
   FeedbackPromptResponse,
   SubmitFeedbackPromptResponseRequest,
@@ -70,23 +69,6 @@ export class FeedbackFusionClient {
       .then((response) => response.json() as Promise<Page<FeedbackPromptField>>)
       .then((response: Page<FeedbackPromptField>) => response)
   }
-}
-
-export function initI18n(locales?: { locale: string; translations: Object }[], defaultLocale?: string): I18n {
-  const existingLocales: string[] = [];
-  const staticCatalog: GlobalCatalog = {};
-  if (locales) {
-    locales.forEach((locale) => {
-      existingLocales.push(locale.locale);
-      staticCatalog[locale.locale] = locale.translations as LocaleCatalog;
-    });
-  }
-
-  return new I18n({
-    defaultLocale: defaultLocale || existingLocales[0],
-    retryInDefaultLocale: true,
-    staticCatalog
-  })
 }
 
 export * from "./config";

@@ -2,6 +2,6 @@ export default {
   locale: "en",
   translations: {
     loading: "Loading...",
-    page: "page %n from %n",
+    page: "page {{ current }} from {{ total }}",
   },
 };

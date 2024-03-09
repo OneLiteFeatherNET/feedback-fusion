@@ -21,7 +21,6 @@
  */
 
 import { FeedbackFusionClient } from "./";
-import { I18n } from "i18n";
 
 export interface FeedbackFusionConfig {
   baseURL: string;
@@ -36,5 +35,4 @@ export interface FeedbackFusionConfig {
 export interface FeedbackFusionState {
   config: FeedbackFusionConfig;
   client: FeedbackFusionClient;
-  i18n: I18n;
 }

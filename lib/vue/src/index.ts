@@ -23,18 +23,25 @@
 import {
   FeedbackFusionClient,
   FeedbackFusionConfig,
-  initI18n
 } from "@onelitefeathernet/feedback-fusion-core";
-import { App, provide } from "vue";
+import en from "@onelitefeathernet/feedback-fusion-core/locales/en";
+import i18next from "i18next";
+import { App } from "vue";
 
 import "vuetify/styles";
 
 export const FeedbackFusion = {
   install(Vue: App, config: FeedbackFusionConfig) {
-    provide("feedbackFusionState", {
+    i18next.init({
+      lng: "en",
+      resources: {
+        en: en.translations,
+      },
+    });
+
+    Vue.provide("feedbackFusionState", {
       config,
       client: new FeedbackFusionClient(config.baseURL, config.target),
-      i18n: initI18n(config.locales, config.defaultLocale)
     });
   },
 };
