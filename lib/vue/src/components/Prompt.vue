@@ -19,7 +19,7 @@
         <slot name="fields">
           <div class="feedback-fusion__prompt-fields">
             <Field v-for="field in fields" :key="field.id"
-              v-bind="{ ...field, value: data[field.id], theme: props.theme }" />
+              v-bind="{ ...field, value: data[field.id], theme: props.theme }" @update="event => data[field.id] = event" />
           </div>
         </slot>
       </div>

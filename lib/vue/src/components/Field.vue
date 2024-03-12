@@ -6,6 +6,19 @@
 
     <input v-if="props.type === 'text'" v-model="data" type="text" :placeholder="props.options.placeholder">
 
+    <div v-if="props.type === 'rating'" class="feedback-fusion__field__rating">
+      <div class="feedback-fusion__field__rating-point" v-for="i in props.options.max">
+        <input v-model="data" type="radio" :name="props.id" :id="props.id + i" :value="i">
+        <label :for="props.id + i">
+          <svg xmlns="http://www.w3.org/2000/svg" :fill="starColor(i)" viewBox="0 0 24 24">
+            <title>star-outline</title>
+            <path
+              d="M12,15.39L8.24,17.66L9.23,13.38L5.91,10.5L10.29,10.13L12,6.09L13.71,10.13L18.09,10.5L14.77,13.38L15.76,17.66M22,9.24L14.81,8.63L12,2L9.19,8.63L2,9.24L7.45,13.97L5.82,21L12,17.27L18.18,21L16.54,13.97L22,9.24Z" />
+          </svg>
+        </label>
+      </div>
+    </div>
+
     <div class="feedback-fusion__field-description">
       {{ props.options.description }}
     </div>
@@ -23,6 +36,7 @@ interface FieldProps extends FeedbackPromptField {
 
 const { config } = inject<FeedbackFusionState>('feedbackFusionState')!;
 const theme = computed(() => config.themes[props.theme || config.defaultTheme])
+const starColor = computed(() => (i: number) => data.value >= i ? theme.value.primary : theme.value.inactive)
 
 const props = defineProps<FieldProps>();
 const emit = defineEmits(["update"]);
@@ -57,6 +71,24 @@ const data = computed({
 
     &:focus {
       border: 1px solid v-bind("theme.primary");
+    }
+  }
+
+  .feedback-fusion__field__rating {
+    .feedback-fusion__field__rating-point {
+      display: inline-block;
+
+      input {
+        height: 0;
+        width: 0;
+        visibility: hidden;
+        display: none;
+      }
+
+      svg {
+        cursor: pointer;
+        height: 35px;
+      }
     }
   }
 
