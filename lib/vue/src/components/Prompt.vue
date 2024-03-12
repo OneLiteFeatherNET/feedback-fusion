@@ -18,7 +18,8 @@
 
         <slot name="fields">
           <div class="feedback-fusion__prompt-fields">
-            <Field v-for="field in fields" :key="field.id" v-bind="{ ...field, value: data[field.id]   }" />
+            <Field v-for="field in fields" :key="field.id"
+              v-bind="{ ...field, value: data[field.id], theme: props.theme }" />
           </div>
         </slot>
       </div>
@@ -47,7 +48,7 @@ const fieldPages = ref(1);
 const prompt = ref(undefined as FeedbackPrompt | undefined)
 const fields = ref([] as FeedbackPromptField[]);
 
-const data = ref({} as { [key:string]: any });
+const data = ref({} as { [key: string]: any });
 const childProps = ref({
   prompt,
   fields,
