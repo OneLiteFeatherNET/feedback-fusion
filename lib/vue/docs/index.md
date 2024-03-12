@@ -1,7 +1,4 @@
 # Prompt
 
-<Prompt prompt="prompt" />
+<FeedbackFusionPrompt prompt="prompt" />
 
-<script setup>
-import Prompt from "../src/components/Prompt.vue";
-</script>

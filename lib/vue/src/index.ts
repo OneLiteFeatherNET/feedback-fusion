@@ -22,26 +22,27 @@
 
 import {
   FeedbackFusionClient,
-  FeedbackFusionConfig,
+  FeedbackFusionConfigurationOptions,
+  patchConfig,
 } from "@onelitefeathernet/feedback-fusion-core";
-import en from "@onelitefeathernet/feedback-fusion-core/locales/en";
 import i18next from "i18next";
 import { App } from "vue";
-
-import "vuetify/styles";
+import Prompt from "./components/Prompt.vue"
 
 export const FeedbackFusion = {
-  install(Vue: App, config: FeedbackFusionConfig) {
+  install(Vue: App, config: FeedbackFusionConfigurationOptions) {
+    const patchedConfig = patchConfig(config);
+
     i18next.init({
-      lng: "en",
-      resources: {
-        en: en.translations,
-      },
+      lng: config.defaultLocale,
+      resources: config.locales as any 
     });
 
     Vue.provide("feedbackFusionState", {
-      config,
-      client: new FeedbackFusionClient(config.baseURL, config.target),
+      config: patchedConfig,
+      client: new FeedbackFusionClient(patchedConfig.baseURL, patchedConfig.target),
     });
+
+    Vue.component("FeedbackFusionPrompt", Prompt);
   },
 };

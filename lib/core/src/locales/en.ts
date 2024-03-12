@@ -1,7 +1,7 @@
 export default {
   locale: "en",
-  translations: {
+  translation: {
     loading: "Loading...",
-    page: "page {{ current }} from {{ total }}",
+    page: "page {{ current }} of {{ total }}",
   },
 };

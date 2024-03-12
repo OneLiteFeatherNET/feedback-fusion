@@ -21,15 +21,75 @@
  */
 
 import { FeedbackFusionClient } from "./";
+import en from "./locales/en";
 
-export interface FeedbackFusionConfig {
+interface BaseConfig {
   baseURL: string;
   target: string;
-  behaviour?: {
-    storage?: "localstorage" | "cookie";
+}
+
+interface LocaleData {
+  locale: string;
+  translation: Object[];
+}
+
+interface ThemeOptions {
+  [key: string]: {
+    text: string;
+    subtitle: string;
+    sheet: string;
   };
-  locales?: { locale: string; translations: Object }[];
+}
+
+export interface FeedbackFusionConfigurationOptions extends BaseConfig {
+  locales?: LocaleData[];
   defaultLocale?: string;
+  defaultTheme?: string;
+  themes?: ThemeOptions;
+}
+
+export interface FeedbackFusionConfig extends BaseConfig {
+  locales: { [key: string]: { translation: Object } };
+  defaultLocale: string;
+  defaultTheme: string;
+  themes: ThemeOptions;
+}
+
+const defaultThemes = {
+  dark: {
+    text: "#FFFFF5",
+    subtitle: "#757575",
+    sheet: "#212121",
+  },
+};
+
+export function patchConfig(
+  config: FeedbackFusionConfigurationOptions,
+): FeedbackFusionConfig {
+  // default themes
+  config.themes = Object.assign(defaultThemes, config.themes || {});
+  config.defaultTheme = config.defaultTheme || "dark";
+
+  // default locales
+  if (!config.defaultLocale) {
+    config.defaultLocale = "en";
+
+    if (!config.locales?.find((locale: LocaleData) => locale.locale === "en")) {
+      if (!config.locales) config.locales = [];
+      // @ts-ignore
+      config.locales.push(en);
+    }
+  }
+
+  // transform the locales
+  const locales: any = {};
+  config.locales!.forEach((locale: LocaleData) =>
+    locales[locale.locale] = { translation: locale.translation }
+  );
+  config.locales = locales;
+
+  // @ts-ignore
+  return config as FeedbackFusionConfig;
 }
 
 export interface FeedbackFusionState {
