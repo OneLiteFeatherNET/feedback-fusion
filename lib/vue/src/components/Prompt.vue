@@ -88,11 +88,12 @@ onMounted(async () => {
 
       .feedback-fusion__prompt-header-subtitle {
         color: v-bind("theme.subtitle");
+        font-size: 14px;
       }
     }
 
     .feedback-fusion__prompt-fields {
-      padding: 20px 0;
+      padding: 10px 0;
     }
   }
 }

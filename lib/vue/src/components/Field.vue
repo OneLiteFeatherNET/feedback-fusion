@@ -61,6 +61,7 @@ const data = computed({
     border: 1px solid v-bind("theme.inactive");
     border-radius: 4px;
 
+    width: 100%;
     padding: 16px;
 
     color: v-bind("theme.text");
