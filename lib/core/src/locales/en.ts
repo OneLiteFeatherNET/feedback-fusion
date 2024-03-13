@@ -3,5 +3,6 @@ export default {
   translation: {
     loading: "Loading...",
     page: "page {{ current }} of {{ total }}",
+    submit: "submit"
   },
 };
