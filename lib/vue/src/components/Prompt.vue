@@ -1,6 +1,6 @@
 <template>
   <slot v-bind="childProps">
-    <div class="feedback-fusion__prompt">
+    <div v-if="prompt?.active" class="feedback-fusion__prompt">
       <div class="feedback-fusion__prompt-container">
         <div class="feedback-fusion__prompt-header">
           <div class="feedback-fusion__prompt-header-title">
