@@ -40,6 +40,8 @@ interface ThemeOptions {
     sheet: string;
     primary: string;
     inactive: string;
+    success: string;
+    error: string;
   };
 }
 
@@ -64,6 +66,8 @@ const defaultThemes = {
     sheet: "#212121",
     primary: "#3498db",
     inactive: "#757575",
+    success: "#4caf50",
+    error: "#d33d3d",
   },
 };
 

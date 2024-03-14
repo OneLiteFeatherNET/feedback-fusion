@@ -3,6 +3,9 @@ export default {
   translation: {
     loading: "Loading...",
     page: "page {{ current }} of {{ total }}",
-    submit: "submit"
+    submit: "submit",
+    finished: "Thank you for participating in our survery!",
+    close: "close",
+    error: "An error occurred while processing your request"
   },
 };

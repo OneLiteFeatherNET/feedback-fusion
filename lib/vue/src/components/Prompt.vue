@@ -1,11 +1,11 @@
 <template>
   <slot v-bind="childProps">
-    <div v-if="prompt?.active" class="feedback-fusion__prompt">
+    <div v-if="prompt?.active && open" class="feedback-fusion__prompt">
       <div class="feedback-fusion__prompt-container">
         <div class="feedback-fusion__prompt-header">
           <div class="feedback-fusion__prompt-header-title">
             <slot name="title">
-              {{ prompt?.title || i18next.t("") }}
+              {{ prompt?.title || i18next.t("loading") }}
             </slot>
           </div>
 
@@ -16,7 +16,21 @@
           </div>
         </div>
 
-        <div class="feedback-fusion__prompt-fields">
+        <div v-if="finished || error" class="feedback-fusion__prompt-status">
+          <slot v-if="finished" name="success">
+            <div class="feedback-fusion__prompt-status-success">
+              {{ i18next.t("finished") }}
+            </div>
+          </slot>
+
+          <slot v-if="error" name="error">
+            <div class="feedback-fusion__prompt-status-error">
+              {{ i18next.t("error") }}
+            </div>
+          </slot>
+        </div>
+
+        <div v-if="!finished" class="feedback-fusion__prompt-fields">
           <slot name="field" v-for="field in fields" :key="field.id">
             <Field v-bind="{ ...field, value: data[field.id], theme: props.theme }"
               @update="event => data[field.id] = event" />
@@ -24,8 +38,12 @@
         </div>
 
         <div class="feedback-fusion__prompt-actions">
-          <button @click="submitResponse" class="feedback-fusion__prompt-actions-submit">
+          <button v-if="!finished" @click="submitResponse" class="feedback-fusion__prompt-actions-submit">
             {{ i18next.t("submit") }}
+          </button>
+
+          <button v-else @click="open = false" class="feedback-fusion__prompt-actions-close">
+            {{ i18next.t("close") }}
           </button>
         </div>
       </div>
@@ -43,6 +61,8 @@ interface PromptProps {
   prompt: string;
   locale?: string;
   theme?: string;
+  autoClose?: boolean;
+  closeAfter?: number;
 }
 
 const props = defineProps<PromptProps>();
@@ -54,12 +74,17 @@ const fieldPages = ref(1);
 const prompt = ref(undefined as FeedbackPrompt | undefined)
 const fields = ref([] as FeedbackPromptField[]);
 
+const open = ref(true);
+const finished = ref(false);
+const error = ref(false);
+
 const data = ref({} as { [key: string]: any });
 const childProps = ref({
   prompt,
   fields,
   fieldPage,
-  fieldPages
+  fieldPages,
+  finished
 });
 
 onMounted(async () => {
@@ -83,10 +108,15 @@ const submitResponse = async () => {
   // @ts-ignore
   Object.keys(data).forEach((key: string) => body[key] = { data: data[key] });
 
-  // TODO: error handling 
-  // TODO: show submit
   await client.submitResponse(props.prompt, body)
-    .then(() => data.value = {});
+    .then(() => {
+      data.value = {};
+      finished.value = true;
+
+      if (props.autoClose)
+        setTimeout(() => open.value = false, props.closeAfter || 5000);
+    })
+    .catch(() => error.value = true);
 };
 </script>
 
@@ -118,6 +148,8 @@ const submitResponse = async () => {
     }
 
     .feedback-fusion__prompt-actions {
+      margin-top: 10px;
+
       button {
         text-transform: uppercase;
         font-weight: bold;
@@ -147,8 +179,26 @@ const submitResponse = async () => {
         }
       }
 
-      .feedback-fusion__prompt-actions-submit {
+      .feedback-fusion__prompt-actions-submit,
+      .feedback-fusion__prompt-actions-close {
         float: right;
+      }
+    }
+
+    .feedback-fusion__prompt-status {
+      margin-top: 20px;
+
+      div {
+        width: 100%;
+        padding: 15px;
+      }
+
+      .feedback-fusion__prompt-status-success {
+        background: v-bind("theme.success");
+      }
+
+      .feedback-fusion__prompt-status-error {
+        background: v-bind("theme.error");
       }
     }
   }
