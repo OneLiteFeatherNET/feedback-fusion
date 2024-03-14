@@ -22,7 +22,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::prelude::*;
-use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};
+use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Server};
 use std::{net::SocketAddr, time::Duration};
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::trace::TraceLayer;

@@ -110,6 +110,7 @@ pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FeedbackPrompt
 
 #[derive(ToSchema)]
 #[cfg_attr(feature = "bindings", derive(TS))]
+#[allow(unused)]
 pub struct GetFeedbackPromptResponsesResponseWrapper(
     HashMap<String, Vec<FeedbackPromptFieldResponse>>,
 );

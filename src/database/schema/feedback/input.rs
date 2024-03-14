@@ -21,7 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use rbatis::rbdc::{DateTime, JsonV};
+use rbatis::rbdc::DateTime;
 
 use super::FeedbackPromptInputType;
 
@@ -100,7 +100,7 @@ pub struct FeedbackPromptFieldResponse {
     #[schema(value_type = FeedbackPromptFieldData)]
     data: JsonV<FeedbackPromptFieldData>,
     #[cfg(feature = "bindings")]
-    data: FeedbackPromptFieldData
+    data: FeedbackPromptFieldData,
 }
 
 crud!(FeedbackPromptFieldResponse {});
