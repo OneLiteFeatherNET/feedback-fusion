@@ -240,7 +240,7 @@ pub async fn fetch(
 /// GET /v1/target/:target/prompt/:prompt/field
 #[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt/field", params(Pagination), responses(
     (status = 200, body = FeedbackPromptFieldPage)
-), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:read"])), security(()))]
+), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:read"])))]
 pub async fn get_fields(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
