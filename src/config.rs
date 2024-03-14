@@ -21,6 +21,14 @@
  *
  */
 
+use crate::prelude::*;
+
+lazy_static! {
+    pub static ref CONFIG: Config = envy::from_env::<Config>().unwrap();
+    pub static ref DATABASE_CONFIG: DatabaseConfiguration =
+        DatabaseConfiguration::extract().unwrap();
+}
+
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct Config {
@@ -34,7 +42,7 @@ pub struct Config {
     #[serde(default = "default_oidc_scope_read")]
     oidc_scope_read: String,
     #[serde(default = "default_oidc_audience")]
-    oidc_audience: String
+    oidc_audience: String,
 }
 
 #[inline]
@@ -42,14 +50,21 @@ fn default_global_rate_limit() -> u64 {
     10
 }
 #[inline]
-fn default_oidc_scope_admin() -> String { "api:feedback-fusion".to_owned() }
+fn default_oidc_scope_admin() -> String {
+    "api:feedback-fusion".to_owned()
+}
 
 #[inline]
-fn default_oidc_scope_write() -> String { "feedback-fusion:write".to_owned() }
+fn default_oidc_scope_write() -> String {
+    "feedback-fusion:write".to_owned()
+}
 
 #[inline]
-fn default_oidc_scope_read() -> String { "feedback-fusion:read".to_owned() }
+fn default_oidc_scope_read() -> String {
+    "feedback-fusion:read".to_owned()
+}
 
 #[inline]
-fn default_oidc_audience() -> String { "feedback-fusion".to_owned() }
- 
+fn default_oidc_audience() -> String {
+    "feedback-fusion".to_owned()
+}

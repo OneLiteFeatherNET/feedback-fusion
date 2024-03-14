@@ -1,0 +1,36 @@
+{
+  "name": "@onelitefeathernet/feedback-fusion-core",
+  "version": "0.0.0",
+  "description": "Core lib containing the http client in order to interact with the feedback-fusion backend",
+  "main": "dist/lib/core/src/index.js",
+  "types": "dist/lib/core/src/index.d.ts",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/lib/core/src/index.d.ts",
+      "default": "./dist/lib/core/src/index.js"
+    },
+    "./locales/*": {
+      "types": "./dist/lib/core/src/locales/*.d.ts",
+      "default": "./dist/lib/core/src/locales/*.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OneLiteFeatherNET/feedback-fusion.git"
+  },
+  "author": "OneLiteFeatherNET",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OneLiteFeatherNET/feedback-fusion/issues"
+  },
+  "homepage": "https://github.com/OneLiteFeatherNET/feedback-fusion#readme",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

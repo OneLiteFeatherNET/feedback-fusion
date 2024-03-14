@@ -3,8 +3,19 @@ name = "feedback-fusion"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+default-run = "main"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "docs"
+path = "src/docs.rs"
+
+[[bin]]
+name = "bindings"
+path = "src/bindings.rs"
 
 [dependencies]
 aliri = "0.6.2"
@@ -35,6 +46,7 @@ tower = { version = "0.4.13", features = ["limit", "buffer"] }
 tower-http = { version = "0.4.4", features = ["trace"] }
 tracing = "0.1.39"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+ts-rs = { version = "7.0.0", optional = true }
 typed-builder = "0.18.0"
 utoipa = { version = "4.1.0", features = ["yaml", "chrono"] }
 validator = { version = "0.16", features = ["derive"] }
@@ -48,10 +60,11 @@ test-log = "0.2.14"
 [features]
 default = ["all-databases"]
 
-docs = []
 all-databases = ["postgres", "mysql"]
 postgres = ["rbdc-pg"]
 mysql = ["rbdc-mysql"]
 
 test = []
+docs = []
+bindings = ["ts-rs"]
 

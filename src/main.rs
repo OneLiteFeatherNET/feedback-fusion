@@ -21,97 +21,62 @@
  */
 #![allow(clippy::too_many_arguments)]
 
-#[macro_use]
-extern crate derivative;
-#[macro_use]
-extern crate getset;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate paste;
-#[macro_use]
-extern crate rbatis;
-#[macro_use]
-extern crate serde;
-#[macro_use]
-extern crate tracing;
-#[macro_use]
-extern crate typed_builder;
-#[macro_use]
-extern crate utoipa;
-#[macro_use]
-extern crate validator;
-
-use crate::{config::Config, database::DatabaseConfiguration, prelude::*};
-use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Router, Server};
+use crate::prelude::*;
+use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Server};
 use std::{net::SocketAddr, time::Duration};
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-lazy_static! {
-    pub static ref CONFIG: Config = envy::from_env::<Config>().unwrap();
-    pub static ref DATABASE_CONFIG: DatabaseConfiguration =
-        DatabaseConfiguration::extract().unwrap();
-}
-
 pub mod config;
 pub mod database;
 pub mod error;
+pub mod prelude;
 pub mod routes;
 pub mod state;
 
-#[cfg(feature = "docs")]
-pub mod docs;
-
 #[tokio::main]
 async fn main() {
-    #[cfg(feature = "docs")]
-    docs::generate();
+    // init the tracing subscriber with the `RUST_LOG` env filter
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
-    #[cfg(not(feature = "docs"))]
-    {
-        // init the tracing subscriber with the `RUST_LOG` env filter
-        tracing_subscriber::registry()
-            .with(tracing_subscriber::EnvFilter::from_default_env())
-            .with(tracing_subscriber::fmt::layer())
-            .init();
+    // init config
+    lazy_static::initialize(&CONFIG);
+    lazy_static::initialize(&DATABASE_CONFIG);
 
-        // init config
-        lazy_static::initialize(&CONFIG);
-        lazy_static::initialize(&DATABASE_CONFIG);
+    let (sender, receiver) = kanal::oneshot_async::<()>();
+    let address = SocketAddr::from(([0, 0, 0, 0], 8000));
 
-        let (sender, receiver) = kanal::oneshot_async::<()>();
-        let address = SocketAddr::from(([0, 0, 0, 0], 8000));
+    // connect to the database
+    let connection = DATABASE_CONFIG.connect().await.unwrap();
+    let connection = DatabaseConnection::from(connection);
 
-        // connect to the database
-        let connection = DATABASE_CONFIG.connect().await.unwrap();
-        let connection = DatabaseConnection::from(connection);
+    tokio::spawn(async move {
+        Server::bind(&address)
+            .serve(router(connection).await.into_make_service())
+            .with_graceful_shutdown(async move {
+                receiver.recv().await.ok();
+            })
+            .await
+            .unwrap();
+    });
+    info!("Listening for incoming requests");
 
-        tokio::spawn(async move {
-            Server::bind(&address)
-                .serve(router(connection).await.into_make_service())
-                .with_graceful_shutdown(async move {
-                    receiver.recv().await.ok();
-                })
-                .await
-                .unwrap();
-        });
-        info!("Listening for incoming requests");
-
-        match tokio::signal::ctrl_c().await {
-            Ok(()) => {}
-            Err(error) => {
-                error!("Unable to listen for the shutdown signal: {}", error);
-            }
+    match tokio::signal::ctrl_c().await {
+        Ok(()) => {}
+        Err(error) => {
+            error!("Unable to listen for the shutdown signal: {}", error);
         }
-
-        info!("Received shutdown signal... shutting down...");
-        sender.send(()).await.unwrap();
     }
+
+    info!("Received shutdown signal... shutting down...");
+    sender.send(()).await.unwrap();
 }
 
-pub(crate) async fn router(connection: DatabaseConnection) -> Router {
+async fn router(connection: DatabaseConnection) -> Router {
     let state = FeedbackFusionState::new(connection);
 
     routes::router(state).await.layer(
@@ -128,25 +93,6 @@ pub(crate) async fn router(connection: DatabaseConnection) -> Router {
                 *CONFIG.global_rate_limit(),
                 Duration::from_secs(1),
             ))
-            .layer(TraceLayer::new_for_http())
+            .layer(TraceLayer::new_for_http()),
     )
-}
-
-pub mod prelude {
-    pub use crate::{
-        config::*,
-        database::DatabaseConnection,
-        database_request,
-        error::*,
-        impl_select_page_wrapper,
-        routes::{oidc::*, *},
-        state::FeedbackFusionState,
-        CONFIG, DATABASE_CONFIG,
-    };
-    pub use axum::{
-        extract::{Json, Query, State},
-        routing::*,
-        Router,
-    };
-    pub use rbatis::{plugin::page::Page, rbdc::JsonV, IPageRequest};
 }

@@ -46,6 +46,7 @@ pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
             )
             .with_state(state.clone()),
         Router::new()
+            .route("/target/:target/prompt/:prompt", get(prompt::get_prompt))
             .route("/target/:target/prompt/:prompt/fetch", get(prompt::fetch))
             .route(
                 "/target/:target/prompt/:prompt/response",
@@ -56,6 +57,7 @@ pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
 }
 
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct CreateFeedbackTargetRequest {
     #[validate(length(max = 255))]
     name: String,
@@ -134,6 +136,7 @@ pub async fn get_target(
 }
 
 #[derive(Clone, Debug, Deserialize, ToSchema, Validate)]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct PutFeedbackTargetRequest {
     #[validate(length(max = 255))]
     name: Option<String>,

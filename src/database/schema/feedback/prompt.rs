@@ -21,7 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use rbatis::rbdc::{DateTime, JsonV};
+use rbatis::rbdc::DateTime;
 
 use super::input::FeedbackPromptInputOptions;
 
@@ -41,6 +41,7 @@ use super::input::FeedbackPromptInputOptions;
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct FeedbackPrompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -51,8 +52,10 @@ pub struct FeedbackPrompt {
     active: bool,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
+    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
+    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     #[builder(default)]
     created_at: DateTime,
 }
@@ -63,6 +66,7 @@ impl_select_page_wrapper!(FeedbackPrompt {select_page_by_target(target: &str) =>
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub enum FeedbackPromptInputType {
     Text,
     Rating,
@@ -84,6 +88,7 @@ pub enum FeedbackPromptInputType {
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct FeedbackPromptField {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -91,12 +96,17 @@ pub struct FeedbackPromptField {
     title: String,
     prompt: String,
     r#type: FeedbackPromptInputType,
+    #[cfg(not(feature = "bindings"))]
     #[schema(value_type = FeedbackPromptInputOptions)]
     options: JsonV<FeedbackPromptInputOptions>,
+    #[cfg(feature = "bindings")]
+    options: FeedbackPromptInputOptions,
     #[builder(default)]
     #[derivative(PartialEq = "ignore")]
+    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
+    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     #[builder(default)]
     created_at: DateTime,
 }
