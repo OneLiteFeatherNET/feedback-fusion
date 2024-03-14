@@ -73,7 +73,7 @@ pub async fn post_prompt(
 /// GET /v1/target/:target/prompt/:prompt
 #[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt", responses(
     (status = 200, body = FeedbackPrompt)
-), tag = "FeedbackTargetPrompt")]
+), tag = "FeedbackTargetPrompt", security(()))]
 pub async fn get_prompt(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -83,7 +83,9 @@ pub async fn get_prompt(
 
     match prompt {
         Some(prompt) => Ok(Json(prompt)),
-        None => Err(FeedbackFusionError::BadRequest("invalid prompt".to_string()))
+        None => Err(FeedbackFusionError::BadRequest(
+            "invalid prompt".to_string(),
+        )),
     }
 }
 
@@ -238,7 +240,7 @@ pub async fn fetch(
 /// GET /v1/target/:target/prompt/:prompt/field
 #[utoipa::path(get, path = "/v1/target/:target/prompt/:prompt/field", params(Pagination), responses(
     (status = 200, body = FeedbackPromptFieldPage)
-), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:read"])))]
+), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:read"])), security(()))]
 pub async fn get_fields(
     State(state): State<FeedbackFusionState>,
     Query(pagination): Query<Pagination>,
