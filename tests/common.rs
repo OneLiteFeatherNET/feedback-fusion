@@ -51,7 +51,7 @@ pub fn run_server() -> BackendServer {
     let mut path = std::env::current_exe().unwrap();
     assert!(path.pop());
     assert!(path.pop());
-    path = path.join(env!("CARGO_PKG_NAME"));
+    path = path.join("main");
 
     // prepare the command
     let mut command = Command::new(path);
