@@ -224,7 +224,8 @@ async fn test_prompt_endpoints() {
         let response = client
             .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
             .json(&serde_json::json!({
-                "title": "title"
+                "title": "title",
+                "description": "description"
             }))
             .send()
             .await
@@ -362,7 +363,8 @@ async fn test_prompt_field_endpoints() {
             let response = client
                 .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
                 .json(&serde_json::json!({
-                    "title": "title"
+                    "title": "title",
+                    "description": "description"
                 }))
                 .send()
                 .await
@@ -375,7 +377,8 @@ async fn test_prompt_field_endpoints() {
                 .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
                 .json(&serde_json::json!({
                     "title": "title",
-                    "active": false
+                    "active": false,
+                    "description": "description"
                 }))
                 .send()
                 .await
@@ -602,7 +605,8 @@ async fn test_response_endpoints() {
             let response = client
                 .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
                 .json(&serde_json::json!({
-                    "title": "title"
+                    "title": "title",
+                    "description": "description"
                 }))
                 .send()
                 .await
@@ -704,6 +708,23 @@ async fn test_response_endpoints() {
 
     // test post response
     {
+        // test with invalid data
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &text_field.id: {"data": "Yea"},
+                    &rating_field.id: {"data": 11}
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
         let response = client
             .post(format!(
                 "{}/v1/target/{}/prompt/{}/response",

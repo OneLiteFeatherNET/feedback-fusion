@@ -73,27 +73,32 @@ pub async fn post_response(
     let data = data
         .responses
         .into_iter()
-        .filter_map(|(field, value)| {
-            // validate the type of field and response
-            if fields
+        .map(|(key, value)| {
+            // try to get the field
+            let field = fields
                 .iter()
-                .any(|f| field.eq(f.id()) && f.r#type().eq(&value))
-            {
+                .find(|f| key.eq(f.id()) && f.r#type().eq(&value));
+
+            if let Some(field) = field {
+                // validate the data
+                value.validate(field.options())?;
+
                 #[cfg(not(feature = "bindings"))]
                 let value = JsonV(value);
 
-                Some(
-                    FeedbackPromptFieldResponse::builder()
-                        .response(response.id().as_str())
-                        .field(field)
-                        .data(value)
-                        .build(),
-                )
+                Ok(FeedbackPromptFieldResponse::builder()
+                    .response(response.id().as_str())
+                    .field(field.id())
+                    .data(value)
+                    .build())
             } else {
-                None
+                Err(FeedbackFusionError::BadRequest(format!(
+                    "Invalid field '{}'",
+                    key
+                )))
             }
         })
-        .collect::<Vec<FeedbackPromptFieldResponse>>();
+        .collect::<Result<Vec<FeedbackPromptFieldResponse>>>()?;
     // insert them as batch
     database_request!(
         FeedbackPromptFieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64)

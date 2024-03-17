@@ -41,10 +41,12 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct CreateFeedbackPromptRequest {
-    #[validate(length(max = 255))]
+    #[validate(length(max = 32))]
     title: String,
     #[serde(default = "bool_true")]
     active: bool,
+    #[validate(length(max = 255))]
+    description: String,
 }
 
 fn bool_true() -> bool {
@@ -66,6 +68,7 @@ pub async fn post_prompt(
     // build the prompt
     let prompt = FeedbackPrompt::builder()
         .title(data.title)
+        .description(data.description)
         .active(data.active)
         .target(target)
         .build();
@@ -166,8 +169,10 @@ pub async fn delete_prompt(
 #[derive(Debug, Clone, ToSchema, Deserialize, Validate)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct CreateFeedbackPromptFieldRequest {
-    #[validate(length(max = 255))]
+    #[validate(length(max = 32))]
     title: String,
+    #[validate(length(max = 255))]
+    description: Option<String>,
     r#type: FeedbackPromptInputType,
     options: FeedbackPromptInputOptions,
 }
@@ -197,6 +202,7 @@ pub async fn post_field(
     let options = data.options;
     let field = FeedbackPromptField::builder()
         .title(data.title)
+        .description(data.description)
         .r#type(data.r#type)
         .options(options)
         .prompt(prompt)
