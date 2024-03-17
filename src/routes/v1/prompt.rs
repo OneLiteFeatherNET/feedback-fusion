@@ -43,8 +43,12 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 pub struct CreateFeedbackPromptRequest {
     #[validate(length(max = 255))]
     title: String,
-    #[serde(default)]
+    #[serde(default = "bool_true")]
     active: bool,
+}
+
+fn bool_true() -> bool {
+    true
 }
 
 /// POST /v1/target/:target/prompt

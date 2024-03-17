@@ -345,7 +345,7 @@ async fn test_prompt_field_endpoints() {
     let client = client().await;
 
     // prepare dependencies
-    let (target, prompt) = {
+    let (target, prompt, inactive_prompt) = {
         let target = {
             let response = client
                 .post(format!("{}/v1/target", HTTP_ENDPOINT))
@@ -370,7 +370,20 @@ async fn test_prompt_field_endpoints() {
             response.json::<PromptResponse>().await.unwrap()
         };
 
-        (target, prompt)
+        let inactive_prompt = {
+            let response = client
+                .post(format!("{}/v1/target/{}/prompt", HTTP_ENDPOINT, &target.id))
+                .json(&serde_json::json!({
+                    "title": "title",
+                    "active": false
+                }))
+                .send()
+                .await
+                .unwrap();
+            response.json::<PromptResponse>().await.unwrap()
+        };
+
+        (target, prompt, inactive_prompt)
     };
 
     // test auth
@@ -473,6 +486,33 @@ async fn test_prompt_field_endpoints() {
         let data = response.json::<Page<FieldResponse>>().await.unwrap();
         assert_eq!(1, data.total);
         assert_eq!(&&field, data.records.first().as_ref().unwrap());
+    }
+
+    // test fetch
+    {
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}/fetch",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::OK, response.status());
+
+        let data = response.json::<Page<FieldResponse>>().await.unwrap();
+        assert_eq!(1, data.total);
+        assert_eq!(&&field, data.records.first().as_ref().unwrap());
+
+        let response = client
+            .get(format!(
+                "{}/v1/target/{}/prompt/{}/fetch",
+                HTTP_ENDPOINT, &target.id, &inactive_prompt.id
+            ))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::FORBIDDEN, response.status());
     }
 
     // test put
