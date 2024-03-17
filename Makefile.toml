@@ -37,7 +37,7 @@ args = [
 ]
 
 [tasks.oidc-server-mock]
-script = "docker compose -f testing/oidc-mock/docker-compose.yaml up -d"
+script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d"
 
 # Postgres
 [tasks.postgres_database]
