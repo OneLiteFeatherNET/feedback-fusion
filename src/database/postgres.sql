@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS feedback_target (
 CREATE TABLE IF NOT EXISTS feedback_prompt (
   id          VARCHAR(32) UNIQUE NOT NULL,
   title       VARCHAR(32) NOT NULL,
+  description VARCHAR(255) NOT NULL,
   target      VARCHAR(32) REFERENCES feedback_target(id) NOT NULL,
   active      BOOLEAN NOT NULL,
   updated_at  TIMESTAMP,
@@ -17,7 +18,8 @@ CREATE TABLE IF NOT EXISTS feedback_prompt (
 
 CREATE TABLE IF NOT EXISTS feedback_prompt_field (
   id          VARCHAR(32) UNIQUE NOT NULL,
-  title       VARCHAR(255) NOT NULL,
+  title       VARCHAR(32) NOT NULL,
+  description VARCHAR(255),
   prompt      VARCHAR(32) REFERENCES feedback_prompt(id) NOT NULL,
   type        VARCHAR(32) NOT NULL,
   options     JSON NOT NULL,

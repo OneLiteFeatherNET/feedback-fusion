@@ -49,8 +49,6 @@ impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct TextOptions {
     #[validate(length(max = 255))]
-    description: String,
-    #[validate(length(max = 255))]
     placeholder: String,
 }
 
@@ -58,8 +56,6 @@ pub struct TextOptions {
 #[builder(field_defaults(setter(into)))]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct RatingOptions {
-    #[validate(length(max = 255))]
-    description: String,
     max: u8,
 }
 

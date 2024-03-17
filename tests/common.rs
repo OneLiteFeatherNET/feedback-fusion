@@ -34,7 +34,7 @@ use std::{
     path::Path,
     process::{Child, Command, Stdio},
 };
-use tracing::debug;
+use tracing::{debug, info};
 
 pub const HTTP_ENDPOINT: &'static str = "http://localhost:8000";
 
@@ -62,7 +62,7 @@ pub fn run_server() -> BackendServer {
     let stderr = Stdio::from(
         File::create(Path::new(env!("OUT_DIR")).join(format!("{}stderr", seed))).unwrap(),
     );
-    debug!("OUT={} SEED={}", env!("OUT_DIR"), seed);
+    info!("OUT={} SEED={}", env!("OUT_DIR"), seed);
 
     command.stdin(Stdio::piped());
     command.stdout(stdout);

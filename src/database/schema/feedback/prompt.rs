@@ -47,6 +47,8 @@ pub struct FeedbackPrompt {
     id: String,
     #[validate(length(max = 255))]
     title: String,
+    #[validate(length(max = 255))]
+    description: String,
     target: String,
     #[builder(default = true)]
     active: bool,
@@ -92,8 +94,10 @@ pub enum FeedbackPromptInputType {
 pub struct FeedbackPromptField {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
-    #[validate(length(max = 255))]
+    #[validate(length(max = 32))]
     title: String,
+    #[validate(length(max = 255))]
+    description: Option<String>,
     prompt: String,
     r#type: FeedbackPromptInputType,
     #[cfg(not(feature = "bindings"))]
