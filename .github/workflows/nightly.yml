@@ -181,7 +181,7 @@ jobs:
           args: docs_build
 
       - name: Prefix docs 
-        run: mkdir -p pages/nightly/ && mv -f target/docs/ pages/nightly/docs/ 
+        run: rm -Rf pages/nightly/ && mkdir -p pages/nightly/ && mv -f target/docs/ pages/nightly/docs/ 
 
       - name: Fix permissions
         run: |
