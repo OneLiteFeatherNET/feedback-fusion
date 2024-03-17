@@ -110,7 +110,7 @@ args = [
 [tasks.docs_build]
 dependencies = ["docs_lint"]
 command = "npx"
-args = ["redocly", "build-docs", "target/openapi.yaml", "-o", "docs/rest/index.html"]
+args = ["redocly", "build-docs", "target/openapi.yaml", "-o", "target/docs/http/index.html"]
 
 # bindings
 
