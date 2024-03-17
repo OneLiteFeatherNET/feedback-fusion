@@ -17,7 +17,7 @@ jobs:
           override: true
 
       - name: Checkout Sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
@@ -44,7 +44,7 @@ jobs:
           profile: minimal
 
       - name: Checkout Sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
@@ -71,7 +71,7 @@ jobs:
           profile: minimal
 
       - name: Checkout Sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
@@ -100,7 +100,7 @@ jobs:
           override: true
 
       - name: Checkout Sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
