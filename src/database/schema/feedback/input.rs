@@ -109,6 +109,38 @@ pub enum FeedbackPromptFieldData {
     Rating(RatingResponse),
 }
 
+// TODO: please do this with a macro
+impl FeedbackPromptFieldData {
+    pub fn validate(&self, options: &FeedbackPromptInputOptions) -> Result<()> {
+        if let &Self::Text(_response) = &self {
+            if let &FeedbackPromptInputOptions::Text(_options) = &options {
+                Ok(())
+            } else {
+                Err(FeedbackFusionError::BadRequest(
+                    "invalid data type".to_owned(),
+                ))
+            }
+        } else if let &Self::Rating(response) = &self {
+            if let &FeedbackPromptInputOptions::Rating(options) = &options {
+                if response.data > options.max {
+                    Err(FeedbackFusionError::BadRequest(format!(
+                        "data '{}' is greater than '{}'",
+                        response.data, options.max
+                    )))
+                } else {
+                    Ok(())
+                }
+            } else {
+                Err(FeedbackFusionError::BadRequest(
+                    "invalid data type".to_owned(),
+                ))
+            }
+        } else {
+            Ok(())
+        }
+    }
+}
+
 // TODO: use macro
 impl PartialEq<FeedbackPromptFieldData> for FeedbackPromptInputType {
     fn eq(&self, other: &FeedbackPromptFieldData) -> bool {
