@@ -55,7 +55,13 @@ pub async fn post_response(
     Json(data): Json<SubmitFeedbackPromptResponseRequest>,
 ) -> Result<(StatusCode, Json<FeedbackPromptResponse>)> {
     // start transaction
-    let mut transaction = state.connection().acquire_begin().await?;
+    let transaction = state.connection().acquire_begin().await?;
+    let mut transaction = transaction.defer_async(|mut tx| async move {
+        if !tx.done {
+            let _ = tx.rollback().await;
+        }
+    });
+
     // fetch the fields of the prompt
     let fields = database_request!(
         FeedbackPromptField::select_by_column(&transaction, "prompt", prompt.as_str()).await?

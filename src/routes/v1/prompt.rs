@@ -203,7 +203,7 @@ pub async fn post_field(
     let field = FeedbackPromptField::builder()
         .title(data.title)
         .description(data.description)
-        .r#type(data.r#type)
+        .r#type(data.r#type.clone())
         .options(options)
         .prompt(prompt)
         .build();

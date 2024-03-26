@@ -4,9 +4,12 @@
       {{ props.title }}
     </div>
 
-    <input v-if="props.type === 'text'" v-model="data" type="text" :placeholder="props.options.placeholder">
+    <template v-if="props.type === 'text'">
+      <input v-if="props.options.lines === 1" v-model="data" type="text" :placeholder="props.options.placeholder">
+      <textarea v-else :rows="props.options.lines" v-model="data" :placeholder="props.options.placeholder" />
+    </template>
 
-    <div v-if="props.type === 'rating'" class="feedback-fusion__field__rating">
+    <div v-else-if="props.type === 'rating'" class="feedback-fusion__field__rating">
       <div class="feedback-fusion__field__rating-point" v-for="i in props.options.max">
         <input v-model="data" type="radio" :name="props.id" :id="props.id + i" :value="i">
         <label :for="props.id + i">
@@ -19,15 +22,27 @@
       </div>
     </div>
 
+    <Range v-else-if="props.type === 'range'" :min="props.options.min" :max="props.options.max" :theme="props.theme"
+      :value="data" @update="event => data = event" />
+
+    <input v-else-if="props.type === 'number'" type="number" :placeholder="props.options.placeholder"
+      :min="props.options.min" :max="props.options.max">
+
     <div class="feedback-fusion__field-description">
-      {{ props.options.description }}
+      {{ props.description }}
+    </div>
+
+    <div v-if="props.type === 'number'" class="feedback-fusion__field-error">
+      {{ i18next.t("field.number.error", { min: props.options.min, max: props.options.max }) }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import Range from "./Range.vue";
 import { FeedbackFusionState, FeedbackPromptField } from '@onelitefeathernet/feedback-fusion-core';
 import { computed, inject } from 'vue';
+import i18next from "i18next";
 
 interface FieldProps extends FeedbackPromptField {
   value: any;
@@ -56,7 +71,8 @@ const data = computed({
   margin-top: 25px;
   margin-bottom: 15px;
 
-  input {
+  input,
+  textarea {
     outline: none;
     border: 1px solid v-bind("theme.inactive");
     border-radius: 4px;
@@ -72,6 +88,14 @@ const data = computed({
 
     &:focus {
       border: 1px solid v-bind("theme.primary");
+    }
+
+    &:invalid {
+      border-color: v-bind("theme.error")
+    }
+
+    &:invalid~.feedback-fusion__field-error {
+      display: block !important;
     }
   }
 
@@ -102,6 +126,12 @@ const data = computed({
   .feedback-fusion__field-description {
     color: v-bind("theme.subtitle");
     font-size: 11px;
+  }
+
+  .feedback-fusion__field-error {
+    color: v-bind("theme.error");
+    font-size: 11px;
+    display: none;
   }
 
   &:focus-within {

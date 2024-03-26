@@ -26,12 +26,16 @@ use rbatis::rbdc::DateTime;
 use super::FeedbackPromptInputType;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ToSchema)]
-#[serde(untagged)]
+#[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub enum FeedbackPromptInputOptions {
     Text(TextOptions),
     Rating(RatingOptions),
+    Checkbox(CheckboxOptions),
+    Selection(SelectionOptions),
+    Range(RangeOptions),
+    Number(NumberOptions),
 }
 
 // TODO: gen with macro
@@ -40,6 +44,10 @@ impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
         match self {
             Self::Text => matches!(other, FeedbackPromptInputOptions::Text(_)),
             Self::Rating => matches!(other, FeedbackPromptInputOptions::Rating(_)),
+            Self::Checkbox => matches!(other, FeedbackPromptInputOptions::Checkbox(_)),
+            Self::Selection => matches!(other, FeedbackPromptInputOptions::Selection(_)),
+            Self::Range => matches!(other, FeedbackPromptInputOptions::Range(_)),
+            Self::Number => matches!(other, FeedbackPromptInputOptions::Number(_)),
         }
     }
 }
@@ -48,15 +56,71 @@ impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
 #[builder(field_defaults(setter(into)))]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct TextOptions {
+    /// the input placeholder
     #[validate(length(max = 255))]
     placeholder: String,
+    /// support for textareas
+    #[serde(default = "default_lines")]
+    lines: u8,
+}
+
+fn default_lines() -> u8 {
+    1
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct RatingOptions {
+    /// the best rating (determines how many stars / points are shown in the frontend)
     max: u8,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
+#[builder(field_defaults(setter(into)))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct CheckboxOptions {
+    /// the default state of the checkbox
+    default_state: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
+#[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct SelectionOptions {
+    /// all possible selections
+    values: Vec<String>,
+    /// allows the client to select multiple values
+    #[serde(default)]
+    multiple: bool,
+    /// allows the client to add it's own values
+    #[serde(default)]
+    combobox: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
+#[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct RangeOptions {
+    /// the min value
+    #[serde(default)]
+    min: u8,
+    /// the max value
+    max: u8,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
+#[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct NumberOptions {
+    /// the min value
+    #[serde(default)]
+    min: u8,
+    /// the max value
+    max: u8,
+    /// input placeholder
+    placeholder: String,
 }
 
 #[derive(
@@ -107,37 +171,81 @@ crud!(FeedbackPromptFieldResponse {});
 pub enum FeedbackPromptFieldData {
     Text(TextResponse),
     Rating(RatingResponse),
+    Checkbox(CheckboxResponse),
+    Selection(SelectionResponse),
+    Range(RangeResponse),
+    Number(NumberResponse),
+}
+
+macro_rules! validate_data {
+    ($self: expr, $voptions: expr, $rident:ident, $ident:ident, $($type:path = $options:path => $if:block $(,)?)*) => {
+        $(
+            if let &$type($rident) = &$self {
+                if let &$options($ident) = &$voptions {
+                    $if
+                } else {
+                    Err(FeedbackFusionError::BadRequest(concat!("invalid data type: expected ", stringify!($options)).to_owned()))
+                }
+            } else)* {
+                Ok(())
+            }
+    };
 }
 
 // TODO: please do this with a macro
 impl FeedbackPromptFieldData {
+    #[allow(unused_variables)]
     pub fn validate(&self, options: &FeedbackPromptInputOptions) -> Result<()> {
-        if let &Self::Text(_response) = &self {
-            if let &FeedbackPromptInputOptions::Text(_options) = &options {
-                Ok(())
-            } else {
-                Err(FeedbackFusionError::BadRequest(
-                    "invalid data type".to_owned(),
-                ))
-            }
-        } else if let &Self::Rating(response) = &self {
-            if let &FeedbackPromptInputOptions::Rating(options) = &options {
-                if response.data > options.max {
+        validate_data!(
+            self,
+            options,
+            response,
+            options,
+            Self::Text = FeedbackPromptInputOptions::Text => { Ok(()) },
+            Self::Rating = FeedbackPromptInputOptions::Rating => {
+                if response.rating > options.max {
                     Err(FeedbackFusionError::BadRequest(format!(
-                        "data '{}' is greater than '{}'",
-                        response.data, options.max
+                        "data '{}' is greater than '{}'", response.rating, options.max
                     )))
                 } else {
                     Ok(())
                 }
-            } else {
-                Err(FeedbackFusionError::BadRequest(
-                    "invalid data type".to_owned(),
-                ))
+            },
+            Self::Checkbox = FeedbackPromptInputOptions::Checkbox => { Ok(()) },
+            Self::Selection = FeedbackPromptInputOptions::Selection => {
+                if !options.combobox {
+                    let invalid = response.values.iter().find(|value| !options.values.contains(value));
+
+                    if let Some(invalid) = invalid {
+                        Err(FeedbackFusionError::BadRequest(format!(
+                            "found invalid value '{}'", invalid
+                        )))
+                    } else {
+                        Ok(())
+                    }
+                } else {
+                    Ok(())
+                }
+            },
+            Self::Range = FeedbackPromptInputOptions::Range => {
+                if response.start < options.min || response.end > options.max {
+                    Err(FeedbackFusionError::BadRequest(format!(
+                        "data does is not within '{}' and '{}'", options.min, options.max
+                    )))
+                } else {
+                    Ok(())
+                }
+            },
+            Self::Number = FeedbackPromptInputOptions::Number => {
+                if response.number > options.max || response.number < options.min {
+                    Err(FeedbackFusionError::BadRequest(format!(
+                        "data '{}' does is not within '{}' and '{}'", response.number, options.min, options.max
+                    )))
+                } else {
+                    Ok(())
+                }
             }
-        } else {
-            Ok(())
-        }
+        )
     }
 }
 
@@ -147,6 +255,10 @@ impl PartialEq<FeedbackPromptFieldData> for FeedbackPromptInputType {
         match self {
             Self::Text => matches!(other, FeedbackPromptFieldData::Text(_)),
             Self::Rating => matches!(other, FeedbackPromptFieldData::Rating(_)),
+            Self::Checkbox => matches!(other, FeedbackPromptFieldData::Checkbox(_)),
+            Self::Selection => matches!(other, FeedbackPromptFieldData::Selection(_)),
+            Self::Range => matches!(other, FeedbackPromptFieldData::Range(_)),
+            Self::Number => matches!(other, FeedbackPromptFieldData::Number(_)),
         }
     }
 }
@@ -154,11 +266,36 @@ impl PartialEq<FeedbackPromptFieldData> for FeedbackPromptInputType {
 #[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct TextResponse {
-    data: String,
+    text: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct RatingResponse {
-    data: u8,
+    rating: u8,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct CheckboxResponse {
+    checked: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct SelectionResponse {
+    values: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct RangeResponse {
+    start: u8,
+    end: u8,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, ToSchema, PartialEq)]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub struct NumberResponse {
+    number: u8,
 }

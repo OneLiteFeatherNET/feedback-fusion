@@ -63,6 +63,10 @@ pub fn main() {
         FeedbackPromptInputOptions,
         TextOptions,
         RatingOptions,
+        CheckboxOptions,
+        SelectionOptions,
+        RangeOptions,
+        NumberOptions,
         FeedbackPromptResponse,
         FeedbackPromptFieldResponse,
         FeedbackPromptFieldData,
@@ -73,6 +77,10 @@ pub fn main() {
         SubmitFeedbackPromptResponseRequest,
         TextResponse,
         RatingResponse,
+        CheckboxResponse,
+        SelectionResponse,
+        RangeResponse,
+        NumberResponse,
         Page<FeedbackPromptField>
     );
 }
