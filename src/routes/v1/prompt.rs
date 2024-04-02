@@ -292,7 +292,7 @@ pub async fn put_field(
 
     let options = data
         .options
-        .and_then(|value| Some(FeedbackPromptInputOptions::parse(field.r#type(), value)));
+        .map(|value| FeedbackPromptInputOptions::parse(field.r#type(), value));
     // validate type and enum
     if options.as_ref().is_some_and(|options| options.is_err()) {
         return Err(FeedbackFusionError::BadRequest(
@@ -301,11 +301,9 @@ pub async fn put_field(
     };
 
     field.set_title(data.title.unwrap_or(field.title().to_string()));
-    if let Some(options) = options {
-        if let Ok(options) = options {
-            #[cfg(not(feature = "bindings"))]
-            field.set_options(JsonV(options));
-        }
+    if let Some(Ok(options)) = options {
+        #[cfg(not(feature = "bindings"))]
+        field.set_options(JsonV(options));
     }
 
     database_request!(
