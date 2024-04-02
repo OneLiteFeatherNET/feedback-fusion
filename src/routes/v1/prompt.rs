@@ -174,7 +174,7 @@ pub struct CreateFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     description: Option<String>,
     r#type: FeedbackPromptInputType,
-    options: FeedbackPromptInputOptions,
+    options: serde_json::Value,
 }
 
 /// POST /v1/target/:target/prompt/:prompt/field
@@ -189,17 +189,11 @@ pub async fn post_field(
 ) -> Result<(StatusCode, Json<FeedbackPromptField>)> {
     data.validate()?;
     // validate type and enum
-    if !data.r#type.eq(&data.options) {
-        return Err(FeedbackFusionError::BadRequest(
-            "type does not match".to_owned(),
-        ));
-    };
+    let options = FeedbackPromptInputOptions::parse(&data.r#type, data.options)?;
 
     // build the field
     #[cfg(not(feature = "bindings"))]
-    let options = JsonV(data.options);
-    #[cfg(feature = "bindings")]
-    let options = data.options;
+    let options = JsonV(options);
     let field = FeedbackPromptField::builder()
         .title(data.title)
         .description(data.description)
@@ -274,7 +268,7 @@ pub async fn get_fields(
 pub struct PutFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     title: Option<String>,
-    options: Option<FeedbackPromptInputOptions>,
+    options: Option<serde_json::Value>,
 }
 
 /// PUT /v1/target/:target/prompt/:prompt/field/:field
@@ -295,20 +289,20 @@ pub async fn put_field(
     )
     .await?
     .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
-    // validate type and enum
-    if data
+
+    let options = data
         .options
-        .as_ref()
-        .is_some_and(|options| !field.r#type().eq(options))
-    {
+        .and_then(|value| Some(FeedbackPromptInputOptions::parse(field.r#type(), value)));
+    // validate type and enum
+    if options.as_ref().is_some_and(|options| options.is_err()) {
         return Err(FeedbackFusionError::BadRequest(
             "type does not match".to_owned(),
         ));
     };
 
     field.set_title(data.title.unwrap_or(field.title().to_string()));
-    if let Some(options) = data.options {
-        if field.r#type().eq(&options) {
+    if let Some(options) = options {
+        if let Ok(options) = options {
             #[cfg(not(feature = "bindings"))]
             field.set_options(JsonV(options));
         }

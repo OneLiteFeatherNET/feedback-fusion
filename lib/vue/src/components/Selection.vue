@@ -4,9 +4,7 @@
 
     <div :style="style" class="feedback-fusion__field__selection-list">
       <div @click="onClick(value)" v-for="(value, i) in props.values" :key="i" :style="itemStyle(value)">
-        <div>
-          {{ value }}
-        </div>
+        {{ value }}
       </div>
     </div>
   </div>
@@ -53,7 +51,6 @@ const data = computed({
     return props.value || [];
   },
   set(value: any) {
-    console.log(value)
     emit("update", value);
   }
 })
@@ -88,10 +85,6 @@ function onClick(value: string) {
       &:hover {
         cursor: pointer;
         background: v-bind("focus")
-      }
-
-      >div {
-        opacity: 1;
       }
     }
   }

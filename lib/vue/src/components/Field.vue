@@ -25,7 +25,7 @@
     <Range v-else-if="props.type === 'range'" :min="props.options.min" :max="props.options.max" :theme="props.theme"
       :value="data" @update="event => data = event" />
 
-    <Selection v-else-if="props.type === 'selection' || props.type === 'combobox'" :values="props.options.values"
+    <Selection v-else-if="props.type === 'selection'" :values="props.options.values"
       :combobox="props.options.combobox" :theme="props.theme" :value="data" @update="event => data = event" />
 
     <input v-else-if="props.type === 'number'" type="number" :placeholder="props.options.placeholder"

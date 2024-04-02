@@ -52,6 +52,37 @@ impl PartialEq<FeedbackPromptInputOptions> for FeedbackPromptInputType {
     }
 }
 
+macro_rules! impl_parse {
+    ($t:ident, $data:ident, $target:path, $($ty:path $(,)?)*) => {
+        match $t {
+            $(
+                $ty => {
+                    let object = $data.as_object_mut().unwrap();
+                    object.insert("type".to_owned(), serde_json::to_value(&$ty)?);
+
+                    Ok(serde_json::from_value::<$target>($data)?)
+                },
+            )*
+        }
+    };
+}
+
+impl FeedbackPromptInputOptions {
+    pub fn parse(ty: &FeedbackPromptInputType, mut data: serde_json::Value) -> Result<Self> {
+        impl_parse!(
+            ty,
+            data,
+            Self,
+            FeedbackPromptInputType::Text,
+            FeedbackPromptInputType::Rating,
+            FeedbackPromptInputType::Checkbox,
+            FeedbackPromptInputType::Selection,
+            FeedbackPromptInputType::Range,
+            FeedbackPromptInputType::Number
+        )
+    }
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
 #[cfg_attr(feature = "bindings", derive(TS))]
@@ -166,7 +197,8 @@ pub struct FeedbackPromptFieldResponse {
 crud!(FeedbackPromptFieldResponse {});
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, ToSchema)]
-#[serde(untagged)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub enum FeedbackPromptFieldData {
     Text(TextResponse),
@@ -194,6 +226,20 @@ macro_rules! validate_data {
 
 // TODO: please do this with a macro
 impl FeedbackPromptFieldData {
+    pub fn parse(ty: &FeedbackPromptInputType, mut data: serde_json::Value) -> Result<Self> {
+        impl_parse!(
+            ty,
+            data,
+            Self,
+            FeedbackPromptInputType::Text,
+            FeedbackPromptInputType::Rating,
+            FeedbackPromptInputType::Checkbox,
+            FeedbackPromptInputType::Selection,
+            FeedbackPromptInputType::Range,
+            FeedbackPromptInputType::Number
+        )
+    }
+
     #[allow(unused_variables)]
     pub fn validate(&self, options: &FeedbackPromptInputOptions) -> Result<()> {
         validate_data!(

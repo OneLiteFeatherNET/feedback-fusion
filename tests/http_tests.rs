@@ -677,7 +677,6 @@ async fn test_response_endpoints() {
                 "title": "Test",
                 "type": "text",
                 "options": {
-                    "type": "text",
                     "placeholder": "placeholder",
                 }
             }))
@@ -695,7 +694,6 @@ async fn test_response_endpoints() {
                 "title": "Test",
                 "type": "rating",
                 "options": {
-                    "type": "rating",
                     "max": 10,
                 }
             }))
@@ -713,7 +711,6 @@ async fn test_response_endpoints() {
                 "title": "Test",
                 "type": "checkbox",
                 "options": {
-                    "type": "checkbox",
                     "defaultState": false
                 }
             }))
@@ -731,7 +728,6 @@ async fn test_response_endpoints() {
                 "title": "Test",
                 "type": "selection",
                 "options": {
-                    "type": "selection",
                     "values": ["foo", "bar"],
                 }
             }))
@@ -749,7 +745,6 @@ async fn test_response_endpoints() {
                 "title": "Test",
                 "type": "range",
                 "options": {
-                    "type": "range",
                     "min": 5,
                     "max": 10,
                 }
@@ -768,7 +763,6 @@ async fn test_response_endpoints() {
                 "title": "Test",
                 "type": "number",
                 "options": {
-                    "type": "number",
                     "min": 5,
                     "max": 10,
                     "placeholder": "placeholder"

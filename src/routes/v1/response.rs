@@ -42,7 +42,7 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 #[derive(Deserialize, Clone, Debug, ToSchema)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct SubmitFeedbackPromptResponseRequest {
-    responses: HashMap<String, FeedbackPromptFieldData>,
+    responses: HashMap<String, serde_json::Value>,
 }
 
 /// POST /v1/target/:target/prompt/:prompt/response
@@ -83,9 +83,10 @@ pub async fn post_response(
             // try to get the field
             let field = fields
                 .iter()
-                .find(|f| key.eq(f.id()) && f.r#type().eq(&value));
+                .find(|f| key.eq(f.id()));
 
             if let Some(field) = field {
+                let value = FeedbackPromptFieldData::parse(field.r#type(), value)?;
                 // validate the data
                 value.validate(field.options())?;
 
