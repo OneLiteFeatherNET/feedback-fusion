@@ -25,6 +25,9 @@
     <Range v-else-if="props.type === 'range'" :min="props.options.min" :max="props.options.max" :theme="props.theme"
       :value="data" @update="event => data = event" />
 
+    <Selection v-else-if="props.type === 'selection' || props.type === 'combobox'" :values="props.options.values"
+      :combobox="props.options.combobox" :theme="props.theme" :value="data" @update="event => data = event" />
+
     <input v-else-if="props.type === 'number'" type="number" :placeholder="props.options.placeholder"
       :min="props.options.min" :max="props.options.max">
 
@@ -40,6 +43,7 @@
 
 <script setup lang="ts">
 import Range from "./Range.vue";
+import Selection from "./Selection.vue";
 import { FeedbackFusionState, FeedbackPromptField } from '@onelitefeathernet/feedback-fusion-core';
 import { computed, inject } from 'vue';
 import i18next from "i18next";
@@ -66,11 +70,12 @@ const data = computed({
 })
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .feedback-fusion__field {
   margin-top: 25px;
   margin-bottom: 15px;
 
+  *>input,
   input,
   textarea {
     outline: none;
