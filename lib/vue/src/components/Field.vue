@@ -22,6 +22,9 @@
       </div>
     </div>
 
+    <Checkbox v-else-if="props.type === 'checkbox'" :defaultState="props.options.defaultState"
+      :style="props.options.style" :value="data" :theme="props.theme" @update="event => data = event" />
+
     <Range v-else-if="props.type === 'range'" :min="props.options.min" :max="props.options.max" :theme="props.theme"
       :value="data" @update="event => data = event" />
 
@@ -42,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import Checkbox from "./Checkbox.vue";
 import Range from "./Range.vue";
 import Selection from "./Selection.vue";
 import { FeedbackFusionState, FeedbackPromptField } from '@onelitefeathernet/feedback-fusion-core';

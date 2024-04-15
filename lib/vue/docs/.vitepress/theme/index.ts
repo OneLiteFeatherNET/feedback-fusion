@@ -87,10 +87,27 @@ fetchMock
             "type": "checkbox",
             "title": "Checkbox",
             "description": "description",
-            "options": {},
+            "options": {
+              "defaultState": true, 
+              "style": "checkbox",
+            },
             "updated_at": new Date(),
             "created_at": new Date(),
           },
+          {
+            "id": "switch",
+            "prompt": "prompt",
+            "type": "checkbox",
+            "title": "Switch",
+            "description": "description",
+            "options": {
+              "defaultState": false, 
+              "style": "switch",
+            },
+            "updated_at": new Date(),
+            "created_at": new Date(),
+          },
+
           {
             "id": "selection",
             "prompt": "prompt",
