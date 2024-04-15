@@ -22,8 +22,8 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::prelude::*;
-use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError, Server};
-use std::{net::SocketAddr, time::Duration};
+use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError};
+use std::time::Duration;
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -48,15 +48,14 @@ async fn main() {
     lazy_static::initialize(&DATABASE_CONFIG);
 
     let (sender, receiver) = kanal::oneshot_async::<()>();
-    let address = SocketAddr::from(([0, 0, 0, 0], 8000));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
 
     // connect to the database
     let connection = DATABASE_CONFIG.connect().await.unwrap();
     let connection = DatabaseConnection::from(connection);
 
     tokio::spawn(async move {
-        Server::bind(&address)
-            .serve(router(connection).await.into_make_service())
+        axum::serve(listener, router(connection).await.into_make_service())
             .with_graceful_shutdown(async move {
                 receiver.recv().await.ok();
             })
