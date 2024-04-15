@@ -25,8 +25,8 @@
     <Range v-else-if="props.type === 'range'" :min="props.options.min" :max="props.options.max" :theme="props.theme"
       :value="data" @update="event => data = event" />
 
-    <Selection v-else-if="props.type === 'selection'" :values="props.options.values"
-      :combobox="props.options.combobox" :theme="props.theme" :value="data" @update="event => data = event" />
+    <Selection v-else-if="props.type === 'selection'" :values="props.options.values" :combobox="props.options.combobox"
+      :theme="props.theme" :value="data" @update="event => data = event" />
 
     <input v-else-if="props.type === 'number'" type="number" :placeholder="props.options.placeholder"
       :min="props.options.min" :max="props.options.max">
@@ -75,9 +75,9 @@ const data = computed({
   margin-top: 25px;
   margin-bottom: 15px;
 
-  *>input,
-  input,
-  textarea {
+  >*>.feedback-fusion__field-input-container,
+  >input,
+  >textarea {
     outline: none;
     border: 1px solid v-bind("theme.inactive");
     border-radius: 4px;
