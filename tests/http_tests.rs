@@ -443,7 +443,7 @@ async fn test_prompt_field_endpoints() {
             .json(&serde_json::json!({
                 "title": "test",
                 "type": "text",
-                "options": {"max": 5, "description": "hell yea"}
+                "options": {"max": 5, "description": "hell yea", "type": "rating"}
             }))
             .send()
             .await
@@ -460,6 +460,7 @@ async fn test_prompt_field_endpoints() {
                 "title": "Test",
                 "type": "text",
                 "options": {
+                    "type": "text",
                     "placeholder": "placeholder",
                     "description": "description",
                 }
@@ -527,7 +528,7 @@ async fn test_prompt_field_endpoints() {
                 HTTP_ENDPOINT, &target.id, &prompt.id, &field.id
             ))
             .json(&serde_json::json!({
-                "options": {"max": 5, "description": "test"}
+                "options": {"type": "rating",  "max": 5, "description": "test"}
             }))
             .send()
             .await
@@ -666,7 +667,7 @@ async fn test_response_endpoints() {
     }
 
     // create testing fields
-    let (text_field, rating_field) = {
+    let (text_field, rating_field, checkbox, selection, range, number) = {
         let response = client
             .post(format!(
                 "{}/v1/target/{}/prompt/{}/field",
@@ -677,7 +678,6 @@ async fn test_response_endpoints() {
                 "type": "text",
                 "options": {
                     "placeholder": "placeholder",
-                    "description": "description",
                 }
             }))
             .send()
@@ -695,7 +695,6 @@ async fn test_response_endpoints() {
                 "type": "rating",
                 "options": {
                     "max": 10,
-                    "description": "description",
                 }
             }))
             .send()
@@ -703,10 +702,82 @@ async fn test_response_endpoints() {
             .unwrap();
         let rating_field = response.json::<FieldResponse>().await.unwrap();
 
-        (text_field, rating_field)
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "Test",
+                "type": "checkbox",
+                "options": {
+                    "defaultState": false,
+                    "style": "checkbox"
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        let checkbox = response.json::<FieldResponse>().await.unwrap();
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "Test",
+                "type": "selection",
+                "options": {
+                    "values": ["foo", "bar"],
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        let selection = response.json::<FieldResponse>().await.unwrap();
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "Test",
+                "type": "range",
+                "options": {
+                    "min": 5,
+                    "max": 10,
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        let range = response.json::<FieldResponse>().await.unwrap();
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/field",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "title": "Test",
+                "type": "number",
+                "options": {
+                    "min": 5,
+                    "max": 10,
+                    "placeholder": "placeholder"
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        let number = response.json::<FieldResponse>().await.unwrap();
+
+        (text_field, rating_field, checkbox, selection, range, number)
     };
 
-    // test post response
+    // test post response and validators
     {
         // test with invalid data
         let response = client
@@ -716,8 +787,8 @@ async fn test_response_endpoints() {
             ))
             .json(&serde_json::json!({
                 "responses": {
-                    &text_field.id: {"data": "Yea"},
-                    &rating_field.id: {"data": 11}
+                    &text_field.id: {"text": "Yea"},
+                    &rating_field.id: {"rating": 11}
                 }
             }))
             .send()
@@ -732,8 +803,113 @@ async fn test_response_endpoints() {
             ))
             .json(&serde_json::json!({
                 "responses": {
-                    &text_field.id: {"data": "Yea"},
-                    &rating_field.id: {"data": 5}
+                    &text_field.id: {"text": "Yea"},
+                    &rating_field.id: {"rating": 5}
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::CREATED, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &checkbox.id: {"checked": true},
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::CREATED, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &selection.id: {"values": ["bernd"]},
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &selection.id: {"values": ["bar"]},
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::CREATED, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &range.id: {"start": 1, "end": 5 },
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &range.id: {"start": 6, "end": 7},
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::CREATED, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &number.id: {"number": 1 },
+                }
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        let response = client
+            .post(format!(
+                "{}/v1/target/{}/prompt/{}/response",
+                HTTP_ENDPOINT, &target.id, &prompt.id
+            ))
+            .json(&serde_json::json!({
+                "responses": {
+                    &number.id: {"number": 6 },
                 }
             }))
             .send()

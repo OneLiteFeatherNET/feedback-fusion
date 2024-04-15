@@ -44,12 +44,12 @@ pub struct Page<T: for<'a> ToSchema<'a>> {
     page_no: u16,
 }
 
+pub mod config;
 pub mod database;
 pub mod error;
+pub mod prelude;
 pub mod routes;
 pub mod state;
-pub mod config;
-pub mod prelude;
 
 pub fn main() {
     #[derive(OpenApi)]
@@ -85,6 +85,11 @@ pub fn main() {
                 FeedbackPromptInputOptions,
                 TextOptions,
                 RatingOptions,
+                CheckboxOptions,
+                CheckboxStyle,
+                SelectionOptions,
+                RangeOptions,
+                NumberOptions,
                 FeedbackPromptResponse,
                 FeedbackPromptFieldResponse,
                 FeedbackPromptFieldData,
@@ -97,7 +102,11 @@ pub fn main() {
                 GetFeedbackPromptResponsesResponseWrapper,
                 SubmitFeedbackPromptResponseRequest,
                 TextResponse,
-                RatingResponse
+                RatingResponse,
+                CheckboxResponse,
+                SelectionResponse,
+                RangeResponse,
+                NumberResponse
             )
         ),
         tags(

@@ -2,4 +2,4 @@
 import type { FeedbackPromptInputOptions } from "./FeedbackPromptInputOptions";
 import type { FeedbackPromptInputType } from "./FeedbackPromptInputType";
 
-export interface FeedbackPromptField { id: string, title: string, prompt: string, type: FeedbackPromptInputType, options: FeedbackPromptInputOptions, updated_at: Date, created_at: Date, }
+export interface FeedbackPromptField { id: string, title: string, description: string | null, prompt: string, type: FeedbackPromptInputType, options: FeedbackPromptInputOptions, updated_at: Date, created_at: Date, }

@@ -72,6 +72,10 @@ impl_select_page_wrapper!(FeedbackPrompt {select_page_by_target(target: &str) =>
 pub enum FeedbackPromptInputType {
     Text,
     Rating,
+    Checkbox,
+    Selection,
+    Range,
+    Number,
 }
 
 #[derive(

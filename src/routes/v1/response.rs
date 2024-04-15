@@ -42,6 +42,9 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 #[derive(Deserialize, Clone, Debug, ToSchema)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct SubmitFeedbackPromptResponseRequest {
+    #[cfg(not(feature = "bindings"))]
+    responses: HashMap<String, serde_json::Value>,
+    #[cfg(feature = "bindings")]
     responses: HashMap<String, FeedbackPromptFieldData>,
 }
 
@@ -49,13 +52,20 @@ pub struct SubmitFeedbackPromptResponseRequest {
 #[utoipa::path(post, path = "/v1/target/:target/prompt/:prompt/response", request_body = SubmitFeedbackPromptResponseRequest, responses(
     (status = 200, description = "Created", body = FeedbackPromptResponse)
 ), security(()), tag = "FeedbackPromptResponse")]
+#[cfg(not(feature = "bindings"))]
 pub async fn post_response(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
     Json(data): Json<SubmitFeedbackPromptResponseRequest>,
 ) -> Result<(StatusCode, Json<FeedbackPromptResponse>)> {
     // start transaction
-    let mut transaction = state.connection().acquire_begin().await?;
+    let transaction = state.connection().acquire_begin().await?;
+    let mut transaction = transaction.defer_async(|mut tx| async move {
+        if !tx.done {
+            let _ = tx.rollback().await;
+        }
+    });
+
     // fetch the fields of the prompt
     let fields = database_request!(
         FeedbackPromptField::select_by_column(&transaction, "prompt", prompt.as_str()).await?
@@ -75,11 +85,10 @@ pub async fn post_response(
         .into_iter()
         .map(|(key, value)| {
             // try to get the field
-            let field = fields
-                .iter()
-                .find(|f| key.eq(f.id()) && f.r#type().eq(&value));
+            let field = fields.iter().find(|f| key.eq(f.id()));
 
             if let Some(field) = field {
+                let value = FeedbackPromptFieldData::parse(field.r#type(), value)?;
                 // validate the data
                 value.validate(field.options())?;
 

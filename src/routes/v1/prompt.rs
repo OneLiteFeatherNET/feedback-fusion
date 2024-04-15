@@ -30,12 +30,15 @@ use crate::{
 };
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
-    Router::new()
+    #[cfg(not(feature = "bindings"))]
+{Router::new()
         .route("/", post(post_prompt).get(get_prompts))
         .route("/:prompt", delete(delete_prompt).put(put_prompt))
         .route("/:prompt/field", post(post_field).get(get_fields))
         .route("/:prompt/field/:field", delete(delete_field).put(put_field))
-        .with_state(state)
+        .with_state(state)}
+    #[cfg(feature ="bindings")]
+    {Router::new().with_state(state)}
 }
 
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
@@ -174,6 +177,9 @@ pub struct CreateFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     description: Option<String>,
     r#type: FeedbackPromptInputType,
+    #[cfg(not(feature = "bindings"))]
+    options: serde_json::Value,
+    #[cfg(feature = "bindings")]
     options: FeedbackPromptInputOptions,
 }
 
@@ -181,6 +187,7 @@ pub struct CreateFeedbackPromptFieldRequest {
 #[utoipa::path(post, path = "/v1/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
     (status = 201, description = "Created", body = FeedbackPromptField)
 ), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:write"])))]
+#[cfg(not(feature = "bindings"))]
 pub async fn post_field(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -189,21 +196,15 @@ pub async fn post_field(
 ) -> Result<(StatusCode, Json<FeedbackPromptField>)> {
     data.validate()?;
     // validate type and enum
-    if !data.r#type.eq(&data.options) {
-        return Err(FeedbackFusionError::BadRequest(
-            "type does not match".to_owned(),
-        ));
-    };
+    let options = FeedbackPromptInputOptions::parse(&data.r#type, data.options)?;
 
     // build the field
     #[cfg(not(feature = "bindings"))]
-    let options = JsonV(data.options);
-    #[cfg(feature = "bindings")]
-    let options = data.options;
+    let options = JsonV(options);
     let field = FeedbackPromptField::builder()
         .title(data.title)
         .description(data.description)
-        .r#type(data.r#type)
+        .r#type(data.r#type.clone())
         .options(options)
         .prompt(prompt)
         .build();
@@ -274,6 +275,9 @@ pub async fn get_fields(
 pub struct PutFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     title: Option<String>,
+    #[cfg(not(feature = "bindings"))]
+    options: Option<serde_json::Value>,
+    #[cfg(feature = "bindings")]
     options: Option<FeedbackPromptInputOptions>,
 }
 
@@ -281,6 +285,7 @@ pub struct PutFeedbackPromptFieldRequest {
 #[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt/field/:field", request_body = PutFeedbackPromptFieldRequest, responses(
     (status = 200, body = FeedbackPromptField, description = "updated")
 ), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:write"])))]
+#[cfg(not(feature = "bindings"))]
 pub async fn put_field(
     State(state): State<FeedbackFusionState>,
     Path((_, _, field)): Path<(String, String, String)>,
@@ -295,23 +300,21 @@ pub async fn put_field(
     )
     .await?
     .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
-    // validate type and enum
-    if data
+
+    let options = data
         .options
-        .as_ref()
-        .is_some_and(|options| !field.r#type().eq(options))
-    {
+        .map(|value| FeedbackPromptInputOptions::parse(field.r#type(), value));
+    // validate type and enum
+    if options.as_ref().is_some_and(|options| options.is_err()) {
         return Err(FeedbackFusionError::BadRequest(
             "type does not match".to_owned(),
         ));
     };
 
     field.set_title(data.title.unwrap_or(field.title().to_string()));
-    if let Some(options) = data.options {
-        if field.r#type().eq(&options) {
-            #[cfg(not(feature = "bindings"))]
-            field.set_options(JsonV(options));
-        }
+    if let Some(Ok(options)) = options {
+        #[cfg(not(feature = "bindings"))]
+        field.set_options(JsonV(options));
     }
 
     database_request!(

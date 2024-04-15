@@ -49,6 +49,12 @@ impl From<ValidationErrors> for FeedbackFusionError {
     }
 }
 
+impl From<serde_json::Error> for FeedbackFusionError {
+    fn from(value: serde_json::Error) -> Self {
+        Self::BadRequest(value.to_string())
+    }
+}
+
 #[derive(Serialize, Debug, Clone)]
 pub struct FeedbackFusionErrorResponse {
     error: String,
