@@ -46,7 +46,7 @@ tower = { version = "0.4.13", features = ["limit", "buffer"] }
 tower-http = { version = "0.5.2", features = ["trace"] }
 tracing = "0.1.39"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-ts-rs = { version = "7.1.1", optional = true }
+ts-rs = { version = "8.1.0", optional = true }
 typed-builder = "0.18.1"
 utoipa = { version = "4.2.0", features = ["yaml", "chrono"] }
 validator = { version = "0.18", features = ["derive"] }
