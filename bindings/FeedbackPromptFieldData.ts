@@ -6,4 +6,4 @@ import type { RatingResponse } from "./RatingResponse";
 import type { SelectionResponse } from "./SelectionResponse";
 import type { TextResponse } from "./TextResponse";
 
-export type FeedbackPromptFieldData = TextResponse | RatingResponse | CheckboxResponse | SelectionResponse | RangeResponse | NumberResponse;
+export type FeedbackPromptFieldData = { "type": "text" } & TextResponse | { "type": "rating" } & RatingResponse | { "type": "checkbox" } & CheckboxResponse | { "type": "selection" } & SelectionResponse | { "type": "range" } & RangeResponse | { "type": "number" } & NumberResponse;

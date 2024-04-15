@@ -29,6 +29,19 @@ pub mod prompt;
 pub mod response;
 
 pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
+    #[cfg(not(feature = "bindings"))]
+    let unauthorized = Router::new()
+        .route("/target/:target/prompt/:prompt", get(prompt::get_prompt))
+        .route("/target/:target/prompt/:prompt/fetch", get(prompt::fetch))
+        .route(
+            "/target/:target/prompt/:prompt/response",
+            post(response::post_response),
+        )
+        .with_state(state.clone());
+
+    #[cfg(feature = "bindings")]
+    let unauthorized = Router::new().with_state(state.clone());
+
     (
         Router::new()
             .route("/target", post(post_target).get(get_targets))
@@ -44,15 +57,8 @@ pub async fn router(state: FeedbackFusionState) -> (Router, Router) {
                 "/target/:target/prompt/:prompt/response",
                 response::router(state.clone()).await,
             )
-            .with_state(state.clone()),
-        Router::new()
-            .route("/target/:target/prompt/:prompt", get(prompt::get_prompt))
-            .route("/target/:target/prompt/:prompt/fetch", get(prompt::fetch))
-            .route(
-                "/target/:target/prompt/:prompt/response",
-                post(response::post_response),
-            )
             .with_state(state),
+        unauthorized,
     )
 }
 

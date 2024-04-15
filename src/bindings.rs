@@ -64,6 +64,7 @@ pub fn main() {
         TextOptions,
         RatingOptions,
         CheckboxOptions,
+        CheckboxStyle,
         SelectionOptions,
         RangeOptions,
         NumberOptions,

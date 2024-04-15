@@ -42,13 +42,17 @@ pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
 #[derive(Deserialize, Clone, Debug, ToSchema)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 pub struct SubmitFeedbackPromptResponseRequest {
+    #[cfg(not(feature = "bindings"))]
     responses: HashMap<String, serde_json::Value>,
+    #[cfg(feature = "bindings")]
+    responses: HashMap<String, FeedbackPromptFieldData>,
 }
 
 /// POST /v1/target/:target/prompt/:prompt/response
 #[utoipa::path(post, path = "/v1/target/:target/prompt/:prompt/response", request_body = SubmitFeedbackPromptResponseRequest, responses(
     (status = 200, description = "Created", body = FeedbackPromptResponse)
 ), security(()), tag = "FeedbackPromptResponse")]
+#[cfg(not(feature = "bindings"))]
 pub async fn post_response(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -81,9 +85,7 @@ pub async fn post_response(
         .into_iter()
         .map(|(key, value)| {
             // try to get the field
-            let field = fields
-                .iter()
-                .find(|f| key.eq(f.id()));
+            let field = fields.iter().find(|f| key.eq(f.id()));
 
             if let Some(field) = field {
                 let value = FeedbackPromptFieldData::parse(field.r#type(), value)?;

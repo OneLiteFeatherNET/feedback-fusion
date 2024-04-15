@@ -1,5 +1,6 @@
 export * from './CheckboxOptions';
 export * from './CheckboxResponse';
+export * from './CheckboxStyle';
 export * from './CreateFeedbackPromptFieldRequest';
 export * from './CreateFeedbackPromptRequest';
 export * from './CreateFeedbackTargetRequest';

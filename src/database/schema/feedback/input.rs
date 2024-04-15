@@ -107,6 +107,14 @@ pub struct RatingOptions {
     max: u8,
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, ToSchema)]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "bindings", derive(TS))]
+pub enum CheckboxStyle {
+    Switch,
+    Checkbox,
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]
 #[builder(field_defaults(setter(into)))]
 #[serde(rename_all = "camelCase")]
@@ -114,6 +122,7 @@ pub struct RatingOptions {
 pub struct CheckboxOptions {
     /// the default state of the checkbox
     default_state: bool,
+    style: CheckboxStyle,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, ToSchema, Validate)]

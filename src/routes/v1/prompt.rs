@@ -30,12 +30,15 @@ use crate::{
 };
 
 pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
-    Router::new()
+    #[cfg(not(feature = "bindings"))]
+{Router::new()
         .route("/", post(post_prompt).get(get_prompts))
         .route("/:prompt", delete(delete_prompt).put(put_prompt))
         .route("/:prompt/field", post(post_field).get(get_fields))
         .route("/:prompt/field/:field", delete(delete_field).put(put_field))
-        .with_state(state)
+        .with_state(state)}
+    #[cfg(feature ="bindings")]
+    {Router::new().with_state(state)}
 }
 
 #[derive(ToSchema, Deserialize, Debug, Clone, Validate)]
@@ -174,13 +177,17 @@ pub struct CreateFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     description: Option<String>,
     r#type: FeedbackPromptInputType,
+    #[cfg(not(feature = "bindings"))]
     options: serde_json::Value,
+    #[cfg(feature = "bindings")]
+    options: FeedbackPromptInputOptions,
 }
 
 /// POST /v1/target/:target/prompt/:prompt/field
 #[utoipa::path(post, path = "/v1/target/:target/prompt/:prompt/field", request_body = CreateFeedbackPromptFieldRequest, responses(
     (status = 201, description = "Created", body = FeedbackPromptField)
 ), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:write"])))]
+#[cfg(not(feature = "bindings"))]
 pub async fn post_field(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
@@ -268,13 +275,17 @@ pub async fn get_fields(
 pub struct PutFeedbackPromptFieldRequest {
     #[validate(length(max = 255))]
     title: Option<String>,
+    #[cfg(not(feature = "bindings"))]
     options: Option<serde_json::Value>,
+    #[cfg(feature = "bindings")]
+    options: Option<FeedbackPromptInputOptions>,
 }
 
 /// PUT /v1/target/:target/prompt/:prompt/field/:field
 #[utoipa::path(put, path = "/v1/target/:target/prompt/:prompt/field/:field", request_body = PutFeedbackPromptFieldRequest, responses(
     (status = 200, body = FeedbackPromptField, description = "updated")
 ), tag = "FeedbackTargetPromptField", security(("oidc" = ["feedback-fusion:write"])))]
+#[cfg(not(feature = "bindings"))]
 pub async fn put_field(
     State(state): State<FeedbackFusionState>,
     Path((_, _, field)): Path<(String, String, String)>,
