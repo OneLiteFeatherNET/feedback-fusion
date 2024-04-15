@@ -711,7 +711,8 @@ async fn test_response_endpoints() {
                 "title": "Test",
                 "type": "checkbox",
                 "options": {
-                    "defaultState": false
+                    "defaultState": false,
+                    "style": "checkbox"
                 }
             }))
             .send()
