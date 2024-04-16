@@ -20,8 +20,14 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-pub mod proto {
-    tonic::include_proto!("feedback_fusion_v1");
-    pub const FILE_DESCRIPTOR_SET: &[u8] =
-        tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
+use std::path::PathBuf;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+
+    tonic_build::configure()
+        .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
+        .compile(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
+        .unwrap();
+    Ok(())
 }

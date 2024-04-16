@@ -22,8 +22,8 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::prelude::*;
-use axum::{error_handling::HandleErrorLayer, http::StatusCode, BoxError};
 use std::time::Duration;
+use tonic::transport::Server;
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -34,6 +34,8 @@ pub mod error;
 pub mod prelude;
 pub mod routes;
 pub mod state;
+
+const ADDRESS: &'static str = "[::1]:8000";
 
 #[tokio::main]
 async fn main() {
@@ -48,21 +50,48 @@ async fn main() {
     lazy_static::initialize(&DATABASE_CONFIG);
 
     let (sender, receiver) = kanal::oneshot_async::<()>();
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
 
     // connect to the database
     let connection = DATABASE_CONFIG.connect().await.unwrap();
     let connection = DatabaseConnection::from(connection);
 
     tokio::spawn(async move {
-        axum::serve(listener, router(connection).await.into_make_service())
-            .with_graceful_shutdown(async move {
+        let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+        health_reporter
+            .set_serving::<PublicFeedbackFusionV1Servier<PublicFeedbackFusionV1>>()
+            .await;
+
+        let reflection_service = tonic_reflection::server::Builder::configure()
+            .register_encoded_file_descriptor_set(
+                feedback_fusion_common::proto::FILE_DESCRIPTOR_SET,
+            )
+            .build()
+            .unwrap();
+
+        let service = FeedbackFusionV1::default();
+        let service = tower::ServiceBuilder::new()
+            .layer(tower_http::trace::TraceLayer::new_for_grpc())
+            .service(service)
+            .into_inner();
+
+        let public_service = PublicFeedbackFusionV1::default();
+        let public_service = tower::ServiceBuilder::new()
+            .layer(tower_http::trace::TraceLayer::new_for_grpc())
+            .service(public_service)
+            .into_inner();
+
+        Server::builder()
+            .add_server(health_service)
+            .add_service(reflection_service)
+            .add_service(service)
+            .add_service(public_service)
+            .serve_with_shutdown(ADDRESS.parse().unwrap(), async move {
                 receiver.recv().await.ok();
             })
             .await
             .unwrap();
     });
-    info!("Listening for incoming requests");
+    info!("Listening for incoming requests on {ADDRESS}");
 
     match tokio::signal::ctrl_c().await {
         Ok(()) => {}
@@ -75,23 +104,26 @@ async fn main() {
     sender.send(()).await.unwrap();
 }
 
-async fn router(connection: DatabaseConnection) -> Router {
-    let state = FeedbackFusionState::new(connection);
-
-    routes::router(state).await.layer(
-        ServiceBuilder::new()
-            .layer(HandleErrorLayer::new(|error: BoxError| async move {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    error!("Unhandled error occurred: {}", error),
-                )
-            }))
-            .layer(BufferLayer::new(1024))
-            // set the max requests per sec for all incoming calls
-            .layer(RateLimitLayer::new(
-                *CONFIG.global_rate_limit(),
-                Duration::from_secs(1),
-            ))
-            .layer(TraceLayer::new_for_http()),
-    )
+pub mod prelude {
+    pub use crate::{
+        config::*,
+        database::{DatabaseConfiguration, DatabaseConnection},
+        database_request,
+        error::*,
+        impl_select_page_wrapper,
+        routes::{oidc::*, *},
+        state::FeedbackFusionState,
+    };
+    pub use derivative::Derivative;
+    pub use getset::{Getters, MutGetters, Setters};
+    pub use lazy_static::lazy_static;
+    pub use paste::paste;
+    pub use rbatis::{
+        crud, impl_insert, impl_select, impl_select_page, impled, plugin::page::Page, py_sql,
+        rbdc::JsonV, IPageRequest,
+    };
+    pub use serde::{Deserialize, Serialize};
+    pub use tracing::{debug, error, info, info_span, warn};
+    pub use typed_builder::TypedBuilder;
+    pub use validator::Validate;
 }

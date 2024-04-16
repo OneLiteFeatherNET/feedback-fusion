@@ -3,22 +3,6 @@
 [config]
 skip_core_tasks = true
 
-[tasks.docs_init]
-command = "pnpm"
-args = ["i"]
-
-# openapi docs
-
-[tasks.docs_generate]
-dependencies = ["docs_init"]
-command = "cargo"
-args = ["run", "--bin", "docs", "--features", "docs"]
-
-[tasks.docs_preview]
-dependencies = ["docs_generate"]
-command = "npx"
-args = ["redocly", "preview-docs", "target/openapi.yaml"]
-
 # lib dev
 
 [tasks.core_build]
@@ -48,8 +32,6 @@ args = ["check", "--bin", "main"]
 command = "cargo"
 args = [
   "clippy",
-  "--bin",
-  "main",
   "--features",
   "postgres",
   "--",
@@ -93,40 +75,3 @@ script = "docker kill postgres;docker rm postgres;docker kill oidc-server-mock;d
 
 [tasks.test]
 run_task = { name = ["postgres"] }
-
-# OpenAPI build
-
-[tasks.docs_lint]
-dependencies = ["docs_generate"]
-command = "npx"
-args = [
-  "redocly",
-  "lint",
-  "--skip-rule=no-empty-servers",
-  "--skip-rule=info-license-url",
-  "target/openapi.yaml",
-]
-
-[tasks.docs_build]
-dependencies = ["docs_lint"]
-command = "npx"
-args = ["redocly", "build-docs", "target/openapi.yaml", "-o", "target/docs/http/index.html"]
-
-# bindings
-
-[tasks.generate_bindings]
-command = "cargo"
-args = [
-  "run",
-  "--bin",
-  "bindings",
-  "--no-default-features",
-  "--features",
-  "bindings,postgres",
-]
-
-[tasks.export_bindings]
-script = '''for f in bindings/*.ts; do [ "$f" != "bindings/index.ts" ] && echo "export * from './$(basename "$f" .ts)';" ; done > bindings/index.ts'''
-
-[tasks.bindings]
-run_task = { name = ["generate_bindings", "export_bindings"] }

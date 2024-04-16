@@ -3,28 +3,15 @@ name = "feedback-fusion"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-default-run = "main"
-
-[[bin]]
-name = "main"
-path = "src/main.rs"
-
-[[bin]]
-name = "docs"
-path = "src/docs.rs"
-
-[[bin]]
-name = "bindings"
-path = "src/bindings.rs"
 
 [dependencies]
+feedback_fusion_common = { path = "./common" }
+
 aliri = "0.6.3"
-aliri_axum = "0.4.0"
 aliri_clock = "0.1.4"
 aliri_oauth2 = "0.10.1"
 aliri_tower = "0.6.0"
 async-trait = "0.1.80"
-axum = "0.7.5"
 chrono = { version = "0.4.38", features = ["serde"] }
 derivative = "2.2.0"
 envy = "0.4.2"
@@ -41,14 +28,15 @@ rbs = "4.5.13"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 thiserror = "1.0.58"
+tonic = "0.11.0"
+tonic-health = "0.11.0"
+tonic-reflection = "0.11.0"
 tokio = { version = "1.37.0", features = ["full"] }
-tower = { version = "0.4.13", features = ["limit", "buffer"] }
+tower = "0.4.13"
 tower-http = { version = "0.5.2", features = ["trace"] }
 tracing = "0.1.39"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-ts-rs = { version = "7.1.1", optional = true }
 typed-builder = "0.18.1"
-utoipa = { version = "4.2.0", features = ["yaml", "chrono"] }
 validator = { version = "0.18", features = ["derive"] }
 version-compare = "0.2.0"
 
@@ -65,6 +53,3 @@ postgres = ["rbdc-pg"]
 mysql = ["rbdc-mysql"]
 
 test = []
-docs = []
-bindings = ["ts-rs"]
-
