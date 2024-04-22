@@ -26,6 +26,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     tonic_build::configure()
+        .type_attribute("CreateTargetRequest", "#[derive(Validate)]")
+        .field_attribute("CreateTargetRequest.name", "#[validate(length(max = 255))]")
+        .type_attribute("UpdateTargetRequest", "#[derive(Validate)]")
+        .field_attribute("UpdateTargetRequest.name", "#[validate(length(max = 255))]")
+        .field_attribute(
+            "UpdateTargetRequest.description",
+            "#[validate(length(max = 255))]",
+        )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
         .compile(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
         .unwrap();

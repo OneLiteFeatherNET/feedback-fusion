@@ -118,12 +118,3 @@ impl HasScope for OIDCClaims {
     }
 }
 
-pub mod scope {
-    aliri_axum::scope_guards! {
-        type Claims = super::OIDCClaims;
-
-        pub scope API = "api:feedback-fusion";
-        pub scope Read = ["api:feedback-fusion" || "feedback-fusion:read"];
-        pub scope Write = ["api:feedback-fusion" || "feedback-fusion:write"];
-    }
-}

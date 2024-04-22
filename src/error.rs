@@ -22,10 +22,6 @@
  */
 
 use crate::prelude::*;
-use axum::{
-    http::StatusCode,
-    response::{IntoResponse, Response},
-};
 use thiserror::Error;
 use validator::ValidationErrors;
 
@@ -68,32 +64,32 @@ impl From<String> for FeedbackFusionErrorResponse {
 
 pub type Result<T> = std::result::Result<T, FeedbackFusionError>;
 
-impl IntoResponse for FeedbackFusionError {
-    fn into_response(self) -> Response {
-        match self {
-            FeedbackFusionError::BadRequest(error) => (
-                StatusCode::BAD_REQUEST,
-                Json(FeedbackFusionErrorResponse::from(error)),
-            ),
-            FeedbackFusionError::Unauthorized => (
-                StatusCode::UNAUTHORIZED,
-                Json(FeedbackFusionErrorResponse::from("Unauthorized".to_owned())),
-            ),
-            FeedbackFusionError::Forbidden(error) => (
-                StatusCode::FORBIDDEN,
-                Json(FeedbackFusionErrorResponse::from(error)),
-            ),
-            _ => {
-                error!("Error occurred while processing request: {:?}", self);
-
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(FeedbackFusionErrorResponse::from(
-                        "Internal server error".to_owned(),
-                    )),
-                )
-            }
-        }
-        .into_response()
-    }
-}
+// impl IntoResponse for FeedbackFusionError {
+//     fn into_response(self) -> Response {
+//         match self {
+//             FeedbackFusionError::BadRequest(error) => (
+//                 StatusCode::BAD_REQUEST,
+//                 Json(FeedbackFusionErrorResponse::from(error)),
+//             ),
+//             FeedbackFusionError::Unauthorized => (
+//                 StatusCode::UNAUTHORIZED,
+//                 Json(FeedbackFusionErrorResponse::from("Unauthorized".to_owned())),
+//             ),
+//             FeedbackFusionError::Forbidden(error) => (
+//                 StatusCode::FORBIDDEN,
+//                 Json(FeedbackFusionErrorResponse::from(error)),
+//             ),
+//             _ => {
+//                 error!("Error occurred while processing request: {:?}", self);
+//
+//                 (
+//                     StatusCode::INTERNAL_SERVER_ERROR,
+//                     Json(FeedbackFusionErrorResponse::from(
+//                         "Internal server error".to_owned(),
+//                     )),
+//                 )
+//             }
+//         }
+//         .into_response()
+//     }
+// }

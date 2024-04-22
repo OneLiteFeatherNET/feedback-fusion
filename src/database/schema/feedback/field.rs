@@ -414,7 +414,6 @@ macro_rules! validate_data {
     };
 }
 
-// TODO: please do this with a macro
 impl FieldData {
     #[allow(unused_variables)]
     pub fn validate(&self, options: &FieldOptions) -> Result<()> {

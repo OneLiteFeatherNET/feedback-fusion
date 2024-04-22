@@ -22,6 +22,10 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::prelude::*;
+use feedback_fusion_common::proto::{
+    feedback_fusion_v1_server::FeedbackFusionV1,
+    public_feedback_fusion_v1_server::{PublicFeedbackFusionV1, PublicFeedbackFusionV1Server},
+};
 use std::time::Duration;
 use tonic::transport::Server;
 use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
@@ -31,8 +35,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 pub mod config;
 pub mod database;
 pub mod error;
-pub mod prelude;
-pub mod routes;
+pub mod services;
 pub mod state;
 
 const ADDRESS: &'static str = "[::1]:8000";
@@ -58,7 +61,7 @@ async fn main() {
     tokio::spawn(async move {
         let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
         health_reporter
-            .set_serving::<PublicFeedbackFusionV1Servier<PublicFeedbackFusionV1>>()
+            .set_serving::<PublicFeedbackFusionV1Server<PublicFeedbackFusionV1>>()
             .await;
 
         let reflection_service = tonic_reflection::server::Builder::configure()
@@ -123,6 +126,7 @@ pub mod prelude {
         rbdc::JsonV, IPageRequest,
     };
     pub use serde::{Deserialize, Serialize};
+    pub use tonic::{Request, Response};
     pub use tracing::{debug, error, info, info_span, warn};
     pub use typed_builder::TypedBuilder;
     pub use validator::Validate;

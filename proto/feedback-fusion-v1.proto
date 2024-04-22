@@ -11,17 +11,17 @@ service FeedbackFusionV1 {
   rpc GetTarget(GetTargetRequest) returns (Target);
   rpc GetTargets(GetTargetsRequest) returns (TargetPage);
   rpc UpdateTarget(UpdateTargetRequest) returns (Target);
-  rpc DeleteTarget(DeleteTargetRequest) returns (Target);
+  rpc DeleteTarget(DeleteTargetRequest) returns (google.protobuf.Empty);
 
   rpc CreatePrompt(CreatePromptRequest) returns (Prompt);
   rpc GetPrompts(GetPromptsRequest) returns (PromptPage);
   rpc UpdatePrompt(UpdatePromptRequest) returns (Prompt);
-  rpc DeletePrompt(DeletePromptRequest) returns (Prompt);
+  rpc DeletePrompt(DeletePromptRequest) returns (google.protobuf.Empty);
 
   rpc CreateField(CreateFieldRequest) returns (Field);
   rpc GetField(GetFieldRequest) returns (Field);
   rpc UpdateField(UpdateFieldRequest) returns (Field);
-  rpc DeleteField(DeleteFieldRequest) returns (Field);
+  rpc DeleteField(DeleteFieldRequest) returns (google.protobuf.Empty);
 
   rpc GetResponses(GetResponsesRequest) returns (FieldResponsePage);
 }
@@ -48,6 +48,7 @@ message Target {
 message GetTargetsRequest {
   string page_token = 1;
   string page_size = 2;
+  string query = 3;
 }
 
 message TargetPage {
@@ -66,8 +67,9 @@ message CreateTargetRequest {
 message GetTargetRequest { string id = 1; }
 
 message UpdateTargetRequest {
-  optional string name = 1;
-  optional string description = 2;
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
 }
 
 message DeleteTargetRequest { string id = 1; }
@@ -110,8 +112,9 @@ message PromptPage {
 }
 
 message UpdatePromptRequest {
-  bool active = 1;
-  string description = 2;
+  string id = 1;
+  bool active = 2;
+  string description = 3;
 }
 
 message DeletePromptRequest { string id = 2; }
@@ -228,6 +231,7 @@ message UpdateFieldRequest {
 
   optional string title = 8;
   optional string description = 9;
+  string id = 10;
 }
 
 message DeleteFieldRequest { string id = 1; }
@@ -274,7 +278,7 @@ message FieldResponse {
   string id = 1;
   string response = 2;
   string field = 3;
-  
+
   oneof data {
     TextResponse text_response = 4;
     RatingResponse rating_response = 5;
