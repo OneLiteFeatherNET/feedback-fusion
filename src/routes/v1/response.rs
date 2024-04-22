@@ -24,8 +24,8 @@ use std::collections::HashMap;
 
 use crate::{
     database::schema::feedback::{
-        FeedbackPromptField, FeedbackPromptFieldData, FeedbackPromptFieldResponse,
-        FeedbackPromptResponse,
+        FeedbackPromptField, FieldData, FieldResponse,
+        PromptResponse,
     },
     prelude::*,
 };
@@ -45,7 +45,7 @@ pub struct SubmitFeedbackPromptResponseRequest {
     #[cfg(not(feature = "bindings"))]
     responses: HashMap<String, serde_json::Value>,
     #[cfg(feature = "bindings")]
-    responses: HashMap<String, FeedbackPromptFieldData>,
+    responses: HashMap<String, FieldData>,
 }
 
 /// POST /v1/target/:target/prompt/:prompt/response
@@ -57,7 +57,7 @@ pub async fn post_response(
     State(state): State<FeedbackFusionState>,
     Path((_, prompt)): Path<(String, String)>,
     Json(data): Json<SubmitFeedbackPromptResponseRequest>,
-) -> Result<(StatusCode, Json<FeedbackPromptResponse>)> {
+) -> Result<(StatusCode, Json<PromptResponse>)> {
     // start transaction
     let transaction = state.connection().acquire_begin().await?;
     let mut transaction = transaction.defer_async(|mut tx| async move {
@@ -76,8 +76,8 @@ pub async fn post_response(
     }
 
     // insert the response dataprompt
-    let response = FeedbackPromptResponse::builder().prompt(prompt).build();
-    database_request!(FeedbackPromptResponse::insert(&transaction, &response).await?);
+    let response = PromptResponse::builder().prompt(prompt).build();
+    database_request!(PromptResponse::insert(&transaction, &response).await?);
 
     // transform the hashmap into a field data vec
     let data = data
@@ -88,14 +88,14 @@ pub async fn post_response(
             let field = fields.iter().find(|f| key.eq(f.id()));
 
             if let Some(field) = field {
-                let value = FeedbackPromptFieldData::parse(field.r#type(), value)?;
+                let value = FieldData::parse(field.r#type(), value)?;
                 // validate the data
                 value.validate(field.options())?;
 
                 #[cfg(not(feature = "bindings"))]
                 let value = JsonV(value);
 
-                Ok(FeedbackPromptFieldResponse::builder()
+                Ok(FieldResponse::builder()
                     .response(response.id().as_str())
                     .field(field.id())
                     .data(value)
@@ -107,10 +107,10 @@ pub async fn post_response(
                 )))
             }
         })
-        .collect::<Result<Vec<FeedbackPromptFieldResponse>>>()?;
+        .collect::<Result<Vec<FieldResponse>>>()?;
     // insert them as batch
     database_request!(
-        FeedbackPromptFieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64)
+        FieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64)
             .await?
     );
 
@@ -120,13 +120,13 @@ pub async fn post_response(
     Ok((StatusCode::CREATED, Json(response)))
 }
 
-pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FeedbackPromptFieldResponse>>;
+pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FieldResponse>>;
 
 #[derive(ToSchema)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 #[allow(unused)]
 pub struct GetFeedbackPromptResponsesResponseWrapper(
-    HashMap<String, Vec<FeedbackPromptFieldResponse>>,
+    HashMap<String, Vec<FieldResponse>>,
 );
 
 #[derive(Deserialize, Debug, Clone)]
@@ -162,7 +162,7 @@ pub async fn get_responses(
 ) -> Result<Json<GetFeedbackPromptResponsesResponse>> {
     // select a page of responses
     let responses = database_request!(
-        FeedbackPromptResponse::select_page_by_prompt_wrapper(
+        PromptResponse::select_page_by_prompt_wrapper(
             state.connection(),
             &pagination.request(),
             prompt.as_str()

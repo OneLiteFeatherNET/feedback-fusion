@@ -20,16 +20,17 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
 use crate::prelude::*;
+use rbatis::rbdc::DateTime;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, ToSchema, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "bindings", derive(TS))]
-pub struct FeedbackTarget {
+pub struct Target {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
     #[validate(length(max = 255))]
@@ -38,14 +39,36 @@ pub struct FeedbackTarget {
     description: Option<String>,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
-    created_at: DateTime
+    created_at: DateTime,
 }
 
-crud!(FeedbackTarget {});
-impl_select!(FeedbackTarget {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
-impl_select_page_wrapper!(FeedbackTarget {select_page(query: &str) => "`WHERE name ILIKE COALESCE('%' || NULLIF(#{query}, '') || '%', '%%')`"});
+impl Into<feedback_fusion_common::proto::Target> for Target {
+    fn into(self) -> feedback_fusion_common::proto::Target {
+        feedback_fusion_common::proto::Target {
+            id: self.id,
+            name: self.name,
+            description: self.description,
+            updated_at: self.updated_at.into(),
+            created_at: self.created_at.into(),
+        }
+    }
+}
+
+impl Into<Target> for feedback_fusion_common::proto::Target {
+    fn into(self) -> Target {
+        Target {
+            id: self.id,
+            name: self.name,
+            description: self.description,
+            updated_at: self.updated_at.into(),
+            created_at: self.created_at.into(),
+        }
+    }
+}
+
+crud!(Target {});
+impl_select!(Target {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page_wrapper!(Target {select_page(query: &str) => "`WHERE name ILIKE COALESCE('%' || NULLIF(#{query}, '') || '%', '%%')`"});

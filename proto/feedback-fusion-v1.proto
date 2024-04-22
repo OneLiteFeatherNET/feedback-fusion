@@ -9,12 +9,12 @@ import "google/protobuf/timestamp.proto";
 service FeedbackFusionV1 {
   rpc CreateTarget(CreateTargetRequest) returns (Target);
   rpc GetTarget(GetTargetRequest) returns (Target);
-  rpc GetTargets(GetTargetsRequest) returns (Targets);
+  rpc GetTargets(GetTargetsRequest) returns (TargetPage);
   rpc UpdateTarget(UpdateTargetRequest) returns (Target);
   rpc DeleteTarget(DeleteTargetRequest) returns (Target);
 
   rpc CreatePrompt(CreatePromptRequest) returns (Prompt);
-  rpc GetPrompts(GetPromptsRequest) returns (Prompts);
+  rpc GetPrompts(GetPromptsRequest) returns (PromptPage);
   rpc UpdatePrompt(UpdatePromptRequest) returns (Prompt);
   rpc DeletePrompt(DeletePromptRequest) returns (Prompt);
 
@@ -23,14 +23,14 @@ service FeedbackFusionV1 {
   rpc UpdateField(UpdateFieldRequest) returns (Field);
   rpc DeleteField(DeleteFieldRequest) returns (Field);
 
-  rpc GetResponses(GetResponsesRequest) returns (ResponseDataPage);
+  rpc GetResponses(GetResponsesRequest) returns (FieldResponsePage);
 }
 
 // does not use oidc authentication
 service PublicFeedbackFusionV1 {
-  rpc GetFields(GetFieldsRequest) returns (Field);
+  rpc GetFields(GetFieldsRequest) returns (FieldPage);
   rpc GetPrompt(GetPromptRequest) returns (Prompt);
-  rpc CreateResponses(CreateResponsesRequest) returns (ResponseDataList);
+  rpc CreateResponses(CreateResponsesRequest) returns (PromptResponse);
 }
 
 //
@@ -50,7 +50,7 @@ message GetTargetsRequest {
   string page_size = 2;
 }
 
-message Targets {
+message TargetPage {
   string page_token = 1;
   string next_page_token = 2;
   int32 page_size = 3;
@@ -93,9 +93,7 @@ message Prompt {
   google.protobuf.Timestamp updated_at = 7;
 }
 
-message GetPromptRequest {
-  string id = 1;
-}
+message GetPromptRequest { string id = 1; }
 
 message GetPromptsRequest {
   string page_token = 1;
@@ -103,7 +101,7 @@ message GetPromptsRequest {
   string target = 3;
 }
 
-message Prompts {
+message PromptPage {
   string page_token = 1;
   string next_page_token = 2;
   int32 page_size = 3;
@@ -186,6 +184,7 @@ message Field {
   string prompt = 2;
   string title = 3;
   optional string description = 4;
+  FieldType field_type = 13;
 
   oneof options {
     TextOptions text_options = 5;
@@ -208,7 +207,7 @@ message GetFieldsRequest {
   string prompt = 3;
 }
 
-message Fields {
+message FieldPage {
   string page_token = 1;
   string next_page_token = 2;
   int32 page_size = 3;
@@ -261,13 +260,9 @@ message ResponseData {
     RangeResponse range_response = 5;
     NumberResponse number_response = 6;
   }
-
-  optional google.protobuf.Timestamp created_at = 7;
 }
 
 message CreateResponsesRequest { map<string, ResponseData> data = 1; }
-
-message ResponseDataList { repeated ResponseData values = 1; }
 
 message GetResponsesRequest {
   string page_token = 1;
@@ -275,10 +270,31 @@ message GetResponsesRequest {
   string prompt = 3;
 }
 
-message ResponseDataPage {
+message FieldResponse {
+  string id = 1;
+  string response = 2;
+  string field = 3;
+  
+  oneof data {
+    TextResponse text_response = 4;
+    RatingResponse rating_response = 5;
+    CheckboxResponse checkbox_response = 6;
+    SelectionResponse selection_response = 7;
+    RangeResponse range_response = 8;
+    NumberResponse number_response = 9;
+  }
+}
+
+message FieldResponsePage {
   string page_token = 1;
   string next_page_token = 2;
   int32 page_size = 3;
 
-  repeated ResponseData values = 4;
+  repeated FieldResponse values = 4;
+}
+
+message PromptResponse {
+  string id = 1;
+  string prompt = 2;
+  google.protobuf.Timestamp created_at = 3;
 }

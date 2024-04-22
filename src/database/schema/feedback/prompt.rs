@@ -23,26 +23,17 @@
 use crate::prelude::*;
 use rbatis::rbdc::DateTime;
 
-use super::input::FeedbackPromptInputOptions;
+use super::FieldOptions;
 
 #[derive(
-    Deserialize,
-    Serialize,
-    Clone,
-    Derivative,
-    Debug,
-    Getters,
-    Setters,
-    TypedBuilder,
-    ToSchema,
-    Validate,
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
 #[cfg_attr(feature = "bindings", derive(TS))]
-pub struct FeedbackPrompt {
+pub struct Prompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
     #[validate(length(max = 255))]
@@ -54,22 +45,47 @@ pub struct FeedbackPrompt {
     active: bool,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     #[builder(default)]
     created_at: DateTime,
 }
 
-crud!(FeedbackPrompt {});
-impl_select!(FeedbackPrompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
-impl_select_page_wrapper!(FeedbackPrompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
+impl Into<feedback_fusion_common::proto::Prompt> for Prompt {
+    fn into(self) -> feedback_fusion_common::proto::Prompt {
+        feedback_fusion_common::proto::Prompt {
+            id: self.id,
+            title: self.title,
+            description: self.description,
+            target: self.target,
+            active: self.active,
+            updated_at: self.updated_at.into(),
+            created_at: self.created_at.into(),
+        }
+    }
+}
+
+impl Into<Prompt> for feedback_fusion_common::proto::Prompt {
+    fn into(self) -> Prompt {
+        Prompt {
+            id: self.id,
+            title: self.title,
+            description: self.description,
+            target: self.target,
+            active: self.active,
+            updated_at: self.updated_at.into(),
+            created_at: self.created_at.into(),
+        }
+    }
+}
+
+crud!(Prompt {});
+impl_select!(Prompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page_wrapper!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "bindings", derive(TS))]
-pub enum FeedbackPromptInputType {
+pub enum FieldType {
     Text,
     Rating,
     Checkbox,
@@ -78,24 +94,40 @@ pub enum FeedbackPromptInputType {
     Number,
 }
 
+impl Into<feedback_fusion_common::proto::FieldType> for FieldType {
+    fn into(self) -> feedback_fusion_common::proto::FieldType {
+        match self {
+            Self::Text => feedback_fusion_common::proto::FieldType::Text,
+            Self::Rating => feedback_fusion_common::proto::FieldType::Rating,
+            Self::Checkbox => feedback_fusion_common::proto::FieldType::Checkbox,
+            Self::Selection => feedback_fusion_common::proto::FieldType::Selection,
+            Self::Range => feedback_fusion_common::proto::FieldType::Range,
+            Self::Number => feedback_fusion_common::proto::FieldType::Number,
+        }
+    }
+}
+
+impl Into<FieldType> for feedback_fusion_common::proto::FieldType {
+    fn into(self) -> FieldType {
+        match self {
+            Self::Text => FieldType::Text,
+            Self::Rating => FieldType::Rating,
+            Self::Checkbox => FieldType::Checkbox,
+            Self::Selection => FieldType::Selection,
+            Self::Range => FieldType::Range,
+            Self::Number => FieldType::Number,
+        }
+    }
+}
+
 #[derive(
-    Deserialize,
-    Serialize,
-    Clone,
-    Derivative,
-    Debug,
-    Getters,
-    Setters,
-    TypedBuilder,
-    ToSchema,
-    Validate,
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "bindings", derive(TS))]
-pub struct FeedbackPromptField {
+pub struct Field {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
     #[validate(length(max = 32))]
@@ -103,22 +135,46 @@ pub struct FeedbackPromptField {
     #[validate(length(max = 255))]
     description: Option<String>,
     prompt: String,
-    r#type: FeedbackPromptInputType,
-    #[cfg(not(feature = "bindings"))]
-    #[schema(value_type = FeedbackPromptInputOptions)]
-    options: JsonV<FeedbackPromptInputOptions>,
-    #[cfg(feature = "bindings")]
-    options: FeedbackPromptInputOptions,
+    r#type: FieldType,
+    options: JsonV<FieldOptions>,
     #[builder(default)]
     #[derivative(PartialEq = "ignore")]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     #[builder(default)]
     created_at: DateTime,
 }
 
-crud!(FeedbackPromptField {});
-impl_select!(FeedbackPromptField {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
-impl_select_page_wrapper!(FeedbackPromptField {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
+impl Into<feedback_fusion_common::proto::Field> for Field {
+    fn into(self) -> feedback_fusion_common::proto::Field {
+        feedback_fusion_common::proto::Field {
+            id: self.id,
+            title: self.title,
+            description: self.description,
+            prompt: self.prompt,
+            field_type: self.r#type.into(),
+            options: self.options.0.into(),
+            updated_at: self.updated_at.into(),
+            created_at: self.created_at.into(),
+        }
+    }
+}
+
+impl Into<Field> for feedback_fusion_common::proto::Field {
+    fn into(self) -> Field {
+        Field {
+            id: self.id,
+            title: self.title,
+            description: self.description,
+            prompt: self.prompt,
+            r#type: self.field_type.into(),
+            options: JsonV(self.options.into()),
+            updated_at: self.updated_at.into(),
+            created_at: self.created_at.into(),
+        }
+    }
+}
+
+crud!(Field {});
+impl_select!(Field {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page_wrapper!(Field {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
