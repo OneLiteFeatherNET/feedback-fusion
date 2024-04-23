@@ -20,24 +20,12 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use std::collections::HashMap;
-
 use crate::{
-    database::schema::feedback::{
-        FeedbackPromptField, FieldData, FieldResponse,
-        PromptResponse,
-    },
+    database::schema::feedback::{FeedbackPromptField, FieldData, FieldResponse, PromptResponse},
     prelude::*,
 };
-
-use axum::{extract::Path, http::StatusCode};
 use rbatis::rbatis_codegen::IntoSql;
-
-pub async fn router(state: FeedbackFusionState) -> Router<FeedbackFusionState> {
-    Router::new()
-        .route("/", get(get_responses))
-        .with_state(state)
-}
+use std::collections::HashMap;
 
 #[derive(Deserialize, Clone, Debug, ToSchema)]
 #[cfg_attr(feature = "bindings", derive(TS))]
@@ -110,8 +98,7 @@ pub async fn post_response(
         .collect::<Result<Vec<FieldResponse>>>()?;
     // insert them as batch
     database_request!(
-        FieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64)
-            .await?
+        FieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64).await?
     );
 
     // commit the transaction
@@ -125,9 +112,7 @@ pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FieldResponse>
 #[derive(ToSchema)]
 #[cfg_attr(feature = "bindings", derive(TS))]
 #[allow(unused)]
-pub struct GetFeedbackPromptResponsesResponseWrapper(
-    HashMap<String, Vec<FieldResponse>>,
-);
+pub struct GetFeedbackPromptResponsesResponseWrapper(HashMap<String, Vec<FieldResponse>>);
 
 #[derive(Deserialize, Debug, Clone)]
 struct DatabaseResult {

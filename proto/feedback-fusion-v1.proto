@@ -19,7 +19,7 @@ service FeedbackFusionV1 {
   rpc DeletePrompt(DeletePromptRequest) returns (google.protobuf.Empty);
 
   rpc CreateField(CreateFieldRequest) returns (Field);
-  rpc GetField(GetFieldRequest) returns (Field);
+  rpc GetFields(GetFieldsRequest) returns (FieldPage);
   rpc UpdateField(UpdateFieldRequest) returns (Field);
   rpc DeleteField(DeleteFieldRequest) returns (google.protobuf.Empty);
 
@@ -28,7 +28,7 @@ service FeedbackFusionV1 {
 
 // does not use oidc authentication
 service PublicFeedbackFusionV1 {
-  rpc GetFields(GetFieldsRequest) returns (FieldPage);
+  rpc GetActiveFields(GetFieldsRequest) returns (FieldPage);
   rpc GetPrompt(GetPromptRequest) returns (Prompt);
   rpc CreateResponses(CreateResponsesRequest) returns (PromptResponse);
 }
@@ -201,8 +201,6 @@ message Field {
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
 }
-
-message GetFieldRequest { string id = 1; }
 
 message GetFieldsRequest {
   string page_token = 1;

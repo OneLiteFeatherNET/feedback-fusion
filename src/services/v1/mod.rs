@@ -20,16 +20,19 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use axum::{extract::Path, http::StatusCode};
+use crate::{database::schema::feedback::Target, prelude::*};
 use feedback_fusion_common::proto::{
-    feedback_fusion_v1_server::FeedbackFusionV1, CreateTargetRequest, DeleteTargetRequest,
-    GetTargetRequest, GetTargetsRequest, Target as ProtoTarget, TargetPage, UpdateTargetRequest, CreatePromptRequest, Prompt as ProtoPrompt
+    feedback_fusion_v1_server::FeedbackFusionV1, CreateFieldRequest, CreatePromptRequest,
+    CreateTargetRequest, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
+    Field as ProtoField, FieldPage, FieldResponsePage, GetFieldsRequest, GetPromptsRequest,
+    GetResponsesRequest, GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage,
+    Target as ProtoTarget, TargetPage, UpdateFieldRequest, UpdatePromptRequest,
+    UpdateTargetRequest,
 };
 use tonic::Response;
 use validator::Validate;
 
-use crate::{database::schema::feedback::Target, prelude::*};
-
+pub mod field;
 pub mod prompt;
 pub mod response;
 pub mod target;
@@ -46,6 +49,8 @@ macro_rules! handler {
     };
 }
 
+// may consider to divide the service into its parts, but as of now this wouldn't be a real
+// enhacement
 #[async_trait::async_trait]
 impl FeedbackFusionV1 for FeedbackFusionV1Context {
     #[instrument(skip_all)]
@@ -86,7 +91,62 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     }
 
     #[instrument(skip_all)]
-    async fn create_prompt(&self, request: Request<CreatePromptRequest>) -> Result<Response<ProtoPrompt>> {
+    async fn create_prompt(
+        &self,
+        request: Request<CreatePromptRequest>,
+    ) -> Result<Response<ProtoPrompt>> {
         handler!(prompt::create_prompt, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn get_prompts(
+        &self,
+        request: Request<GetPromptsRequest>,
+    ) -> Result<Response<PromptPage>> {
+        handler!(prompt::get_prompts, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn update_prompt(&self, request: Request<UpdatePromptRequest>) -> Result<ProtoPrompt> {
+        handler!(prompt::update_prompt, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn delete_prompt(&self, request: Request<DeletePromptRequest>) -> Result<Response<()>> {
+        handler!(prompt::delete_prompt, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn create_field(
+        &self,
+        request: Request<CreateFieldRequest>,
+    ) -> Result<Response<ProtoField>> {
+        handler!(field::create_field, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn get_fields(&self, request: Request<GetFieldsRequest>) -> Result<Response<FieldPage>> {
+        handler!(field::get_fields, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn update_field(
+        &self,
+        request: Request<UpdateFieldRequest>,
+    ) -> Result<Response<ProtoField>> {
+        handler!(field::update_field, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn delete_field(&self, request: Request<DeleteFieldRequest>) -> Result<Response<()>> {
+        handler!(field::delete_field, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn get_responses(
+        &self,
+        request: Request<GetResponsesRequest>,
+    ) -> Result<Response<FieldResponsePage>> {
+        handler!(responses::get_responses, self, request)
     }
 }

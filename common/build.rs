@@ -34,6 +34,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "UpdateTargetRequest.description",
             "#[validate(length(max = 255))]",
         )
+        .type_attribute("CreatePromptRequest", "#[derive(Validate)]")
+        .field_attribute("CreatePromptRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "UpdatePromptRequest.description",
+            "#[validate(length(max = 255))]",
+        )
+        .type_attribute("UpdatePromptRequest", "#[derive(Validate)]")
+        .field_attribute("UpdatePromptRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "CreatePromptRequest.description",
+            "#[validate(length(max = 255))]",
+        )
+        .type_attribute("CreateFieldRequest", "#[derive(Validate)]")
+        .field_attribute("CreateFieldRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "CreateFieldRequest.description",
+            "#[validate(length(max = 255))]",
+        )
+        .type_attribute("UpdateFieldRequest", "#[derive(Validate)]")
+        .field_attribute("UpdateFieldRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "UpdateFieldRequest.description",
+            "#[validate(length(max = 255))]",
+        )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
         .compile(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
         .unwrap();
