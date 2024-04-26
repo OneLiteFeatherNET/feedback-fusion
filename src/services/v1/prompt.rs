@@ -22,8 +22,8 @@
 use super::FeedbackFusionV1Context;
 use crate::{database::schema::feedback::Prompt, prelude::*};
 use feedback_fusion_common::proto::{
-    CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest,
-    Prompt as ProtoPrompt, PromptPage, UpdatePromptRequest,
+    CreatePromptRequest, DeletePromptRequest, GetPromptsRequest, Prompt as ProtoPrompt, PromptPage,
+    UpdatePromptRequest,
 };
 use validator::Validate;
 
@@ -42,7 +42,7 @@ pub async fn create_prompt(
         .active(data.active)
         .target(data.target)
         .build();
-    database_request!(Prompt::insert(connection(), &prompt).await?);
+    database_request!(Prompt::insert(connection, &prompt).await?);
 
     Ok(Response::new(prompt.into()))
 }
@@ -67,18 +67,24 @@ pub async fn get_prompts(
     request: Request<GetPromptsRequest>,
 ) -> Result<Response<PromptPage>> {
     let data = request.into_inner();
+    let page_request = data.into_page_request();
     let connection = context.connection();
 
     let prompts = database_request!(
-        Prompt::select_page_by_target_wrapper(
-            connection,
-            &data.into_page_request(),
-            data.target.as_str(),
-        )
-        .await?
+        Prompt::select_page_by_target_wrapper(connection, &page_request, data.target.as_str(),)
+            .await?
     );
 
-    Ok(Response::new(prompts.into()))
+    Ok(Response::new(PromptPage {
+        page_token: page_request.page_no().try_into()?,
+        next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
+        page_size: page_request.page_size().try_into()?,
+        prompts: prompts
+            .records
+            .into_iter()
+            .map(Into::into)
+            .collect::<Vec<ProtoPrompt>>(),
+    }))
 }
 
 pub async fn update_prompt(
@@ -95,6 +101,7 @@ pub async fn update_prompt(
             .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
 
     prompt.set_title(data.title.unwrap_or(prompt.title().clone()));
+    prompt.set_description(data.description.unwrap_or(prompt.description().clone()));
     prompt.set_active(data.active.unwrap_or(*prompt.active()));
 
     database_request!(Prompt::update_by_column(connection, &prompt, "id").await?);

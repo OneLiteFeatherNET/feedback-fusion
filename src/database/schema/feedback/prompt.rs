@@ -83,7 +83,7 @@ crud!(Prompt {});
 impl_select!(Prompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
 impl_select_page_wrapper!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, ToSchema)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum FieldType {
     Text,
@@ -92,6 +92,35 @@ pub enum FieldType {
     Selection,
     Range,
     Number,
+}
+
+impl TryFrom<i32> for FieldType {
+    type Error = FeedbackFusionError;
+
+    fn try_from(value: i32) -> Result<Self> {
+        match value {
+            0 => Ok(Self::Text),
+            1 => Ok(Self::Rating),
+            2 => Ok(Self::Checkbox),
+            3 => Ok(Self::Selection),
+            4 => Ok(Self::Range),
+            5 => Ok(Self::Number),
+            _ => Err(FeedbackFusionError::BadRequest("invalid type".to_owned())),
+        }
+    }
+}
+
+impl Into<i32> for FieldType {
+    fn into(self) -> i32 {
+        match self {
+            Self::Text => 0,
+            Self::Rating => 1,
+            Self::Checkbox => 2,
+            Self::Selection => 3,
+            Self::Range => 4,
+            Self::Number => 5,
+        }
+    }
 }
 
 impl Into<feedback_fusion_common::proto::FieldType> for FieldType {
@@ -153,25 +182,27 @@ impl Into<feedback_fusion_common::proto::Field> for Field {
             description: self.description,
             prompt: self.prompt,
             field_type: self.r#type.into(),
-            options: self.options.0.into(),
+            options: Some(self.options.0.into()),
             updated_at: Some(date_time_to_timestamp(self.updated_at)),
             created_at: Some(date_time_to_timestamp(self.created_at)),
         }
     }
 }
 
-impl Into<Field> for feedback_fusion_common::proto::Field {
-    fn into(self) -> Field {
-        Field {
+impl TryInto<Field> for feedback_fusion_common::proto::Field {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<Field> {
+        Ok(Field {
             id: self.id,
             title: self.title,
             description: self.description,
             prompt: self.prompt,
-            r#type: self.field_type.into(),
-            options: JsonV(self.options.into()),
+            r#type: self.field_type.try_into()?,
+            options: JsonV(self.options.unwrap().try_into()?),
             updated_at: to_date_time!(self.updated_at),
             created_at: to_date_time!(self.created_at),
-        }
+        })
     }
 }
 

@@ -22,14 +22,8 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::{prelude::*, services::v1::FeedbackFusionV1Context};
-use feedback_fusion_common::proto::{
-    feedback_fusion_v1_server::{FeedbackFusionV1, FeedbackFusionV1Server},
-    public_feedback_fusion_v1_server::{PublicFeedbackFusionV1, PublicFeedbackFusionV1Server},
-};
-use std::time::Duration;
+use feedback_fusion_common::proto::feedback_fusion_v1_server::FeedbackFusionV1Server;
 use tonic::transport::Server;
-use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
-use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod config;

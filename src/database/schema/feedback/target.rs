@@ -21,7 +21,6 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
-use prost_types::Timestamp;
 use rbatis::rbdc::DateTime;
 
 #[derive(

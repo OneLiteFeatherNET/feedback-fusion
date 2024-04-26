@@ -22,10 +22,12 @@
 
 use super::FeedbackFusionV1Context;
 use crate::{
-    database::schema::feedback::{FieldData, FieldResponse, PromptResponse},
+    database::schema::feedback::{FieldResponse, PromptResponse},
     prelude::*,
 };
-use feedback_fusion_common::proto::{FieldResponseList, GetResponsesRequest, ResponsePage};
+use feedback_fusion_common::proto::{
+    FieldResponse as ProtoFieldResponse, FieldResponseList, GetResponsesRequest, ResponsePage,
+};
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::HashMap;
 
@@ -143,20 +145,21 @@ pub async fn get_responses(
     request: Request<GetResponsesRequest>,
 ) -> Result<Response<ResponsePage>> {
     let data = request.into_inner();
+    let page_request = data.into_page_request();
     let connection = context.connection();
 
     // select a page of responses
     let responses = database_request!(
         PromptResponse::select_page_by_prompt_wrapper(
             connection,
-            &data.into_page_request(),
+            &page_request,
             data.prompt.as_str()
         )
         .await?
     );
 
     let records = if responses.total > 0 {
-        let map = database_request!(
+        database_request!(
             group_field_responses(
                 connection,
                 responses
@@ -169,17 +172,26 @@ pub async fn get_responses(
             .await?
             .result
             .0
-        );
-
-        // transform the map
-        for value in map.values_mut() {
-            *value = FieldResponseList { data: value.into() };
-        };
-
-        map
+        )
+        .into_iter()
+        .map(|(key, value)| {
+            let value = FieldResponseList {
+                data: value
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<ProtoFieldResponse>>(),
+            };
+            (key, value)
+        })
+        .collect::<HashMap<String, FieldResponseList>>()
     } else {
         HashMap::new()
     };
 
-    Ok(Response::new(records))
+    Ok(Response::new(ResponsePage {
+        page_token: page_request.page_no().try_into()?,
+        next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
+        page_size: page_request.page_size().try_into()?,
+        data: records,
+    }))
 }

@@ -21,7 +21,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use super::FeedbackFusionV1Context;
-use crate::{database::schema::feedback::Field, prelude::*};
+use crate::{
+    database::schema::feedback::{Field, FieldType},
+    prelude::*,
+};
 use feedback_fusion_common::proto::{
     CreateFieldRequest, DeleteFieldRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
     UpdateFieldRequest,
@@ -37,11 +40,11 @@ pub async fn create_field(
 
     // build the field
     let field = Field::builder()
+        .r#type(Into::<FieldType>::into(data.field_type()))
         .title(data.title)
         .description(data.description)
-        .r#type(data.r#type.clone())
-        .options(JsonV(data.options))
-        .prompt(prompt)
+        .options(JsonV(data.options.unwrap().try_into()?))
+        .prompt(data.prompt)
         .build();
     database_request!(Field::insert(connection, &field).await?);
 
@@ -84,17 +87,27 @@ pub async fn get_fields(
     request: Request<GetFieldsRequest>,
 ) -> Result<Response<FieldPage>> {
     let data = request.into_inner();
+    let page_request = data.into_page_request();
 
     let page = database_request!(
         Field::select_page_by_prompt_wrapper(
             context.connection(),
-            &data.into_page_request(),
+            &page_request,
             data.prompt.as_str()
         )
         .await?
     );
 
-    Ok(Response::new(page.into()))
+    Ok(Response::new(FieldPage {
+        page_token: page_request.page_no().try_into()?,
+        next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
+        page_size: page_request.page_size().try_into()?,
+        fields: page
+            .records
+            .into_iter()
+            .map(Into::into)
+            .collect::<Vec<ProtoField>>(),
+    }))
 }
 
 pub async fn update_field(
@@ -110,8 +123,8 @@ pub async fn update_field(
         .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
 
     field.set_title(data.title.unwrap_or(field.title().to_string()));
-    if let Some(Ok(options)) = options {
-        field.set_options(JsonV(options));
+    if let Some(options) = data.options {
+        field.set_options(JsonV(options.try_into()?));
     }
 
     database_request!(Field::update_by_column(connection, &field, "id").await?);
@@ -124,12 +137,8 @@ pub async fn delete_field(
     request: Request<DeleteFieldRequest>,
 ) -> Result<Response<()>> {
     database_request!(
-        Field::delete_by_column(
-            context.connection(),
-            "id",
-            request.into_inner().id.as_str()
-        )
-        .await?
+        Field::delete_by_column(context.connection(), "id", request.into_inner().id.as_str())
+            .await?
     );
 
     Ok(Response::new(()))

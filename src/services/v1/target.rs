@@ -69,20 +69,30 @@ pub async fn get_targets(
     request: Request<GetTargetsRequest>,
 ) -> Result<Response<TargetPage>> {
     let data = request.into_inner();
+    let page_request = data.into_page_request();
     let connection = context.connection();
 
     // TODO: write translation macro
     let page = database_request!(
-        Target::select_page_wrapper(connection, &data.into_page_request(), data.query.as_str())
-            .await?
+        Target::select_page_wrapper(connection, &page_request, data.query.as_str()).await?
     );
-    Ok(Response::new(page.into()))
+
+    Ok(Response::new(TargetPage {
+        page_token: page_request.page_no().try_into()?,
+        next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
+        page_size: page_request.page_size().try_into()?,
+        targets: page
+            .records
+            .into_iter()
+            .map(Into::into)
+            .collect::<Vec<ProtoTarget>>(),
+    }))
 }
 
 pub async fn update_target(
     context: &FeedbackFusionV1Context,
     request: Request<UpdateTargetRequest>,
-) -> Result<Response<Target>> {
+) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
     let connection = context.connection();
@@ -103,7 +113,7 @@ pub async fn delete_target(
     request: Request<DeleteTargetRequest>,
 ) -> Result<Response<()>> {
     let data = request.into_inner();
-    let connection = self.connection();
+    let connection = context.connection();
 
     database_request!(Target::delete_by_column(connection, "id", data.id.as_str()).await?);
     Ok(Response::new(()))

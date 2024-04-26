@@ -113,8 +113,9 @@ message PromptPage {
 
 message UpdatePromptRequest {
   string id = 1;
-  bool active = 2;
-  string description = 3;
+  optional bool active = 2;
+  optional string description = 3;
+  optional string title = 4;
 }
 
 message DeletePromptRequest { string id = 2; }
@@ -190,12 +191,12 @@ message Field {
   FieldType field_type = 13;
 
   oneof options {
-    TextOptions text_options = 5;
-    RatingOptions rating_options = 6;
-    CheckboxOptions checkbox_options = 7;
-    SelectionOptions selection_options = 8;
-    RangeOptions range_options = 9;
-    NumberOptions number_options = 10;
+    TextOptions text = 5;
+    RatingOptions rating = 6;
+    CheckboxOptions checkbox = 7;
+    SelectionOptions selection = 8;
+    RangeOptions range = 9;
+    NumberOptions number = 10;
   }
 
   google.protobuf.Timestamp created_at = 11;
@@ -218,13 +219,12 @@ message FieldPage {
 
 message UpdateFieldRequest {
   oneof options {
-    TextOptions text_options = 1;
-    RatingOptions rating_options = 2;
-    CheckboxOptions checkbox_options = 3;
-    SelectionOptions selection_options = 4;
-    RangeOptions range_options = 5;
-    NumberOptions number_options = 6;
-    google.protobuf.Empty empty = 7;
+    TextOptions text = 1;
+    RatingOptions rating = 2;
+    CheckboxOptions checkbox = 3;
+    SelectionOptions selection = 4;
+    RangeOptions range = 5;
+    NumberOptions number = 6;
   }
 
   optional string title = 8;
@@ -255,12 +255,12 @@ message NumberResponse { int32 number = 1; }
 
 message ResponseData {
   oneof data {
-    TextResponse text_response = 1;
-    RatingResponse rating_response = 2;
-    CheckboxResponse checkbox_response = 3;
-    SelectionResponse selection_response = 4;
-    RangeResponse range_response = 5;
-    NumberResponse number_response = 6;
+    TextResponse text = 1;
+    RatingResponse rating = 2;
+    CheckboxResponse checkbox = 3;
+    SelectionResponse selection = 4;
+    RangeResponse range = 5;
+    NumberResponse number = 6;
   }
 }
 
@@ -278,12 +278,12 @@ message FieldResponse {
   string field = 3;
 
   oneof data {
-    TextResponse text_response = 4;
-    RatingResponse rating_response = 5;
-    CheckboxResponse checkbox_response = 6;
-    SelectionResponse selection_response = 7;
-    RangeResponse range_response = 8;
-    NumberResponse number_response = 9;
+    TextResponse text = 4;
+    RatingResponse rating = 5;
+    CheckboxResponse checkbox = 6;
+    SelectionResponse selection = 7;
+    RangeResponse range = 8;
+    NumberResponse number = 9;
   }
 }
 

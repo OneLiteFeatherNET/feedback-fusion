@@ -21,8 +21,11 @@
  *
  */
 
+use std::{fmt::Debug, num::TryFromIntError};
+
 use crate::prelude::*;
 use thiserror::Error;
+use tonic::Status;
 use validator::ValidationErrors;
 
 #[derive(Error, Debug)]
@@ -51,45 +54,25 @@ impl From<serde_json::Error> for FeedbackFusionError {
     }
 }
 
-#[derive(Serialize, Debug, Clone)]
-pub struct FeedbackFusionErrorResponse {
-    error: String,
-}
-
-impl From<String> for FeedbackFusionErrorResponse {
-    fn from(value: String) -> Self {
-        Self { error: value }
+impl From<TryFromIntError> for FeedbackFusionError {
+    fn from(value: TryFromIntError) -> Self {
+        Self::BadRequest(value.to_string())
     }
 }
 
 pub type Result<T> = std::result::Result<T, FeedbackFusionError>;
 
-// impl IntoResponse for FeedbackFusionError {
-//     fn into_response(self) -> Response {
-//         match self {
-//             FeedbackFusionError::BadRequest(error) => (
-//                 StatusCode::BAD_REQUEST,
-//                 Json(FeedbackFusionErrorResponse::from(error)),
-//             ),
-//             FeedbackFusionError::Unauthorized => (
-//                 StatusCode::UNAUTHORIZED,
-//                 Json(FeedbackFusionErrorResponse::from("Unauthorized".to_owned())),
-//             ),
-//             FeedbackFusionError::Forbidden(error) => (
-//                 StatusCode::FORBIDDEN,
-//                 Json(FeedbackFusionErrorResponse::from(error)),
-//             ),
-//             _ => {
-//                 error!("Error occurred while processing request: {:?}", self);
-//
-//                 (
-//                     StatusCode::INTERNAL_SERVER_ERROR,
-//                     Json(FeedbackFusionErrorResponse::from(
-//                         "Internal server error".to_owned(),
-//                     )),
-//                 )
-//             }
-//         }
-//         .into_response()
-//     }
-// }
+impl Into<Status> for FeedbackFusionError {
+    fn into(self) -> Status {
+        match self {
+            FeedbackFusionError::Unauthorized => Status::unauthenticated("unauthorized"),
+            FeedbackFusionError::Forbidden(error) => Status::permission_denied(error.to_string()),
+            FeedbackFusionError::BadRequest(error) => Status::invalid_argument(error.to_string()),
+            _ => {
+                error!("Error occurred while processing the request: {:?}", self);
+
+                Status::internal("Internal server error")
+            }
+        }
+    }
+}

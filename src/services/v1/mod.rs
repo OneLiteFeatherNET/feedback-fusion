@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::feedback::Target, prelude::*};
+use crate::prelude::*;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1, CreateFieldRequest, CreatePromptRequest,
     CreateTargetRequest, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
@@ -29,8 +29,7 @@ use feedback_fusion_common::proto::{
     Target as ProtoTarget, TargetPage, UpdateFieldRequest, UpdatePromptRequest,
     UpdateTargetRequest,
 };
-use tonic::Response;
-use validator::Validate;
+use tonic::{Response, Status};
 
 pub mod field;
 pub mod prompt;
@@ -45,9 +44,10 @@ pub struct FeedbackFusionV1Context {
 
 macro_rules! handler {
     ($handler:path, $self:ident, $request:ident) => {{
-        let response = $handler($self, $request).await?;
-
-        Ok(response)
+        match $handler($self, $request).await {
+            Ok(response) => Ok(response),
+            Err(error) => Err(error.into()),
+        }
     }};
 }
 
@@ -59,7 +59,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn create_target(
         &self,
         request: Request<CreateTargetRequest>,
-    ) -> Result<Response<ProtoTarget>> {
+    ) -> std::result::Result<Response<ProtoTarget>, Status> {
         handler!(target::create_target, self, request)
     }
 
@@ -67,7 +67,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn get_target(
         &self,
         request: Request<GetTargetRequest>,
-    ) -> Result<Response<ProtoTarget>> {
+    ) -> std::result::Result<Response<ProtoTarget>, Status> {
         handler!(target::get_target, self, request)
     }
 
@@ -75,7 +75,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn get_targets(
         &self,
         request: Request<GetTargetsRequest>,
-    ) -> Result<Response<TargetPage>> {
+    ) -> std::result::Result<Response<TargetPage>, Status> {
         handler!(target::get_targets, self, request)
     }
 
@@ -83,12 +83,15 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn update_target(
         &self,
         request: Request<UpdateTargetRequest>,
-    ) -> Result<Response<Target>> {
+    ) -> std::result::Result<Response<ProtoTarget>, Status> {
         handler!(target::update_target, self, request)
     }
 
     #[instrument(skip_all)]
-    async fn delete_target(&self, request: Request<DeleteTargetRequest>) -> Result<Response<()>> {
+    async fn delete_target(
+        &self,
+        request: Request<DeleteTargetRequest>,
+    ) -> std::result::Result<Response<()>, Status> {
         handler!(target::delete_target, self, request)
     }
 
@@ -96,7 +99,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn create_prompt(
         &self,
         request: Request<CreatePromptRequest>,
-    ) -> Result<Response<ProtoPrompt>> {
+    ) -> std::result::Result<Response<ProtoPrompt>, Status> {
         handler!(prompt::create_prompt, self, request)
     }
 
@@ -104,7 +107,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn get_prompts(
         &self,
         request: Request<GetPromptsRequest>,
-    ) -> Result<Response<PromptPage>> {
+    ) -> std::result::Result<Response<PromptPage>, Status> {
         handler!(prompt::get_prompts, self, request)
     }
 
@@ -112,12 +115,15 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn update_prompt(
         &self,
         request: Request<UpdatePromptRequest>,
-    ) -> Result<Response<ProtoPrompt>> {
+    ) -> std::result::Result<Response<ProtoPrompt>, Status> {
         handler!(prompt::update_prompt, self, request)
     }
 
     #[instrument(skip_all)]
-    async fn delete_prompt(&self, request: Request<DeletePromptRequest>) -> Result<Response<()>> {
+    async fn delete_prompt(
+        &self,
+        request: Request<DeletePromptRequest>,
+    ) -> std::result::Result<Response<()>, Status> {
         handler!(prompt::delete_prompt, self, request)
     }
 
@@ -125,12 +131,15 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn create_field(
         &self,
         request: Request<CreateFieldRequest>,
-    ) -> Result<Response<ProtoField>> {
+    ) -> std::result::Result<Response<ProtoField>, Status> {
         handler!(field::create_field, self, request)
     }
 
     #[instrument(skip_all)]
-    async fn get_fields(&self, request: Request<GetFieldsRequest>) -> Result<Response<FieldPage>> {
+    async fn get_fields(
+        &self,
+        request: Request<GetFieldsRequest>,
+    ) -> std::result::Result<Response<FieldPage>, Status> {
         handler!(field::get_fields, self, request)
     }
 
@@ -138,12 +147,15 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn update_field(
         &self,
         request: Request<UpdateFieldRequest>,
-    ) -> Result<Response<ProtoField>> {
+    ) -> std::result::Result<Response<ProtoField>, Status> {
         handler!(field::update_field, self, request)
     }
 
     #[instrument(skip_all)]
-    async fn delete_field(&self, request: Request<DeleteFieldRequest>) -> Result<Response<()>> {
+    async fn delete_field(
+        &self,
+        request: Request<DeleteFieldRequest>,
+    ) -> std::result::Result<Response<()>, Status> {
         handler!(field::delete_field, self, request)
     }
 
@@ -151,7 +163,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn get_responses(
         &self,
         request: Request<GetResponsesRequest>,
-    ) -> Result<Response<ResponsePage>> {
+    ) -> std::result::Result<Response<ResponsePage>, Status> {
         handler!(response::get_responses, self, request)
     }
 }

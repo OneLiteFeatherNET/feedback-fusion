@@ -20,10 +20,8 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{prelude::*, database::schema::date_time_to_timestamp, to_date_time};
+use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
 use rbatis::rbdc::DateTime;
-
-use super::FieldType;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(tag = "type")]
@@ -37,47 +35,45 @@ pub enum FieldOptions {
     Number(NumberOptions),
 }
 
-impl Into<feedback_fusion_common::proto::create_field_request::Options> for FieldOptions {
-    fn into(self) -> feedback_fusion_common::proto::create_field_request::Options {
-        match self {
-            Self::Text(options) => {
-                feedback_fusion_common::proto::create_field_request::Options::Text(options.into())
-            }
-            Self::Rating(options) => {
-                feedback_fusion_common::proto::create_field_request::Options::Rating(options.into())
-            }
-            Self::Checkbox(options) => {
-                feedback_fusion_common::proto::create_field_request::Options::Checkbox(
-                    options.into(),
-                )
-            }
-            Self::Selection(options) => {
-                feedback_fusion_common::proto::create_field_request::Options::Selection(
-                    options.into(),
-                )
-            }
-            Self::Range(options) => {
-                feedback_fusion_common::proto::create_field_request::Options::Range(options.into())
-            }
-            Self::Number(options) => {
-                feedback_fusion_common::proto::create_field_request::Options::Number(options.into())
+macro_rules! map_options {
+    ($($path:path $(,)?)*) => {
+       $(
+        impl Into<$path> for FieldOptions {
+            fn into(self) -> $path {
+                match self {
+                    Self::Text(options) => <$path>::Text(options.into()),
+                    Self::Rating(options) => <$path>::Rating(options.into()),
+                    Self::Checkbox(options) => <$path>::Checkbox(options.into()),
+                    Self::Selection(options) => <$path>::Selection(options.into()),
+                    Self::Range(options) => <$path>::Range(options.into()),
+                    Self::Number(options) => <$path>::Number(options.into()),
+                }
             }
         }
-    }
+
+        impl TryInto<FieldOptions> for $path {
+            type Error = FeedbackFusionError;
+
+            fn try_into(self) -> Result<FieldOptions> {
+                Ok(match self {
+                    Self::Text(options) => FieldOptions::Text(options.try_into()?),
+                    Self::Rating(options) => FieldOptions::Rating(options.try_into()?),
+                    Self::Checkbox(options) => FieldOptions::Checkbox(options.try_into()?),
+                    Self::Selection(options) => FieldOptions::Selection(options.into()),
+                    Self::Range(options) => FieldOptions::Range(options.try_into()?),
+                    Self::Number(options) => FieldOptions::Number(options.try_into()?),
+                })
+            }
+        }
+        )*
+    };
 }
 
-impl Into<FieldOptions> for feedback_fusion_common::proto::create_field_request::Options {
-    fn into(self) -> FieldOptions {
-        match self {
-            Self::Text(options) => FieldOptions::Text(options.into()),
-            Self::Rating(options) => FieldOptions::Rating(options.into()),
-            Self::Checkbox(options) => FieldOptions::Checkbox(options.into()),
-            Self::Selection(options) => FieldOptions::Selection(options.into()),
-            Self::Range(options) => FieldOptions::Range(options.into()),
-            Self::Number(options) => FieldOptions::Number(options.into()),
-        }
-    }
-}
+map_options!(
+    feedback_fusion_common::proto::create_field_request::Options,
+    feedback_fusion_common::proto::update_field_request::Options,
+    feedback_fusion_common::proto::field::Options,
+);
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
@@ -99,12 +95,14 @@ impl Into<feedback_fusion_common::proto::TextOptions> for TextOptions {
     }
 }
 
-impl Into<TextOptions> for feedback_fusion_common::proto::TextOptions {
-    fn into(self) -> TextOptions {
-        TextOptions {
+impl TryInto<TextOptions> for feedback_fusion_common::proto::TextOptions {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<TextOptions> {
+        Ok(TextOptions {
             placeholder: self.placeholder,
-            lines: self.lines.into(),
-        }
+            lines: self.lines.try_into()?,
+        })
     }
 }
 
@@ -127,11 +125,13 @@ impl Into<feedback_fusion_common::proto::RatingOptions> for RatingOptions {
     }
 }
 
-impl Into<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
-    fn into(self) -> RatingOptions {
-        RatingOptions {
-            max: self.max.into(),
-        }
+impl TryInto<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<RatingOptions> {
+        Ok(RatingOptions {
+            max: self.max.try_into()?,
+        })
     }
 }
 
@@ -139,14 +139,37 @@ impl Into<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
 #[serde(rename_all = "lowercase")]
 pub enum CheckboxStyle {
     Switch,
-    Checkbox,
+    Normal,
+}
+
+impl Into<i32> for CheckboxStyle {
+    fn into(self) -> i32 {
+        match self {
+            Self::Normal => 0,
+            Self::Switch => 1,
+        }
+    }
+}
+
+impl TryFrom<i32> for CheckboxStyle {
+    type Error = FeedbackFusionError;
+
+    fn try_from(value: i32) -> Result<Self> {
+        match value {
+            0 => Ok(Self::Normal),
+            1 => Ok(Self::Switch),
+            _ => Err(FeedbackFusionError::BadRequest(
+                "invalid CheckboxStyle".to_owned(),
+            )),
+        }
+    }
 }
 
 impl Into<feedback_fusion_common::proto::CheckboxStyle> for CheckboxStyle {
     fn into(self) -> feedback_fusion_common::proto::CheckboxStyle {
         match self {
             Self::Switch => feedback_fusion_common::proto::CheckboxStyle::Switch,
-            Self::Checkbox => feedback_fusion_common::proto::CheckboxStyle::Normal,
+            Self::Normal => feedback_fusion_common::proto::CheckboxStyle::Normal,
         }
     }
 }
@@ -155,7 +178,7 @@ impl Into<CheckboxStyle> for feedback_fusion_common::proto::CheckboxStyle {
     fn into(self) -> CheckboxStyle {
         match self {
             Self::Switch => CheckboxStyle::Switch,
-            Self::Checkbox => CheckboxStyle::Normal,
+            Self::Normal => CheckboxStyle::Normal,
         }
     }
 }
@@ -178,12 +201,14 @@ impl Into<feedback_fusion_common::proto::CheckboxOptions> for CheckboxOptions {
     }
 }
 
-impl Into<CheckboxOptions> for feedback_fusion_common::proto::CheckboxOptions {
-    fn into(self) -> CheckboxOptions {
-        CheckboxOptions {
+impl TryInto<CheckboxOptions> for feedback_fusion_common::proto::CheckboxOptions {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<CheckboxOptions> {
+        Ok(CheckboxOptions {
             default_state: self.default_state,
-            style: self.style.into(),
-        }
+            style: self.style.try_into()?,
+        })
     }
 }
 
@@ -239,12 +264,14 @@ impl Into<feedback_fusion_common::proto::RangeOptions> for RangeOptions {
     }
 }
 
-impl Into<RangeOptions> for feedback_fusion_common::proto::RangeOptions {
-    fn into(self) -> RangeOptions {
-        RangeOptions {
-            min: self.min.into(),
-            max: self.max.into(),
-        }
+impl TryInto<RangeOptions> for feedback_fusion_common::proto::RangeOptions {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<RangeOptions> {
+        Ok(RangeOptions {
+            min: self.min.try_into()?,
+            max: self.max.try_into()?,
+        })
     }
 }
 
@@ -270,13 +297,15 @@ impl Into<feedback_fusion_common::proto::NumberOptions> for NumberOptions {
     }
 }
 
-impl Into<NumberOptions> for feedback_fusion_common::proto::NumberOptions {
-    fn into(self) -> NumberOptions {
-        NumberOptions {
-            min: self.min.into(),
-            max: self.max.into(),
+impl TryInto<NumberOptions> for feedback_fusion_common::proto::NumberOptions {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<NumberOptions> {
+        Ok(NumberOptions {
+            min: self.min.try_into()?,
+            max: self.max.try_into()?,
             placeholder: self.placeholder,
-        }
+        })
     }
 }
 
@@ -335,19 +364,21 @@ impl Into<feedback_fusion_common::proto::FieldResponse> for FieldResponse {
             id: self.id,
             response: self.response,
             field: self.field,
-            data: self.data.0.into(),
+            data: Some(self.data.0.into()),
         }
     }
 }
 
-impl Into<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
-    fn into(self) -> FieldResponse {
-        FieldResponse {
+impl TryInto<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<FieldResponse> {
+        Ok(FieldResponse {
             id: self.id,
             response: self.response,
             field: self.field,
-            data: JsonV(self.data.into()),
-        }
+            data: JsonV(self.data.unwrap().try_into()?),
+        })
     }
 }
 
@@ -365,43 +396,44 @@ pub enum FieldData {
     Number(NumberResponse),
 }
 
-impl Into<feedback_fusion_common::proto::field_response::Data> for FieldData {
-    fn into(self) -> feedback_fusion_common::proto::field_response::Data {
-        match self {
-            Self::Text(data) => {
-                feedback_fusion_common::proto::field_response::Data::TextResponse(data.into())
-            }
-            Self::Rating(data) => {
-                feedback_fusion_common::proto::field_response::Data::RatingResponse(data.into())
-            }
-            Self::Checkbox(data) => {
-                feedback_fusion_common::proto::field_response::Data::CheckboxResponse(data.into())
-            }
-            Self::Selection(data) => {
-                feedback_fusion_common::proto::field_response::Data::SelectionResponse(data.into())
-            }
-            Self::Range(data) => {
-                feedback_fusion_common::proto::field_response::Data::RangeResponse(data.into())
-            }
-            Self::Number(data) => {
-                feedback_fusion_common::proto::field_response::Data::NumberResponse(data.into())
+macro_rules! map_response {
+    ($($path:path $(,)?)*) => {
+        $(
+        impl Into<$path> for FieldData {
+            fn into(self) -> $path {
+                match self {
+                    Self::Text(data) => <$path>::Text(data.into()),
+                    Self::Rating(data) => <$path>::Rating(data.into()),
+                    Self::Checkbox(data) => <$path>::Checkbox(data.into()),
+                    Self::Selection(data) => <$path>::Selection(data.into()),
+                    Self::Range(data) => <$path>::Range(data.into()),
+                    Self::Number(data) => <$path>::Number(data.into()),
+                }
             }
         }
-    }
+
+        impl TryInto<FieldData> for $path {
+            type Error = FeedbackFusionError;
+
+            fn try_into(self) -> Result<FieldData> {
+                Ok(match self {
+                    Self::Text(data) => FieldData::Text(data.into()),
+                    Self::Rating(data) => FieldData::Rating(data.try_into()?),
+                    Self::Checkbox(data) => FieldData::Checkbox(data.into()),
+                    Self::Selection(data) => FieldData::Selection(data.into()),
+                    Self::Range(data) => FieldData::Range(data.try_into()?),
+                    Self::Number(data) => FieldData::Number(data.try_into()?),
+                })
+            }
+        }
+        )*
+    };
 }
 
-impl Into<FieldData> for feedback_fusion_common::proto::field_response::Data {
-    fn into(self) -> FieldData {
-        match self {
-            Self::TextResponse(data) => FieldData::Text(data.into()),
-            Self::RatingResponse(data) => FieldData::Rating(data.into()),
-            Self::CheckboxResponse(data) => FieldData::Checkbox(data.into()),
-            Self::SelectionResponse(data) => FieldData::Selection(data.into()),
-            Self::RangeResponse(data) => FieldData::Range(data.into()),
-            Self::NumberResponse(data) => FieldData::Number(data.into()),
-        }
-    }
-}
+map_response!(
+    feedback_fusion_common::proto::field_response::Data,
+    feedback_fusion_common::proto::response_data::Data
+);
 
 macro_rules! validate_data {
     ($self: expr, $voptions: expr, $rident:ident, $ident:ident, $($type:path = $options:path => $if:block $(,)?)*) => {
@@ -504,11 +536,13 @@ impl Into<feedback_fusion_common::proto::RatingResponse> for RatingResponse {
     }
 }
 
-impl Into<RatingResponse> for feedback_fusion_common::proto::RatingResponse {
-    fn into(self) -> RatingResponse {
-        RatingResponse {
-            rating: self.rating.into(),
-        }
+impl TryInto<RatingResponse> for feedback_fusion_common::proto::RatingResponse {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<RatingResponse> {
+        Ok(RatingResponse {
+            rating: self.rating.try_into()?,
+        })
     }
 }
 
@@ -569,12 +603,14 @@ impl Into<feedback_fusion_common::proto::RangeResponse> for RangeResponse {
     }
 }
 
-impl Into<RangeResponse> for feedback_fusion_common::proto::RangeResponse {
-    fn into(self) -> RangeResponse {
-        RangeResponse {
-            start: self.start.into(),
-            end: self.end.into(),
-        }
+impl TryInto<RangeResponse> for feedback_fusion_common::proto::RangeResponse {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<RangeResponse> {
+        Ok(RangeResponse {
+            start: self.start.try_into()?,
+            end: self.end.try_into()?,
+        })
     }
 }
 
@@ -586,15 +622,17 @@ pub struct NumberResponse {
 impl Into<feedback_fusion_common::proto::NumberResponse> for NumberResponse {
     fn into(self) -> feedback_fusion_common::proto::NumberResponse {
         feedback_fusion_common::proto::NumberResponse {
-            number: Self.number.into(),
+            number: self.number.into(),
         }
     }
 }
 
-impl Into<NumberResponse> for feedback_fusion_common::proto::NumberResponse {
-    fn into(self) -> NumberResponse {
-        NumberResponse {
-            number: Self.number.into(),
-        }
+impl TryInto<NumberResponse> for feedback_fusion_common::proto::NumberResponse {
+    type Error = FeedbackFusionError;
+
+    fn try_into(self) -> Result<NumberResponse> {
+        Ok(NumberResponse {
+            number: self.number.try_into()?,
+        })
     }
 }
