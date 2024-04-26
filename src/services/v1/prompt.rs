@@ -19,11 +19,11 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use super::FeedbackFusionV1Context;
+use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{database::schema::feedback::Prompt, prelude::*};
 use feedback_fusion_common::proto::{
-    CreatePromptRequest, DeletePromptRequest, GetPromptsRequest, Prompt as ProtoPrompt, PromptPage,
-    UpdatePromptRequest,
+    CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest,
+    Prompt as ProtoPrompt, PromptPage, UpdatePromptRequest,
 };
 use validator::Validate;
 
@@ -47,20 +47,23 @@ pub async fn create_prompt(
     Ok(Response::new(prompt.into()))
 }
 
-// pub async fn get_prompt(
-//   context: &FeedbackFusionV1Context,
-//     request: Request<GetPromptRequest>
-// ) -> Result<Json<FeedbackPrompt>> {
-//     let prompt: Option<FeedbackPrompt> =
-//         database_request!(FeedbackPrompt::select_by_id.connection(), prompt.as_str()).await?);
-//
-//     match prompt {
-//         Some(prompt) => Ok(Json(prompt)),
-//         None => Err(FeedbackFusionError::BadRequest(
-//             "invalid prompt".to_string(),
-//         )),
-//     }
-// }
+pub async fn get_prompt(
+    context: &PublicFeedbackFusionV1Context,
+    request: Request<GetPromptRequest>,
+) -> Result<Response<ProtoPrompt>> {
+    let data = request.into_inner();
+    let connection = context.connection();
+
+    let prompt: Option<Prompt> =
+        database_request!(Prompt::select_by_id(connection, data.id.as_str()).await?);
+
+    match prompt {
+        Some(prompt) => Ok(Response::new(prompt.into())),
+        None => Err(FeedbackFusionError::BadRequest(
+            "invalid prompt".to_string(),
+        )),
+    }
+}
 
 pub async fn get_prompts(
     context: &FeedbackFusionV1Context,

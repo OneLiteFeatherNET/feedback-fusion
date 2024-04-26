@@ -20,9 +20,9 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use super::FeedbackFusionV1Context;
+use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldType},
+    database::schema::feedback::{Field, FieldType, Prompt},
     prelude::*,
 };
 use feedback_fusion_common::proto::{
@@ -51,36 +51,41 @@ pub async fn create_field(
     Ok(Response::new(field.into()))
 }
 
-// pub async fn fetch(
-//    (state): State<FeedbackFusionState>,
-//     Query(pagination): Query<Pagination>,
-//     Path((_, prompt)): Path<(String, String)>,
-// ) -> Result<Json<Page<FeedbackPromptField>>> {
-//     // fetch the prompt
-//     let prompt = database_request!(FeedbackPrompt::select_by_id(
-//        .connection(),
-//         prompt.as_str()
-//     )
-//     .await?
-//     .ok_or(FeedbackFusionError::BadRequest(
-//         "invalid prompt".to_string()
-//     ))?);
-//     // only allow active prompts
-//     if !prompt.active() {
-//         return Err(FeedbackFusionError::Forbidden("inactive prompt".to_owned()));
-//     }
-//
-//     let page = database_request!(
-//         FeedbackPromptField::select_page_by_prompt_wrapper(
-//            .connection(),
-//             &pagination.request(),
-//             prompt.id().as_str()
-//         )
-//         .await?
-//     );
-//
-//     Ok(Json(page))
-// }
+pub async fn get_active_fields(
+    context: &PublicFeedbackFusionV1Context,
+    request: Request<GetFieldsRequest>,
+) -> Result<Response<FieldPage>> {
+    let data = request.into_inner();
+    let page_request = data.into_page_request();
+    let connection = context.connection();
+
+    // fetch the prompt
+    let prompt = database_request!(Prompt::select_by_id(connection, data.prompt.as_str())
+        .await?
+        .ok_or(FeedbackFusionError::BadRequest(
+            "invalid prompt".to_string()
+        ))?);
+    // only allow active prompts
+    if !prompt.active() {
+        return Err(FeedbackFusionError::Forbidden("inactive prompt".to_owned()));
+    }
+
+    let page = database_request!(
+        Field::select_page_by_prompt_wrapper(connection, &page_request, prompt.id().as_str())
+            .await?
+    );
+
+    Ok(Response::new(FieldPage {
+        page_token: page_request.page_no().try_into()?,
+        next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
+        page_size: page_request.page_size().try_into()?,
+        fields: page
+            .records
+            .into_iter()
+            .map(Into::into)
+            .collect::<Vec<ProtoField>>(),
+    }))
+}
 
 pub async fn get_fields(
     context: &FeedbackFusionV1Context,

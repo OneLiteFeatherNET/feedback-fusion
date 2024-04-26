@@ -21,8 +21,14 @@
  */
 #![allow(clippy::too_many_arguments)]
 
-use crate::{prelude::*, services::v1::FeedbackFusionV1Context};
-use feedback_fusion_common::proto::feedback_fusion_v1_server::FeedbackFusionV1Server;
+use crate::{
+    prelude::*,
+    services::v1::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context},
+};
+use feedback_fusion_common::proto::{
+    feedback_fusion_v1_server::FeedbackFusionV1Server,
+    public_feedback_fusion_v1_server::PublicFeedbackFusionV1Server,
+};
 use tonic::transport::Server;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -52,10 +58,10 @@ async fn main() {
     let connection = DatabaseConnection::from(connection);
 
     tokio::spawn(async move {
-        // let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
-        // health_reporter
-        //     .set_serving::<PublicFeedbackFusionV1Server<PublicFeedbackFusionV1>>()
-        //     .await;
+        let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+        health_reporter
+            .set_serving::<PublicFeedbackFusionV1Server<PublicFeedbackFusionV1Context>>()
+            .await;
 
         let reflection_service = tonic_reflection::server::Builder::configure()
             .register_encoded_file_descriptor_set(
@@ -64,23 +70,25 @@ async fn main() {
             .build()
             .unwrap();
 
-        let service = FeedbackFusionV1Context { connection };
+        let service = FeedbackFusionV1Context {
+            connection: connection.clone(),
+        };
         let service = tower::ServiceBuilder::new()
             .layer(tower_http::trace::TraceLayer::new_for_grpc())
             .service(FeedbackFusionV1Server::new(service))
             .into_inner();
 
-        // let public_service = PublicFeedbackFusionV1::default();
-        // let public_service = tower::ServiceBuilder::new()
-        //     .layer(tower_http::trace::TraceLayer::new_for_grpc())
-        //     .service(public_service)
-        //     .into_inner();
+        let public_service = PublicFeedbackFusionV1Context { connection };
+        let public_service = tower::ServiceBuilder::new()
+            .layer(tower_http::trace::TraceLayer::new_for_grpc())
+            .service(PublicFeedbackFusionV1Server::new(public_service))
+            .into_inner();
 
         Server::builder()
-            // .add_server(health_service)
+            .add_service(health_service)
             .add_service(reflection_service)
             .add_service(service)
-            // .add_service(public_service)
+            .add_service(public_service)
             .serve_with_shutdown(ADDRESS.parse().unwrap(), async move {
                 receiver.recv().await.ok();
             })

@@ -22,12 +22,13 @@
 
 use crate::prelude::*;
 use feedback_fusion_common::proto::{
-    feedback_fusion_v1_server::FeedbackFusionV1, CreateFieldRequest, CreatePromptRequest,
-    CreateTargetRequest, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
-    Field as ProtoField, FieldPage, GetFieldsRequest, GetPromptsRequest, GetResponsesRequest,
-    GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage, ResponsePage,
-    Target as ProtoTarget, TargetPage, UpdateFieldRequest, UpdatePromptRequest,
-    UpdateTargetRequest,
+    feedback_fusion_v1_server::FeedbackFusionV1,
+    public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
+    CreatePromptRequest, CreateResponsesRequest, CreateTargetRequest, DeleteFieldRequest,
+    DeletePromptRequest, DeleteTargetRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
+    GetPromptRequest, GetPromptsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
+    Prompt as ProtoPrompt, PromptPage, PromptResponse, ResponsePage, Target as ProtoTarget,
+    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateTargetRequest,
 };
 use tonic::{Response, Status};
 
@@ -39,6 +40,12 @@ pub mod target;
 #[derive(Clone, Getters)]
 #[get = "pub"]
 pub struct FeedbackFusionV1Context {
+    pub connection: DatabaseConnection,
+}
+
+#[derive(Clone, Getters)]
+#[get = "pub"]
+pub struct PublicFeedbackFusionV1Context {
     pub connection: DatabaseConnection,
 }
 
@@ -165,5 +172,32 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         request: Request<GetResponsesRequest>,
     ) -> std::result::Result<Response<ResponsePage>, Status> {
         handler!(response::get_responses, self, request)
+    }
+}
+
+#[async_trait::async_trait]
+impl PublicFeedbackFusionV1 for PublicFeedbackFusionV1Context {
+    #[instrument(skip_all)]
+    async fn get_active_fields(
+        &self,
+        request: Request<GetFieldsRequest>,
+    ) -> std::result::Result<Response<FieldPage>, Status> {
+        handler!(field::get_active_fields, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn get_prompt(
+        &self,
+        request: Request<GetPromptRequest>,
+    ) -> std::result::Result<Response<ProtoPrompt>, Status> {
+        handler!(prompt::get_prompt, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn create_responses(
+        &self,
+        request: Request<CreateResponsesRequest>,
+    ) -> std::result::Result<Response<PromptResponse>, Status> {
+        handler!(response::create_responses, self, request)
     }
 }

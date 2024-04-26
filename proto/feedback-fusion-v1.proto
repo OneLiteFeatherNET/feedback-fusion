@@ -264,7 +264,10 @@ message ResponseData {
   }
 }
 
-message CreateResponsesRequest { map<string, ResponseData> data = 1; }
+message CreateResponsesRequest { 
+  map<string, ResponseData> data = 1;
+  string prompt = 2;
+}
 
 message GetResponsesRequest {
   int32 page_token = 1;

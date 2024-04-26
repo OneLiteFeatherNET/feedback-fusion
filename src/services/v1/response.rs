@@ -20,13 +20,14 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use super::FeedbackFusionV1Context;
+use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{FieldResponse, PromptResponse},
+    database::schema::feedback::{Field, FieldData, FieldResponse, PromptResponse},
     prelude::*,
 };
 use feedback_fusion_common::proto::{
-    FieldResponse as ProtoFieldResponse, FieldResponseList, GetResponsesRequest, ResponsePage,
+    CreateResponsesRequest, FieldResponse as ProtoFieldResponse, FieldResponseList,
+    GetResponsesRequest, PromptResponse as ProtoPromptResponse, ResponsePage,
 };
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::HashMap;
@@ -38,72 +39,69 @@ use std::collections::HashMap;
 //     #[cfg(feature = "bindings")]
 //     responses: HashMap<String, FieldData>,
 // }
-//
-// pub async fn post_response(
-//    (state): State<FeedbackFusionState>,
-//     Path((_, prompt)): Path<(String, String)>,
-//     Json(data): Json<SubmitFeedbackPromptResponseRequest>,
-// ) -> Result<(StatusCode, Json<PromptResponse>)> {
-//     // start transaction
-//     let transaction =.connection().acquire_begin().await?;
-//     let mut transaction = transaction.defer_async(|mut tx| async move {
-//         if !tx.done {
-//             let _ = tx.rollback().await;
-//         }
-//     });
-//
-//     // fetch the fields of the prompt
-//     let fields = database_request!(
-//         FeedbackPromptField::select_by_column(&transaction, "prompt", prompt.as_str()).await?
-//     );
-//     // as we can assume a prompt has to have at least 1 field we can throw the 400 here
-//     if fields.is_empty() {
-//         return Err(FeedbackFusionError::BadRequest("invalid prompt".to_owned()));
-//     }
-//
-//     // insert the response dataprompt
-//     let response = PromptResponse::builder().prompt(prompt).build();
-//     database_request!(PromptResponse::insert(&transaction, &response).await?);
-//
-//     // transform the hashmap into a field data vec
-//     let data = data
-//         .responses
-//         .into_iter()
-//         .map(|(key, value)| {
-//             // try to get the field
-//             let field = fields.iter().find(|f| key.eq(f.id()));
-//
-//             if let Some(field) = field {
-//                 let value = FieldData::parse(field.r#type(), value)?;
-//                 // validate the data
-//                 value.validate(field.options())?;
-//
-//                 #[cfg(not(feature = "bindings"))]
-//                 let value = JsonV(value);
-//
-//                 Ok(FieldResponse::builder()
-//                     .response(response.id().as_str())
-//                     .field(field.id())
-//                     .data(value)
-//                     .build())
-//             } else {
-//                 Err(FeedbackFusionError::BadRequest(format!(
-//                     "Invalid field '{}'",
-//                     key
-//                 )))
-//             }
-//         })
-//         .collect::<Result<Vec<FieldResponse>>>()?;
-//     // insert them as batch
-//     database_request!(
-//         FieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64).await?
-//     );
-//
-//     // commit the transaction
-//     transaction.commit().await?;
-//
-//     Ok((StatusCode::CREATED, Json(response)))
-// }
+
+pub async fn create_responses(
+    context: &PublicFeedbackFusionV1Context,
+    request: Request<CreateResponsesRequest>,
+) -> Result<Response<ProtoPromptResponse>> {
+    let data = request.into_inner();
+    // start transaction
+    let transaction = context.connection().acquire_begin().await?;
+    let mut transaction = transaction.defer_async(|mut tx| async move {
+        if !tx.done {
+            let _ = tx.rollback().await;
+        }
+    });
+
+    // fetch the fields of the prompt
+    let fields = database_request!(
+        Field::select_by_column(&transaction, "prompt", data.prompt.as_str()).await?
+    );
+    // as we can assume a prompt has to have at least 1 field we can throw the 400 here
+    if fields.is_empty() {
+        return Err(FeedbackFusionError::BadRequest("invalid prompt".to_owned()));
+    }
+
+    // insert the response dataprompt
+    let response = PromptResponse::builder().prompt(data.prompt).build();
+    database_request!(PromptResponse::insert(&transaction, &response).await?);
+
+    // transform the hashmap into a field data vec
+    let data = data
+        .data
+        .into_iter()
+        .map(|(key, value)| {
+            // try to get the field
+            let field = fields.iter().find(|f| key.eq(f.id()));
+
+            if let Some(field) = field {
+                // validate the data
+                let field_data: FieldData = value.data.unwrap().try_into()?;
+                field_data.validate(field.options())?;
+
+                Ok(FieldResponse::builder()
+                    .response(response.id().as_str())
+                    .field(field.id())
+                    .data(JsonV(field_data))
+                    .build())
+            } else {
+                Err(FeedbackFusionError::BadRequest(format!(
+                    "Invalid field '{}'",
+                    key
+                )))
+            }
+        })
+        .collect::<Result<Vec<FieldResponse>>>()?;
+    // insert them as batch
+    database_request!(
+        FieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64).await?
+    );
+
+    // commit the transaction
+    transaction.commit().await?;
+
+    Ok(Response::new(response.into()))
+}
 
 pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FieldResponse>>;
 
