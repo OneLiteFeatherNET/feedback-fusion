@@ -6,6 +6,7 @@ license = "MIT"
 
 [dependencies]
 feedback_fusion_common = { path = "./common" }
+feedback_fusion_codegen = { path = "./codegen" }
 
 aliri = "0.6.3"
 aliri_clock = "0.1.4"

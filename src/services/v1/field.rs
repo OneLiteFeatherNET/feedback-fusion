@@ -30,10 +30,10 @@ use feedback_fusion_common::proto::{
 pub async fn create_field(
     context: &FeedbackFusionV1Context,
     request: Request<CreateFieldRequest>,
-) -> Result<Response<Field>> {
+) -> Result<Response<ProtoField>> {
     let data = request.into_inner();
     data.validate()?;
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     // build the field
     let field = Field::builder()
@@ -49,13 +49,13 @@ pub async fn create_field(
 }
 
 // pub async fn fetch(
-//     State(state): State<FeedbackFusionState>,
+//    (state): State<FeedbackFusionState>,
 //     Query(pagination): Query<Pagination>,
 //     Path((_, prompt)): Path<(String, String)>,
 // ) -> Result<Json<Page<FeedbackPromptField>>> {
 //     // fetch the prompt
 //     let prompt = database_request!(FeedbackPrompt::select_by_id(
-//         state.connection(),
+//        .connection(),
 //         prompt.as_str()
 //     )
 //     .await?
@@ -69,7 +69,7 @@ pub async fn create_field(
 //
 //     let page = database_request!(
 //         FeedbackPromptField::select_page_by_prompt_wrapper(
-//             state.connection(),
+//            .connection(),
 //             &pagination.request(),
 //             prompt.id().as_str()
 //         )
@@ -83,11 +83,13 @@ pub async fn get_fields(
     context: &FeedbackFusionV1Context,
     request: Request<GetFieldsRequest>,
 ) -> Result<Response<FieldPage>> {
+    let data = request.into_inner();
+
     let page = database_request!(
         Field::select_page_by_prompt_wrapper(
-            context.state.connection(),
-            &pagination.request(),
-            request.into_inner().prompt.as_str()
+            context.connection(),
+            &data.into_page_request(),
+            data.prompt.as_str()
         )
         .await?
     );
@@ -101,7 +103,7 @@ pub async fn update_field(
 ) -> Result<Response<ProtoField>> {
     let data = request.into_inner();
     data.validate()?;
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     let mut field = database_request!(Field::select_by_id(connection, data.id.as_str())
         .await?
@@ -123,7 +125,7 @@ pub async fn delete_field(
 ) -> Result<Response<()>> {
     database_request!(
         Field::delete_by_column(
-            context.state.connection(),
+            context.connection(),
             "id",
             request.into_inner().id.as_str()
         )

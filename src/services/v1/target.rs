@@ -35,7 +35,7 @@ pub async fn create_target(
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     let target = Target::builder()
         .name(data.name)
@@ -53,7 +53,7 @@ pub async fn get_target(
     request: Request<GetTargetRequest>,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     let target = database_request!(Target::select_by_id(connection, data.id.as_str()).await?);
     match target {
@@ -69,13 +69,14 @@ pub async fn get_targets(
     request: Request<GetTargetsRequest>,
 ) -> Result<Response<TargetPage>> {
     let data = request.into_inner();
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     // TODO: write translation macro
     let page = database_request!(
-        Target::select_page_wrapper(connection, &pagination.request(), data.query.as_str()).await?
+        Target::select_page_wrapper(connection, &data.into_page_request(), data.query.as_str())
+            .await?
     );
-    Ok(Request::new(page.into()))
+    Ok(Response::new(page.into()))
 }
 
 pub async fn update_target(
@@ -84,7 +85,7 @@ pub async fn update_target(
 ) -> Result<Response<Target>> {
     let data = request.into_inner();
     data.validate()?;
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     let mut target =
         database_request!(Target::select_by_id(connection, data.id.as_str())
@@ -94,7 +95,7 @@ pub async fn update_target(
     target.set_description(data.description.or(target.description().clone()));
 
     database_request!(Target::update_by_column(connection, &target, "id").await?);
-    Ok(Request::new(target.into()))
+    Ok(Response::new(target.into()))
 }
 
 pub async fn delete_target(
@@ -102,7 +103,7 @@ pub async fn delete_target(
     request: Request<DeleteTargetRequest>,
 ) -> Result<Response<()>> {
     let data = request.into_inner();
-    let connection = self.state.connection();
+    let connection = self.connection();
 
     database_request!(Target::delete_by_column(connection, "id", data.id.as_str()).await?);
     Ok(Response::new(()))

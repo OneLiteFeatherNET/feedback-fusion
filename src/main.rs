@@ -21,7 +21,7 @@
  */
 #![allow(clippy::too_many_arguments)]
 
-use crate::prelude::*;
+use crate::{prelude::*, services::v1::FeedbackFusionV1Context};
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::{PublicFeedbackFusionV1, PublicFeedbackFusionV1Server},
@@ -36,7 +36,6 @@ pub mod config;
 pub mod database;
 pub mod error;
 pub mod services;
-pub mod state;
 
 const ADDRESS: &'static str = "[::1]:8000";
 
@@ -59,10 +58,10 @@ async fn main() {
     let connection = DatabaseConnection::from(connection);
 
     tokio::spawn(async move {
-        let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
-        health_reporter
-            .set_serving::<PublicFeedbackFusionV1Server<PublicFeedbackFusionV1>>()
-            .await;
+        // let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+        // health_reporter
+        //     .set_serving::<PublicFeedbackFusionV1Server<PublicFeedbackFusionV1>>()
+        //     .await;
 
         let reflection_service = tonic_reflection::server::Builder::configure()
             .register_encoded_file_descriptor_set(
@@ -71,23 +70,23 @@ async fn main() {
             .build()
             .unwrap();
 
-        let service = FeedbackFusionV1::default();
+        let service = FeedbackFusionV1Context { connection };
         let service = tower::ServiceBuilder::new()
             .layer(tower_http::trace::TraceLayer::new_for_grpc())
             .service(service)
             .into_inner();
 
-        let public_service = PublicFeedbackFusionV1::default();
-        let public_service = tower::ServiceBuilder::new()
-            .layer(tower_http::trace::TraceLayer::new_for_grpc())
-            .service(public_service)
-            .into_inner();
+        // let public_service = PublicFeedbackFusionV1::default();
+        // let public_service = tower::ServiceBuilder::new()
+        //     .layer(tower_http::trace::TraceLayer::new_for_grpc())
+        //     .service(public_service)
+        //     .into_inner();
 
         Server::builder()
-            .add_server(health_service)
+            // .add_server(health_service)
             .add_service(reflection_service)
             .add_service(service)
-            .add_service(public_service)
+            // .add_service(public_service)
             .serve_with_shutdown(ADDRESS.parse().unwrap(), async move {
                 receiver.recv().await.ok();
             })
@@ -114,10 +113,10 @@ pub mod prelude {
         database_request,
         error::*,
         impl_select_page_wrapper,
-        routes::{oidc::*, *},
-        state::FeedbackFusionState,
+        services::{oidc::*, *},
     };
     pub use derivative::Derivative;
+    pub use feedback_fusion_common::IntoPageRequest;
     pub use getset::{Getters, MutGetters, Setters};
     pub use lazy_static::lazy_static;
     pub use paste::paste;
@@ -127,7 +126,7 @@ pub mod prelude {
     };
     pub use serde::{Deserialize, Serialize};
     pub use tonic::{Request, Response};
-    pub use tracing::{debug, error, info, info_span, warn};
+    pub use tracing::{debug, error, info, info_span, instrument, warn};
     pub use typed_builder::TypedBuilder;
     pub use validator::Validate;
 }

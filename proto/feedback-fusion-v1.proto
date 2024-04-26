@@ -23,7 +23,7 @@ service FeedbackFusionV1 {
   rpc UpdateField(UpdateFieldRequest) returns (Field);
   rpc DeleteField(DeleteFieldRequest) returns (google.protobuf.Empty);
 
-  rpc GetResponses(GetResponsesRequest) returns (FieldResponsePage);
+  rpc GetResponses(GetResponsesRequest) returns (ResponsePage);
 }
 
 // does not use oidc authentication
@@ -46,14 +46,14 @@ message Target {
 }
 
 message GetTargetsRequest {
-  string page_token = 1;
-  string page_size = 2;
+  int32 page_token = 1;
+  int32 page_size = 2;
   string query = 3;
 }
 
 message TargetPage {
-  string page_token = 1;
-  string next_page_token = 2;
+  int32 page_token = 1;
+  int32 next_page_token = 2;
   int32 page_size = 3;
 
   repeated Target targets = 4;
@@ -98,14 +98,14 @@ message Prompt {
 message GetPromptRequest { string id = 1; }
 
 message GetPromptsRequest {
-  string page_token = 1;
-  string page_size = 2;
+  int32 page_token = 1;
+  int32 page_size = 2;
   string target = 3;
 }
 
 message PromptPage {
-  string page_token = 1;
-  string next_page_token = 2;
+  int32 page_token = 1;
+  int32 next_page_token = 2;
   int32 page_size = 3;
 
   repeated Prompt prompts = 4;
@@ -203,14 +203,14 @@ message Field {
 }
 
 message GetFieldsRequest {
-  string page_token = 1;
-  string page_size = 2;
+  int32 page_token = 1;
+  int32 page_size = 2;
   string prompt = 3;
 }
 
 message FieldPage {
-  string page_token = 1;
-  string next_page_token = 2;
+  int32 page_token = 1;
+  int32 next_page_token = 2;
   int32 page_size = 3;
 
   repeated Field fields = 4;
@@ -267,8 +267,8 @@ message ResponseData {
 message CreateResponsesRequest { map<string, ResponseData> data = 1; }
 
 message GetResponsesRequest {
-  string page_token = 1;
-  string page_size = 2;
+  int32 page_token = 1;
+  int32 page_size = 2;
   string prompt = 3;
 }
 
@@ -287,12 +287,16 @@ message FieldResponse {
   }
 }
 
-message FieldResponsePage {
-  string page_token = 1;
-  string next_page_token = 2;
+message FieldResponseList {
+  repeated FieldResponse data = 1;
+}
+
+message ResponsePage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
   int32 page_size = 3;
 
-  repeated FieldResponse values = 4;
+  map<string, FieldResponseList> data = 4;
 }
 
 message PromptResponse {

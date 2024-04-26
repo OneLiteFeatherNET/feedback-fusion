@@ -20,12 +20,21 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-pub mod proto {
-    tonic::include_proto!("feedback_fusion_v1");
-    pub const FILE_DESCRIPTOR_SET: &[u8] =
-        tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
-}
+use proc_macro::TokenStream;
+use syn::{parse_macro_input, DeriveInput};
 
-pub trait IntoPageRequest {
-    fn into_page_request(&self) -> rbatis::plugin::page::PageRequest;
+#[proc_macro_derive(IntoPageRequest)]
+pub fn into_page_request_derive(input: TokenStream) -> TokenStream {
+    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
+    let ident = &input.ident;
+
+    let expanded = quote::quote! {
+        impl crate::IntoPageRequest for #ident {
+            fn into_page_request(&self) -> rbatis::plugin::page::PageRequest {
+                rbatis::plugin::page::PageRequest::new(self.page_token as u64, self.page_size as u64)
+            }
+        }
+    };
+
+    expanded.into()
 }

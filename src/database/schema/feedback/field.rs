@@ -40,26 +40,26 @@ pub enum FieldOptions {
 impl Into<feedback_fusion_common::proto::create_field_request::Options> for FieldOptions {
     fn into(self) -> feedback_fusion_common::proto::create_field_request::Options {
         match self {
-            Text(options) => {
+            Self::Text(options) => {
                 feedback_fusion_common::proto::create_field_request::Options::Text(options.into())
             }
-            Rating(options) => {
+            Self::Rating(options) => {
                 feedback_fusion_common::proto::create_field_request::Options::Rating(options.into())
             }
-            Checkbox(options) => {
+            Self::Checkbox(options) => {
                 feedback_fusion_common::proto::create_field_request::Options::Checkbox(
                     options.into(),
                 )
             }
-            Selection(options) => {
+            Self::Selection(options) => {
                 feedback_fusion_common::proto::create_field_request::Options::Selection(
                     options.into(),
                 )
             }
-            Range(options) => {
+            Self::Range(options) => {
                 feedback_fusion_common::proto::create_field_request::Options::Range(options.into())
             }
-            Number(options) => {
+            Self::Number(options) => {
                 feedback_fusion_common::proto::create_field_request::Options::Number(options.into())
             }
         }
@@ -69,12 +69,12 @@ impl Into<feedback_fusion_common::proto::create_field_request::Options> for Fiel
 impl Into<FieldOptions> for feedback_fusion_common::proto::create_field_request::Options {
     fn into(self) -> FieldOptions {
         match self {
-            Text(options) => FieldOptions::Text(options.into()),
-            Rating(options) => FieldOptions::Rating(options.into()),
-            Checkbox(options) => FieldOptions::Checkbox(options.into()),
-            Selection(options) => FieldOptions::Selection(options.into()),
-            Range(options) => FieldOptions::Range(options.into()),
-            Number(options) => FieldOptions::Number(options.into()),
+            Self::Text(options) => FieldOptions::Text(options.into()),
+            Self::Rating(options) => FieldOptions::Rating(options.into()),
+            Self::Checkbox(options) => FieldOptions::Checkbox(options.into()),
+            Self::Selection(options) => FieldOptions::Selection(options.into()),
+            Self::Range(options) => FieldOptions::Range(options.into()),
+            Self::Number(options) => FieldOptions::Number(options.into()),
         }
     }
 }
@@ -368,19 +368,23 @@ pub enum FieldData {
 impl Into<feedback_fusion_common::proto::field_response::Data> for FieldData {
     fn into(self) -> feedback_fusion_common::proto::field_response::Data {
         match self {
-            Text(data) => feedback_fusion_common::proto::field_response::Data::Text(data.into()),
-            Rating(data) => {
-                feedback_fusion_common::proto::field_response::Data::Rating(data.into())
+            Self::Text(data) => {
+                feedback_fusion_common::proto::field_response::Data::TextResponse(data.into())
             }
-            Checkbox(data) => {
-                feedback_fusion_common::proto::field_response::Data::Checkbox(data.into())
+            Self::Rating(data) => {
+                feedback_fusion_common::proto::field_response::Data::RatingResponse(data.into())
             }
-            Selection(data) => {
-                feedback_fusion_common::proto::field_response::Data::Selection(data.into())
+            Self::Checkbox(data) => {
+                feedback_fusion_common::proto::field_response::Data::CheckboxResponse(data.into())
             }
-            Range(data) => feedback_fusion_common::proto::field_response::Data::Range(data.into()),
-            Number(data) => {
-                feedback_fusion_common::proto::field_response::Data::Number(data.into())
+            Self::Selection(data) => {
+                feedback_fusion_common::proto::field_response::Data::SelectionResponse(data.into())
+            }
+            Self::Range(data) => {
+                feedback_fusion_common::proto::field_response::Data::RangeResponse(data.into())
+            }
+            Self::Number(data) => {
+                feedback_fusion_common::proto::field_response::Data::NumberResponse(data.into())
             }
         }
     }
@@ -389,12 +393,12 @@ impl Into<feedback_fusion_common::proto::field_response::Data> for FieldData {
 impl Into<FieldData> for feedback_fusion_common::proto::field_response::Data {
     fn into(self) -> FieldData {
         match self {
-            Text(data) => FieldData::Text(data.into()),
-            Rating(data) => FieldData::Rating(data.into()),
-            Checkbox(data) => FieldData::Checkbox(data.into()),
-            Selection(data) => FieldData::Selection(data.into()),
-            Range(data) => FieldData::Range(data.into()),
-            Number(data) => FieldData::Number(data.into()),
+            Self::TextResponse(data) => FieldData::Text(data.into()),
+            Self::RatingResponse(data) => FieldData::Rating(data.into()),
+            Self::CheckboxResponse(data) => FieldData::Checkbox(data.into()),
+            Self::SelectionResponse(data) => FieldData::Selection(data.into()),
+            Self::RangeResponse(data) => FieldData::Range(data.into()),
+            Self::NumberResponse(data) => FieldData::Number(data.into()),
         }
     }
 }

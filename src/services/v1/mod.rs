@@ -24,8 +24,8 @@ use crate::{database::schema::feedback::Target, prelude::*};
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1, CreateFieldRequest, CreatePromptRequest,
     CreateTargetRequest, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
-    Field as ProtoField, FieldPage, FieldResponsePage, GetFieldsRequest, GetPromptsRequest,
-    GetResponsesRequest, GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage,
+    Field as ProtoField, FieldPage, GetFieldsRequest, GetPromptsRequest, GetResponsesRequest,
+    GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage, ResponsePage,
     Target as ProtoTarget, TargetPage, UpdateFieldRequest, UpdatePromptRequest,
     UpdateTargetRequest,
 };
@@ -37,16 +37,18 @@ pub mod prompt;
 pub mod response;
 pub mod target;
 
+#[derive(Clone, Getters)]
+#[get = "pub"]
 pub struct FeedbackFusionV1Context {
-    state: FeedbackFusionState,
+    connection: DatabaseConnection,
 }
 
 macro_rules! handler {
-    ($handler:path, $self:ident, $request:ident) => {
+    ($handler:path, $self:ident, $request:ident) => {{
         let response = $handler($self, $request).await?;
 
         Ok(response)
-    };
+    }};
 }
 
 // may consider to divide the service into its parts, but as of now this wouldn't be a real
@@ -107,7 +109,10 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     }
 
     #[instrument(skip_all)]
-    async fn update_prompt(&self, request: Request<UpdatePromptRequest>) -> Result<ProtoPrompt> {
+    async fn update_prompt(
+        &self,
+        request: Request<UpdatePromptRequest>,
+    ) -> Result<Response<ProtoPrompt>> {
         handler!(prompt::update_prompt, self, request)
     }
 
@@ -146,7 +151,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn get_responses(
         &self,
         request: Request<GetResponsesRequest>,
-    ) -> Result<Response<FieldResponsePage>> {
-        handler!(responses::get_responses, self, request)
+    ) -> Result<Response<ResponsePage>> {
+        handler!(response::get_responses, self, request)
     }
 }

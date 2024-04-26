@@ -20,13 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use super::FeedbackFusionV1Context;
-use crate::{
-    database::schema::feedback::{
-        FeedbackPrompt, FeedbackPromptField, FeedbackPromptInputOptions, FeedbackPromptInputType,
-        Prompt,
-    },
-    prelude::*,
-};
+use crate::{database::schema::feedback::Prompt, prelude::*};
 use feedback_fusion_common::proto::{
     CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest,
     Prompt as ProtoPrompt, PromptPage, UpdatePromptRequest,
@@ -39,7 +33,7 @@ pub async fn create_prompt(
 ) -> Result<Response<ProtoPrompt>> {
     let data = request.into_inner();
     data.validate()?;
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     // build the prompt
     let prompt = Prompt::builder()
@@ -58,7 +52,7 @@ pub async fn create_prompt(
 //     request: Request<GetPromptRequest>
 // ) -> Result<Json<FeedbackPrompt>> {
 //     let prompt: Option<FeedbackPrompt> =
-//         database_request!(FeedbackPrompt::select_by_id(state.connection(), prompt.as_str()).await?);
+//         database_request!(FeedbackPrompt::select_by_id.connection(), prompt.as_str()).await?);
 //
 //     match prompt {
 //         Some(prompt) => Ok(Json(prompt)),
@@ -72,11 +66,16 @@ pub async fn get_prompts(
     context: &FeedbackFusionV1Context,
     request: Request<GetPromptsRequest>,
 ) -> Result<Response<PromptPage>> {
-    let connection = context.state.connection();
+    let data = request.into_inner();
+    let connection = context.connection();
 
     let prompts = database_request!(
-        Prompt::select_page_by_target_wrapper(connection, &pagination.request(), target.as_str(),)
-            .await?
+        Prompt::select_page_by_target_wrapper(
+            connection,
+            &data.into_page_request(),
+            data.target.as_str(),
+        )
+        .await?
     );
 
     Ok(Response::new(prompts.into()))
@@ -88,7 +87,7 @@ pub async fn update_prompt(
 ) -> Result<Response<ProtoPrompt>> {
     let data = request.into_inner();
     data.validate()?;
-    let connection = context.state.connection();
+    let connection = context.connection();
 
     let mut prompt =
         database_request!(Prompt::select_by_id(connection, data.id.as_str())
@@ -99,7 +98,7 @@ pub async fn update_prompt(
     prompt.set_active(data.active.unwrap_or(*prompt.active()));
 
     database_request!(Prompt::update_by_column(connection, &prompt, "id").await?);
-    Ok(Response::new(prompt))
+    Ok(Response::new(prompt.into()))
 }
 
 pub async fn delete_prompt(
@@ -107,12 +106,8 @@ pub async fn delete_prompt(
     request: Request<DeletePromptRequest>,
 ) -> Result<Response<()>> {
     database_request!(
-        Prompt::delete_by_column(
-            context.state.connection(),
-            "id",
-            request.into_inner().id.as_str()
-        )
-        .await?
+        Prompt::delete_by_column(context.connection(), "id", request.into_inner().id.as_str())
+            .await?
     );
 
     Ok(Response::new(()))
