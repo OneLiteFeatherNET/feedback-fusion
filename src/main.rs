@@ -23,7 +23,7 @@
 
 use crate::{prelude::*, services::v1::FeedbackFusionV1Context};
 use feedback_fusion_common::proto::{
-    feedback_fusion_v1_server::FeedbackFusionV1,
+    feedback_fusion_v1_server::{FeedbackFusionV1, FeedbackFusionV1Server},
     public_feedback_fusion_v1_server::{PublicFeedbackFusionV1, PublicFeedbackFusionV1Server},
 };
 use std::time::Duration;
@@ -73,7 +73,7 @@ async fn main() {
         let service = FeedbackFusionV1Context { connection };
         let service = tower::ServiceBuilder::new()
             .layer(tower_http::trace::TraceLayer::new_for_grpc())
-            .service(service)
+            .service(FeedbackFusionV1Server::new(service))
             .into_inner();
 
         // let public_service = PublicFeedbackFusionV1::default();

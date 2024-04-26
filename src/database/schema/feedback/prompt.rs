@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::prelude::*;
+use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
 use rbatis::rbdc::DateTime;
 
 use super::FieldOptions;
@@ -59,8 +59,8 @@ impl Into<feedback_fusion_common::proto::Prompt> for Prompt {
             description: self.description,
             target: self.target,
             active: self.active,
-            updated_at: self.updated_at.into(),
-            created_at: self.created_at.into(),
+            updated_at: Some(date_time_to_timestamp(self.updated_at)),
+            created_at: Some(date_time_to_timestamp(self.created_at)),
         }
     }
 }
@@ -73,8 +73,8 @@ impl Into<Prompt> for feedback_fusion_common::proto::Prompt {
             description: self.description,
             target: self.target,
             active: self.active,
-            updated_at: self.updated_at.into(),
-            created_at: self.created_at.into(),
+            updated_at: to_date_time!(self.updated_at),
+            created_at: to_date_time!(self.created_at),
         }
     }
 }
@@ -154,8 +154,8 @@ impl Into<feedback_fusion_common::proto::Field> for Field {
             prompt: self.prompt,
             field_type: self.r#type.into(),
             options: self.options.0.into(),
-            updated_at: self.updated_at.into(),
-            created_at: self.created_at.into(),
+            updated_at: Some(date_time_to_timestamp(self.updated_at)),
+            created_at: Some(date_time_to_timestamp(self.created_at)),
         }
     }
 }
@@ -169,8 +169,8 @@ impl Into<Field> for feedback_fusion_common::proto::Field {
             prompt: self.prompt,
             r#type: self.field_type.into(),
             options: JsonV(self.options.into()),
-            updated_at: self.updated_at.into(),
-            created_at: self.created_at.into(),
+            updated_at: to_date_time!(self.updated_at),
+            created_at: to_date_time!(self.created_at),
         }
     }
 }

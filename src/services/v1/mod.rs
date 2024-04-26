@@ -40,7 +40,7 @@ pub mod target;
 #[derive(Clone, Getters)]
 #[get = "pub"]
 pub struct FeedbackFusionV1Context {
-    connection: DatabaseConnection,
+    pub connection: DatabaseConnection,
 }
 
 macro_rules! handler {

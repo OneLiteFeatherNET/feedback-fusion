@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::prelude::*;
+use crate::{prelude::*, database::schema::date_time_to_timestamp, to_date_time};
 use rbatis::rbdc::DateTime;
 
 use super::FieldType;
@@ -299,7 +299,7 @@ impl Into<feedback_fusion_common::proto::PromptResponse> for PromptResponse {
         feedback_fusion_common::proto::PromptResponse {
             id: self.id,
             prompt: self.prompt,
-            created_at: self.created_at.into(),
+            created_at: Some(date_time_to_timestamp(self.created_at)),
         }
     }
 }
@@ -309,7 +309,7 @@ impl Into<PromptResponse> for feedback_fusion_common::proto::PromptResponse {
         PromptResponse {
             id: self.id,
             prompt: self.prompt,
-            created_at: self.created_at.into(),
+            created_at: to_date_time!(self.created_at),
         }
     }
 }
