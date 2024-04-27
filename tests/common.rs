@@ -25,18 +25,12 @@ use openidconnect::{
     reqwest::async_http_client,
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
-use reqwest::{
-    header::{HeaderMap, HeaderValue, AUTHORIZATION},
-    Client,
-};
 use std::{
     fs::File,
     path::Path,
     process::{Child, Command, Stdio},
 };
 use tracing::{debug, info};
-
-pub const HTTP_ENDPOINT: &'static str = "http://localhost:8000";
 
 pub struct BackendServer(Child);
 
@@ -47,14 +41,8 @@ impl Drop for BackendServer {
 }
 
 pub fn run_server() -> BackendServer {
-    // construct the executable path
-    let mut path = std::env::current_exe().unwrap();
-    assert!(path.pop());
-    assert!(path.pop());
-    path = path.join("main");
-
     // prepare the command
-    let mut command = Command::new(path);
+    let mut command = Command::new("docker run feedback-fusion:test");
     let seed = rand::random::<u16>();
     let stdout = Stdio::from(
         File::create(Path::new(env!("OUT_DIR")).join(format!("{}stdout", seed))).unwrap(),
@@ -79,7 +67,8 @@ pub fn run_server() -> BackendServer {
     for key in env.iter() {
         if let Ok(value) = std::env::var(key) {
             debug!("{:?}: {:?}", key, value);
-            command.env(key, value);
+            command.arg("-e");
+            command.arg(format!("{key}={value}"));
         }
     }
     command.env("RUST_LOG", "DEBUG");
@@ -109,15 +98,4 @@ pub async fn authenticate() -> String {
         .unwrap();
 
     token_response.access_token().secret().clone()
-}
-
-pub async fn client() -> Client {
-    let access_token = authenticate().await;
-
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        AUTHORIZATION,
-        HeaderValue::from_str(format!("Bearer {}", access_token).as_str()).unwrap(),
-    );
-    Client::builder().default_headers(headers).build().unwrap()
 }

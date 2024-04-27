@@ -37,7 +37,7 @@ pub mod database;
 pub mod error;
 pub mod services;
 
-const ADDRESS: &'static str = "[::1]:8000";
+const ADDRESS: &str = "[::1]:8000";
 
 #[tokio::main]
 async fn main() {

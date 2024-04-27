@@ -44,6 +44,9 @@ args = [
 [tasks.oidc-server-mock]
 script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d"
 
+[tasks.test_build]
+script = "docker build . -t feedback-fusion:test"
+
 # Postgres
 [tasks.postgres_database]
 script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres && sleep 1"
@@ -62,6 +65,7 @@ args = [
 ]
 
 [tasks.postgres]
+dependencies = ["test_build"]
 run_task = { name = [
   "oidc-server-mock",
   "postgres_database",
