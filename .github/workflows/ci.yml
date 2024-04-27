@@ -19,6 +19,11 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
@@ -46,6 +51,11 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
@@ -72,6 +82,11 @@ jobs:
 
       - name: Checkout Sources
         uses: actions/checkout@v4
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
