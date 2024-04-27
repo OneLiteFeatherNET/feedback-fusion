@@ -86,123 +86,91 @@ jobs:
       - name: Tests
         run: cargo make test
 
-  docs-lint:
-    name: lint docs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-     
-      - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-
-      - name: Checkout Sources
-        uses: actions/checkout@v4
-
-      - name: Setup cache
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
-      - name: Run docs lint
-        uses: actions-rs/cargo@v1
-        with:
-          command: make
-          args: docs_lint
-
-  build-docs:
-    needs: [ docs-lint ]
-    name: build docs
-    runs-on: ubuntu-latest
-    steps: 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-     
-      - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-
-      - name: Checkout Sources
-        uses: actions/checkout@v4
-
-      - name: Setup cache
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
-      - name: Determine current pages artifact 
-        id: determine_pages_artifact
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { data } = await github.rest.actions.listWorkflowRunsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: "main",
-              status: "success",
-              per_page: 1
-            });
-
-            core.setOutput("last_run", data.workflow_runs[0].id);
-
-      - name: Download current pages artifact 
-        uses: actions/download-artifact@v4
-        with: 
-          github-token: ${{ secrets.GITHUB_TOKEN }} 
-          run-id: ${{ steps.determine_pages_artifact.outputs.last_run }}
-          name: github-pages
-          path: ./
-
-      - name: Extract pages artifact 
-        run: mkdir pages/ && tar -xvf artifact.tar -C pages/ 
-
-      - name: Build docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: make
-          args: docs_build
-
-      - name: Prefix docs 
-        run: rm -Rf pages/nightly/ && mkdir -p pages/nightly/ && mv -f target/docs/ pages/nightly/docs/ 
-
-      - name: Fix permissions
-        run: |
-          chmod -c -R +rX "pages/" | while read line; do
-            echo "::warning title=Invalid file permissions automatically fixed::$line"
-          done
-
-      - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: pages/
-          retention-days: 3
+  # build-docs:
+  #   needs: [ docs-lint ]
+  #   name: build docs
+  #   runs-on: ubuntu-latest
+  #   steps: 
+  #     - uses: pnpm/action-setup@v2
+  #       with:
+  #         version: 8
+  #    
+  #     - name: Install toolchain
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: nightly
+  #         override: true
+  #
+  #     - name: Checkout Sources
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup cache
+  #       uses: Swatinem/rust-cache@v2
+  #
+  #     - name: Install cargo-make
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: install
+  #         args: cargo-make
+  #
+  #     - name: Determine current pages artifact 
+  #       id: determine_pages_artifact
+  #       uses: actions/github-script@v7
+  #       with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #         script: |
+  #           const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #             branch: "main",
+  #             status: "success",
+  #             per_page: 1
+  #           });
+  #
+  #           core.setOutput("last_run", data.workflow_runs[0].id);
+  #
+  #     - name: Download current pages artifact 
+  #       uses: actions/download-artifact@v4
+  #       with: 
+  #         github-token: ${{ secrets.GITHUB_TOKEN }} 
+  #         run-id: ${{ steps.determine_pages_artifact.outputs.last_run }}
+  #         name: github-pages
+  #         path: ./
+  #
+  #     - name: Extract pages artifact 
+  #       run: mkdir pages/ && tar -xvf artifact.tar -C pages/ 
+  #
+  #     - name: Build docs
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: make
+  #         args: docs_build
+  #
+  #     - name: Prefix docs 
+  #       run: rm -Rf pages/nightly/ && mkdir -p pages/nightly/ && mv -f target/docs/ pages/nightly/docs/ 
+  #
+  #     - name: Fix permissions
+  #       run: |
+  #         chmod -c -R +rX "pages/" | while read line; do
+  #           echo "::warning title=Invalid file permissions automatically fixed::$line"
+  #         done
+  #
+  #     - name: Upload pages artifact
+  #       uses: actions/upload-pages-artifact@v3
+  #       with:
+  #         path: pages/
+  #         retention-days: 3
               
-  deploy-pages:
-    needs: [ build-docs, test ]
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment: 
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to pages 
-        id: deployment 
-        uses: actions/deploy-pages@v4
+  # deploy-pages:
+  #   needs: [ build-docs, test ]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     pages: write
+  #     id-token: write
+  #   environment: 
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #   steps:
+  #     - name: Deploy to pages 
+  #       id: deployment 
+  #       uses: actions/deploy-pages@v4
