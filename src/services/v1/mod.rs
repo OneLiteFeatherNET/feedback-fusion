@@ -21,6 +21,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
+use aliri_oauth2::{policy, scope, HasScope};
+use aliri_traits::Policy;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
@@ -49,7 +51,32 @@ pub struct PublicFeedbackFusionV1Context {
     pub connection: DatabaseConnection,
 }
 
+// https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
+    ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*) => {{
+        let policy = policy![scope!["api:feedback-fusion" $(, $scope)*]];
+        policy
+            .evaluate(
+                $request
+                    .extensions()
+                    .get::<OIDCClaims>()
+                    .ok_or_else(|| Status::permission_denied("missing claims"))?
+                    .scope(),
+            )
+            .map_err(|_| {
+                let message = format!(
+                    "insufficient scopes, requires one of: [\"{}\"]",
+                    (&policy)
+                        .into_iter()
+                        .map(|s| s.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(" "))
+                        .collect::<Vec<_>>()
+                        .join("\" or \"")
+                );
+                Status::permission_denied(message)
+            })?;
+
+        handler!($handler, $self, $request)
+    }};
     ($handler:path, $self:ident, $request:ident) => {{
         match $handler($self, $request).await {
             Ok(response) => Ok(response),
@@ -67,7 +94,12 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<CreateTargetRequest>,
     ) -> std::result::Result<Response<ProtoTarget>, Status> {
-        handler!(target::create_target, self, request)
+        handler!(
+            target::create_target,
+            self,
+            request,
+            "feedback-fusion:write"
+        )
     }
 
     #[instrument(skip_all)]
@@ -75,7 +107,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<GetTargetRequest>,
     ) -> std::result::Result<Response<ProtoTarget>, Status> {
-        handler!(target::get_target, self, request)
+        handler!(target::get_target, self, request, "feedback-fusion:read")
     }
 
     #[instrument(skip_all)]
@@ -83,7 +115,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<GetTargetsRequest>,
     ) -> std::result::Result<Response<TargetPage>, Status> {
-        handler!(target::get_targets, self, request)
+        handler!(target::get_targets, self, request, "feedback-fusion:read")
     }
 
     #[instrument(skip_all)]
@@ -91,7 +123,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<UpdateTargetRequest>,
     ) -> std::result::Result<Response<ProtoTarget>, Status> {
-        handler!(target::update_target, self, request)
+        handler!(target::update_target, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -99,7 +131,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<DeleteTargetRequest>,
     ) -> std::result::Result<Response<()>, Status> {
-        handler!(target::delete_target, self, request)
+        handler!(target::delete_target, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -107,7 +139,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<CreatePromptRequest>,
     ) -> std::result::Result<Response<ProtoPrompt>, Status> {
-        handler!(prompt::create_prompt, self, request)
+        handler!(prompt::create_prompt, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -115,7 +147,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<GetPromptsRequest>,
     ) -> std::result::Result<Response<PromptPage>, Status> {
-        handler!(prompt::get_prompts, self, request)
+        handler!(prompt::get_prompts, self, request, "feedback-fusion:read")
     }
 
     #[instrument(skip_all)]
@@ -123,7 +155,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<UpdatePromptRequest>,
     ) -> std::result::Result<Response<ProtoPrompt>, Status> {
-        handler!(prompt::update_prompt, self, request)
+        handler!(prompt::update_prompt, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -131,7 +163,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<DeletePromptRequest>,
     ) -> std::result::Result<Response<()>, Status> {
-        handler!(prompt::delete_prompt, self, request)
+        handler!(prompt::delete_prompt, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -139,7 +171,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<CreateFieldRequest>,
     ) -> std::result::Result<Response<ProtoField>, Status> {
-        handler!(field::create_field, self, request)
+        handler!(field::create_field, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -147,7 +179,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<GetFieldsRequest>,
     ) -> std::result::Result<Response<FieldPage>, Status> {
-        handler!(field::get_fields, self, request)
+        handler!(field::get_fields, self, request, "feedback-fusion:read")
     }
 
     #[instrument(skip_all)]
@@ -155,7 +187,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<UpdateFieldRequest>,
     ) -> std::result::Result<Response<ProtoField>, Status> {
-        handler!(field::update_field, self, request)
+        handler!(field::update_field, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -163,7 +195,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<DeleteFieldRequest>,
     ) -> std::result::Result<Response<()>, Status> {
-        handler!(field::delete_field, self, request)
+        handler!(field::delete_field, self, request, "feedback-fusion:write")
     }
 
     #[instrument(skip_all)]
@@ -171,7 +203,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<GetResponsesRequest>,
     ) -> std::result::Result<Response<ResponsePage>, Status> {
-        handler!(response::get_responses, self, request)
+        handler!(response::get_responses, self, request, "feedback-fusion:read")
     }
 }
 

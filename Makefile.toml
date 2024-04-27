@@ -30,14 +30,7 @@ args = ["check", "--bin", "main"]
 
 [tasks.clippy]
 command = "cargo"
-args = [
-  "clippy",
-  "--features",
-  "postgres",
-  "--",
-  "-D",
-  "warnings",
-]
+args = ["clippy", "--features", "all-databases", "--", "-D", "warnings"]
 
 # run oidc server for integration tests
 
@@ -73,7 +66,7 @@ run_task = { name = [
 ], fork = true, cleanup_task = "postgres_cleanup" }
 
 [tasks.postgres_cleanup]
-script = "docker kill postgres;docker rm postgres;docker kill oidc-server-mock;docker rm oidc-server-mock"
+script = "docker rm -f postgres;docker rm -f oidc-server-mock"
 
 # run all tests
 

@@ -75,7 +75,7 @@ pub async fn authority() -> Result<Authority> {
         .require_issuer(jwt::Issuer::from_str(issuer.as_str()).unwrap());
     for algorithm in algorithms {
         validator = validator.add_approved_algorithm(algorithm);
-    };
+    }
 
     // build the authority
     let authority = Authority::new_from_url(jwks_url.to_string(), validator)
@@ -118,3 +118,35 @@ impl HasScope for OIDCClaims {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct AuthorizedService<S>(pub S);
+
+impl<S, T> tonic::server::NamedService
+    for AuthorizedService<tower_http::validate_request::ValidateRequestHeader<S, T>>
+where
+    S: tonic::server::NamedService,
+{
+    const NAME: &'static str = S::NAME;
+}
+
+impl<S, R> tower::Service<R> for AuthorizedService<S>
+where
+    S: tower::Service<R>,
+{
+    type Error = S::Error;
+    type Future = S::Future;
+    type Response = S::Response;
+
+    #[inline]
+    fn poll_ready(
+        &mut self,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<std::result::Result<(), Self::Error>> {
+        self.0.poll_ready(cx)
+    }
+
+    #[inline]
+    fn call(&mut self, req: R) -> Self::Future {
+        self.0.call(req)
+    }
+}

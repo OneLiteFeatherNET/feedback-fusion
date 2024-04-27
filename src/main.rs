@@ -25,6 +25,7 @@ use crate::{
     prelude::*,
     services::v1::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context},
 };
+use aliri_tower::Oauth2Authorizer;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1Server,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1Server,
@@ -70,24 +71,27 @@ async fn main() {
             .build()
             .unwrap();
 
+        // build the authority
+        let authority = oidc::authority().await.unwrap();
+        let authorizer = Oauth2Authorizer::new()
+            .with_claims::<OIDCClaims>()
+            .with_terse_error_handler();
+
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
         };
         let service = tower::ServiceBuilder::new()
-            .layer(tower_http::trace::TraceLayer::new_for_grpc())
-            .service(FeedbackFusionV1Server::new(service))
-            .into_inner();
+            .layer(authorizer.jwt_layer(authority))
+            .service(FeedbackFusionV1Server::new(service));
 
         let public_service = PublicFeedbackFusionV1Context { connection };
-        let public_service = tower::ServiceBuilder::new()
-            .layer(tower_http::trace::TraceLayer::new_for_grpc())
-            .service(PublicFeedbackFusionV1Server::new(public_service))
-            .into_inner();
+        let public_service = PublicFeedbackFusionV1Server::new(public_service);
 
         Server::builder()
+            .layer(tower_http::trace::TraceLayer::new_for_grpc())
             .add_service(health_service)
             .add_service(reflection_service)
-            .add_service(service)
+            .add_service(AuthorizedService(service))
             .add_service(public_service)
             .serve_with_shutdown(ADDRESS.parse().unwrap(), async move {
                 receiver.recv().await.ok();
