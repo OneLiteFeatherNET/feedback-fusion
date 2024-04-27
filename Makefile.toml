@@ -35,17 +35,14 @@ args = ["clippy", "--features", "all-databases", "--", "-D", "warnings"]
 # run oidc server for integration tests
 
 [tasks.oidc-server-mock]
-script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d"
-
-[tasks.test_build]
-script = "docker build . -t feedback-fusion:test"
+script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d && sleep 5 && curl -s http://localhost:5151/.well-known/openid-configuration"
 
 # Postgres
 [tasks.postgres_database]
 script = "docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres && sleep 1"
 
 [tasks.postgres_tests]
-env = { DATABASE = "POSTGRES", POSTGRES_USERNAME = "postgres", POSTGRES_PASSWORD = "password", POSTGRES_ENDPOINT = "localhost:5150", POSTGRES_DATABASE = "postgres", "OIDC_DISCOVERY_URL" = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", OIDC_SCOPE = "api:feedback-fusion", RUST_LOG = "INFO" }
+env = { DATABASE = "POSTGRES", POSTGRES_USERNAME = "postgres", POSTGRES_PASSWORD = "password", POSTGRES_ENDPOINT = "localhost:5150", POSTGRES_DATABASE = "postgres", "OIDC_DISCOVERY_URL" = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "INFO" }
 command = "cargo"
 args = [
   "test",
@@ -58,7 +55,6 @@ args = [
 ]
 
 [tasks.postgres]
-dependencies = ["test_build"]
 run_task = { name = [
   "oidc-server-mock",
   "postgres_database",

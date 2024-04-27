@@ -44,6 +44,7 @@ validator = { version = "0.18", features = ["derive"] }
 version-compare = "0.2.0"
 
 [dev-dependencies]
+paste = "1.0.14"
 rand = "0.8.5"
 reqwest = { version = "0.12.3", features = ["json"] }
 test-log = "0.2.15"

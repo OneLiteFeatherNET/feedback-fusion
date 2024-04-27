@@ -54,7 +54,10 @@ pub struct PublicFeedbackFusionV1Context {
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
     ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*) => {{
-        let policy = policy![scope!["api:feedback-fusion" $(, $scope)*]];
+        let policy = policy![
+            scope!["api:feedback-fusion"]
+            $(, scope![$scope])*
+        ];
         policy
             .evaluate(
                 $request

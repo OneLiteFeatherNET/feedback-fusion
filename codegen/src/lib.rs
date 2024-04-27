@@ -31,7 +31,10 @@ pub fn into_page_request_derive(input: TokenStream) -> TokenStream {
     let expanded = quote::quote! {
         impl crate::IntoPageRequest for #ident {
             fn into_page_request(&self) -> rbatis::plugin::page::PageRequest {
-                rbatis::plugin::page::PageRequest::new(self.page_token as u64, self.page_size as u64)
+                let page_size = if self.page_size > 0 { self.page_size as u64 } else { 20 };
+                let page = if self.page_token > 0 { self.page_token as u64 } else { 1 };
+
+                rbatis::plugin::page::PageRequest::new(page, page_size)
             }
         }
     };

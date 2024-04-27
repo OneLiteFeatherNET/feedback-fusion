@@ -32,6 +32,8 @@ use std::{
 };
 use tracing::{debug, info};
 
+pub const GRPC_ENDPOINT: &str = "http://[::1]:8000";
+
 pub struct BackendServer(Child);
 
 impl Drop for BackendServer {
@@ -41,8 +43,14 @@ impl Drop for BackendServer {
 }
 
 pub fn run_server() -> BackendServer {
+    // construct the executable path
+    let mut path = std::env::current_exe().unwrap();
+    assert!(path.pop());
+    assert!(path.pop());
+    path = path.join("feedback-fusion");
+
     // prepare the command
-    let mut command = Command::new("docker run feedback-fusion:test");
+    let mut command = Command::new(path);
     let seed = rand::random::<u16>();
     let stdout = Stdio::from(
         File::create(Path::new(env!("OUT_DIR")).join(format!("{}stdout", seed))).unwrap(),
@@ -67,11 +75,10 @@ pub fn run_server() -> BackendServer {
     for key in env.iter() {
         if let Ok(value) = std::env::var(key) {
             debug!("{:?}: {:?}", key, value);
-            command.arg("-e");
-            command.arg(format!("{key}={value}"));
+            command.env(key, value);
         }
     }
-    command.env("RUST_LOG", "DEBUG");
+    command.env("RUST_LOG", "TRACE");
 
     let child = command.spawn().unwrap();
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -92,10 +99,33 @@ pub async fn authenticate() -> String {
 
     let token_response = client
         .exchange_client_credentials()
-        .add_scope(Scope::new(env!("OIDC_SCOPE").to_owned()))
+        .add_scope(Scope::new("api:feedback-fusion".to_owned()))
         .request_async(async_http_client)
         .await
         .unwrap();
 
     token_response.access_token().secret().clone()
+}
+
+#[macro_export]
+macro_rules! connect {
+    () => {{
+        let channel = tonic::transport::Channel::from_static(common::GRPC_ENDPOINT).connect().await.unwrap();
+        let token: tonic::metadata::MetadataValue<_> = format!("Bearer {}", common::authenticate().await).parse().unwrap();
+
+        let client =
+            feedback_fusion_common::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(channel, move |mut request: tonic::Request<()>| {
+                request
+                    .metadata_mut()
+                    .insert("authorization", token.clone());
+
+                Ok(request)
+            });
+
+        let public_client = feedback_fusion_common::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect(common::GRPC_ENDPOINT)
+            .await
+            .unwrap();
+
+        (client, public_client)
+    }};
 }
