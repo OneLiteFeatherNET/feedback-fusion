@@ -62,14 +62,14 @@ impl From<TryFromIntError> for FeedbackFusionError {
 
 pub type Result<T> = std::result::Result<T, FeedbackFusionError>;
 
-impl Into<Status> for FeedbackFusionError {
-    fn into(self) -> Status {
-        match self {
+impl From<FeedbackFusionError> for Status {
+    fn from(val: FeedbackFusionError) -> Self {
+        match val {
             FeedbackFusionError::Unauthorized => Status::unauthenticated("unauthorized"),
             FeedbackFusionError::Forbidden(error) => Status::permission_denied(error.to_string()),
             FeedbackFusionError::BadRequest(error) => Status::invalid_argument(error.to_string()),
             _ => {
-                error!("Error occurred while processing the request: {:?}", self);
+                error!("Error occurred while processing the request: {:?}", val);
 
                 Status::internal("Internal server error")
             }

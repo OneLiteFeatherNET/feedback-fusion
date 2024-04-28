@@ -50,30 +50,30 @@ pub struct Prompt {
     created_at: DateTime,
 }
 
-impl Into<feedback_fusion_common::proto::Prompt> for Prompt {
-    fn into(self) -> feedback_fusion_common::proto::Prompt {
+impl From<Prompt> for feedback_fusion_common::proto::Prompt {
+    fn from(val: Prompt) -> Self {
         feedback_fusion_common::proto::Prompt {
-            id: self.id,
-            title: self.title,
-            description: self.description,
-            target: self.target,
-            active: self.active,
-            updated_at: Some(date_time_to_timestamp(self.updated_at)),
-            created_at: Some(date_time_to_timestamp(self.created_at)),
+            id: val.id,
+            title: val.title,
+            description: val.description,
+            target: val.target,
+            active: val.active,
+            updated_at: Some(date_time_to_timestamp(val.updated_at)),
+            created_at: Some(date_time_to_timestamp(val.created_at)),
         }
     }
 }
 
-impl Into<Prompt> for feedback_fusion_common::proto::Prompt {
-    fn into(self) -> Prompt {
+impl From<feedback_fusion_common::proto::Prompt> for Prompt {
+    fn from(val: feedback_fusion_common::proto::Prompt) -> Self {
         Prompt {
-            id: self.id,
-            title: self.title,
-            description: self.description,
-            target: self.target,
-            active: self.active,
-            updated_at: to_date_time!(self.updated_at),
-            created_at: to_date_time!(self.created_at),
+            id: val.id,
+            title: val.title,
+            description: val.description,
+            target: val.target,
+            active: val.active,
+            updated_at: to_date_time!(val.updated_at),
+            created_at: to_date_time!(val.created_at),
         }
     }
 }
@@ -109,41 +109,41 @@ impl TryFrom<i32> for FieldType {
     }
 }
 
-impl Into<i32> for FieldType {
-    fn into(self) -> i32 {
-        match self {
-            Self::Text => 0,
-            Self::Rating => 1,
-            Self::Checkbox => 2,
-            Self::Selection => 3,
-            Self::Range => 4,
-            Self::Number => 5,
+impl From<FieldType> for i32 {
+    fn from(val: FieldType) -> Self {
+        match val {
+            FieldType::Text => 0,
+            FieldType::Rating => 1,
+            FieldType::Checkbox => 2,
+            FieldType::Selection => 3,
+            FieldType::Range => 4,
+            FieldType::Number => 5,
         }
     }
 }
 
-impl Into<feedback_fusion_common::proto::FieldType> for FieldType {
-    fn into(self) -> feedback_fusion_common::proto::FieldType {
-        match self {
-            Self::Text => feedback_fusion_common::proto::FieldType::Text,
-            Self::Rating => feedback_fusion_common::proto::FieldType::Rating,
-            Self::Checkbox => feedback_fusion_common::proto::FieldType::Checkbox,
-            Self::Selection => feedback_fusion_common::proto::FieldType::Selection,
-            Self::Range => feedback_fusion_common::proto::FieldType::Range,
-            Self::Number => feedback_fusion_common::proto::FieldType::Number,
+impl From<FieldType> for feedback_fusion_common::proto::FieldType {
+    fn from(val: FieldType) -> Self {
+        match val {
+            FieldType::Text => feedback_fusion_common::proto::FieldType::Text,
+            FieldType::Rating => feedback_fusion_common::proto::FieldType::Rating,
+            FieldType::Checkbox => feedback_fusion_common::proto::FieldType::Checkbox,
+            FieldType::Selection => feedback_fusion_common::proto::FieldType::Selection,
+            FieldType::Range => feedback_fusion_common::proto::FieldType::Range,
+            FieldType::Number => feedback_fusion_common::proto::FieldType::Number,
         }
     }
 }
 
-impl Into<FieldType> for feedback_fusion_common::proto::FieldType {
-    fn into(self) -> FieldType {
-        match self {
-            Self::Text => FieldType::Text,
-            Self::Rating => FieldType::Rating,
-            Self::Checkbox => FieldType::Checkbox,
-            Self::Selection => FieldType::Selection,
-            Self::Range => FieldType::Range,
-            Self::Number => FieldType::Number,
+impl From<feedback_fusion_common::proto::FieldType> for FieldType {
+    fn from(val: feedback_fusion_common::proto::FieldType) -> Self {
+        match val {
+            feedback_fusion_common::proto::FieldType::Text => FieldType::Text,
+            feedback_fusion_common::proto::FieldType::Rating => FieldType::Rating,
+            feedback_fusion_common::proto::FieldType::Checkbox => FieldType::Checkbox,
+            feedback_fusion_common::proto::FieldType::Selection => FieldType::Selection,
+            feedback_fusion_common::proto::FieldType::Range => FieldType::Range,
+            feedback_fusion_common::proto::FieldType::Number => FieldType::Number,
         }
     }
 }
@@ -173,17 +173,17 @@ pub struct Field {
     created_at: DateTime,
 }
 
-impl Into<feedback_fusion_common::proto::Field> for Field {
-    fn into(self) -> feedback_fusion_common::proto::Field {
+impl From<Field> for feedback_fusion_common::proto::Field {
+    fn from(val: Field) -> Self {
         feedback_fusion_common::proto::Field {
-            id: self.id,
-            title: self.title,
-            description: self.description,
-            prompt: self.prompt,
-            field_type: self.r#type.into(),
-            options: Some(self.options.0.into()),
-            updated_at: Some(date_time_to_timestamp(self.updated_at)),
-            created_at: Some(date_time_to_timestamp(self.created_at)),
+            id: val.id,
+            title: val.title,
+            description: val.description,
+            prompt: val.prompt,
+            field_type: val.r#type.into(),
+            options: Some(val.options.0.into()),
+            updated_at: Some(date_time_to_timestamp(val.updated_at)),
+            created_at: Some(date_time_to_timestamp(val.created_at)),
         }
     }
 }

@@ -38,15 +38,15 @@ pub enum FieldOptions {
 macro_rules! map_options {
     ($($path:path $(,)?)*) => {
        $(
-        impl Into<$path> for FieldOptions {
-            fn into(self) -> $path {
-                match self {
-                    Self::Text(options) => <$path>::Text(options.into()),
-                    Self::Rating(options) => <$path>::Rating(options.into()),
-                    Self::Checkbox(options) => <$path>::Checkbox(options.into()),
-                    Self::Selection(options) => <$path>::Selection(options.into()),
-                    Self::Range(options) => <$path>::Range(options.into()),
-                    Self::Number(options) => <$path>::Number(options.into()),
+        impl From<FieldOptions> for $path {
+            fn from(value: FieldOptions) -> Self {
+                match value {
+                    FieldOptions::Text(options) => Self::Text(options.into()),
+                    FieldOptions::Rating(options) => Self::Rating(options.into()),
+                    FieldOptions::Checkbox(options) => Self::Checkbox(options.into()),
+                    FieldOptions::Selection(options) => Self::Selection(options.into()),
+                    FieldOptions::Range(options) => Self::Range(options.into()),
+                    FieldOptions::Number(options) => Self::Number(options.into()),
                 }
             }
         }
@@ -86,11 +86,11 @@ pub struct TextOptions {
     lines: u8,
 }
 
-impl Into<feedback_fusion_common::proto::TextOptions> for TextOptions {
-    fn into(self) -> feedback_fusion_common::proto::TextOptions {
+impl From<TextOptions> for feedback_fusion_common::proto::TextOptions {
+    fn from(value: TextOptions) -> feedback_fusion_common::proto::TextOptions {
         feedback_fusion_common::proto::TextOptions {
-            placeholder: self.placeholder,
-            lines: self.lines.into(),
+            placeholder: value.placeholder,
+            lines: value.lines.into(),
         }
     }
 }
@@ -117,10 +117,10 @@ pub struct RatingOptions {
     max: u8,
 }
 
-impl Into<feedback_fusion_common::proto::RatingOptions> for RatingOptions {
-    fn into(self) -> feedback_fusion_common::proto::RatingOptions {
+impl From<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
+    fn from(value: RatingOptions) -> feedback_fusion_common::proto::RatingOptions {
         feedback_fusion_common::proto::RatingOptions {
-            max: self.max.into(),
+            max: value.max.into(),
         }
     }
 }
@@ -142,11 +142,11 @@ pub enum CheckboxStyle {
     Normal,
 }
 
-impl Into<i32> for CheckboxStyle {
-    fn into(self) -> i32 {
-        match self {
-            Self::Normal => 0,
-            Self::Switch => 1,
+impl From<CheckboxStyle> for i32 {
+    fn from(value: CheckboxStyle) -> Self {
+        match value {
+            CheckboxStyle::Normal => 0,
+            CheckboxStyle::Switch => 1,
         }
     }
 }
@@ -165,20 +165,20 @@ impl TryFrom<i32> for CheckboxStyle {
     }
 }
 
-impl Into<feedback_fusion_common::proto::CheckboxStyle> for CheckboxStyle {
-    fn into(self) -> feedback_fusion_common::proto::CheckboxStyle {
-        match self {
-            Self::Switch => feedback_fusion_common::proto::CheckboxStyle::Switch,
-            Self::Normal => feedback_fusion_common::proto::CheckboxStyle::Normal,
+impl From<CheckboxStyle> for feedback_fusion_common::proto::CheckboxStyle {
+    fn from(value: CheckboxStyle) -> feedback_fusion_common::proto::CheckboxStyle {
+        match value {
+            CheckboxStyle::Switch => feedback_fusion_common::proto::CheckboxStyle::Switch,
+            CheckboxStyle::Normal => feedback_fusion_common::proto::CheckboxStyle::Normal,
         }
     }
 }
 
-impl Into<CheckboxStyle> for feedback_fusion_common::proto::CheckboxStyle {
-    fn into(self) -> CheckboxStyle {
-        match self {
-            Self::Switch => CheckboxStyle::Switch,
-            Self::Normal => CheckboxStyle::Normal,
+impl From<feedback_fusion_common::proto::CheckboxStyle> for CheckboxStyle {
+    fn from(value: feedback_fusion_common::proto::CheckboxStyle) -> CheckboxStyle {
+        match value {
+            feedback_fusion_common::proto::CheckboxStyle::Switch => CheckboxStyle::Switch,
+            feedback_fusion_common::proto::CheckboxStyle::Normal => CheckboxStyle::Normal,
         }
     }
 }
@@ -192,11 +192,11 @@ pub struct CheckboxOptions {
     style: CheckboxStyle,
 }
 
-impl Into<feedback_fusion_common::proto::CheckboxOptions> for CheckboxOptions {
-    fn into(self) -> feedback_fusion_common::proto::CheckboxOptions {
+impl From<CheckboxOptions> for feedback_fusion_common::proto::CheckboxOptions {
+    fn from(value: CheckboxOptions) -> feedback_fusion_common::proto::CheckboxOptions {
         feedback_fusion_common::proto::CheckboxOptions {
-            default_state: self.default_state,
-            style: self.style.into(),
+            default_state: value.default_state,
+            style: value.style.into(),
         }
     }
 }
@@ -225,22 +225,22 @@ pub struct SelectionOptions {
     combobox: bool,
 }
 
-impl Into<feedback_fusion_common::proto::SelectionOptions> for SelectionOptions {
-    fn into(self) -> feedback_fusion_common::proto::SelectionOptions {
+impl From<SelectionOptions> for feedback_fusion_common::proto::SelectionOptions {
+    fn from(value: SelectionOptions) -> Self {
         feedback_fusion_common::proto::SelectionOptions {
-            values: self.values,
-            multiple: self.multiple,
-            combobox: self.combobox,
+            values: value.values,
+            multiple: value.multiple,
+            combobox: value.combobox,
         }
     }
 }
 
-impl Into<SelectionOptions> for feedback_fusion_common::proto::SelectionOptions {
-    fn into(self) -> SelectionOptions {
+impl From<feedback_fusion_common::proto::SelectionOptions> for SelectionOptions {
+    fn from(value: feedback_fusion_common::proto::SelectionOptions) -> Self {
         SelectionOptions {
-            values: self.values,
-            multiple: self.multiple,
-            combobox: self.combobox,
+            values: value.values,
+            multiple: value.multiple,
+            combobox: value.combobox,
         }
     }
 }
@@ -255,11 +255,11 @@ pub struct RangeOptions {
     max: u8,
 }
 
-impl Into<feedback_fusion_common::proto::RangeOptions> for RangeOptions {
-    fn into(self) -> feedback_fusion_common::proto::RangeOptions {
+impl From<RangeOptions> for feedback_fusion_common::proto::RangeOptions {
+    fn from(value: RangeOptions) -> Self {
         feedback_fusion_common::proto::RangeOptions {
-            min: self.min.into(),
-            max: self.max.into(),
+            min: value.min.into(),
+            max: value.max.into(),
         }
     }
 }
@@ -287,12 +287,12 @@ pub struct NumberOptions {
     placeholder: String,
 }
 
-impl Into<feedback_fusion_common::proto::NumberOptions> for NumberOptions {
-    fn into(self) -> feedback_fusion_common::proto::NumberOptions {
+impl From<NumberOptions> for feedback_fusion_common::proto::NumberOptions {
+    fn from(value: NumberOptions) -> Self {
         feedback_fusion_common::proto::NumberOptions {
-            min: self.min.into(),
-            max: self.max.into(),
-            placeholder: self.placeholder,
+            min: value.min.into(),
+            max: value.max.into(),
+            placeholder: value.placeholder,
         }
     }
 }
@@ -323,22 +323,22 @@ pub struct PromptResponse {
     created_at: DateTime,
 }
 
-impl Into<feedback_fusion_common::proto::PromptResponse> for PromptResponse {
-    fn into(self) -> feedback_fusion_common::proto::PromptResponse {
+impl From<PromptResponse> for feedback_fusion_common::proto::PromptResponse {
+    fn from(value: PromptResponse) -> Self {
         feedback_fusion_common::proto::PromptResponse {
-            id: self.id,
-            prompt: self.prompt,
-            created_at: Some(date_time_to_timestamp(self.created_at)),
+            id: value.id,
+            prompt: value.prompt,
+            created_at: Some(date_time_to_timestamp(value.created_at)),
         }
     }
 }
 
-impl Into<PromptResponse> for feedback_fusion_common::proto::PromptResponse {
-    fn into(self) -> PromptResponse {
+impl From<feedback_fusion_common::proto::PromptResponse> for PromptResponse {
+    fn from(value: feedback_fusion_common::proto::PromptResponse) -> Self {
         PromptResponse {
-            id: self.id,
-            prompt: self.prompt,
-            created_at: to_date_time!(self.created_at),
+            id: value.id,
+            prompt: value.prompt,
+            created_at: to_date_time!(value.created_at),
         }
     }
 }
@@ -358,13 +358,13 @@ pub struct FieldResponse {
     data: JsonV<FieldData>,
 }
 
-impl Into<feedback_fusion_common::proto::FieldResponse> for FieldResponse {
-    fn into(self) -> feedback_fusion_common::proto::FieldResponse {
+impl From<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
+    fn from(value: FieldResponse) -> Self {
         feedback_fusion_common::proto::FieldResponse {
-            id: self.id,
-            response: self.response,
-            field: self.field,
-            data: Some(self.data.0.into()),
+            id: value.id,
+            response: value.response,
+            field: value.field,
+            data: Some(value.data.0.into()),
         }
     }
 }
@@ -399,15 +399,15 @@ pub enum FieldData {
 macro_rules! map_response {
     ($($path:path $(,)?)*) => {
         $(
-        impl Into<$path> for FieldData {
-            fn into(self) -> $path {
-                match self {
-                    Self::Text(data) => <$path>::Text(data.into()),
-                    Self::Rating(data) => <$path>::Rating(data.into()),
-                    Self::Checkbox(data) => <$path>::Checkbox(data.into()),
-                    Self::Selection(data) => <$path>::Selection(data.into()),
-                    Self::Range(data) => <$path>::Range(data.into()),
-                    Self::Number(data) => <$path>::Number(data.into()),
+        impl From<FieldData> for $path {
+            fn from(value: FieldData) -> $path {
+                match value {
+                    FieldData::Text(data) => Self::Text(data.into()),
+                    FieldData::Rating(data) => Self::Rating(data.into()),
+                    FieldData::Checkbox(data) => Self::Checkbox(data.into()),
+                    FieldData::Selection(data) => Self::Selection(data.into()),
+                    FieldData::Range(data) => Self::Range(data.into()),
+                    FieldData::Number(data) => Self::Number(data.into()),
                 }
             }
         }
@@ -472,20 +472,18 @@ impl FieldData {
             Self::Selection = FieldOptions::Selection => {
                 if !options.multiple && response.values.len() > 1 {
                     Err(FeedbackFusionError::BadRequest("selecting multiple is not allowed".to_owned()))
-                } else {
-                    if !options.combobox {
-                        let invalid = response.values.iter().find(|value| !options.values.contains(value));
+                } else if !options.combobox {
+                    let invalid = response.values.iter().find(|value| !options.values.contains(value));
 
-                        if let Some(invalid) = invalid {
-                            Err(FeedbackFusionError::BadRequest(format!(
-                                "found invalid value '{}'", invalid
-                            )))
-                        } else {
-                            Ok(())
-                        }
+                    if let Some(invalid) = invalid {
+                        Err(FeedbackFusionError::BadRequest(format!(
+                            "found invalid value '{}'", invalid
+                        )))
                     } else {
                         Ok(())
                     }
+                } else {
+                    Ok(())
                 }
             },
             Self::Range = FieldOptions::Range => {
@@ -515,15 +513,15 @@ pub struct TextResponse {
     text: String,
 }
 
-impl Into<feedback_fusion_common::proto::TextResponse> for TextResponse {
-    fn into(self) -> feedback_fusion_common::proto::TextResponse {
-        feedback_fusion_common::proto::TextResponse { text: self.text }
+impl From<TextResponse> for feedback_fusion_common::proto::TextResponse {
+    fn from(value: TextResponse) -> Self {
+        feedback_fusion_common::proto::TextResponse { text: value.text }
     }
 }
 
-impl Into<TextResponse> for feedback_fusion_common::proto::TextResponse {
-    fn into(self) -> TextResponse {
-        TextResponse { text: self.text }
+impl From<feedback_fusion_common::proto::TextResponse> for TextResponse {
+    fn from(value: feedback_fusion_common::proto::TextResponse) -> Self {
+        TextResponse { text: value.text }
     }
 }
 
@@ -532,10 +530,10 @@ pub struct RatingResponse {
     rating: u8,
 }
 
-impl Into<feedback_fusion_common::proto::RatingResponse> for RatingResponse {
-    fn into(self) -> feedback_fusion_common::proto::RatingResponse {
+impl From<RatingResponse> for feedback_fusion_common::proto::RatingResponse {
+    fn from(value: RatingResponse) -> Self {
         feedback_fusion_common::proto::RatingResponse {
-            rating: self.rating.into(),
+            rating: value.rating.into(),
         }
     }
 }
@@ -555,18 +553,18 @@ pub struct CheckboxResponse {
     checked: bool,
 }
 
-impl Into<feedback_fusion_common::proto::CheckboxResponse> for CheckboxResponse {
-    fn into(self) -> feedback_fusion_common::proto::CheckboxResponse {
+impl From<CheckboxResponse> for feedback_fusion_common::proto::CheckboxResponse {
+    fn from(value: CheckboxResponse) -> Self {
         feedback_fusion_common::proto::CheckboxResponse {
-            checked: self.checked,
+            checked: value.checked,
         }
     }
 }
 
-impl Into<CheckboxResponse> for feedback_fusion_common::proto::CheckboxResponse {
-    fn into(self) -> CheckboxResponse {
+impl From<feedback_fusion_common::proto::CheckboxResponse> for CheckboxResponse {
+    fn from(value: feedback_fusion_common::proto::CheckboxResponse) -> Self {
         CheckboxResponse {
-            checked: self.checked,
+            checked: value.checked,
         }
     }
 }
@@ -576,18 +574,18 @@ pub struct SelectionResponse {
     values: Vec<String>,
 }
 
-impl Into<feedback_fusion_common::proto::SelectionResponse> for SelectionResponse {
-    fn into(self) -> feedback_fusion_common::proto::SelectionResponse {
+impl From<SelectionResponse> for feedback_fusion_common::proto::SelectionResponse {
+    fn from(value: SelectionResponse) -> Self {
         feedback_fusion_common::proto::SelectionResponse {
-            values: self.values,
+            values: value.values,
         }
     }
 }
 
-impl Into<SelectionResponse> for feedback_fusion_common::proto::SelectionResponse {
-    fn into(self) -> SelectionResponse {
+impl From<feedback_fusion_common::proto::SelectionResponse> for SelectionResponse {
+    fn from(value: feedback_fusion_common::proto::SelectionResponse) -> Self {
         SelectionResponse {
-            values: self.values,
+            values: value.values,
         }
     }
 }
@@ -598,11 +596,11 @@ pub struct RangeResponse {
     end: u8,
 }
 
-impl Into<feedback_fusion_common::proto::RangeResponse> for RangeResponse {
-    fn into(self) -> feedback_fusion_common::proto::RangeResponse {
+impl From<RangeResponse> for feedback_fusion_common::proto::RangeResponse {
+    fn from(value: RangeResponse) -> Self {
         feedback_fusion_common::proto::RangeResponse {
-            start: self.start.into(),
-            end: self.end.into(),
+            start: value.start.into(),
+            end: value.end.into(),
         }
     }
 }
@@ -623,10 +621,10 @@ pub struct NumberResponse {
     number: u8,
 }
 
-impl Into<feedback_fusion_common::proto::NumberResponse> for NumberResponse {
-    fn into(self) -> feedback_fusion_common::proto::NumberResponse {
+impl From<NumberResponse> for feedback_fusion_common::proto::NumberResponse {
+    fn from(value: NumberResponse) -> Self {
         feedback_fusion_common::proto::NumberResponse {
-            number: self.number.into(),
+            number: value.number.into(),
         }
     }
 }

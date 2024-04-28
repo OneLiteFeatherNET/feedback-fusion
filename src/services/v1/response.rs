@@ -32,14 +32,6 @@ use feedback_fusion_common::proto::{
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::HashMap;
 
-// #[derive(Deserialize, Clone, Debug, ToSchema)]
-// pub struct SubmitFeedbackPromptResponseRequest {
-//     #[cfg(not(feature = "bindings"))]
-//     responses: HashMap<String, serde_json::Value>,
-//     #[cfg(feature = "bindings")]
-//     responses: HashMap<String, FieldData>,
-// }
-
 pub async fn create_responses(
     context: &PublicFeedbackFusionV1Context,
     request: Request<CreateResponsesRequest>,
@@ -109,18 +101,6 @@ pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FieldResponse>
 struct DatabaseResult {
     result: JsonV<GetFeedbackPromptResponsesResponse>,
 }
-
-// impl Into<Responses> for DatabaseResult {
-//     fn into(self) -> Responses {
-//         let data = self.result.0;
-//
-//         for value in data.values_mut() {
-//             *value = FieldResponseList { data: value.into() };
-//         }
-//
-//         Responses { data }
-//     }
-// }
 
 #[py_sql(
     "`SELECT jsonb_object_agg(response, rows) AS RESULT FROM (`

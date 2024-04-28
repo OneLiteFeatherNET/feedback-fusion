@@ -45,26 +45,26 @@ pub struct Target {
     created_at: DateTime,
 }
 
-impl Into<feedback_fusion_common::proto::Target> for Target {
-    fn into(self) -> feedback_fusion_common::proto::Target {
+impl From<Target> for feedback_fusion_common::proto::Target {
+    fn from(val: Target) -> Self {
         feedback_fusion_common::proto::Target {
-            id: self.id,
-            name: self.name,
-            description: self.description,
-            updated_at: Some(date_time_to_timestamp(self.updated_at)),
-            created_at: Some(date_time_to_timestamp(self.created_at)),
+            id: val.id,
+            name: val.name,
+            description: val.description,
+            updated_at: Some(date_time_to_timestamp(val.updated_at)),
+            created_at: Some(date_time_to_timestamp(val.created_at)),
         }
     }
 }
 
-impl Into<Target> for feedback_fusion_common::proto::Target {
-    fn into(self) -> Target {
+impl From<feedback_fusion_common::proto::Target> for Target {
+    fn from(val: feedback_fusion_common::proto::Target) -> Self {
         Target {
-            id: self.id,
-            name: self.name,
-            description: self.description,
-            updated_at: to_date_time!(self.updated_at),
-            created_at: to_date_time!(self.created_at),
+            id: val.id,
+            name: val.name,
+            description: val.description,
+            updated_at: to_date_time!(val.updated_at),
+            created_at: to_date_time!(val.created_at),
         }
     }
 }
