@@ -29,8 +29,8 @@ devDependencies:
     specifier: ^20.11.25
     version: 20.12.7
   '@vitejs/plugin-vue':
-    specifier: ^4.5.2
-    version: 4.6.2(vite@5.2.8)(vue@3.4.22)
+    specifier: ^5.0.0
+    version: 5.0.4(vite@5.2.8)(vue@3.4.22)
   sass:
     specifier: ^1.71.1
     version: 1.75.0
@@ -782,17 +782,6 @@ packages:
   /@types/wrap-ansi@3.0.0:
     resolution: {integrity: sha512-ltIpx+kM7g/MLRZfkbL7EsCEjfzCcScLpkg37eXEtx5kmrAKBkTJwd1GIAjDSL8wTpM6Hzn5YO4pSb91BEwu1g==}
     dev: false
-
-  /@vitejs/plugin-vue@4.6.2(vite@5.2.8)(vue@3.4.22):
-    resolution: {integrity: sha512-kqf7SGFoG+80aZG6Pf+gsZIVvGSCKE98JbiWqcCV9cThtg91Jav0yvYFC9Zb+jKetNGF6ZKeoaxgZfND21fWKw==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    peerDependencies:
-      vite: ^4.0.0 || ^5.0.0
-      vue: ^3.2.25
-    dependencies:
-      vite: 5.2.8(@types/node@20.12.7)(sass@1.75.0)
-      vue: 3.4.22(typescript@5.4.5)
-    dev: true
 
   /@vitejs/plugin-vue@5.0.4(vite@5.2.8)(vue@3.4.22):
     resolution: {integrity: sha512-WS3hevEszI6CEVEx28F8RjTX97k3KsrcY6kvTg7+Whm5y3oYvcqzVeGCU3hxSAn4uY2CLCkeokkGKpoctccilQ==}
