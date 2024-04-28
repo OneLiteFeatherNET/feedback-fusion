@@ -53,7 +53,7 @@
 
 <script setup lang="ts">
 import Field from "./Field.vue";
-import { FeedbackPromptField, FeedbackFusionState, FeedbackPrompt, SubmitFeedbackPromptResponseRequest } from "@onelitefeathernet/feedback-fusion-core";
+import { Field as ProtoField, FeedbackFusionState, Prompt, CreateResponsesRequest } from "@onelitefeathernet/feedback-fusion-core";
 import { computed, inject, onMounted, ref } from "vue";
 import i18next from "i18next";
 
@@ -71,8 +71,8 @@ const theme = computed(() => config.themes[props.theme || config.defaultTheme]);
 
 const fieldPage = ref(0);
 const fieldPages = ref(1);
-const prompt = ref(undefined as FeedbackPrompt | undefined)
-const fields = ref([] as FeedbackPromptField[]);
+const prompt = ref(undefined as Prompt | undefined)
+const fields = ref([] as ProtoField[]);
 
 const open = ref(true);
 const finished = ref(false);
@@ -89,26 +89,26 @@ const childProps = ref({
 
 onMounted(async () => {
   // fetch the prompt information
-  await client.getPrompt(props.prompt)
-    .then((data) => prompt.value = data);
+  await client.getPrompt({ id: props.prompt })
+    .then((data ) => prompt.value = data.response);
+  
 
   // fetch the first field page 
-  await client.getFields(props.prompt, 1, 10)
+  await client.getActiveFields({ prompt: prompt.value!.id, pageSize: 10, pageToken: 1 })
     .then((data) => {
       // TODO: do we actually already return the pages?
-      fieldPages.value = Math.ceil(data.total / 10);
-      fields.value = data.records;
+      fieldPages.value = Math.ceil(data.response.total / 10);
+      fields.value = data.response.fields;
     })
 });
 
 const submitResponse = async () => {
-  // TODO: validate data types
   // transform data
-  const body = {} as SubmitFeedbackPromptResponseRequest;
+  const body = {};
   // @ts-ignore
   Object.keys(data).forEach((key: string) => body[key] = { data: data[key] });
 
-  await client.submitResponse(props.prompt, body)
+  await client.createResponses({ data: body, prompt: prompt.value!.id })
     .then(() => {
       data.value = {};
       finished.value = true;

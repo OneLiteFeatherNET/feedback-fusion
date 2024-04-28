@@ -82,6 +82,7 @@ pub async fn get_prompts(
         page_token: page_request.page_no().try_into()?,
         next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
         page_size: page_request.page_size().try_into()?,
+        total: prompts.total.try_into()?,
         prompts: prompts
             .records
             .into_iter()

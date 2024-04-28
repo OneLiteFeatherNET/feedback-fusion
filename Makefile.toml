@@ -5,19 +5,25 @@ skip_core_tasks = true
 
 # lib dev
 
-[tasks.core_build]
+[tasks.core_generate]
+cwd = "./lib/core/src/"
+command = "npx"
+args = ["protoc", "--ts_out", ".", "--ts_opt", "server_none", "--proto_path", "../../../proto", "../../../proto/feedback-fusion-v1.proto"]
+
+[tasks.core]
+dependencies = ["core_generate"]
 cwd = "./lib/core/"
 command = "pnpm"
 args = ["run", "tsc"]
 
 [tasks.vue]
-dependencies = ["core_build"]
+dependencies = ["core"]
 cwd = "./lib/vue/"
 command = "pnpm"
 args = ["run", "docs:dev"]
 
 [tasks.vue_build]
-dependencies = ["core_build"]
+dependencies = ["core"]
 cwd = "./lib/vue/"
 command = "pnpm"
 args = ["run", "build"]

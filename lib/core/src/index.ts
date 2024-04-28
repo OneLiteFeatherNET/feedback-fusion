@@ -20,58 +20,6 @@
  * SOFTWARE.
  */
 
-import {
-  FeedbackPromptResponse,
-  SubmitFeedbackPromptResponseRequest,
-  FeedbackPromptField,
-  Page,
-  FeedbackPrompt,
-} from "../../../bindings";
-
-export class FeedbackFusionClient {
-  public baseURL: string;
-
-  public constructor(baseURL: string, target: String) {
-    this.baseURL = `${baseURL}/v1/target/${target}`;
-  }
-
-  /**
-   * Submit a new response to the prompt
-   */
-  public async submitResponse(
-    prompt: String,
-    responses: SubmitFeedbackPromptResponseRequest,
-  ): Promise<FeedbackPromptResponse> {
-    return await fetch(`${this.baseURL}/prompt/${prompt}/response`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(responses),
-    })
-      .then((response) => response.json() as Promise<FeedbackPromptResponse>)
-      .then((response: FeedbackPromptResponse) => response);
-    // TODO: handle errors
-  }
-
-  /**
-   * Fetch a specific prompt
-   */
-  public async getPrompt(prompt: string): Promise<FeedbackPrompt> {
-    return await fetch(`${this.baseURL}/prompt/${prompt}`)
-      .then((response) => response.json() as Promise<FeedbackPrompt>)
-      .then((response: FeedbackPrompt) => response)
-  }
-
-  /**
-  * Fetch a page of fields 
-  */
-  public async getFields(prompt: string, page = 1, page_size = 20): Promise<Page<FeedbackPromptField>> {
-    return await fetch(`${this.baseURL}/prompt/${prompt}/fetch?page=${page}&page_size=${page_size}`)
-      .then((response) => response.json() as Promise<Page<FeedbackPromptField>>)
-      .then((response: Page<FeedbackPromptField>) => response)
-  }
-}
-
+export * from "./feedback-fusion-v1";
+export * from "./feedback-fusion-v1.client";
 export * from "./config";
-
-// export bindings generated via ts-rs
-export * from "../../../bindings";

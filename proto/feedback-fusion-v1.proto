@@ -55,8 +55,9 @@ message TargetPage {
   int32 page_token = 1;
   int32 next_page_token = 2;
   int32 page_size = 3;
+  int32 total = 4;
 
-  repeated Target targets = 4;
+  repeated Target targets = 5;
 }
 
 message CreateTargetRequest {
@@ -107,8 +108,9 @@ message PromptPage {
   int32 page_token = 1;
   int32 next_page_token = 2;
   int32 page_size = 3;
+  int32 total = 4;
 
-  repeated Prompt prompts = 4;
+  repeated Prompt prompts = 5;
 }
 
 message UpdatePromptRequest {
@@ -213,8 +215,9 @@ message FieldPage {
   int32 page_token = 1;
   int32 next_page_token = 2;
   int32 page_size = 3;
+  int32 total = 4;
 
-  repeated Field fields = 4;
+  repeated Field fields = 5;
 }
 
 message UpdateFieldRequest {
@@ -298,8 +301,9 @@ message ResponsePage {
   int32 page_token = 1;
   int32 next_page_token = 2;
   int32 page_size = 3;
+  int32 total = 4;
 
-  map<string, FieldResponseList> data = 4;
+  map<string, FieldResponseList> data = 5;
 }
 
 message PromptResponse {

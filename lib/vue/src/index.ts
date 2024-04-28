@@ -21,13 +21,14 @@
  */
 
 import {
-  FeedbackFusionClient,
   FeedbackFusionConfigurationOptions,
   patchConfig,
+  PublicFeedbackFusionV1Client,
 } from "@onelitefeathernet/feedback-fusion-core";
 import i18next from "i18next";
 import { App } from "vue";
-import Prompt from "./components/Prompt.vue"
+import Prompt from "./components/Prompt.vue";
+import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 
 export const FeedbackFusion = {
   install(Vue: App, config: FeedbackFusionConfigurationOptions) {
@@ -35,12 +36,16 @@ export const FeedbackFusion = {
 
     i18next.init({
       lng: config.defaultLocale,
-      resources: config.locales as any 
+      resources: config.locales as any,
     });
 
     Vue.provide("feedbackFusionState", {
       config: patchedConfig,
-      client: new FeedbackFusionClient(patchedConfig.baseURL, patchedConfig.target),
+      client: new PublicFeedbackFusionV1Client(
+        new GrpcWebFetchTransport({
+          baseUrl: config.endpoint,
+        }),
+      ),
     });
 
     Vue.component("FeedbackFusionPrompt", Prompt);

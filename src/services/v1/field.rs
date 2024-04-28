@@ -79,6 +79,7 @@ pub async fn get_active_fields(
         page_token: page_request.page_no().try_into()?,
         next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
         page_size: page_request.page_size().try_into()?,
+        total: page.total.try_into()?,
         fields: page
             .records
             .into_iter()
@@ -107,6 +108,7 @@ pub async fn get_fields(
         page_token: page_request.page_no().try_into()?,
         next_page_token: TryInto::<i32>::try_into(page_request.page_no())? + 1i32,
         page_size: page_request.page_size().try_into()?,
+        total: page.total.try_into()?,
         fields: page
             .records
             .into_iter()
