@@ -31,6 +31,7 @@ use feedback_fusion_common::proto::{
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1Server,
 };
 use tonic::transport::Server;
+use tonic_web::GrpcWebLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod config;
@@ -89,6 +90,8 @@ async fn main() {
 
         Server::builder()
             .layer(tower_http::trace::TraceLayer::new_for_grpc())
+            .accept_http1(true)
+            .layer(GrpcWebLayer::new())
             .add_service(health_service)
             .add_service(reflection_service)
             .add_service(AuthorizedService(service))
