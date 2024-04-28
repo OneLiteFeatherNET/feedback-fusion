@@ -69,7 +69,6 @@ jobs:
         run: cargo make clippy 
 
   test:
-    needs: [ clippy, check ]
     name: tests
     runs-on: ubuntu-latest
     steps:

@@ -32,7 +32,6 @@ use super::FieldOptions;
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "bindings", derive(TS))]
 pub struct Prompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,

@@ -126,7 +126,7 @@ struct DatabaseResult {
     "`SELECT jsonb_object_agg(response, rows) AS RESULT FROM (`
         `SELECT response, `
         `jsonb_agg(jsonb_build_object('id', id, 'response', response, 'field', field, 'data', data)) AS ROWS `
-            `FROM feedback_prompt_field_response `
+            `FROM field_response `
                 ` WHERE response IN `
                     ${responses.sql()} 
     ` GROUP BY response) subquery`"

@@ -74,7 +74,7 @@ pub async fn get_prompts(
     let connection = context.connection();
 
     let prompts = database_request!(
-        Prompt::select_page_by_target_wrapper(connection, &page_request, data.target.as_str(),)
+        Prompt::select_page_by_target_wrapper(connection, &page_request, data.target.as_str())
             .await?
     );
 

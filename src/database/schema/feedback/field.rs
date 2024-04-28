@@ -470,18 +470,22 @@ impl FieldData {
             },
             Self::Checkbox = FieldOptions::Checkbox => { Ok(()) },
             Self::Selection = FieldOptions::Selection => {
-                if !options.combobox {
-                    let invalid = response.values.iter().find(|value| !options.values.contains(value));
+                if !options.multiple && response.values.len() > 1 {
+                    Err(FeedbackFusionError::BadRequest("selecting multiple is not allowed".to_owned()))
+                } else {
+                    if !options.combobox {
+                        let invalid = response.values.iter().find(|value| !options.values.contains(value));
 
-                    if let Some(invalid) = invalid {
-                        Err(FeedbackFusionError::BadRequest(format!(
-                            "found invalid value '{}'", invalid
-                        )))
+                        if let Some(invalid) = invalid {
+                            Err(FeedbackFusionError::BadRequest(format!(
+                                "found invalid value '{}'", invalid
+                            )))
+                        } else {
+                            Ok(())
+                        }
                     } else {
                         Ok(())
                     }
-                } else {
-                    Ok(())
                 }
             },
             Self::Range = FieldOptions::Range => {
@@ -634,5 +638,171 @@ impl TryInto<NumberResponse> for feedback_fusion_common::proto::NumberResponse {
         Ok(NumberResponse {
             number: self.number.try_into()?,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        CheckboxOptions, CheckboxResponse, FieldData, FieldOptions, NumberOptions, NumberResponse,
+        RangeOptions, RangeResponse, RatingOptions, RatingResponse, SelectionOptions,
+        SelectionResponse, TextOptions, TextResponse,
+    };
+
+    #[test]
+    pub fn test_text_validation() {
+        let data = FieldData::Text(TextResponse {
+            text: "Hello, world!".to_owned(),
+        });
+
+        let options = FieldOptions::Text(TextOptions {
+            placeholder: "".to_owned(),
+            lines: 1,
+        });
+        assert!(data.validate(&options).is_ok());
+    }
+
+    #[test]
+    pub fn test_rating_validation() {
+        let data = FieldData::Rating(RatingResponse { rating: 5 });
+
+        let options = FieldOptions::Rating(RatingOptions { max: 5 });
+        assert!(data.validate(&options).is_ok());
+
+        let options = FieldOptions::Rating(RatingOptions { max: 4 });
+        assert!(data.validate(&options).is_err());
+    }
+
+    #[test]
+    pub fn test_checkbox_validation() {
+        let options = FieldOptions::Checkbox(CheckboxOptions {
+            default_state: true,
+            style: super::CheckboxStyle::Switch,
+        });
+
+        let data = FieldData::Checkbox(CheckboxResponse { checked: true });
+        assert!(data.validate(&options).is_ok());
+
+        let data = FieldData::Checkbox(CheckboxResponse { checked: false });
+        assert!(data.validate(&options).is_ok());
+    }
+
+    #[test]
+    pub fn test_selection_validation() {
+        let options = FieldOptions::Selection(SelectionOptions {
+            multiple: false,
+            combobox: false,
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["FooBar".to_owned()],
+        });
+        assert!(data.validate(&options).is_err());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+        assert!(data.validate(&options).is_err());
+
+        let options = FieldOptions::Selection(SelectionOptions {
+            multiple: true,
+            combobox: false,
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["FooBar".to_owned()],
+        });
+        assert!(data.validate(&options).is_err());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+
+        let options = FieldOptions::Selection(SelectionOptions {
+            multiple: false,
+            combobox: true,
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["FooBar".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+        assert!(data.validate(&options).is_err());
+
+        let options = FieldOptions::Selection(SelectionOptions {
+            multiple: true,
+            combobox: true,
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["FooBar".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+
+        let data = FieldData::Selection(SelectionResponse {
+            values: vec!["Foo".to_owned(), "Bar".to_owned()],
+        });
+        assert!(data.validate(&options).is_ok());
+    }
+
+    #[test]
+    pub fn test_range_validation() {
+        let options = FieldOptions::Range(RangeOptions { min: 2, max: 5 });
+
+        let data = FieldData::Range(RangeResponse { start: 1, end: 5 });
+        assert!(data.validate(&options).is_err());
+
+        let data = FieldData::Range(RangeResponse { start: 2, end: 6 });
+        assert!(data.validate(&options).is_err());
+
+        let data = FieldData::Range(RangeResponse { start: 2, end: 4 });
+        assert!(data.validate(&options).is_ok());
+    }
+
+    #[test]
+    pub fn test_number_validation() {
+        let options = FieldOptions::Number(NumberOptions {
+            min: 2,
+            max: 4,
+            placeholder: "".to_owned(),
+        });
+
+        let data = FieldData::Number(NumberResponse { number: 1 });
+        assert!(data.validate(&options).is_err());
+
+        let data = FieldData::Number(NumberResponse { number: 5 });
+        assert!(data.validate(&options).is_err());
+
+        let data = FieldData::Number(NumberResponse { number: 2 });
+        assert!(data.validate(&options).is_ok());
     }
 }

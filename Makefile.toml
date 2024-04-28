@@ -35,7 +35,7 @@ args = ["clippy", "--features", "all-databases", "--", "-D", "warnings"]
 # run oidc server for integration tests
 
 [tasks.oidc-server-mock]
-script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d && sleep 5 && curl -s http://localhost:5151/.well-known/openid-configuration"
+script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d && sleep 5 && curl -s -o /dev/null http://localhost:5151/.well-known/openid-configuration"
 
 # Postgres
 [tasks.postgres_database]
@@ -46,6 +46,7 @@ env = { DATABASE = "POSTGRES", POSTGRES_USERNAME = "postgres", POSTGRES_PASSWORD
 command = "cargo"
 args = [
   "test",
+  "--no-fail-fast",
   "--no-default-features",
   "--features",
   "postgres,test",

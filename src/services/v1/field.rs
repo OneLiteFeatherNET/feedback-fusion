@@ -127,10 +127,15 @@ pub async fn update_field(
         .await?
         .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
 
-    field.set_title(data.title.unwrap_or(field.title().to_string()));
+    if let Some(title) = data.title {
+        field.set_title(title);
+    };
+    if let Some(description) = data.description {
+        field.set_description(Some(description));
+    };
     if let Some(options) = data.options {
         field.set_options(JsonV(options.try_into()?));
-    }
+    };
 
     database_request!(Field::update_by_column(connection, &field, "id").await?);
 

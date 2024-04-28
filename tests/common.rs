@@ -78,7 +78,7 @@ pub fn run_server() -> BackendServer {
             command.env(key, value);
         }
     }
-    command.env("RUST_LOG", "TRACE");
+    command.env("RUST_LOG", "DEBUG");
 
     let child = command.spawn().unwrap();
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -86,6 +86,7 @@ pub fn run_server() -> BackendServer {
     BackendServer(child)
 }
 
+#[allow(unused)]
 pub async fn authenticate() -> String {
     let issuer = IssuerUrl::new(env!("OIDC_DISCOVERY_URL").to_owned()).unwrap();
     let metadata = CoreProviderMetadata::discover_async(issuer, async_http_client)
