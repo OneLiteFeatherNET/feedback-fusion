@@ -20,13 +20,8 @@
  * SOFTWARE.
  */
 
-import { FeedbackFusionClient } from "./";
+import { PublicFeedbackFusionV1Client } from "./";
 import en from "./locales/en";
-
-interface BaseConfig {
-  baseURL: string;
-  target: string;
-}
 
 interface LocaleData {
   locale: string;
@@ -45,14 +40,16 @@ interface ThemeOptions {
   };
 }
 
-export interface FeedbackFusionConfigurationOptions extends BaseConfig {
+export interface FeedbackFusionConfigurationOptions {
+  endpoint: string;
   locales?: LocaleData[];
   defaultLocale?: string;
   defaultTheme?: string;
   themes?: ThemeOptions;
 }
 
-export interface FeedbackFusionConfig extends BaseConfig {
+export interface FeedbackFusionConfig {
+  endpoint: string;
   locales: { [key: string]: { translation: Object } };
   defaultLocale: string;
   defaultTheme: string;
@@ -102,5 +99,5 @@ export function patchConfig(
 
 export interface FeedbackFusionState {
   config: FeedbackFusionConfig;
-  client: FeedbackFusionClient;
+  client: PublicFeedbackFusionV1Client;
 }

@@ -1,9 +1,9 @@
-//SPDX-FileCopyrightText: 2023 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
 
-// Copyright (c) 2023 OneLiteFeatherNet
+// Copyright (c) 2024 OneLiteFeatherNet
 
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 //associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -20,10 +20,5 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-mod field;
-mod prompt;
-mod target;
-
-pub use field::*;
-pub use prompt::*;
-pub use target::*;
+pub mod oidc;
+pub mod v1;

@@ -1,0 +1,16 @@
+[package]
+name = "feedback_fusion_common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+feedback_fusion_codegen = { path = "../codegen" }
+
+rbatis = "4.5.21"
+tonic = "0.11.0"
+prost = "0.12.4"
+prost-types = "0.12.4"
+validator = { version = "0.18.1", features = ["derive"] }
+
+[build-dependencies]
+tonic-build = "0.11.0"

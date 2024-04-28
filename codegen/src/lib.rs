@@ -1,9 +1,9 @@
-//SPDX-FileCopyrightText: 2023 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
 
-// Copyright (c) 2023 OneLiteFeatherNet
+// Copyright (c) 2024 OneLiteFeatherNet
 
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 //associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -20,10 +20,24 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-mod field;
-mod prompt;
-mod target;
+use proc_macro::TokenStream;
+use syn::{parse_macro_input, DeriveInput};
 
-pub use field::*;
-pub use prompt::*;
-pub use target::*;
+#[proc_macro_derive(IntoPageRequest)]
+pub fn into_page_request_derive(input: TokenStream) -> TokenStream {
+    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
+    let ident = &input.ident;
+
+    let expanded = quote::quote! {
+        impl crate::IntoPageRequest for #ident {
+            fn into_page_request(&self) -> rbatis::plugin::page::PageRequest {
+                let page_size = if self.page_size > 0 { self.page_size as u64 } else { 20 };
+                let page = if self.page_token > 0 { self.page_token as u64 } else { 1 };
+
+                rbatis::plugin::page::PageRequest::new(page, page_size)
+            }
+        }
+    };
+
+    expanded.into()
+}

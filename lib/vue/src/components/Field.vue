@@ -4,13 +4,13 @@
       {{ props.title }}
     </div>
 
-    <template v-if="props.type === 'text'">
-      <input v-if="props.options.lines === 1" v-model="data" type="text" :placeholder="props.options.placeholder">
-      <textarea v-else :rows="props.options.lines" v-model="data" :placeholder="props.options.placeholder" />
+    <template v-if="props.fieldType === FieldType.TEXT">
+      <input v-if="props.options.text.lines === 1" v-model="data" type="text" :placeholder="props.options.text.placeholder">
+      <textarea v-else :rows="props.options.lines" v-model="data" :placeholder="props.options.text.placeholder" />
     </template>
 
-    <div v-else-if="props.type === 'rating'" class="feedback-fusion__field__rating">
-      <div class="feedback-fusion__field__rating-point" v-for="i in props.options.max">
+    <div v-else-if="props.fieldType === FieldType.RATING" class="feedback-fusion__field__rating">
+      <div class="feedback-fusion__field__rating-point" v-for="i in props.options.rating.max">
         <input v-model="data" type="radio" :name="props.id" :id="props.id + i" :value="i">
         <label :for="props.id + i">
           <svg xmlns="http://www.w3.org/2000/svg" :fill="starColor(i)" viewBox="0 0 24 24">
@@ -22,17 +22,16 @@
       </div>
     </div>
 
-    <Checkbox v-else-if="props.type === 'checkbox'" :defaultState="props.options.defaultState"
-      :style="props.options.style" :value="data" :theme="props.theme" @update="event => data = event" />
+    <Checkbox v-else-if="props.fieldType === FieldType.CHECKBOX" v-bind="props.options.checkbox" :value="data"
+      :theme="props.theme" @update="event => data = event" />
 
-    <Range v-else-if="props.type === 'range'" :min="props.options.min" :max="props.options.max" :theme="props.theme"
+    <Range v-else-if="props.fieldType === FieldType.RANGE" v-bind="props.options.range" :theme="props.theme"
       :value="data" @update="event => data = event" />
 
-    <Selection v-else-if="props.type === 'selection'" :values="props.options.values" :combobox="props.options.combobox"
+    <Selection v-else-if="props.fieldType === FieldType.SELECTION" v-bind="props.options.selection"
       :theme="props.theme" :value="data" @update="event => data = event" />
 
-    <input v-else-if="props.type === 'number'" type="number" :placeholder="props.options.placeholder"
-      :min="props.options.min" :max="props.options.max">
+    <input v-else-if="props.fieldType === FieldType.NUMBER" type="number" v-bind="props.options.number">
 
     <div class="feedback-fusion__field-description">
       {{ props.description }}
@@ -48,11 +47,11 @@
 import Checkbox from "./Checkbox.vue";
 import Range from "./Range.vue";
 import Selection from "./Selection.vue";
-import { FeedbackFusionState, FeedbackPromptField } from '@onelitefeathernet/feedback-fusion-core';
+import { FeedbackFusionState, Field, FieldType } from '@onelitefeathernet/feedback-fusion-core';
 import { computed, inject } from 'vue';
 import i18next from "i18next";
 
-interface FieldProps extends FeedbackPromptField {
+interface FieldProps extends Field {
   value: any;
   theme?: string;
 }

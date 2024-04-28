@@ -3,28 +3,17 @@ name = "feedback-fusion"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-default-run = "main"
-
-[[bin]]
-name = "main"
-path = "src/main.rs"
-
-[[bin]]
-name = "docs"
-path = "src/docs.rs"
-
-[[bin]]
-name = "bindings"
-path = "src/bindings.rs"
 
 [dependencies]
+feedback_fusion_common = { path = "./common" }
+feedback_fusion_codegen = { path = "./codegen" }
+
 aliri = "0.6.3"
-aliri_axum = "0.4.0"
 aliri_clock = "0.1.4"
 aliri_oauth2 = "0.10.1"
-aliri_tower = "0.6.0"
+aliri_tower = "=0.5.0"
+aliri_traits = "0.1.1"
 async-trait = "0.1.80"
-axum = "0.7.5"
 chrono = { version = "0.4.38", features = ["serde"] }
 derivative = "2.2.0"
 envy = "0.4.2"
@@ -34,6 +23,7 @@ lazy_static = "1.4.0"
 nanoid = "0.4.0"
 openidconnect = "3.5.0"
 paste = "1.0.14"
+prost-types = "0.12.4"
 rbatis = "4.5.21"
 rbdc-pg = { version = "4.5.6", optional = true }
 rbdc-mysql = { version = "4.5.7", optional = true }
@@ -41,18 +31,21 @@ rbs = "4.5.13"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 thiserror = "1.0.58"
+tonic = "0.11.0"
+tonic-health = "0.11.0"
+tonic-reflection = "0.11.0"
+tonic-web = "0.11.0"
 tokio = { version = "1.37.0", features = ["full"] }
-tower = { version = "0.4.13", features = ["limit", "buffer"] }
-tower-http = { version = "0.5.2", features = ["trace"] }
+tower = "0.4.13"
+tower-http = { version = "=0.4.4", features = ["trace", "validate-request"] }
 tracing = "0.1.39"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-ts-rs = { version = "7.1.1", optional = true }
 typed-builder = "0.18.1"
-utoipa = { version = "4.2.0", features = ["yaml", "chrono"] }
 validator = { version = "0.18", features = ["derive"] }
 version-compare = "0.2.0"
 
 [dev-dependencies]
+paste = "1.0.14"
 rand = "0.8.5"
 reqwest = { version = "0.12.3", features = ["json"] }
 test-log = "0.2.15"
@@ -65,6 +58,3 @@ postgres = ["rbdc-pg"]
 mysql = ["rbdc-mysql"]
 
 test = []
-docs = []
-bindings = ["ts-rs"]
-

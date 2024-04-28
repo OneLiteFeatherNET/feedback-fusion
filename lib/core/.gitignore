@@ -130,3 +130,6 @@ dist
 .pnp.
 
 dist/
+src/google/
+src/feedback-fusion-v1.ts 
+src/feedback-fusion-v1.client.ts

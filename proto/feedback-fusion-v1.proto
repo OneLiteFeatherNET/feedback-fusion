@@ -1,0 +1,313 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// uses oidc authentication
+service FeedbackFusionV1 {
+  rpc CreateTarget(CreateTargetRequest) returns (Target);
+  rpc GetTarget(GetTargetRequest) returns (Target);
+  rpc GetTargets(GetTargetsRequest) returns (TargetPage);
+  rpc UpdateTarget(UpdateTargetRequest) returns (Target);
+  rpc DeleteTarget(DeleteTargetRequest) returns (google.protobuf.Empty);
+
+  rpc CreatePrompt(CreatePromptRequest) returns (Prompt);
+  rpc GetPrompts(GetPromptsRequest) returns (PromptPage);
+  rpc UpdatePrompt(UpdatePromptRequest) returns (Prompt);
+  rpc DeletePrompt(DeletePromptRequest) returns (google.protobuf.Empty);
+
+  rpc CreateField(CreateFieldRequest) returns (Field);
+  rpc GetFields(GetFieldsRequest) returns (FieldPage);
+  rpc UpdateField(UpdateFieldRequest) returns (Field);
+  rpc DeleteField(DeleteFieldRequest) returns (google.protobuf.Empty);
+
+  rpc GetResponses(GetResponsesRequest) returns (ResponsePage);
+}
+
+// does not use oidc authentication
+service PublicFeedbackFusionV1 {
+  rpc GetActiveFields(GetFieldsRequest) returns (FieldPage);
+  rpc GetPrompt(GetPromptRequest) returns (Prompt);
+  rpc CreateResponses(CreateResponsesRequest) returns (PromptResponse);
+}
+
+//
+// Target
+//
+
+message Target {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message GetTargetsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  string query = 3;
+}
+
+message TargetPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated Target targets = 5;
+}
+
+message CreateTargetRequest {
+  string name = 1;
+  optional string description = 2;
+}
+
+message GetTargetRequest { string id = 1; }
+
+message UpdateTargetRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
+}
+
+message DeleteTargetRequest { string id = 1; }
+
+//
+// Prompt
+//
+
+message CreatePromptRequest {
+  string target = 1;
+  string title = 2;
+  string description = 3;
+  bool active = 4;
+}
+
+message Prompt {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string target = 4;
+  bool active = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message GetPromptRequest { string id = 1; }
+
+message GetPromptsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  string target = 3;
+}
+
+message PromptPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated Prompt prompts = 5;
+}
+
+message UpdatePromptRequest {
+  string id = 1;
+  optional bool active = 2;
+  optional string description = 3;
+  optional string title = 4;
+}
+
+message DeletePromptRequest { string id = 2; }
+
+//
+// Field
+//
+
+enum FieldType {
+  TEXT = 0;
+  RATING = 1;
+  CHECKBOX = 2;
+  SELECTION = 3;
+  RANGE = 4;
+  NUMBER = 5;
+}
+
+message TextOptions {
+  string placeholder = 1;
+  int32 lines = 2;
+}
+
+message RatingOptions { int32 max = 1; }
+
+enum CheckboxStyle {
+  NORMAL = 0;
+  SWITCH = 1;
+}
+
+message CheckboxOptions {
+  CheckboxStyle style = 1;
+  bool default_state = 2;
+}
+
+message SelectionOptions {
+  repeated string values = 1;
+  bool multiple = 2;
+  bool combobox = 3;
+}
+
+message RangeOptions {
+  int32 min = 1;
+  int32 max = 2;
+}
+
+message NumberOptions {
+  int32 min = 1;
+  int32 max = 2;
+  string placeholder = 3;
+}
+
+message CreateFieldRequest {
+  string prompt = 1;
+  string title = 2;
+  optional string description = 3;
+  FieldType field_type = 4;
+
+  oneof options {
+    TextOptions text = 5;
+    RatingOptions rating = 6;
+    CheckboxOptions checkbox = 7;
+    SelectionOptions selection = 8;
+    RangeOptions range = 9;
+    NumberOptions number = 10;
+  }
+}
+
+message Field {
+  string id = 1;
+  string prompt = 2;
+  string title = 3;
+  optional string description = 4;
+  FieldType field_type = 13;
+
+  oneof options {
+    TextOptions text = 5;
+    RatingOptions rating = 6;
+    CheckboxOptions checkbox = 7;
+    SelectionOptions selection = 8;
+    RangeOptions range = 9;
+    NumberOptions number = 10;
+  }
+
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message GetFieldsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  string prompt = 3;
+}
+
+message FieldPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated Field fields = 5;
+}
+
+message UpdateFieldRequest {
+  oneof options {
+    TextOptions text = 1;
+    RatingOptions rating = 2;
+    CheckboxOptions checkbox = 3;
+    SelectionOptions selection = 4;
+    RangeOptions range = 5;
+    NumberOptions number = 6;
+  }
+
+  optional string title = 8;
+  optional string description = 9;
+  string id = 10;
+}
+
+message DeleteFieldRequest { string id = 1; }
+
+//
+// Responses
+//
+
+message TextResponse { string text = 1; }
+
+message RatingResponse { int32 rating = 1; }
+
+message CheckboxResponse { bool checked = 1; }
+
+message SelectionResponse { repeated string values = 1; }
+
+message RangeResponse {
+  int32 start = 1;
+  int32 end = 2;
+}
+
+message NumberResponse { int32 number = 1; }
+
+message ResponseData {
+  oneof data {
+    TextResponse text = 1;
+    RatingResponse rating = 2;
+    CheckboxResponse checkbox = 3;
+    SelectionResponse selection = 4;
+    RangeResponse range = 5;
+    NumberResponse number = 6;
+  }
+}
+
+message CreateResponsesRequest { 
+  map<string, ResponseData> data = 1;
+  string prompt = 2;
+}
+
+message GetResponsesRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  string prompt = 3;
+}
+
+message FieldResponse {
+  string id = 1;
+  string response = 2;
+  string field = 3;
+
+  oneof data {
+    TextResponse text = 4;
+    RatingResponse rating = 5;
+    CheckboxResponse checkbox = 6;
+    SelectionResponse selection = 7;
+    RangeResponse range = 8;
+    NumberResponse number = 9;
+  }
+}
+
+message FieldResponseList {
+  repeated FieldResponse data = 1;
+}
+
+message ResponsePage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  map<string, FieldResponseList> data = 5;
+}
+
+message PromptResponse {
+  string id = 1;
+  string prompt = 2;
+  google.protobuf.Timestamp created_at = 3;
+}

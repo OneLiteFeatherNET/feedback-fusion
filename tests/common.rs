@@ -25,10 +25,6 @@ use openidconnect::{
     reqwest::async_http_client,
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
-use reqwest::{
-    header::{HeaderMap, HeaderValue, AUTHORIZATION},
-    Client,
-};
 use std::{
     fs::File,
     path::Path,
@@ -36,7 +32,7 @@ use std::{
 };
 use tracing::{debug, info};
 
-pub const HTTP_ENDPOINT: &'static str = "http://localhost:8000";
+pub const GRPC_ENDPOINT: &str = "http://[::1]:8000";
 
 pub struct BackendServer(Child);
 
@@ -51,7 +47,7 @@ pub fn run_server() -> BackendServer {
     let mut path = std::env::current_exe().unwrap();
     assert!(path.pop());
     assert!(path.pop());
-    path = path.join("main");
+    path = path.join("feedback-fusion");
 
     // prepare the command
     let mut command = Command::new(path);
@@ -90,6 +86,7 @@ pub fn run_server() -> BackendServer {
     BackendServer(child)
 }
 
+#[allow(unused)]
 pub async fn authenticate() -> String {
     let issuer = IssuerUrl::new(env!("OIDC_DISCOVERY_URL").to_owned()).unwrap();
     let metadata = CoreProviderMetadata::discover_async(issuer, async_http_client)
@@ -103,7 +100,7 @@ pub async fn authenticate() -> String {
 
     let token_response = client
         .exchange_client_credentials()
-        .add_scope(Scope::new(env!("OIDC_SCOPE").to_owned()))
+        .add_scope(Scope::new("api:feedback-fusion".to_owned()))
         .request_async(async_http_client)
         .await
         .unwrap();
@@ -111,13 +108,25 @@ pub async fn authenticate() -> String {
     token_response.access_token().secret().clone()
 }
 
-pub async fn client() -> Client {
-    let access_token = authenticate().await;
+#[macro_export]
+macro_rules! connect {
+    () => {{
+        let channel = tonic::transport::Channel::from_static(common::GRPC_ENDPOINT).connect().await.unwrap();
+        let token: tonic::metadata::MetadataValue<_> = format!("Bearer {}", common::authenticate().await).parse().unwrap();
 
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        AUTHORIZATION,
-        HeaderValue::from_str(format!("Bearer {}", access_token).as_str()).unwrap(),
-    );
-    Client::builder().default_headers(headers).build().unwrap()
+        let client =
+            feedback_fusion_common::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(channel, move |mut request: tonic::Request<()>| {
+                request
+                    .metadata_mut()
+                    .insert("authorization", token.clone());
+
+                Ok(request)
+            });
+
+        let public_client = feedback_fusion_common::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect(common::GRPC_ENDPOINT)
+            .await
+            .unwrap();
+
+        (client, public_client)
+    }};
 }

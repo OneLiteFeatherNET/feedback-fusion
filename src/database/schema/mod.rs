@@ -21,5 +21,26 @@
  *
  */
 
+use prost_types::Timestamp;
+use rbatis::rbdc::DateTime;
+
 pub mod feedback;
 
+pub fn date_time_to_timestamp(date_time: DateTime) -> Timestamp {
+    Timestamp::date_time(
+        date_time.year().into(),
+        date_time.mon(),
+        date_time.day(),
+        date_time.hour(),
+        date_time.minute(),
+        date_time.sec(),
+    )
+    .unwrap()
+}
+
+#[macro_export]
+macro_rules! to_date_time {
+    ($ident:expr) => {{
+        DateTime::from_timestamp($ident.unwrap().seconds)
+    }};
+}

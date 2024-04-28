@@ -20,16 +20,17 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
 use rbatis::rbdc::DateTime;
-use crate::prelude::*;
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, ToSchema, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "bindings", derive(TS))]
-pub struct FeedbackTarget {
+pub struct Target {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
     #[validate(length(max = 255))]
@@ -38,14 +39,36 @@ pub struct FeedbackTarget {
     description: Option<String>,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default)]
-    #[cfg_attr(feature = "bindings", ts(type = "Date"))]
-    created_at: DateTime
+    created_at: DateTime,
 }
 
-crud!(FeedbackTarget {});
-impl_select!(FeedbackTarget {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
-impl_select_page_wrapper!(FeedbackTarget {select_page(query: &str) => "`WHERE name ILIKE COALESCE('%' || NULLIF(#{query}, '') || '%', '%%')`"});
+impl From<Target> for feedback_fusion_common::proto::Target {
+    fn from(val: Target) -> Self {
+        feedback_fusion_common::proto::Target {
+            id: val.id,
+            name: val.name,
+            description: val.description,
+            updated_at: Some(date_time_to_timestamp(val.updated_at)),
+            created_at: Some(date_time_to_timestamp(val.created_at)),
+        }
+    }
+}
+
+impl From<feedback_fusion_common::proto::Target> for Target {
+    fn from(val: feedback_fusion_common::proto::Target) -> Self {
+        Target {
+            id: val.id,
+            name: val.name,
+            description: val.description,
+            updated_at: to_date_time!(val.updated_at),
+            created_at: to_date_time!(val.created_at),
+        }
+    }
+}
+
+crud!(Target {});
+impl_select!(Target {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select_page_wrapper!(Target {select_page(query: &str) => "`WHERE name ILIKE COALESCE('%' || NULLIF(#{query}, '') || '%', '%%')`"});

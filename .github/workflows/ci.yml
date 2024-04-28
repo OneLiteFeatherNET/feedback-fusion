@@ -19,6 +19,11 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
@@ -46,6 +51,11 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
@@ -59,7 +69,6 @@ jobs:
         run: cargo make clippy 
 
   test:
-    needs: [ clippy, check ]
     name: tests
     runs-on: ubuntu-latest
     steps:
@@ -73,6 +82,11 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
@@ -84,35 +98,3 @@ jobs:
 
       - name: Tests
         run: cargo make test
-
-  docs:
-    name: docs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-     
-      - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-
-      - name: Checkout Sources
-        uses: actions/checkout@v4
-
-      - name: Setup cache
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
-      - name: Run docs lint
-        uses: actions-rs/cargo@v1
-        with:
-          command: make
-          args: docs_lint
