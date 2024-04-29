@@ -70,5 +70,5 @@ impl From<feedback_fusion_common::proto::Target> for Target {
 }
 
 crud!(Target {});
-impl_select!(Target {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select!(Target {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
 impl_select_page_wrapper!(Target {select_page(query: &str) => "``"});

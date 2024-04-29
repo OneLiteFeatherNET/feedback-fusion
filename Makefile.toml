@@ -119,6 +119,29 @@ run_task = { name = [
 script = "docker rm -f mysql;docker rm -f oidc-server-mock"
 
 # Mysql
+[tasks.mariadb_database]
+script = '''
+docker run --name mariadb \
+  -e MYSQL_ROOT_PASSWORD=password \
+  -e MYSQL_PASSWORD=password \
+  -e MYSQL_USERNAME=username \
+  -e MYSQL_DATABASE=database \
+  -p 5150:3306 -d mariadb \
+  --default-authentication-plugin=mysql_native_password
+sleep 10
+'''
+
+[tasks.mariadb]
+run_task = { name = [
+  "oidc-server-mock",
+  "mariadb_database",
+  "mysql_tests",
+], fork = true, cleanup_task = "mariadb_cleanup" }
+
+[tasks.mariadb_cleanup]
+script = "docker rm -f mariadb;docker rm -f oidc-server-mock"
+
+# Mysql
 [tasks.mssql_database]
 script = '''
 docker run --name mssql \

@@ -80,7 +80,7 @@ impl From<feedback_fusion_common::proto::Prompt> for Prompt {
 }
 
 crud!(Prompt {});
-impl_select!(Prompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select!(Prompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
 impl_select_page_wrapper!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
@@ -207,5 +207,5 @@ impl TryInto<Field> for feedback_fusion_common::proto::Field {
 }
 
 crud!(Field {});
-impl_select!(Field {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
+impl_select!(Field {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
 impl_select_page_wrapper!(Field {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});

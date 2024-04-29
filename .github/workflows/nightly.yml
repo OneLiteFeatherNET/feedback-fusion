@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: [postgres, mysql, mssql]
+        database: [postgres, mysql, mariadb, mssql]
     steps:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
