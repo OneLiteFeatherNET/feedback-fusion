@@ -95,26 +95,15 @@ pub async fn create_responses(
     Ok(Response::new(response.into()))
 }
 
-pub type GetFeedbackPromptResponsesResponse = HashMap<String, Vec<FieldResponse>>;
-
-#[derive(Deserialize, Debug, Clone)]
-struct DatabaseResult {
-    result: JsonV<GetFeedbackPromptResponsesResponse>,
-}
-
 #[py_sql(
-    "`SELECT jsonb_object_agg(response, rows) AS RESULT FROM (`
-        `SELECT response, `
-        `jsonb_agg(jsonb_build_object('id', id, 'response', response, 'field', field, 'data', data)) AS ROWS `
-            `FROM field_response `
-                ` WHERE response IN `
-                    ${responses.sql()} 
-    ` GROUP BY response) subquery`"
+    "`SELECT * FROM field_response`
+        ` WHERE response IN `
+            ${responses.sql()}"
 )]
-async fn group_field_responses(
+async fn field_responses(
     rb: &dyn rbatis::executor::Executor,
     responses: &[String],
-) -> rbatis::Result<DatabaseResult> {
+) -> rbatis::Result<Vec<FieldResponse>> {
     impled!()
 }
 
@@ -138,7 +127,7 @@ pub async fn get_responses(
 
     let records = if responses.total > 0 {
         database_request!(
-            group_field_responses(
+            field_responses(
                 connection,
                 responses
                     .records
@@ -148,9 +137,9 @@ pub async fn get_responses(
                     .as_slice(),
             )
             .await?
-            .result
-            .0
         )
+        .into_iter()
+        .group_by(|value| value.response().clone())
         .into_iter()
         .map(|(key, value)| {
             let value = FieldResponseList {

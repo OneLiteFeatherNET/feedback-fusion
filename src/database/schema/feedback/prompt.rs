@@ -41,12 +41,13 @@ pub struct Prompt {
     description: String,
     target: String,
     #[builder(default = true)]
+    #[serde(deserialize_with = "serde_this_or_that::as_bool")]
     active: bool,
-    #[derivative(PartialEq = "ignore")]
-    #[builder(default)]
+    #[derivative(PartialEq = "ignore")] 
+    #[builder(default_code = r#"DateTime::utc()"#)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
-    #[builder(default)]
+    #[builder(default_code = r#"DateTime::utc()"#)]
     created_at: DateTime,
 }
 
@@ -165,11 +166,11 @@ pub struct Field {
     prompt: String,
     r#type: FieldType,
     options: JsonV<FieldOptions>,
-    #[builder(default)]
+    #[builder(default_code = r#"DateTime::utc()"#)]
     #[derivative(PartialEq = "ignore")]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
-    #[builder(default)]
+    #[builder(default_code = r#"DateTime::utc()"#)]
     created_at: DateTime,
 }
 

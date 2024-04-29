@@ -71,6 +71,10 @@ jobs:
   test:
     name: tests
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [postgres, mysql, mssql]
     steps:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
@@ -97,4 +101,4 @@ jobs:
           args: cargo-make
 
       - name: Tests
-        run: cargo make test
+        run: cargo make ${{ matrix.database }}

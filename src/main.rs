@@ -127,6 +127,7 @@ pub mod prelude {
     pub use derivative::Derivative;
     pub use feedback_fusion_common::IntoPageRequest;
     pub use getset::{Getters, MutGetters, Setters};
+    pub use itertools::Itertools;
     pub use lazy_static::lazy_static;
     pub use paste::paste;
     pub use rbatis::{

@@ -319,7 +319,7 @@ pub struct PromptResponse {
     id: String,
     prompt: String,
     #[derivative(PartialEq = "ignore")]
-    #[builder(default)]
+    #[builder(default_code = r#"DateTime::utc()"#)]
     created_at: DateTime,
 }
 

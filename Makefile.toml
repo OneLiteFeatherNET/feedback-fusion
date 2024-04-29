@@ -8,7 +8,16 @@ skip_core_tasks = true
 [tasks.core_generate]
 cwd = "./lib/core/src/"
 command = "npx"
-args = ["protoc", "--ts_out", ".", "--ts_opt", "server_none", "--proto_path", "../../../proto", "../../../proto/feedback-fusion-v1.proto"]
+args = [
+  "protoc",
+  "--ts_out",
+  ".",
+  "--ts_opt",
+  "server_none",
+  "--proto_path",
+  "../../../proto",
+  "../../../proto/feedback-fusion-v1.proto",
+]
 
 [tasks.core]
 dependencies = ["core_generate"]
@@ -71,7 +80,79 @@ run_task = { name = [
 [tasks.postgres_cleanup]
 script = "docker rm -f postgres;docker rm -f oidc-server-mock"
 
+
+# Mysql
+[tasks.mysql_database]
+script = '''
+docker run --name mysql \
+  -e MYSQL_ROOT_PASSWORD=password \
+  -e MYSQL_PASSWORD=password \
+  -e MYSQL_USERNAME=username \
+  -e MYSQL_DATABASE=database \
+  -p 5150:3306 -d mysql \
+  --default-authentication-plugin=mysql_native_password
+sleep 30
+'''
+
+[tasks.mysql_tests]
+env = { DATABASE = "MYSQL", MYSQL_USERNAME = "root", MYSQL_PASSWORD = "password", MYSQL_ENDPOINT = "localhost:5150", MYSQL_DATABASE = "database", "OIDC_DISCOVERY_URL" = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "INFO" }
+command = "cargo"
+args = [
+  "test",
+  "--no-fail-fast",
+  "--no-default-features",
+  "--features",
+  "mysql,test",
+  "--",
+  "--nocapture",
+  "--test-threads=1",
+]
+
+[tasks.mysql]
+run_task = { name = [
+  "oidc-server-mock",
+  "mysql_database",
+  "mysql_tests",
+], fork = true, cleanup_task = "mysql_cleanup" }
+
+[tasks.mysql_cleanup]
+script = "docker rm -f mysql;docker rm -f oidc-server-mock"
+
+# Mysql
+[tasks.mssql_database]
+script = '''
+docker run --name mssql \
+  -e ACCEPT_EULA=Y \
+  -e MSSQL_SA_PASSWORD=Password1 \
+  -p 5150:1433 -d mcr.microsoft.com/mssql/server:2022-latest
+sleep 10
+'''
+
+[tasks.mssql_tests]
+env = { DATABASE = "MSSQL", MSSQL_USERNAME = "sa", MSSQL_PASSWORD = "Password1", MSSQL_ENDPOINT = "localhost:5150", MSSQL_DATABASE = "master", "OIDC_DISCOVERY_URL" = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "INFO" }
+command = "cargo"
+args = [
+  "test",
+  "--no-fail-fast",
+  "--no-default-features",
+  "--features",
+  "mssql,test",
+  "--",
+  "--nocapture",
+  "--test-threads=1",
+]
+
+[tasks.mssql]
+run_task = { name = [
+  "oidc-server-mock",
+  "mssql_database",
+  "mssql_tests",
+], fork = true, cleanup_task = "mssql_cleanup" }
+
+[tasks.mssql_cleanup]
+script = "docker rm -f mssql;docker rm -f oidc-server-mock"
+
 # run all tests
 
 [tasks.test]
-run_task = { name = ["postgres"] }
+run_task = { name = ["postgres", "mysql", "mssql"], fork = true }

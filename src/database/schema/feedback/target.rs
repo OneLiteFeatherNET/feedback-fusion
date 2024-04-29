@@ -38,10 +38,10 @@ pub struct Target {
     #[builder(default)]
     description: Option<String>,
     #[derivative(PartialEq = "ignore")]
-    #[builder(default)]
+    #[builder(default_code = r#"DateTime::utc()"#)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
-    #[builder(default)]
+    #[builder(default_code = r#"DateTime::utc()"#)]
     created_at: DateTime,
 }
 
@@ -71,4 +71,4 @@ impl From<feedback_fusion_common::proto::Target> for Target {
 
 crud!(Target {});
 impl_select!(Target {select_by_id(id: &str) -> Option => "`WHERE id = #{id} LIMIT 1`"});
-impl_select_page_wrapper!(Target {select_page(query: &str) => "`WHERE name ILIKE COALESCE('%' || NULLIF(#{query}, '') || '%', '%%')`"});
+impl_select_page_wrapper!(Target {select_page(query: &str) => "``"});
