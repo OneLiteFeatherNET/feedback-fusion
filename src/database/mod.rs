@@ -46,6 +46,31 @@ impl BaseConfiguration {
     }
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub struct MSSQLConfiguration {
+    pub endpoint: String,
+    pub username: String,
+    pub password: String,
+    pub database: String,
+    #[serde(default = "bool_true")]
+    pub encrypt: bool,
+    #[serde(default = "bool_true")]
+    pub trust_server_certificate: bool,
+}
+
+fn bool_true() -> bool {
+    true
+}
+
+impl MSSQLConfiguration {
+    pub fn to_url(&self, _scheme: &str) -> String {
+        format!(
+            "jdbc:sqlserver://{};username={};password={};database={};encrypt=false;TrustServerCertificate=true",
+            self.endpoint, self.username, self.password, self.database
+        )
+    }
+}
+
 macro_rules! database_configuration {
     ($(($ident:ident, $config:path, $driver:path, $scheme:literal) $(,)?)*) => {
         paste! {
@@ -128,6 +153,12 @@ database_configuration!(
         BaseConfiguration,
         rbdc_mysql::driver::MysqlDriver,
         "mysql"
+    ),
+    (
+        MSSQL,
+        MSSQLConfiguration,
+        rbdc_mssql::driver::MssqlDriver,
+        "mssql"
     )
 );
 
@@ -166,8 +197,10 @@ macro_rules! impl_select_page_wrapper {
                   match $crate::config::DATABASE_CONFIG.deref() {
                      #[cfg(feature = "postgres")]
                      $crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {} OFFSET {} ", limit, offset).as_str()).await,
+                     #[cfg(feature= "mssql")]
+                     $crate::database::DatabaseConfiguration::MSSQL(_) => Self::$ident(executor, page_request, $($arg,)* format!(" ORDER BY id OFFSET {} ROWS FETCH NEXT {} ROWS ONLY", offset, limit).as_str()).await,
                     #[allow(unreachable_patterns)]
-                    _ => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {},{} ", limit, offset).as_str()).await
+                    _ => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {},{} ", offset, limit).as_str()).await
                  }
                }
             }

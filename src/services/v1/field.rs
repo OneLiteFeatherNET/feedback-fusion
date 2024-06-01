@@ -22,7 +22,7 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldType, Prompt},
+    database::schema::feedback::{Field, FieldType, Prompt, FieldOptions},
     prelude::*,
 };
 use feedback_fusion_common::proto::{
@@ -43,7 +43,7 @@ pub async fn create_field(
         .r#type(Into::<FieldType>::into(data.field_type()))
         .title(data.title)
         .description(data.description)
-        .options(JsonV(data.options.unwrap().try_into()?))
+        .options(TryInto::<FieldOptions>::try_into(data.options.unwrap())?)
         .prompt(data.prompt)
         .build();
     database_request!(Field::insert(connection, &field).await?);
@@ -136,7 +136,7 @@ pub async fn update_field(
         field.set_description(Some(description));
     };
     if let Some(options) = data.options {
-        field.set_options(JsonV(options.try_into()?));
+        field.set_options(options.try_into()?);
     };
 
     database_request!(Field::update_by_column(connection, &field, "id").await?);

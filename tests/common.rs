@@ -81,7 +81,7 @@ pub fn run_server() -> BackendServer {
     command.env("RUST_LOG", "DEBUG");
 
     let child = command.spawn().unwrap();
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    std::thread::sleep(std::time::Duration::from_secs(2));
 
     BackendServer(child)
 }

@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
+use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time, save_as_json};
 use rbatis::rbdc::DateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -319,7 +319,7 @@ pub struct PromptResponse {
     id: String,
     prompt: String,
     #[derivative(PartialEq = "ignore")]
-    #[builder(default)]
+    #[builder(default_code = r#"DateTime::utc()"#)]
     created_at: DateTime,
 }
 
@@ -346,6 +346,8 @@ impl From<feedback_fusion_common::proto::PromptResponse> for PromptResponse {
 crud!(PromptResponse {});
 impl_select_page_wrapper!(PromptResponse {select_page_by_prompt(prompt: &str) => "WHERE prompt = #{prompt}"});
 
+save_as_json!(FieldData, data);
+
 #[derive(Deserialize, Serialize, Clone, PartialEq, Debug, Getters, MutGetters, TypedBuilder)]
 #[get = "pub"]
 #[get_mut = "pub"]
@@ -355,7 +357,11 @@ pub struct FieldResponse {
     id: String,
     response: String,
     field: String,
-    data: JsonV<FieldData>,
+    #[serde(
+        serialize_with = "serialize_data",
+        deserialize_with = "deserialize_data"
+    )]
+    data: FieldData,
 }
 
 impl From<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
@@ -364,7 +370,7 @@ impl From<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
             id: value.id,
             response: value.response,
             field: value.field,
-            data: Some(value.data.0.into()),
+            data: Some(value.data.into()),
         }
     }
 }
@@ -377,7 +383,7 @@ impl TryInto<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
             id: self.id,
             response: self.response,
             field: self.field,
-            data: JsonV(self.data.unwrap().try_into()?),
+            data: self.data.unwrap().try_into()?,
         })
     }
 }

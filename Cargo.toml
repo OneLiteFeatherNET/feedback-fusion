@@ -18,6 +18,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 derivative = "2.2.0"
 envy = "0.4.2"
 getset = "0.1.2"
+itertools = "0.12.1"
 kanal = "0.1.0-pre8"
 lazy_static = "1.4.0"
 nanoid = "0.4.0"
@@ -27,9 +28,11 @@ prost-types = "0.12.4"
 rbatis = "4.5.21"
 rbdc-pg = { version = "4.5.6", optional = true }
 rbdc-mysql = { version = "4.5.7", optional = true }
+rbdc-mssql = { version = "4.5.4", optional = true }
 rbs = "4.5.13"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
+serde-this-or-that = { git = "https://github.com/Randoooom/serde-this-or-that.git", branch = "feature/bool-signed" }
 thiserror = "1.0.58"
 tonic = "0.11.0"
 tonic-health = "0.11.0"
@@ -53,8 +56,9 @@ test-log = "0.2.15"
 [features]
 default = ["all-databases"]
 
-all-databases = ["postgres", "mysql"]
+all-databases = ["postgres", "mysql", "mssql"]
 postgres = ["rbdc-pg"]
 mysql = ["rbdc-mysql"]
+mssql = ["rbdc-mssql"]
 
 test = []
