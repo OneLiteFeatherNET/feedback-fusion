@@ -74,7 +74,7 @@ pub async fn create_responses(
                 Ok(FieldResponse::builder()
                     .response(response.id().as_str())
                     .field(field.id())
-                    .data(JsonV(field_data))
+                    .data(field_data)
                     .build())
             } else {
                 Err(FeedbackFusionError::BadRequest(format!(

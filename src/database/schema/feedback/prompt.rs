@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
+use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time, save_as_json};
 use rbatis::rbdc::DateTime;
 
 use super::FieldOptions;
@@ -149,6 +149,8 @@ impl From<feedback_fusion_common::proto::FieldType> for FieldType {
     }
 }
 
+save_as_json!(FieldOptions, options);
+
 #[derive(
     Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
 )]
@@ -165,7 +167,8 @@ pub struct Field {
     description: Option<String>,
     prompt: String,
     r#type: FieldType,
-    options: JsonV<FieldOptions>,
+    #[serde(serialize_with = "serialize_options", deserialize_with = "deserialize_options")]
+    options: FieldOptions,
     #[builder(default_code = r#"DateTime::utc()"#)]
     #[derivative(PartialEq = "ignore")]
     updated_at: DateTime,
@@ -182,7 +185,7 @@ impl From<Field> for feedback_fusion_common::proto::Field {
             description: val.description,
             prompt: val.prompt,
             field_type: val.r#type.into(),
-            options: Some(val.options.0.into()),
+            options: Some(val.options.into()),
             updated_at: Some(date_time_to_timestamp(val.updated_at)),
             created_at: Some(date_time_to_timestamp(val.created_at)),
         }
@@ -199,7 +202,7 @@ impl TryInto<Field> for feedback_fusion_common::proto::Field {
             description: self.description,
             prompt: self.prompt,
             r#type: self.field_type.try_into()?,
-            options: JsonV(self.options.unwrap().try_into()?),
+            options: self.options.unwrap().try_into()?,
             updated_at: to_date_time!(self.updated_at),
             created_at: to_date_time!(self.created_at),
         })

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS field (
   description VARCHAR(255),
   prompt      VARCHAR(32) REFERENCES prompt(id) NOT NULL,
   type        VARCHAR(32) NOT NULL,
-  options     JSON NOT NULL,
+  options     TEXT NOT NULL,
   updated_at  TIMESTAMP,
   created_at  TIMESTAMP
 );
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS field_response (
   id          VARCHAR(32) UNIQUE NOT NULL,
   response    VARCHAR(32) REFERENCES prompt_response(id) NOT NULL,
   field       VARCHAR(32) REFERENCES field(id) NOT NULL,
-  data        JSON NOT NULL
+  data        TEXT NOT NULL
 );
 
 
