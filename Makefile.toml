@@ -87,10 +87,9 @@ script = '''
 docker run --name mysql \
   -e MYSQL_ROOT_PASSWORD=password \
   -e MYSQL_PASSWORD=password \
-  -e MYSQL_USERNAME=username \
+  -e MYSQL_USER=username \
   -e MYSQL_DATABASE=database \
-  -p 5150:3306 -d mysql \
-  --default-authentication-plugin=mysql_native_password
+  -p 5150:3306 -d mysql
 sleep 30
 '''
 
@@ -124,10 +123,9 @@ script = '''
 docker run --name mariadb \
   -e MYSQL_ROOT_PASSWORD=password \
   -e MYSQL_PASSWORD=password \
-  -e MYSQL_USERNAME=username \
+  -e MYSQL_USER=username \
   -e MYSQL_DATABASE=database \
-  -p 5150:3306 -d mariadb \
-  --default-authentication-plugin=mysql_native_password
+  -p 5150:3306 -d mariadb
 sleep 10
 '''
 
