@@ -78,29 +78,68 @@ macro_rules! handler {
     }};
     ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*, $target:block) => {{
         paste! {
-            let target = async $target.await;    
+            let policy = policy![
+                scope!["api:feedback-fusion"]
+                $(,
+                    scope![$scope]
+                )*
+            ];
 
-            match target {
-                Ok(target) => {
-                    if let Some(target) = target {
-                        let policy = policy![
-                            scope!["api:feedback-fusion"]
-                            $(,
-                                scope![$scope],
-                                aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string(format!("{}:target:{}", $scope, target)).unwrap())
-                            )*
-                        ];
+             match policy.evaluate(
+                $request
+                    .extensions()
+                    .get::<OIDCClaims>()
+                    .ok_or_else(|| Status::permission_denied("missing claims"))?
+                    .scope(),
+            ) {
+                Ok(_) => {
+                    handler!($handler, $self, $request)
+                },
+                Err(_) => {
+                    let target = async $target.await;
 
-                        handler!($handler, $self, $request, policy, $($scope,)*)
-                    } else {
-                        Err(Status::invalid_argument("Resource target could not be found"))
+                    match target {
+                        Ok(target) => {
+                            if let Some(target ) = target {
+                                let policy = policy![
+                                    $(
+                                        aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string(format!("{}:target:{}", $scope, target)).unwrap()),
+                                     )*
+                                ];
+
+                                 policy
+                                    .evaluate(
+                                        $request
+                                            .extensions()
+                                            .get::<OIDCClaims>()
+                                            .ok_or_else(|| Status::permission_denied("missing claims"))?
+                                            .scope(),
+                                    )
+                                    .map_err(|_| {
+                                        let message = format!(
+                                            "insufficient scopes, requires one of: [\"{}\"]",
+                                            (&policy)
+                                                .into_iter()
+                                                .map(|s| s.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(" "))
+                                                .collect::<Vec<_>>()
+                                                .join("\" or \"")
+                                        );
+                                        Status::permission_denied(message)
+                                    })?;
+
+                                handler!($handler, $self, $request)
+                             } else {
+                                Err(Status::invalid_argument("Resource target could not be found"))
+                            }
+                        },
+                        Err(error) => {
+                            error!("Error occurred during target fetch: {}", error);
+                            Err(error.into())
+                        }
                     }
+
                 }
-                Err(error) =>  {
-                    error!("Error occurred during target fetch: {}", error);
-                    Err(error.into())
-                }
-            }
+            } 
         }
     }};
     ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*) => {{
@@ -111,7 +150,27 @@ macro_rules! handler {
             )*
         ];
 
-        handler!($handler, $self, $request, policy, $($scope,)*)
+         policy
+            .evaluate(
+                $request
+                    .extensions()
+                    .get::<OIDCClaims>()
+                    .ok_or_else(|| Status::permission_denied("missing claims"))?
+                    .scope(),
+            )
+            .map_err(|_| {
+                let message = format!(
+                    "insufficient scopes, requires one of: [\"{}\"]",
+                    (&policy)
+                        .into_iter()
+                        .map(|s| s.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(" "))
+                        .collect::<Vec<_>>()
+                        .join("\" or \"")
+                );
+                Status::permission_denied(message)
+            })?;
+
+        handler!($handler, $self, $request)
     }};
     ($handler:path, $self:ident, $request:ident) => {{
         match $handler($self, $request).await {
