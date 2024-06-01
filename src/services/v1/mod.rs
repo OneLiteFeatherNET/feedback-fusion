@@ -78,7 +78,9 @@ macro_rules! handler {
     }};
     ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*, $target:block) => {{
         paste! {
-            match async $target.await {
+            let target = async $target.await;    
+
+            match target {
                 Ok(target) => {
                     if let Some(target) = target {
                         let policy = policy![
@@ -240,7 +242,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                 Ok::<_, FeedbackFusionError>(database_request!(
                     Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
                         .await?
-                        .and_then(|prompt| Some(prompt.target().clone())),
+                        .map(|prompt| prompt.target().clone()),
                     "Authorization"
                 ))
             }
@@ -262,7 +264,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                 Ok::<_, FeedbackFusionError>(database_request!(
                     Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
                         .await?
-                        .and_then(|prompt| Some(prompt.target().clone())),
+                        .map(|prompt| prompt.target().clone()),
                     "Authorization"
                 ))
             }
@@ -284,7 +286,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                 Ok::<_, FeedbackFusionError>(database_request!(
                     Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
                         .await?
-                        .and_then(|prompt| Some(prompt.target().clone())),
+                        .map(|prompt| prompt.target().clone()),
                     "Authorization"
                 ))
             }
@@ -306,7 +308,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                 Ok::<_, FeedbackFusionError>(database_request!(
                     Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
                         .await?
-                        .and_then(|prompt| Some(prompt.target().clone())),
+                        .map(|prompt| prompt.target().clone()),
                     "Authorization"
                 ))
             }
@@ -334,9 +336,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                         .await?,
                     "Authorization"
                 );
-                Ok::<_, FeedbackFusionError>(
-                    prompt.and_then(|prompt| Some(prompt.target().clone())),
-                )
+                Ok::<_, FeedbackFusionError>(prompt.map(|prompt| prompt.target().clone()))
             }
         )
     }
@@ -362,9 +362,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                         .await?,
                     "Authorization"
                 );
-                Ok::<_, FeedbackFusionError>(
-                    prompt.and_then(|prompt| Some(prompt.target().clone())),
-                )
+                Ok::<_, FeedbackFusionError>(prompt.map(|prompt| prompt.target().clone()))
             }
         )
     }
@@ -384,7 +382,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                 Ok::<_, FeedbackFusionError>(database_request!(
                     Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
                         .await?
-                        .and_then(|prompt| Some(prompt.target().clone())),
+                        .map(|prompt| prompt.target().clone()),
                     "Authorization"
                 ))
             }
