@@ -21,6 +21,8 @@
  */
 #![allow(clippy::too_many_arguments)]
 
+use std::{path::PathBuf, str::FromStr};
+
 use crate::{
     prelude::*,
     services::v1::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context},
@@ -30,6 +32,8 @@ use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1Server,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1Server,
 };
+use futures::stream::StreamExt;
+use notify::{RecommendedWatcher, Watcher};
 use tonic::transport::Server;
 use tonic_web::GrpcWebLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -53,11 +57,61 @@ async fn main() {
     lazy_static::initialize(&CONFIG);
     lazy_static::initialize(&DATABASE_CONFIG);
 
-    let (sender, receiver) = kanal::oneshot_async::<()>();
-
     // connect to the database
     let connection = DATABASE_CONFIG.connect().await.unwrap();
     let connection = DatabaseConnection::from(connection);
+
+    // start config file watcher
+    if let Some(config_path) = CONFIG.config_path().as_ref() {
+        let connection = connection.clone();
+        info!("CONFIG_PATH present, starting watcher");
+        // initial load
+        match config::sync_config(&connection).await {
+            Ok(_) => info!("Config reloaded"),
+            Err(error) => error!("Error occurred while syncinc config: {error}"),
+        };
+
+        tokio::spawn(async move {
+            let (sender, receiver) = kanal::bounded_async(1);
+
+            let mut watcher = RecommendedWatcher::new(
+                move |response| {
+                    let sender = sender.clone();
+                    tokio::spawn(async move { sender.send(response).await.unwrap() });
+                },
+                notify::Config::default(),
+            )
+            .unwrap();
+
+            watcher
+                .watch(
+                    &PathBuf::from_str(config_path.as_str()).unwrap(),
+                    notify::RecursiveMode::NonRecursive,
+                )
+                .unwrap();
+            info!("Watching for changes at {config_path}");
+
+            let mut stream = receiver.stream();
+            while let Some(response) = stream.next().await {
+                match response {
+                    Ok(_) => {
+                        let span = info_span!("ConfigReload");
+                        let _ = span.enter();
+
+                        match config::sync_config(&connection).await {
+                            Ok(_) => info!("Config reloaded"),
+                            Err(error) => error!("Error occurred while syncinc config: {error}"),
+                        }
+                    }
+                    Err(error) => error!("Error occurred during watch: {error}"),
+                }
+            }
+
+            Ok::<(), FeedbackFusionError>(())
+        });
+    }
+
+    let (sender, receiver) = kanal::oneshot_async::<()>();
 
     tokio::spawn(async move {
         let (mut health_reporter, health_service) = tonic_health::server::health_reporter();

@@ -166,7 +166,7 @@ pub struct Field {
     #[validate(length(max = 255))]
     description: Option<String>,
     prompt: String,
-    r#type: FieldType,
+    field_type: FieldType,
     #[serde(serialize_with = "serialize_options", deserialize_with = "deserialize_options")]
     options: FieldOptions,
     #[builder(default_code = r#"DateTime::utc()"#)]
@@ -184,7 +184,7 @@ impl From<Field> for feedback_fusion_common::proto::Field {
             title: val.title,
             description: val.description,
             prompt: val.prompt,
-            field_type: val.r#type.into(),
+            field_type: val.field_type.into(),
             options: Some(val.options.into()),
             updated_at: Some(date_time_to_timestamp(val.updated_at)),
             created_at: Some(date_time_to_timestamp(val.created_at)),
@@ -201,7 +201,7 @@ impl TryInto<Field> for feedback_fusion_common::proto::Field {
             title: self.title,
             description: self.description,
             prompt: self.prompt,
-            r#type: self.field_type.try_into()?,
+            field_type: self.field_type.try_into()?,
             options: self.options.unwrap().try_into()?,
             updated_at: to_date_time!(self.updated_at),
             created_at: to_date_time!(self.created_at),

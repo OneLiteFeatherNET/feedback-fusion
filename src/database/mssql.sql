@@ -30,7 +30,7 @@ BEGIN
         title        VARCHAR(32)    NOT NULL,
         description  VARCHAR(255),
         prompt       VARCHAR(32)    NOT NULL REFERENCES prompt(id),
-        type         VARCHAR(32)    NOT NULL,
+        field_type   VARCHAR(32)    NOT NULL,
         options      NVARCHAR(MAX)  NOT NULL,
         updated_at   DATETIME,
         created_at   DATETIME
