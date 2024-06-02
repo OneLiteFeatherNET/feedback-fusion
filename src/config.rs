@@ -21,7 +21,10 @@
  *
  */
 
-use crate::prelude::*;
+use crate::{
+    database::schema::feedback::{FieldOptions, FieldType},
+    prelude::*,
+};
 
 lazy_static! {
     pub static ref CONFIG: Config = envy::from_env::<Config>().unwrap();
@@ -37,6 +40,7 @@ pub struct Config {
     oidc_discovery_url: String,
     #[serde(default = "default_oidc_audience")]
     oidc_audience: String,
+    config_path: Option<String>,
 }
 
 #[inline]
@@ -47,4 +51,56 @@ fn default_global_rate_limit() -> u64 {
 #[inline]
 fn default_oidc_audience() -> String {
     "feedback-fusion".to_owned()
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct InstanceConfig {
+    targets: Vec<TargetConfig>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct TargetConfig {
+    id: String,
+    name: String,
+    description: Option<String>,
+    prompts: Option<Vec<PromptConfig>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct PromptConfig {
+    id: String,
+    title: String,
+    #[serde(default)]
+    active: bool,
+    fields: Option<Vec<FieldConfig>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct FieldConfig {
+    id: String,
+    description: Option<String>,
+    field_type: FieldType,
+    options: FieldOptions,
+}
+
+pub async fn sync_config() -> Result<()> {
+    // as this function can only be called when the notify watch agent got created we can use
+    // unwrap here
+    let config_path = CONFIG.config_path.as_ref().unwrap();
+    let content = tokio::fs::read_to_string(config_path)
+        .await
+        .map_err(|error| {
+            FeedbackFusionError::ConfigurationError(format!(
+                "Error while reading config: {}",
+                error
+            ))
+        })?;
+
+    // parse the config
+    let config = toml::from_str(content.as_str()).map_err(|error| {
+        FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
+    })?;
+    info!("Sucessfully parsed config");
+
+    Ok(())
 }
