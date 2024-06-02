@@ -63,9 +63,10 @@ async fn main() {
 
     // start config file watcher
     if let Some(config_path) = CONFIG.config_path().as_ref() {
+        let connection = connection.clone();
         info!("CONFIG_PATH present, starting watcher");
         // initial load
-        match config::sync_config().await {
+        match config::sync_config(&connection).await {
             Ok(_) => info!("Config reloaded"),
             Err(error) => error!("Error occurred while syncinc config: {error}"),
         };
@@ -93,10 +94,15 @@ async fn main() {
             let mut stream = receiver.stream();
             while let Some(response) = stream.next().await {
                 match response {
-                    Ok(_) => match config::sync_config().await {
-                        Ok(_) => info!("Config reloaded"),
-                        Err(error) => error!("Error occurred while syncinc config: {error}"),
-                    },
+                    Ok(_) => {
+                        let span = info_span!("ConfigReload");
+                        let _ = span.enter();
+
+                        match config::sync_config(&connection).await {
+                            Ok(_) => info!("Config reloaded"),
+                            Err(error) => error!("Error occurred while syncinc config: {error}"),
+                        }
+                    }
                     Err(error) => error!("Error occurred during watch: {error}"),
                 }
             }

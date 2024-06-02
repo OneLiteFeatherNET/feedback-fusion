@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS field (
   title       VARCHAR(32) NOT NULL,
   description VARCHAR(255),
   prompt      VARCHAR(32) NOT NULL,
-  type        VARCHAR(32) NOT NULL,
+  field_type  VARCHAR(32) NOT NULL,
   options     TEXT NOT NULL,
   updated_at  TIMESTAMP(3),
   created_at  TIMESTAMP(3),

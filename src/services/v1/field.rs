@@ -40,7 +40,7 @@ pub async fn create_field(
 
     // build the field
     let field = Field::builder()
-        .r#type(Into::<FieldType>::into(data.field_type()))
+        .field_type(Into::<FieldType>::into(data.field_type()))
         .title(data.title)
         .description(data.description)
         .options(TryInto::<FieldOptions>::try_into(data.options.unwrap())?)
