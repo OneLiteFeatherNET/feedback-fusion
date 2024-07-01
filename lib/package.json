@@ -1,58 +1,57 @@
 {
-  "name": "feedback-fusion",
+  "name": "@onelitefeathernet/feedback-fusion",
   "description": "Webcomponent feedback-fusion following open-wc recommendations",
   "license": "MIT",
-  "author": "feedback-fusion",
+  "author": "OneLiteFeatherNet",
   "version": "0.0.0",
   "type": "module",
   "main": "dist/src/index.js",
   "module": "dist/src/index.js",
   "exports": {
-    ".": "./dist/src/index.js",
-    "./feedback-fusion.js": "./dist/src/feedback-fusion.js"
+    ".": "./dist/src/index.js"
   },
   "scripts": {
     "analyze": "cem analyze --litelement",
-    "start": "tsc && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"web-dev-server\"",
     "build": "tsc && npm run analyze -- --exclude dist",
     "prepublish": "tsc && npm run analyze -- --exclude dist",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
     "prepare": "husky",
-    "storybook": "tsc && npm run analyze -- --exclude dist && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"storybook dev -p 8080\"",
-    "storybook:build": "tsc && npm run analyze -- --exclude dist && storybook build"
+    "dev": "concurrently \"tsc --watch\" \"cd ../docs && pnpm run docs:dev\" "
   },
   "dependencies": {
+    "@lit/context": "^1.1.2",
+    "@lit/localize": "^0.12.1",
+    "@protobuf-ts/grpcweb-transport": "^2.9.4",
+    "@protobuf-ts/runtime": "^2.9.4",
+    "@protobuf-ts/runtime-rpc": "^2.9.4",
     "lit": "^3.1.4"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^1.6.0",
     "@custom-elements-manifest/analyzer": "^0.10.2",
+    "@lit/localize-tools": "^0.7.2",
     "@open-wc/eslint-config": "^12.0.3",
-    "@storybook/addon-a11y": "^7.6.19",
-    "@storybook/addon-essentials": "^7.6.19",
-    "@storybook/addon-links": "^7.6.19",
-    "@storybook/web-components": "^7.6.19",
-    "@typescript-eslint/eslint-plugin": "^7.12.0",
-    "@typescript-eslint/parser": "^7.12.0",
-    "@web/dev-server": "^0.4.5",
-    "@web/storybook-builder": "^0.1.16",
-    "@web/storybook-framework-web-components": "^0.1.2",
+    "@protobuf-ts/plugin": "^2.9.4",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
     "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-storybook": "^0.8.0",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.5",
-    "prettier": "^3.3.1",
-    "storybook": "^7.6.19",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.2",
     "tslib": "^2.6.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.3"
   },
   "customElements": "custom-elements.json",
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
     "extends": [
       "@open-wc",
-      "prettier"
+      "prettier",
+      "plugin:storybook/recommended"
     ],
     "plugins": [
       "@typescript-eslint"

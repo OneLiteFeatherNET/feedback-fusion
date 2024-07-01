@@ -20,5 +20,6 @@
 /dist/
 /out-tsc/
 
-storybook-static
-custom-elements.json
+src/feedback-fusion-v1.ts
+src/feedback-fusion-v1.client.ts
+src/google

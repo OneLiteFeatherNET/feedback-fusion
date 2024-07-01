@@ -20,4 +20,7 @@
  * SOFTWARE.
  */
 
-export { FeedbackFusionPrompt } from './components/Prompt.js';
+import { createContext } from "@lit/context";
+import { PublicFeedbackFusionV1Client } from "./feedback-fusion-v1.client.js";
+
+export const client = createContext<PublicFeedbackFusionV1Client>("client");

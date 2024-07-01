@@ -6,7 +6,7 @@ skip_core_tasks = true
 # lib dev
 
 [tasks.core_generate]
-cwd = "./lib/core/src/"
+cwd = "./lib/src/"
 command = "npx"
 args = [
   "protoc",
@@ -15,8 +15,8 @@ args = [
   "--ts_opt",
   "server_none",
   "--proto_path",
-  "../../../proto",
-  "../../../proto/feedback-fusion-v1.proto",
+  "../../proto",
+  "../../proto/feedback-fusion-v1.proto",
 ]
 
 [tasks.core]
