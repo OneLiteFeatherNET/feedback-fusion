@@ -64,7 +64,7 @@ export class FeedbackFusionFieldRating extends LitElement {
     this.inputValue = event.target.value;
 
     // @ts-ignore
-    this.starColor = this.starColor.map((_, i) => +event.target.value > i ? "var(--feedback-fusion-primary)" : "var(--feedback-fusion-inactive)")
+    this.starColor = this.starColor.map((_, i) => +event.target.value > i ? "rgb(var(--feedback-fusion-primary))" : "rgb(var(--feedback-fusion-inactive))")
   }
 
   get inputValue() {
@@ -76,7 +76,7 @@ export class FeedbackFusionFieldRating extends LitElement {
   }
 
   connectedCallback(): void {
-    this.starColor = new Array(this.options.max).fill("var(--feedback-fusion-inactive)");
+    this.starColor = new Array(this.options.max).fill("rgb(var(--feedback-fusion-inactive))");
 
     super.connectedCallback();
   }

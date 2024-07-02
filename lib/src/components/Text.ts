@@ -28,8 +28,7 @@ export class FeedbackFusionFieldText extends LitElement {
   static styles = css`
     input, textarea {
       outline: none;
-      border: 1px solid red;
-      border-color: var(--feedback-fusion-inactive);
+      border: 1px solid rgb(var(--feedback-fusion-inactive));
       border-radius: 4px;
       width: calc(100% - 32px);
       padding: 16px;
@@ -40,11 +39,11 @@ export class FeedbackFusionFieldText extends LitElement {
     }
 
     input:focus, textarea:focus {
-      border-color: var(--feedback-fusion-primary);
+      border-color: rgb(var(--feedback-fusion-primary));
     }
 
     input:invalid, textarea:invalid {
-      border-color: var(--feedback-fusion-error);
+      border-color: rgb(var(--feedback-fusion-error));
     }
   `
 

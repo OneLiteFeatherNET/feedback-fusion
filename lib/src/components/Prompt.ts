@@ -41,23 +41,23 @@ export class FeedbackFusionPrompt extends LitElement {
 
   static styles = css`
     :host {
-      --feedback-fusion-text: #FFFFF5;
-      --feedback-fusion-subtitle: #757575;
-      --feedback-fusion-sheet: #212121;
-      --feedback-fusion-primary: #3498db;
-      --feedback-fusion-inactive: #757575;
-      --feedback-fusion-success: #4caf50;
-      --feedback-fusion-error: #d33d3d;
+      --feedback-fusion-text: 255, 255, 245; /* #FFFFF5 */
+      --feedback-fusion-subtitle: 117, 117, 117; /* #757575 */
+      --feedback-fusion-sheet: 33, 33, 33; /* #212121 */
+      --feedback-fusion-primary: 52, 152, 219; /* #3498db */
+      --feedback-fusion-inactive: 117, 117, 117; /* #757575 */
+      --feedback-fusion-success: 76, 175, 80; /* #4caf50 */
+      --feedback-fusion-error: 211, 61, 61; /* #d33d3d */
     }
 
     .feedback-fusion__prompt {
-       color: var(--feedback-fusion-text);
+       color: rgb(var(--feedback-fusion-text));
        width: 100%;
     }
 
     .feedback-fusion__prompt .feedback-fusion__prompt-container {
        margin: auto;
-       background-color: var(--feedback-fusion-sheet);
+       background-color: rgb(var(--feedback-fusion-sheet));
        padding: 16px;
        overflow: hidden;
     }
@@ -67,8 +67,8 @@ export class FeedbackFusionPrompt extends LitElement {
        font-size: 20px;
     }
 
-    .feedback-fusion__prompt .feedback-fusion__prompt-container .feedback-fusion__prompt-hea eder .feedback-fusion__prompt-header-subtitle {
-       color: var(--feedback-fusion-subtitle);
+    .feedback-fusion__prompt .feedback-fusion__prompt-container .feedback-fusion__prompt-header .feedback-fusion__prompt-header-subtitle {
+       color: rgb(var(--feedback-fusion-subtitle));
        font-size: 14px;
     }
 
@@ -85,7 +85,7 @@ export class FeedbackFusionPrompt extends LitElement {
        font-weight: bold;
        letter-spacing: 2px;
        font-size: 13px;
-       color: var(--feedback-fusion-primary);
+       color: rgb(var(--feedback-fusion-primary));
        position: relative;
        padding: 10px 15px;
     }
@@ -97,7 +97,7 @@ export class FeedbackFusionPrompt extends LitElement {
        right: 0;
        top: 0;
        bottom: 0;
-       background: var(--feedback-fusion-primary);
+       background: rgb(var(--feedback-fusion-primary));
        opacity: 0;
        transition: 0.1s ease-out all;
     }
@@ -121,11 +121,11 @@ export class FeedbackFusionPrompt extends LitElement {
     }
 
     .feedback-fusion__prompt .feedback-fusion__prompt-container .feedback-fusion__prompt-status .feedback-fusion__prompt-status-success {
-       background: var(--feedback-fusion-success);
+       background: rgb(var(--feedback-fusion-success));
     }
 
     .feedback-fusion__prompt .feedback-fusion__prompt-container .feedback-fusion__prompt-status .feedback-fusion__prompt-status-error {
-       background: var(--feedback-fusion-error);
+       background: rgb(var(--feedback-fusion-error));
     }
   `;
 

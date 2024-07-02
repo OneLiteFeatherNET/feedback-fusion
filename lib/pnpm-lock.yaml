@@ -38,7 +38,7 @@ importers:
         version: 0.7.2
       '@open-wc/eslint-config':
         specifier: ^12.0.3
-        version: 12.0.3(@babel/core@7.24.7)(eslint-plugin-html@7.1.0)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.15.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint-plugin-lit-a11y@4.1.2(eslint@8.57.0))(eslint-plugin-lit@1.14.0(eslint@8.57.0))(eslint-plugin-no-only-tests@3.1.0)(eslint-plugin-wc@1.5.0(eslint@8.57.0))(eslint@8.57.0)
+        version: 12.0.3(@babel/core@7.24.7)(eslint-plugin-html@7.1.0)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.15.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint-plugin-lit-a11y@4.1.3(eslint@8.57.0))(eslint-plugin-lit@1.14.0(eslint@8.57.0))(eslint-plugin-no-only-tests@3.1.0)(eslint-plugin-wc@1.5.0(eslint@8.57.0))(eslint@8.57.0)
       '@protobuf-ts/plugin':
         specifier: ^2.9.4
         version: 2.9.4
@@ -321,6 +321,9 @@ packages:
   '@storybook/csf@0.0.1':
     resolution: {integrity: sha512-USTLkZze5gkel8MYCujSRBVIrUQ3YPBrLOx7GNk/0wttvVtlzWXAq9eLbQ4p/NicGxP+3T7KPEMVV//g+yubpw==}
 
+  '@thepassle/axobject-query@4.0.0':
+    resolution: {integrity: sha512-/LHo+2jOdxs2WtbGocr3/lDSzsnjgCV6DSoBf4Y1Q0D24Hu67NPWuneoJimfHu5auqqSWi1fAvtln2013VxVqg==}
+
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
@@ -525,9 +528,6 @@ packages:
   axe-core@4.9.1:
     resolution: {integrity: sha512-QbUdXJVTpvUTHU7871ppZkdOLBeGUKBQWHkHrvN2V9IQWGMt61zf3B45BtzjxEJzYuj0JBjBZP/hmYS/R9pmAw==}
     engines: {node: '>=4'}
-
-  axobject-query@2.2.0:
-    resolution: {integrity: sha512-Td525n+iPOOyUQIeBfcASuG6uJsDOITl7Mds5gFyerkWiX7qhUTdYUBlSgNMyVqtSJqwpt1kXGLdUt6SykLMRA==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -845,8 +845,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-lit-a11y@4.1.2:
-    resolution: {integrity: sha512-otrF1Q0uv6RUz/AflVgnf1rVzbfQJfgUmnB+xBl71IR8EwtJGEOrqGs3Ky/4APMda+maF6bsZLctppcz16m7Hw==}
+  eslint-plugin-lit-a11y@4.1.3:
+    resolution: {integrity: sha512-ndfGZU0RFKp9xqm17f94sQzjgVchDtYL1z/N0qG0otQiDtia1EUVCdd1eMlCeeUe6LTtfjV4iAsNU4r0bVB/Yw==}
     peerDependencies:
       eslint: '>= 5'
 
@@ -2145,7 +2145,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
-  '@open-wc/eslint-config@12.0.3(@babel/core@7.24.7)(eslint-plugin-html@7.1.0)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.15.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint-plugin-lit-a11y@4.1.2(eslint@8.57.0))(eslint-plugin-lit@1.14.0(eslint@8.57.0))(eslint-plugin-no-only-tests@3.1.0)(eslint-plugin-wc@1.5.0(eslint@8.57.0))(eslint@8.57.0)':
+  '@open-wc/eslint-config@12.0.3(@babel/core@7.24.7)(eslint-plugin-html@7.1.0)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.15.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint-plugin-lit-a11y@4.1.3(eslint@8.57.0))(eslint-plugin-lit@1.14.0(eslint@8.57.0))(eslint-plugin-no-only-tests@3.1.0)(eslint-plugin-wc@1.5.0(eslint@8.57.0))(eslint@8.57.0)':
     dependencies:
       '@babel/eslint-parser': 7.24.7(@babel/core@7.24.7)(eslint@8.57.0)
       '@babel/plugin-syntax-import-assertions': 7.24.7(@babel/core@7.24.7)
@@ -2155,7 +2155,7 @@ snapshots:
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.15.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)
       eslint-plugin-import-exports-imports-resolver: 1.0.1
       eslint-plugin-lit: 1.14.0(eslint@8.57.0)
-      eslint-plugin-lit-a11y: 4.1.2(eslint@8.57.0)
+      eslint-plugin-lit-a11y: 4.1.3(eslint@8.57.0)
       eslint-plugin-no-only-tests: 3.1.0
       eslint-plugin-wc: 1.5.0(eslint@8.57.0)
     transitivePeerDependencies:
@@ -2194,6 +2194,10 @@ snapshots:
   '@storybook/csf@0.0.1':
     dependencies:
       lodash: 4.17.21
+
+  '@thepassle/axobject-query@4.0.0':
+    dependencies:
+      dequal: 2.0.3
 
   '@types/json-schema@7.0.15': {}
 
@@ -2440,8 +2444,6 @@ snapshots:
       possible-typed-array-names: 1.0.0
 
   axe-core@4.9.1: {}
-
-  axobject-query@2.2.0: {}
 
   balanced-match@1.0.2: {}
 
@@ -2818,11 +2820,11 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-lit-a11y@4.1.2(eslint@8.57.0):
+  eslint-plugin-lit-a11y@4.1.3(eslint@8.57.0):
     dependencies:
+      '@thepassle/axobject-query': 4.0.0
       aria-query: 5.3.0
       axe-core: 4.9.1
-      axobject-query: 2.2.0
       dom5: 3.0.1
       emoji-regex: 10.3.0
       eslint: 8.57.0

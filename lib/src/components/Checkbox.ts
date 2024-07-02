@@ -21,55 +21,55 @@
  */
 
 import { css, html, LitElement } from "lit";
-import { msg, updateWhenLocaleChanges } from "@lit/localize";
 import { customElement, property } from "lit/decorators.js";
-import { localized } from "@lit/localize";
+import { CheckboxStyle } from "../feedback-fusion-v1";
 
-@customElement("feedback-fusion-field-number")
-@localized()
-export class FeedbackFusionFieldNumber extends LitElement {
-  constructor() {
-    super();
-    updateWhenLocaleChanges(this);
-  }
-
+@customElement("feedback-fusion-field-checkbox")
+export class FeedbackFusionFieldCheckbox extends LitElement {
   static styles = css`
-    input {
-      outline: none;
-      border: 1px solid rgb(var(--feedback-fusion-inactive));
-      border-radius: 4px;
-      width: calc(100% - 32px);
-      padding: 16px;
-      color: rgb(var(--feedback-fusion-text));
-      font-size: 16px;
-      line-height: 24px;
-      transition: 0.2s ease-out all;
-    }
-
-    input:focus {
-      border-color: rgb(var(--feedback-fusion-primary));
-    }
-
-    input:invalid {
-      border-color: rgb(var(--feedback-fusion-error));
-    }
-
-    input:invalid ~ .feedback-fusion__field-error {
-      display: block;
-    }
-
-    .feedback-fusion__field-error {
-      color: rgb(var(--feedback-fusion-error));
-      font-size: 11px;
+    label input {
+      height: 0;
+      width: 0;
       display: none;
+      visibility: hidden;
+    }
+
+    label span {
+      position: relative;
+      width: 60px;
+      height: 35px;
+      display: inline-block;
+      border-radius: 16px;
+      background: rgb(var(--feedback-fusion-inactive));
+      cursor: pointer;
+    }
+
+    label span:after {
+      position: absolute;
+      top: 5px;
+      bottom: 5px;
+      left: 5px;
+      width: 25px;
+      content: "";
+      border-radius: 50%;
+      background: white;
+      transition: 0.15s ease-out;
+    }
+
+    label input:checked + span {
+      background: rgb(var(--feedback-fusion-primary));
+    }
+
+    label input:checked + span:after {
+      left: 30px;
     }
   `
 
   @property({ type: Object })
   options?: any;
 
-  @property({ type: Number, attribute: false })
-  value: number = 0;
+  @property({ type: Boolean, attribute: false })
+  value: boolean = false;
 
   onChange(event: Event) {
     // @ts-ignore
@@ -80,21 +80,20 @@ export class FeedbackFusionFieldNumber extends LitElement {
     return this.value;
   }
 
-  set inputValue(value: number) {
+  set inputValue(value: boolean) {
     this.dispatchEvent(new CustomEvent("update", { detail: { value } }))
   }
 
   render() {
     return html`
-      <input @change=${this.onChange} value=${this.inputValue} type="number" placeholder=${this.options!.placeholder} min=${this.options.min} max=${this.options.max} />
-
-      <div class="feedback-fusion__field-error">
-        ${isNaN(this.inputValue) || !this.inputValue ? `
-          ${msg("Value is not a number")}
-        ` : `
-          ${msg(`Value must lie within ${this.options.min} and ${this.options.max}`)}
-        `}
-      </div>
+      ${this.options.style === CheckboxStyle.NORMAL ? html`
+        <input type="checkbox" value=${this.value} @change=${this.onChange} />
+      `: html `
+        <label>
+          <input type="checkbox" />
+          <span />
+        </label>
+      `}
     `;
   }
 }

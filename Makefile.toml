@@ -19,24 +19,6 @@ args = [
   "../../proto/feedback-fusion-v1.proto",
 ]
 
-[tasks.core]
-dependencies = ["core_generate"]
-cwd = "./lib/core/"
-command = "pnpm"
-args = ["run", "tsc"]
-
-[tasks.vue]
-dependencies = ["core"]
-cwd = "./lib/vue/"
-command = "pnpm"
-args = ["run", "docs:dev"]
-
-[tasks.vue_build]
-dependencies = ["core"]
-cwd = "./lib/vue/"
-command = "pnpm"
-args = ["run", "build"]
-
 # linting
 
 [tasks.check]
@@ -48,7 +30,6 @@ command = "cargo"
 args = ["clippy", "--features", "all-databases", "--", "-D", "warnings"]
 
 # run oidc server for integration tests
-
 [tasks.oidc-server-mock]
 script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d && sleep 5 && curl -s -o /dev/null http://localhost:5151/.well-known/openid-configuration"
 
@@ -79,7 +60,6 @@ run_task = { name = [
 
 [tasks.postgres_cleanup]
 script = "docker rm -f postgres;docker rm -f oidc-server-mock"
-
 
 # Mysql
 [tasks.mysql_database]
@@ -117,7 +97,7 @@ run_task = { name = [
 [tasks.mysql_cleanup]
 script = "docker rm -f mysql;docker rm -f oidc-server-mock"
 
-# Mysql
+# Maria
 [tasks.mariadb_database]
 script = '''
 docker run --name mariadb \
@@ -139,7 +119,7 @@ run_task = { name = [
 [tasks.mariadb_cleanup]
 script = "docker rm -f mariadb;docker rm -f oidc-server-mock"
 
-# Mysql
+# Mssql
 [tasks.mssql_database]
 script = '''
 docker run --name mssql \

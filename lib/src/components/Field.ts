@@ -28,6 +28,9 @@ import { html, unsafeStatic } from "lit/static-html.js";
 import "./Text.js";
 import "./Number.js";
 import "./Rating.js";
+import "./Checkbox.js";
+import "./Selection.js";
+import "./Range.js";
 
 @customElement("feedback-fusion-field")
 @localized()
@@ -48,18 +51,18 @@ export class FeedbackFusionField extends LitElement {
     }
 
     .feedback-fusion__field .feedback-fusion__field-title {
-       color: var(--feedback-fusion-inactive);
+       color: rgb(var(--feedback-fusion-inactive));
        font-size: 14px;
        font-weight: bold;
     }
 
     .feedback-fusion__field .feedback-fusion__field-description {
-       color: var(--feedback-fusion-subtitle);
+       color: rgb(var(--feedback-fusion-subtitle));
        font-size: 11px;
     }
 
     .feedback-fusion__field:focus-within .feedback-fusion__field-title {
-       color: var(--feedback-fusion-primary);
+       color: rgb(var(--feedback-fusion-primary));
     }
   `
 
