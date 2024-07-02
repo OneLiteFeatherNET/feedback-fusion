@@ -30,6 +30,7 @@ import { client } from "../context.js";
 import { provide } from "@lit/context";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import "./Field.js";
+import { setLocale } from "../locales.js";
 
 @customElement("feedback-fusion-prompt")
 @localized()
@@ -139,7 +140,7 @@ export class FeedbackFusionPrompt extends LitElement {
   closeAfter: number = 1000;
 
   @property({ type: String })
-  locale: String = "en";
+  locale: string = "en";
 
   @property({ type: String })
   promptId!: string;
@@ -184,6 +185,7 @@ export class FeedbackFusionPrompt extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
+    setLocale(this.locale);
     this.clientProvider = new PublicFeedbackFusionV1Client(new GrpcWebFetchTransport({ baseUrl: this.baseUrl }));
 
     await this._fetchPrompt().catch(console.error);
@@ -241,7 +243,7 @@ export class FeedbackFusionPrompt extends LitElement {
 
               <div class="feedback-fusion__prompt-header-subtitle">
                 <slot name="subtitle">
-                  ${msg(`Page ${this.currentFieldPage} of ${this.totalFieldPages}`)}
+                  ${msg(html`Page ${this.currentFieldPage} of ${this.totalFieldPages}`)}
                 </slot>
               </div>
             </div>

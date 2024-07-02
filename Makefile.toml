@@ -5,7 +5,13 @@ skip_core_tasks = true
 
 # lib dev
 
+[tasks.pnpm]
+cwd = "./lib"
+command = "pnpm"
+args = ["i"]
+
 [tasks.core_generate]
+dependencies = ["pnpm"]
 cwd = "./lib/src/"
 command = "npx"
 args = [
@@ -18,6 +24,24 @@ args = [
   "../../proto",
   "../../proto/feedback-fusion-v1.proto",
 ]
+
+[tasks.docs]
+dependencies = ["core_generate"]
+cwd = "./lib"
+command = "pnpm"
+args = ["run", "dev"]
+
+[tasks.extract_translations]
+dependencies = ["pnpm"]
+cwd = "./lib"
+command = "pnpm"
+args = ["run", "translations:extract"]
+
+[tasks.build_translations]
+dependencies = ["pnpm"]
+cwd = "./lib"
+command = "pnpm"
+args = ["run", "translations:build"]
 
 # linting
 

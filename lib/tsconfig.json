@@ -6,6 +6,7 @@
       "DOM",
       "DOM.Iterable"
     ],
+    "module": "ESNext",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

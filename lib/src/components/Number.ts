@@ -92,7 +92,7 @@ export class FeedbackFusionFieldNumber extends LitElement {
         ${isNaN(this.inputValue) || !this.inputValue ? `
           ${msg("Value is not a number")}
         ` : `
-          ${msg(`Value must lie within ${this.options.min} and ${this.options.max}`)}
+          ${msg(html`Value must lie within ${this.options.min} and ${this.options.max}`)}
         `}
       </div>
     `;
