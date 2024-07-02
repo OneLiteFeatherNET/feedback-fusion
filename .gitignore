@@ -15,11 +15,5 @@ Cargo.lock
 
 .idea/
 
-# for redocly
-node_modules/
-docs/
-
 # nvim config
 .sqllsrc.json
-
-pages/

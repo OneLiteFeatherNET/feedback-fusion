@@ -1,4 +1,0 @@
-# Prompt
-
-<FeedbackFusionPrompt prompt="prompt" />
-

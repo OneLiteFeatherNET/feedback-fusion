@@ -1,0 +1,26 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vitepress": "^1.2.3"
+  },
+  "dependencies": {
+    "@protobuf-ts/runtime": "^2.9.4",
+    "msw": "^2.3.1"
+  },
+  "msw": {
+    "workerDirectory": [
+      "./"
+    ]
+  }
+}
