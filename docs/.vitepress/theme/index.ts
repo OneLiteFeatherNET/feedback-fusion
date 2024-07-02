@@ -104,9 +104,9 @@ const handlers = [
           "total": 3,
           "fields": [
             {
-              "id": "text1",
+              "id": "text",
               "prompt": "prompt",
-              "title": "Text1",
+              "title": "Text",
               "fieldType": FieldType.TEXT,
               "description": "description",
               "options": {
@@ -136,31 +136,15 @@ const handlers = [
               "createdAt": Timestamp.now(),
             },
             {
-              "id": "rating1",
+              "id": "rating",
               "prompt": "prompt",
-              "title": "Rating1",
+              "title": "Rating",
               "fieldType": FieldType.RATING,
               "description": "description",
               "options": {
                 "oneofKind": "rating",
                 "rating": {
                   "max": 5,
-                },
-              },
-              "updatedAt": Timestamp.now(),
-              "createdAt": Timestamp.now(),
-            },
-            {
-              "id": "text2",
-              "prompt": "prompt",
-              "title": "Text2",
-              "fieldType": FieldType.TEXT,
-              "description": "description",
-              "options": {
-                "oneofKind": "text",
-                "text": {
-                  "placeholder": "placeholder",
-                  "lines": 1,
                 },
               },
               "updatedAt": Timestamp.now(),

@@ -17,7 +17,8 @@ export default defineConfig({
         items: [
           {
             text: "Frontend Library", link: "/docs/frontend-library", items: [
-              { text: "Prompt", link: "/docs/frontend-library/prompt" }
+              { text: "Prompt", link: "/docs/frontend-library/prompt" },
+              { text: "Theming", link: "/docs/frontend-library/theming" }
             ]
           }
         ]

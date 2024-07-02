@@ -38,6 +38,7 @@ export class FeedbackFusionFieldNumber extends LitElement {
       outline: none;
       border: 1px solid rgb(var(--feedback-fusion-inactive));
       border-radius: 4px;
+      background: rgba(var(--feedback-fusion-inactive), 0.1);
       width: calc(100% - 32px);
       padding: 16px;
       color: rgb(var(--feedback-fusion-text));

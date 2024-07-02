@@ -89,6 +89,9 @@ export class FeedbackFusionPrompt extends LitElement {
        color: rgb(var(--feedback-fusion-primary));
        position: relative;
        padding: 10px 15px;
+       background: rgb(var(--feedback-fusion-sheet));
+       border: none;
+       cursor: pointer;
     }
 
     .feedback-fusion__prompt .feedback-fusion__prompt-container .feedback-fusion__prompt-actions button:after {

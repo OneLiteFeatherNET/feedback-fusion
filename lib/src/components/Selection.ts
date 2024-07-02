@@ -30,6 +30,7 @@ export class FeedbackFusionFieldSelection extends LitElement {
     .feedback-fusion__field-input-container {
       outline: none;
       border: 1px solid rgb(var(--feedback-fusion-inactive));
+      background: rgba(var(--feedback-fusion-inactive), 0.1);
       border-radius: 4px;
       width: calc(100% - 32px);
       padding: 16px;
