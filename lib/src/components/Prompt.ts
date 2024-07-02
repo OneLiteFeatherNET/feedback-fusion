@@ -203,7 +203,20 @@ export class FeedbackFusionPrompt extends LitElement {
       })
   }
 
-  private async _submitResponse() { }
+  private async _submitResponse() {
+    const body = {};
+    Object.keys(this.data).forEach((key: string) => body[key] = { data: this.data[key] });
+
+    await this.clientProvider.createResponses({ data: body, prompt: this.prompt!.id })
+      .then(() => {
+        this.data = {};
+        this.finished = true;
+
+        if (this.autoClose)
+          setTimeout(() => this.open = false, this.closeAfter || 5000);
+      })
+      .catch(() => this.error = true);
+  }
 
   private onUpdate(field: string) {
     return (event: CustomEvent) => {
