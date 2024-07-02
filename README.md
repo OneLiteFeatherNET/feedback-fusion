@@ -11,7 +11,7 @@ and easier way with the ability to directly include them in your webpage.
 - **Support for multiple databases**: Relying on the rbatis ORM Feedback-Fusion has native support 
 for a wide range of relational database backends. [List of supported drivers](https://github.com/rbatis/rbatis?tab=readme-ov-file#supported-database-driver)
 - **Scalable**: The rust backend works stateless and therefore can be scaled with ease matching to your needs.
-- **Easy webintegration**: (Coming soon)
+- **Easy webintegration**: We ship an open-wc compatible frontend library using lit. 
 
 ## Examples (Coming soon)
 
