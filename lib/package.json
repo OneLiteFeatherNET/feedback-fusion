@@ -1,0 +1,87 @@
+{
+  "name": "@onelitefeathernet/feedback-fusion",
+  "description": "Webcomponent feedback-fusion following open-wc recommendations",
+  "license": "MIT",
+  "author": "OneLiteFeatherNet",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
+  "exports": {
+    ".": "./dist/src/index.js"
+  },
+  "scripts": {
+    "analyze": "cem analyze --litelement",
+    "build": "tsc && npm run analyze -- --exclude dist",
+    "prepublish": "tsc && npm run analyze -- --exclude dist",
+    "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
+    "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
+    "prepare": "husky",
+    "tsc": "tsc",
+    "dev": "concurrently \"tsc --watch\" \"cd ../docs && pnpm run docs:dev\" ",
+    "translations:extract": "lit-localize extract",
+    "translations:build": "lit-localize build"
+  },
+  "dependencies": {
+    "@lit/context": "^1.1.2",
+    "@lit/localize": "^0.12.1",
+    "@protobuf-ts/grpcweb-transport": "^2.9.4",
+    "@protobuf-ts/runtime": "^2.9.4",
+    "@protobuf-ts/runtime-rpc": "^2.9.4",
+    "lit": "^3.1.4"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^1.6.0",
+    "@custom-elements-manifest/analyzer": "^0.10.2",
+    "@lit/localize-tools": "^0.7.2",
+    "@open-wc/eslint-config": "^12.0.3",
+    "@protobuf-ts/plugin": "^2.9.4",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-storybook": "^0.8.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.2",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.3"
+  },
+  "customElements": "custom-elements.json",
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "@open-wc",
+      "prettier",
+      "plugin:storybook/recommended"
+    ],
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error"
+      ],
+      "import/no-unresolved": "off",
+      "import/extensions": [
+        "error",
+        "always",
+        {
+          "ignorePackages": true
+        }
+      ]
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "avoid"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}

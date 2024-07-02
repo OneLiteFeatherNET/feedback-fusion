@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<file target-language="de" source-language="en" original="lit-localize-inputs" datatype="plaintext">
+<body>
+<trans-unit id="s49730f3d5751a433">
+  <source>Loading...</source>
+  <target>Wird geladen...</target>
+</trans-unit>
+<trans-unit id="s057f8bd8830b39a9">
+  <source>Value is not a number</source>
+  <target>Wert ist keine Zahl</target>
+</trans-unit>
+<trans-unit id="h906d53fa43ed7b6d">
+  <source>Value must lie within <x id="0" equiv-text="${this.options.min}"/> and <x id="1" equiv-text="${this.options.max}"/></source>
+  <target>Wert muss zwischen <x id="0" equiv-text="${this.options.min}"/> und <x id="1" equiv-text="${this.options.max}"/> liegen</target>
+</trans-unit>
+<trans-unit id="h7d09afc329d9995b">
+  <source>Page <x id="0" equiv-text="${this.currentFieldPage}"/> of <x id="1" equiv-text="${this.totalFieldPages}"/></source>
+  <target>Seite <x id="0" equiv-text="${this.currentFieldPage}"/> von <x id="1" equiv-text="${this.totalFieldPages}"/></target>
+</trans-unit>
+<trans-unit id="s4fed6bcd86cf44f8">
+  <source>Thank you for participating in our survey!</source>
+  <target>Danke f&uuml;r ihre Teilnahme an unserer Umfrage!</target>
+</trans-unit>
+<trans-unit id="s121f723b61ff7629">
+  <source>An error occurred while processing your request.</source>
+  <target>Es ist ein fehler beim verarbeiten Ihrer Anfrage aufgetreten.</target>
+</trans-unit>
+<trans-unit id="sb3d4f79d9d8b71e5">
+  <source>Submit</source>
+  <target>Best&auml;tigen</target>
+</trans-unit>
+<trans-unit id="s5e8250fb85d64c23">
+  <source>Close</source>
+  <target>Schlie&szlig;en</target>
+</trans-unit>
+</body>
+</file>
+</xliff>
