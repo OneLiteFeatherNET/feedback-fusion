@@ -275,7 +275,7 @@ export class FeedbackFusionPrompt extends LitElement {
               <div class="feedback-fusion__prompt-fields">
                 ${this.fields.map(field => html`
                   <slot name="field">
-                    <feedback-fusion-field .fieldId=${field.id} .value=${this.data[field.id]} @update=${this.onUpdate(field.id)} .theme=${this.theme} .title=${field.title} .options=${field.options} .fieldType=${field.fieldType} />
+                    <feedback-fusion-field .fieldId=${field.id} .value=${this.data[field.id]} @update=${this.onUpdate(field.id)} .theme=${this.theme} .fieldTitle=${field.title} .options=${field.options} .fieldType=${field.fieldType} />
                   </slot>
                 `)}
               </div>

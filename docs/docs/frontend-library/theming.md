@@ -36,8 +36,13 @@ In the following example we want to change the theme of all our prompts with the
 }
 ```
 
+::: danger 
+Always use the single rgb components of your color as the library also makes use of the alpha values.
+Specyfing a hex value or removing the commas will break the functionality.
+:::
+
 ```html
-<feedback-fusion-prompt baseUrl="http://mock.mock" prompt="prompt" class="nice-theme" />
+<feedback-fusion-prompt baseUrl="http://example.com" prompt="prompt" class="nice-theme" />
 ```
 
 <feedback-fusion-prompt baseUrl="http://mock.mock" prompt="prompt" class="nice-theme" />

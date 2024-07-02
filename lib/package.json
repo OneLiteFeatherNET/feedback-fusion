@@ -17,6 +17,7 @@
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
     "prepare": "husky",
+    "tsc": "tsc",
     "dev": "concurrently \"tsc --watch\" \"cd ../docs && pnpm run docs:dev\" ",
     "translations:extract": "lit-localize extract",
     "translations:build": "lit-localize build"

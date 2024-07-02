@@ -35,5 +35,10 @@ export default defineConfig({
         isCustomElement: (name) => ["feedback-fusion-prompt"].includes(name.toLowerCase())
       }
     }
+  },
+  vite: {
+    build: {
+      target: "esnext"
+    }
   }
 })

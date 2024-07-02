@@ -31,6 +31,18 @@ cwd = "./lib"
 command = "pnpm"
 args = ["run", "dev"]
 
+[tasks.lib_build]
+dependencies = ["core_generate"]
+cwd = "./lib"
+command = "pnpm"
+args = ["run", "tsc"]
+
+[tasks.docs_build]
+dependencies = ["lib_build"]
+cwd = "./docs"
+command = "pnpm"
+args = ["run", "docs:build"]
+
 [tasks.extract_translations]
 dependencies = ["pnpm"]
 cwd = "./lib"

@@ -67,19 +67,19 @@ export class FeedbackFusionField extends LitElement {
   `
 
   @property({ type: String })
-  title?: string;
-
-  @property({ type: String }):webkitURL
   theme: string = "dark";
 
   @property({ type: String })
   fieldId?: string;
 
   @property({ type: String })
+  fieldTitle?: string;
+
+  @property({ type: String })
   fieldType?: FieldType;
 
   // TODO: create an interface for the options
-  @property({ type: Object });
+  @property({ type: Object })
   options?: any;
 
   @property({ attribute: false })
@@ -105,7 +105,7 @@ export class FeedbackFusionField extends LitElement {
     return html`
       <div class="feedback-fusion__field">
         <div class="feedback-fusion__field-title">
-          ${this.title}
+          ${this.fieldTitle}
         </div>
 
         <${unsafeStatic(`feedback-fusion-field-${this.fieldTypeString()}`)} .fieldId=${this.fieldId} .value=${this.fieldValue} .options=${this.options[this.fieldTypeString()]} .theme=${this.theme} @update=${this.onUpdate} />
