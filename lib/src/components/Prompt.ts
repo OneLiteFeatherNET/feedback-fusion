@@ -40,15 +40,17 @@ export class FeedbackFusionPrompt extends LitElement {
   }
 
   static styles = css`
-    .feedback-fusion__prompt {
-      --feedback-fusion-text: "#FFFFF5";
-      --feedback-fusion-subtitle: "#757575";
-      --feedback-fusion-sheet: "#212121";
-      --feedback-fusion-primary: "#3498db";
-      --feedback-fusion-inactive: "#757575";
-      --feedback-fusion-success: "#4caf50";
-      --feedback-fusion-error: "#d33d3d";
+    :host {
+      --feedback-fusion-text: #FFFFF5;
+      --feedback-fusion-subtitle: #757575;
+      --feedback-fusion-sheet: #212121;
+      --feedback-fusion-primary: #3498db;
+      --feedback-fusion-inactive: #757575;
+      --feedback-fusion-success: #4caf50;
+      --feedback-fusion-error: #d33d3d;
+    }
 
+    .feedback-fusion__prompt {
        color: var(--feedback-fusion-text);
        width: 100%;
     }
@@ -155,6 +157,9 @@ export class FeedbackFusionPrompt extends LitElement {
   currentFieldPage = 1;
 
   @property({ attribute: false })
+  data: { [key: string]: any } = {};
+
+  @property({ attribute: false })
   error: boolean = false;
 
   @property({ attribute: false })
@@ -200,6 +205,15 @@ export class FeedbackFusionPrompt extends LitElement {
 
   private async _submitResponse() { }
 
+  private onUpdate(field: string) {
+    return (event: CustomEvent) => {
+      // we have to do it this way so lit can detect the change
+      let target = {};
+      target[field] = event.detail.value;
+      this.data = { ...this.data, ...target }
+    }
+  }
+
   render() {
     return html`
       ${this.prompt?.active && this.open ? html`
@@ -243,7 +257,7 @@ export class FeedbackFusionPrompt extends LitElement {
               <div class="feedback-fusion__prompt-fields">
                 ${this.fields.map(field => html`
                   <slot name="field">
-                    <feedback-fusion-field .theme=${this.theme} .title=${field.title} .options=${field.options} .fieldType=${field.fieldType} />
+                    <feedback-fusion-field .fieldId=${field.id} .value=${this.data[field.id]} @update=${this.onUpdate(field.id)} .theme=${this.theme} .title=${field.title} .options=${field.options} .fieldType=${field.fieldType} />
                   </slot>
                 `)}
               </div>

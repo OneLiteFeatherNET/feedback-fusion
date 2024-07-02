@@ -21,12 +21,20 @@
  */
 
 import { css, html, LitElement } from "lit";
+import { msg, updateWhenLocaleChanges } from "@lit/localize";
 import { customElement, property } from "lit/decorators.js";
+import { localized } from "@lit/localize";
 
-@customElement("feedback-fusion-field-text")
-export class FeedbackFusionFieldText extends LitElement {
+@customElement("feedback-fusion-field-number")
+@localized()
+export class FeedbackFusionFieldNumber extends LitElement {
+  constructor() {
+    super();
+    updateWhenLocaleChanges(this);
+  }
+
   static styles = css`
-    input, textarea {
+    input {
       outline: none;
       border: 1px solid red;
       border-color: var(--feedback-fusion-inactive);
@@ -39,20 +47,30 @@ export class FeedbackFusionFieldText extends LitElement {
       transition: 0.2s ease-out all;
     }
 
-    input:focus, textarea:focus {
+    input:focus {
       border-color: var(--feedback-fusion-primary);
     }
 
-    input:invalid, textarea:invalid {
+    input:invalid {
       border-color: var(--feedback-fusion-error);
+    }
+
+    input:invalid ~ .feedback-fusion__field-error {
+      display: block;
+    }
+
+    .feedback-fusion__field-error {
+      color: var(--feedback-fusion-error);
+      font-size: 11px;
+      display: none;
     }
   `
 
   @property({ type: Object })
   options?: any;
 
-  @property({ type: String, attribute: false })
-  value: string = "";
+  @property({ type: Number, attribute: false })
+  value: number = 0;
 
   onChange(event: Event) {
     // @ts-ignore
@@ -63,19 +81,21 @@ export class FeedbackFusionFieldText extends LitElement {
     return this.value;
   }
 
-  set inputValue(value: string) {
+  set inputValue(value: number) {
     this.dispatchEvent(new CustomEvent("update", { detail: { value } }))
   }
 
   render() {
     return html`
-      ${this.options!.lines === 1
-        ? html`
-          <input @change=${this.onChange} value=${this.inputValue}  type="text" placeholder=${this.options!.placeholder} />
-        `
-        : html`
-          <textarea @change=${this.onChange} value=${this.inputValue} rows=${this.options!.rows} placeholder=${this.options!.placeholder} />
+      <input @change=${this.onChange} value=${this.inputValue} type="number" placeholder=${this.options!.placeholder} min=${this.options.min} max=${this.options.max} />
+
+      <div class="feedback-fusion__field-error">
+        ${isNaN(this.inputValue) || !this.inputValue ? `
+          ${msg("Value is not a number")}
+        ` : `
+          ${msg(`Value must lie within ${this.options.min} and ${this.options.max}`)}
         `}
+      </div>
     `;
   }
 }

@@ -26,10 +26,12 @@ import { customElement, property } from "lit/decorators.js";
 import { FieldType } from "../feedback-fusion-v1";
 import { html, unsafeStatic } from "lit/static-html.js";
 import "./Text.js";
+import "./Number.js";
+import "./Rating.js";
 
 @customElement("feedback-fusion-field")
 @localized()
-export class FeedbackFusionPrompt extends LitElement {
+export class FeedbackFusionField extends LitElement {
   constructor() {
     super();
     updateWhenLocaleChanges(this);
@@ -41,33 +43,34 @@ export class FeedbackFusionPrompt extends LitElement {
        margin-bottom: 15px;
     }
 
+    .feedback-fusion__field > :last-child {
+      width: 100%
+    }
+
     .feedback-fusion__field .feedback-fusion__field-title {
-       color: v-bind("theme.inactive");
+       color: var(--feedback-fusion-inactive);
        font-size: 14px;
        font-weight: bold;
     }
 
     .feedback-fusion__field .feedback-fusion__field-description {
-       color: v-bind("theme.subtitle");
+       color: var(--feedback-fusion-subtitle);
        font-size: 11px;
-    }
-
-    .feedback-fusion__field .feedback-fusion__field-error {
-       color: v-bind("theme.error");
-       font-size: 11px;
-       display: none;
     }
 
     .feedback-fusion__field:focus-within .feedback-fusion__field-title {
-       color: v-bind("theme.primary");
+       color: var(--feedback-fusion-primary);
     }
   `
 
   @property({ type: String })
   title?: string;
 
-  @property({ type: String })
+  @property({ type: String }):webkitURL
   theme: string = "dark";
+
+  @property({ type: String })
+  fieldId?: string;
 
   @property({ type: String })
   fieldType?: FieldType;
@@ -79,9 +82,16 @@ export class FeedbackFusionPrompt extends LitElement {
   @property({ attribute: false })
   value?: any;
 
-  onChange(event: Event) {
-    // @ts-ignore
-    this.value = event.target.value
+  onUpdate(event: CustomEvent) {
+    this.fieldValue = event.detail.value
+  }
+
+  set fieldValue(value: any) {
+    this.dispatchEvent(new CustomEvent("update", { detail: { value } }))
+  }
+
+  get fieldValue() {
+    return this.value;
   }
 
   fieldTypeString() {
@@ -95,7 +105,7 @@ export class FeedbackFusionPrompt extends LitElement {
           ${this.title}
         </div>
 
-        <${unsafeStatic(`feedback-fusion-field-${this.fieldTypeString()}`)} .options=${this.options[this.fieldTypeString()]} .theme=${this.theme} @onChange=${this.onChange} />
+        <${unsafeStatic(`feedback-fusion-field-${this.fieldTypeString()}`)} .fieldId=${this.fieldId} .value=${this.fieldValue} .options=${this.options[this.fieldTypeString()]} .theme=${this.theme} @update=${this.onUpdate} />
       </div>
     `
   }
