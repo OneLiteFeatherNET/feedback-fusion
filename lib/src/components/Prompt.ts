@@ -210,7 +210,7 @@ export class FeedbackFusionPrompt extends LitElement {
       // we have to do it this way so lit can detect the change
       let target = {};
       target[field] = event.detail.value;
-      this.data = { ...this.data, ...target }
+      this.data = { ...this.data, ...target };
     }
   }
 

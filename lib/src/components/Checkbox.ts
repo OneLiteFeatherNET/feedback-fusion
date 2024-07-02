@@ -73,7 +73,7 @@ export class FeedbackFusionFieldCheckbox extends LitElement {
 
   onChange(event: Event) {
     // @ts-ignore
-    this.inputValue = event.target.value;
+    this.inputValue = event.target.checked;
   }
 
   get inputValue() {
@@ -90,7 +90,7 @@ export class FeedbackFusionFieldCheckbox extends LitElement {
         <input type="checkbox" value=${this.value} @change=${this.onChange} />
       `: html `
         <label>
-          <input type="checkbox" />
+          <input type="checkbox" value=${this.value} @change=${this.onChange} />
           <span />
         </label>
       `}
