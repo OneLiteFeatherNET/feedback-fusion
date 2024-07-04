@@ -22,8 +22,8 @@
 
 use common::*;
 use feedback_fusion_common::proto::{
-    create_field_request::Options, CreateFieldRequest, CreatePromptRequest, CreateTargetRequest,
-    DeleteFieldRequest, FieldType, GetFieldsRequest, TextOptions, UpdateFieldRequest,
+    CreateFieldRequest, CreatePromptRequest, CreateTargetRequest, DeleteFieldRequest, FieldOptions,
+    FieldType, GetFieldsRequest, TextOptions, UpdateFieldRequest,
 };
 use test_log::test;
 
@@ -51,10 +51,14 @@ fn create_field(prompt: String) -> CreateFieldRequest {
         title: "Field".to_owned(),
         description: Some("Description".to_owned()),
         field_type: FieldType::Text.into(),
-        options: Some(Options::Text(TextOptions {
-            lines: 1,
-            placeholder: "Placeholder".to_owned(),
-        })),
+        options: Some(FieldOptions {
+            options: Some(feedback_fusion_common::proto::field_options::Options::Text(
+                TextOptions {
+                    lines: 1,
+                    placeholder: "Placeholder".to_owned(),
+                },
+            )),
+        }),
     }
 }
 
