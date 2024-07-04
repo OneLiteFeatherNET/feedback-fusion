@@ -24,8 +24,8 @@ use std::collections::HashMap;
 
 use common::*;
 use feedback_fusion_common::proto::{
-    create_field_request::Options, response_data::Data, CreateFieldRequest, CreatePromptRequest,
-    CreateResponsesRequest, CreateTargetRequest, FieldType, GetResponsesRequest, RatingResponse,
+    response_data::Data, CreateFieldRequest, CreatePromptRequest, CreateResponsesRequest,
+    CreateTargetRequest, FieldOptions, FieldType, GetResponsesRequest, RatingResponse,
     ResponseData, TextOptions, TextResponse,
 };
 use test_log::test;
@@ -54,10 +54,14 @@ fn create_field(prompt: String) -> CreateFieldRequest {
         title: "Field".to_owned(),
         description: Some("Description".to_owned()),
         field_type: FieldType::Text.into(),
-        options: Some(Options::Text(TextOptions {
-            lines: 1,
-            placeholder: "Placeholder".to_owned(),
-        })),
+        options: Some(FieldOptions {
+            options: Some(feedback_fusion_common::proto::field_options::Options::Text(
+                TextOptions {
+                    lines: 1,
+                    placeholder: "Placeholder".to_owned(),
+                },
+            )),
+        }),
     }
 }
 
@@ -155,9 +159,11 @@ async fn test_get() {
         .first()
         .unwrap()
         .data
-        .eq(&Some(
-            feedback_fusion_common::proto::field_response::Data::Text(TextResponse {
-                text: "text".to_owned(),
-            })
-        ))))
+        .eq(&Some(ResponseData {
+            data: Some(feedback_fusion_common::proto::response_data::Data::Text(
+                TextResponse {
+                    text: "text".to_owned(),
+                }
+            ))
+        }))))
 }
