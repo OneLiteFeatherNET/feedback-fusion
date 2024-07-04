@@ -5,3 +5,4 @@ target/
 common/target/
 codegen/target/
 tests/
+docs/
