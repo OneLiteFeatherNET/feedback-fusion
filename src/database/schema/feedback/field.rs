@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time, save_as_json};
+use crate::{database::schema::date_time_to_timestamp, prelude::*, save_as_json, to_date_time};
 use rbatis::rbdc::DateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -35,45 +35,76 @@ pub enum FieldOptions {
     Number(NumberOptions),
 }
 
-macro_rules! map_options {
-    ($($path:path $(,)?)*) => {
-       $(
-        impl From<FieldOptions> for $path {
-            fn from(value: FieldOptions) -> Self {
-                match value {
-                    FieldOptions::Text(options) => Self::Text(options.into()),
-                    FieldOptions::Rating(options) => Self::Rating(options.into()),
-                    FieldOptions::Checkbox(options) => Self::Checkbox(options.into()),
-                    FieldOptions::Selection(options) => Self::Selection(options.into()),
-                    FieldOptions::Range(options) => Self::Range(options.into()),
-                    FieldOptions::Number(options) => Self::Number(options.into()),
-                }
-            }
+impl From<FieldOptions> for feedback_fusion_common::proto::FieldOptions {
+    fn from(value: FieldOptions) -> Self {
+        match value {
+            FieldOptions::Text(options) => Self {
+                options: Some(feedback_fusion_common::proto::field_options::Options::Text(
+                    options.into(),
+                )),
+            },
+            FieldOptions::Rating(options) => Self {
+                options: Some(
+                    feedback_fusion_common::proto::field_options::Options::Rating(options.into()),
+                ),
+            },
+            FieldOptions::Checkbox(options) => Self {
+                options: Some(
+                    feedback_fusion_common::proto::field_options::Options::Checkbox(options.into()),
+                ),
+            },
+            FieldOptions::Selection(options) => Self {
+                options: Some(
+                    feedback_fusion_common::proto::field_options::Options::Selection(
+                        options.into(),
+                    ),
+                ),
+            },
+            FieldOptions::Range(options) => Self {
+                options: Some(
+                    feedback_fusion_common::proto::field_options::Options::Range(options.into()),
+                ),
+            },
+            FieldOptions::Number(options) => Self {
+                options: Some(
+                    feedback_fusion_common::proto::field_options::Options::Number(options.into()),
+                ),
+            },
         }
-
-        impl TryInto<FieldOptions> for $path {
-            type Error = FeedbackFusionError;
-
-            fn try_into(self) -> Result<FieldOptions> {
-                Ok(match self {
-                    Self::Text(options) => FieldOptions::Text(options.try_into()?),
-                    Self::Rating(options) => FieldOptions::Rating(options.try_into()?),
-                    Self::Checkbox(options) => FieldOptions::Checkbox(options.try_into()?),
-                    Self::Selection(options) => FieldOptions::Selection(options.into()),
-                    Self::Range(options) => FieldOptions::Range(options.try_into()?),
-                    Self::Number(options) => FieldOptions::Number(options.try_into()?),
-                })
-            }
-        }
-        )*
-    };
+    }
 }
 
-map_options!(
-    feedback_fusion_common::proto::create_field_request::Options,
-    feedback_fusion_common::proto::update_field_request::Options,
-    feedback_fusion_common::proto::field::Options,
-);
+impl TryInto<FieldOptions> for feedback_fusion_common::proto::FieldOptions {
+    type Error = FeedbackFusionError;
+    fn try_into(self) -> Result<FieldOptions> {
+        if let Some(options) = self.options {
+            Ok(match options {
+                feedback_fusion_common::proto::field_options::Options::Text(options) => {
+                    FieldOptions::Text(options.try_into()?)
+                }
+                feedback_fusion_common::proto::field_options::Options::Rating(options) => {
+                    FieldOptions::Rating(options.try_into()?)
+                }
+                feedback_fusion_common::proto::field_options::Options::Checkbox(options) => {
+                    FieldOptions::Checkbox(options.try_into()?)
+                }
+                feedback_fusion_common::proto::field_options::Options::Selection(options) => {
+                    FieldOptions::Selection(options.into())
+                }
+                feedback_fusion_common::proto::field_options::Options::Range(options) => {
+                    FieldOptions::Range(options.try_into()?)
+                }
+                feedback_fusion_common::proto::field_options::Options::Number(options) => {
+                    FieldOptions::Number(options.try_into()?)
+                }
+            })
+        } else {
+            Err(FeedbackFusionError::BadRequest(
+                "Missing FieldOptions value".to_owned(),
+            ))
+        }
+    }
+}
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
@@ -402,44 +433,73 @@ pub enum FieldData {
     Number(NumberResponse),
 }
 
-macro_rules! map_response {
-    ($($path:path $(,)?)*) => {
-        $(
-        impl From<FieldData> for $path {
-            fn from(value: FieldData) -> $path {
-                match value {
-                    FieldData::Text(data) => Self::Text(data.into()),
-                    FieldData::Rating(data) => Self::Rating(data.into()),
-                    FieldData::Checkbox(data) => Self::Checkbox(data.into()),
-                    FieldData::Selection(data) => Self::Selection(data.into()),
-                    FieldData::Range(data) => Self::Range(data.into()),
-                    FieldData::Number(data) => Self::Number(data.into()),
-                }
-            }
+impl From<FieldData> for feedback_fusion_common::proto::ResponseData {
+    fn from(value: FieldData) -> feedback_fusion_common::proto::ResponseData {
+        match value {
+            FieldData::Text(data) => Self {
+                data: Some(feedback_fusion_common::proto::response_data::Data::Text(
+                    data.into(),
+                )),
+            },
+            FieldData::Rating(data) => Self {
+                data: Some(feedback_fusion_common::proto::response_data::Data::Rating(
+                    data.into(),
+                )),
+            },
+            FieldData::Checkbox(data) => Self {
+                data: Some(
+                    feedback_fusion_common::proto::response_data::Data::Checkbox(data.into()),
+                ),
+            },
+            FieldData::Selection(data) => Self {
+                data: Some(
+                    feedback_fusion_common::proto::response_data::Data::Selection(data.into()),
+                ),
+            },
+            FieldData::Range(data) => Self {
+                data: Some(feedback_fusion_common::proto::response_data::Data::Range(
+                    data.into(),
+                )),
+            },
+            FieldData::Number(data) => Self {
+                data: Some(feedback_fusion_common::proto::response_data::Data::Number(
+                    data.into(),
+                )),
+            },
         }
-
-        impl TryInto<FieldData> for $path {
-            type Error = FeedbackFusionError;
-
-            fn try_into(self) -> Result<FieldData> {
-                Ok(match self {
-                    Self::Text(data) => FieldData::Text(data.into()),
-                    Self::Rating(data) => FieldData::Rating(data.try_into()?),
-                    Self::Checkbox(data) => FieldData::Checkbox(data.into()),
-                    Self::Selection(data) => FieldData::Selection(data.into()),
-                    Self::Range(data) => FieldData::Range(data.try_into()?),
-                    Self::Number(data) => FieldData::Number(data.try_into()?),
-                })
-            }
-        }
-        )*
-    };
+    }
 }
-
-map_response!(
-    feedback_fusion_common::proto::field_response::Data,
-    feedback_fusion_common::proto::response_data::Data
-);
+impl TryInto<FieldData> for feedback_fusion_common::proto::ResponseData {
+    type Error = FeedbackFusionError;
+    fn try_into(self) -> Result<FieldData> {
+        if let Some(data) = self.data {
+            Ok(match data {
+                feedback_fusion_common::proto::response_data::Data::Text(data) => {
+                    FieldData::Text(data.into())
+                }
+                feedback_fusion_common::proto::response_data::Data::Rating(data) => {
+                    FieldData::Rating(data.try_into()?)
+                }
+                feedback_fusion_common::proto::response_data::Data::Checkbox(data) => {
+                    FieldData::Checkbox(data.into())
+                }
+                feedback_fusion_common::proto::response_data::Data::Selection(data) => {
+                    FieldData::Selection(data.into())
+                }
+                feedback_fusion_common::proto::response_data::Data::Range(data) => {
+                    FieldData::Range(data.try_into()?)
+                }
+                feedback_fusion_common::proto::response_data::Data::Number(data) => {
+                    FieldData::Number(data.try_into()?)
+                }
+            })
+        } else {
+            Err(FeedbackFusionError::BadRequest(
+                "Missing ResponseData value".to_owned(),
+            ))
+        }
+    }
+}
 
 macro_rules! validate_data {
     ($self: expr, $voptions: expr, $rident:ident, $ident:ident, $($type:path = $options:path => $if:block $(,)?)*) => {

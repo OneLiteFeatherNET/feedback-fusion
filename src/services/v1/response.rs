@@ -68,7 +68,7 @@ pub async fn create_responses(
 
             if let Some(field) = field {
                 // validate the data
-                let field_data: FieldData = value.data.unwrap().try_into()?;
+                let field_data: FieldData = value.try_into()?;
                 field_data.validate(field.options())?;
 
                 Ok(FieldResponse::builder()

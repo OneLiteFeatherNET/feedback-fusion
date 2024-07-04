@@ -169,12 +169,7 @@ message NumberOptions {
   string placeholder = 3;
 }
 
-message CreateFieldRequest {
-  string prompt = 1;
-  string title = 2;
-  optional string description = 3;
-  FieldType field_type = 4;
-
+message FieldOptions {
   oneof options {
     TextOptions text = 5;
     RatingOptions rating = 6;
@@ -185,21 +180,21 @@ message CreateFieldRequest {
   }
 }
 
+message CreateFieldRequest {
+  string prompt = 1;
+  string title = 2;
+  optional string description = 3;
+  FieldType field_type = 4;
+  FieldOptions options = 5;
+}
+
 message Field {
   string id = 1;
   string prompt = 2;
   string title = 3;
   optional string description = 4;
   FieldType field_type = 13;
-
-  oneof options {
-    TextOptions text = 5;
-    RatingOptions rating = 6;
-    CheckboxOptions checkbox = 7;
-    SelectionOptions selection = 8;
-    RangeOptions range = 9;
-    NumberOptions number = 10;
-  }
+  FieldOptions options = 5;
 
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
@@ -221,18 +216,10 @@ message FieldPage {
 }
 
 message UpdateFieldRequest {
-  oneof options {
-    TextOptions text = 1;
-    RatingOptions rating = 2;
-    CheckboxOptions checkbox = 3;
-    SelectionOptions selection = 4;
-    RangeOptions range = 5;
-    NumberOptions number = 6;
-  }
-
-  optional string title = 8;
-  optional string description = 9;
-  string id = 10;
+  FieldOptions options = 1;
+  optional string title = 2;
+  optional string description = 3;
+  string id = 4;
 }
 
 message DeleteFieldRequest { string id = 1; }
@@ -282,15 +269,7 @@ message FieldResponse {
   string id = 1;
   string response = 2;
   string field = 3;
-
-  oneof data {
-    TextResponse text = 4;
-    RatingResponse rating = 5;
-    CheckboxResponse checkbox = 6;
-    SelectionResponse selection = 7;
-    RangeResponse range = 8;
-    NumberResponse number = 9;
-  }
+  ResponseData data = 4; 
 }
 
 message FieldResponseList {
