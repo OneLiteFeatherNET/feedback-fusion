@@ -76,8 +76,7 @@ pub async fn authority() -> Result<Authority> {
             jwt::Issuer::from_str(
                 CONFIG
                     .oidc_issuer()
-                    .as_ref()
-                    .and_then(|issuer| Some(issuer.clone()))
+                    .clone()
                     .unwrap_or(issuer.clone().to_string())
                     .as_str(),
             )
