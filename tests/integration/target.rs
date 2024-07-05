@@ -20,13 +20,12 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use common::*;
 use feedback_fusion_common::proto::{
     CreateTargetRequest, DeleteTargetRequest, GetTargetsRequest, UpdateTargetRequest,
 };
 use test_log::test;
 
-mod common;
+use crate::connect;
 
 fn create_request() -> CreateTargetRequest {
     CreateTargetRequest {
@@ -37,7 +36,6 @@ fn create_request() -> CreateTargetRequest {
 
 #[test(tokio::test)]
 async fn test_create() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let request = create_request();
@@ -47,7 +45,6 @@ async fn test_create() {
 
 #[test(tokio::test)]
 async fn test_get() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let target = client
@@ -61,14 +58,13 @@ async fn test_get() {
     assert!(response.is_ok_and(|response| response
         .into_inner()
         .targets
-        .first()
-        .unwrap()
-        .eq(&target)));
+        .iter()
+        .find(|t| t.eq(&&target))
+        .is_some()));
 }
 
 #[test(tokio::test)]
 async fn test_update() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let target = client
@@ -104,7 +100,6 @@ async fn test_update() {
 
 #[test(tokio::test)]
 async fn test_delete() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let target = client
@@ -113,13 +108,20 @@ async fn test_delete() {
         .unwrap()
         .into_inner();
 
-    let request = DeleteTargetRequest { id: target.id };
+    let request = DeleteTargetRequest {
+        id: target.id.clone(),
+    };
     let response = client.delete_target(request).await;
     assert!(response.is_ok());
 
     let request = GetTargetsRequest::default();
     let response = client.get_targets(request).await;
-    assert!(response.is_ok_and(|response| response.into_inner().targets.is_empty()));
+    assert!(response.is_ok_and(|response| response
+        .into_inner()
+        .targets
+        .iter()
+        .find(|t| t.eq(&&target))
+        .is_none()));
 
     let target = client
         .create_target(create_request())
@@ -133,7 +135,9 @@ async fn test_delete() {
         .unwrap()
         .into_inner();
 
-    let request = DeleteTargetRequest { id: target.id };
+    let request = DeleteTargetRequest {
+        id: target.id.clone(),
+    };
     let response = client.delete_target(request).await;
     assert!(response.is_ok());
 
@@ -142,6 +146,7 @@ async fn test_delete() {
     assert!(response.is_ok_and(|response| {
         let inner = response.into_inner();
 
-        inner.targets.len() == 1 && inner.targets.first().unwrap().id.eq(&target2.id) 
+        inner.targets.iter().find(|t| t.eq(&&target2)).is_some()
+            && inner.targets.iter().find(|t| t.eq(&&target)).is_none()
     }));
 }

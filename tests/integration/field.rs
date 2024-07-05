@@ -20,14 +20,13 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use common::*;
 use feedback_fusion_common::proto::{
     CreateFieldRequest, CreatePromptRequest, CreateTargetRequest, DeleteFieldRequest, FieldOptions,
     FieldType, GetFieldsRequest, TextOptions, UpdateFieldRequest,
 };
 use test_log::test;
 
-mod common;
+use crate::connect;
 
 fn create_target() -> CreateTargetRequest {
     CreateTargetRequest {
@@ -88,7 +87,6 @@ macro_rules! setup {
 
 #[test(tokio::test)]
 async fn test_create() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let target = client
@@ -109,7 +107,6 @@ async fn test_create() {
 
 #[test(tokio::test)]
 async fn test_get() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let (_, prompt, field) = setup!(client);
@@ -123,14 +120,13 @@ async fn test_get() {
     assert!(response.is_ok_and(|response| response
         .into_inner()
         .fields
-        .first()
-        .unwrap()
-        .eq(&field)));
+        .iter()
+        .find(|f| f.eq(&&field))
+        .is_some()));
 }
 
 #[test(tokio::test)]
 async fn test_update() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let (_, _, field) = setup!(client);
@@ -162,12 +158,13 @@ async fn test_update() {
 
 #[test(tokio::test)]
 async fn test_delete() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let (_, prompt, field) = setup!(client);
 
-    let request = DeleteFieldRequest { id: field.id };
+    let request = DeleteFieldRequest {
+        id: field.id.clone(),
+    };
     let response = client.delete_field(request).await;
     assert!(response.is_ok());
 
@@ -176,7 +173,12 @@ async fn test_delete() {
         ..Default::default()
     };
     let response = client.get_fields(request).await;
-    assert!(response.is_ok_and(|response| response.into_inner().fields.is_empty()));
+    assert!(response.is_ok_and(|response| response
+        .into_inner()
+        .fields
+        .iter()
+        .find(|f| f.eq(&&field))
+        .is_none()));
 
     let field = client
         .create_field(create_field(prompt.id.clone()))
@@ -190,7 +192,9 @@ async fn test_delete() {
         .unwrap()
         .into_inner();
 
-    let request = DeleteFieldRequest { id: field.id };
+    let request = DeleteFieldRequest {
+        id: field.id.clone(),
+    };
     let response = client.delete_field(request).await;
     assert!(response.is_ok());
 
@@ -202,6 +206,7 @@ async fn test_delete() {
     assert!(response.is_ok_and(|response| {
         let inner = response.into_inner();
 
-        inner.fields.len() == 1 && inner.fields.first().unwrap().id.eq(&field2.id)
+        inner.fields.iter().find(|t| t.eq(&&field)).is_none()
+            && inner.fields.iter().find(|t| t.eq(&&field2)).is_some()
     }));
 }

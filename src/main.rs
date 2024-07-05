@@ -43,7 +43,7 @@ pub mod database;
 pub mod error;
 pub mod services;
 
-const ADDRESS: &str = "[::1]:8000";
+const ADDRESS: &str = "0.0.0.0:8000";
 
 #[tokio::main]
 async fn main() {
@@ -130,7 +130,7 @@ async fn main() {
         let authority = oidc::authority().await.unwrap();
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
-            .with_terse_error_handler();
+            .with_verbose_error_handler();
 
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
@@ -141,6 +141,8 @@ async fn main() {
 
         let public_service = PublicFeedbackFusionV1Context { connection };
         let public_service = PublicFeedbackFusionV1Server::new(public_service);
+
+        info!("Listening for incoming requests on {ADDRESS}");
 
         Server::builder()
             .layer(tower_http::trace::TraceLayer::new_for_grpc())
@@ -156,7 +158,6 @@ async fn main() {
             .await
             .unwrap();
     });
-    info!("Listening for incoming requests on {ADDRESS}");
 
     match tokio::signal::ctrl_c().await {
         Ok(()) => {}

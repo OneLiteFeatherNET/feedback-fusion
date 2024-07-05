@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   pull_request:
   merge_group:
+  push: 
+    branches:
+      - main
 
 jobs:
   check:
@@ -74,7 +77,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: [postgres, mysql, mariadb, mssql]
+        test: [postgres, mysql, mariadb, mssql, unittest]
     steps:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
@@ -101,4 +104,4 @@ jobs:
           args: cargo-make
 
       - name: Tests
-        run: cargo make ${{ matrix.database }}
+        run: cargo make ${{ matrix.test }}

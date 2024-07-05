@@ -1,9 +1,9 @@
-name: Nightly
+name: Release 
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"  
+  push:
+    tags:
+      - "server-*"
 
 jobs:
   check:
@@ -111,6 +111,9 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Extract version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/server-}" >> $GITHUB_ENV
+
       - name: Login into repository
         uses: docker/login-action@v3
         with:
@@ -123,4 +126,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/onelitefeathernet/feedback-fusion:nightly
+          tags: ghcr.io/onelitefeathernet/feedback-fusion:${env.VERSION},ghcr.io/onelitefeathernet/feedback-fusion:latest
