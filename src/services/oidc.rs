@@ -39,13 +39,13 @@ pub async fn authority() -> Result<Authority> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
     // discover the oidc endpoints
     let issuer = IssuerUrl::new(CONFIG.oidc_discovery_url().clone())
-        .map_err(|_| FeedbackFusionError::ConfigurationError("invalid discovery url".to_owned()))?;
+        .map_err(|error| FeedbackFusionError::ConfigurationError(format!("Invalid discovery url: {}", error)))?;
     let metadata = CoreProviderMetadata::discover_async(
         issuer.clone(),
         openidconnect::reqwest::async_http_client,
     )
     .await
-    .map_err(|_| FeedbackFusionError::ConfigurationError("invalid oidc endpoint".to_owned()))?;
+    .map_err(|error| FeedbackFusionError::ConfigurationError(format!("Invalid oidc endpoint: {}", error)))?;
     // extract the jwks
     let jwks_url = metadata.jwks_uri().url();
     // extract the algorithms
@@ -72,7 +72,17 @@ pub async fn authority() -> Result<Authority> {
             jwt::Audience::from_str(CONFIG.oidc_audience().as_str())
                 .expect("Invalid oidc audience"),
         )
-        .require_issuer(jwt::Issuer::from_str(issuer.as_str()).unwrap());
+        .require_issuer(
+            jwt::Issuer::from_str(
+                CONFIG
+                    .oidc_issuer()
+                    .as_ref()
+                    .and_then(|issuer| Some(issuer.clone()))
+                    .unwrap_or(issuer.clone().to_string())
+                    .as_str(),
+            )
+            .unwrap(),
+        );
     for algorithm in algorithms {
         validator = validator.add_approved_algorithm(algorithm);
     }

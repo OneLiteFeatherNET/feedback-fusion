@@ -1,9 +1,9 @@
-//SPDX-FileCopyrightText: 2023 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
 
-// Copyright (c) 2023 OneLiteFeatherNet
+// Copyright (c) 2024 OneLiteFeatherNet
 
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 //associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -25,66 +25,8 @@ use openidconnect::{
     reqwest::async_http_client,
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
-use std::{
-    fs::File,
-    path::Path,
-    process::{Child, Command, Stdio},
-};
-use tracing::{debug, info};
 
-pub const GRPC_ENDPOINT: &str = "http://[::1]:8000";
-
-pub struct BackendServer(Child);
-
-impl Drop for BackendServer {
-    fn drop(&mut self) {
-        let _ = self.0.kill();
-    }
-}
-
-pub fn run_server() -> BackendServer {
-    // construct the executable path
-    let mut path = std::env::current_exe().unwrap();
-    assert!(path.pop());
-    assert!(path.pop());
-    path = path.join("feedback-fusion");
-
-    // prepare the command
-    let mut command = Command::new(path);
-    let seed = rand::random::<u16>();
-    let stdout = Stdio::from(
-        File::create(Path::new(env!("OUT_DIR")).join(format!("{}stdout", seed))).unwrap(),
-    );
-    let stderr = Stdio::from(
-        File::create(Path::new(env!("OUT_DIR")).join(format!("{}stderr", seed))).unwrap(),
-    );
-    info!("OUT={} SEED={}", env!("OUT_DIR"), seed);
-
-    command.stdin(Stdio::piped());
-    command.stdout(stdout);
-    command.stderr(stderr);
-
-    command.env_clear();
-    let database = env!("DATABASE");
-    let mut env = vec!["_USERNAME", "_PASSWORD", "_ENDPOINT", "_DATABASE"]
-        .into_iter()
-        .map(|s| format!("{}{}", database, s))
-        .collect::<Vec<String>>();
-    env.push("OIDC_DISCOVERY_URL".to_owned());
-
-    for key in env.iter() {
-        if let Ok(value) = std::env::var(key) {
-            debug!("{:?}: {:?}", key, value);
-            command.env(key, value);
-        }
-    }
-    command.env("RUST_LOG", "DEBUG");
-
-    let child = command.spawn().unwrap();
-    std::thread::sleep(std::time::Duration::from_secs(2));
-
-    BackendServer(child)
-}
+pub const GRPC_ENDPOINT: &str = "http://localhost:8000";
 
 #[allow(unused)]
 pub async fn authenticate() -> String {
@@ -111,8 +53,8 @@ pub async fn authenticate() -> String {
 #[macro_export]
 macro_rules! connect {
     () => {{
-        let channel = tonic::transport::Channel::from_static(common::GRPC_ENDPOINT).connect().await.unwrap();
-        let token: tonic::metadata::MetadataValue<_> = format!("Bearer {}", common::authenticate().await).parse().unwrap();
+        let channel = tonic::transport::Channel::from_static(crate::common::GRPC_ENDPOINT).connect().await.unwrap();
+        let token: tonic::metadata::MetadataValue<_> = format!("Bearer {}", crate::common::authenticate().await).parse().unwrap();
 
         let client =
             feedback_fusion_common::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(channel, move |mut request: tonic::Request<()>| {
@@ -123,7 +65,7 @@ macro_rules! connect {
                 Ok(request)
             });
 
-        let public_client = feedback_fusion_common::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect(common::GRPC_ENDPOINT)
+        let public_client = feedback_fusion_common::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect(crate::common::GRPC_ENDPOINT)
             .await
             .unwrap();
 

@@ -20,7 +20,6 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use common::*;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_client::FeedbackFusionV1Client, CreateFieldRequest, CreatePromptRequest,
     CreateTargetRequest, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
@@ -30,15 +29,12 @@ use feedback_fusion_common::proto::{
 use test_log::test;
 use tonic::{Code, Request};
 
-mod common;
-
 macro_rules! test_authentication {
     ($request:path, $method:ident) => {
         paste::paste! {
             #[test(tokio::test)]
             async fn [<test_$method>]() {
-                let _server = run_server();
-                let mut client = FeedbackFusionV1Client::connect(GRPC_ENDPOINT)
+                let mut client = FeedbackFusionV1Client::connect(crate::common::GRPC_ENDPOINT)
                     .await
                     .unwrap();
 

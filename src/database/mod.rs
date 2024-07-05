@@ -107,9 +107,6 @@ macro_rules! database_configuration {
                                 let url = config.to_url($scheme);
                                 connection.init($driver {}, url.as_str())?;
 
-                                #[cfg(feature = "test")]
-                                connection.exec(include_str!("drop.sql"), vec![]).await?;
-
                                 // perform migrations
                                 let last: Option<Migration> = Migration::select_latest(&connection).await.unwrap_or_default();
                                 if let Some(last) = last {

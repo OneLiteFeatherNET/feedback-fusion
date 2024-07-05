@@ -65,5 +65,3 @@ all-databases = ["postgres", "mysql", "mssql"]
 postgres = ["rbdc-pg"]
 mysql = ["rbdc-mysql"]
 mssql = ["rbdc-mssql"]
-
-test = []

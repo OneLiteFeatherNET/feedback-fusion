@@ -22,7 +22,6 @@
 
 use std::collections::HashMap;
 
-use common::*;
 use feedback_fusion_common::proto::{
     response_data::Data, CreateFieldRequest, CreatePromptRequest, CreateResponsesRequest,
     CreateTargetRequest, FieldOptions, FieldType, GetResponsesRequest, RatingResponse,
@@ -30,7 +29,7 @@ use feedback_fusion_common::proto::{
 };
 use test_log::test;
 
-mod common;
+use crate::connect;
 
 fn create_target() -> CreateTargetRequest {
     CreateTargetRequest {
@@ -91,7 +90,6 @@ macro_rules! setup {
 
 #[test(tokio::test)]
 async fn test_create() {
-    let _server = run_server();
     let (mut client, mut public_client) = connect!();
     let (_, prompt, field) = setup!(client);
 
@@ -124,7 +122,6 @@ async fn test_create() {
 
 #[test(tokio::test)]
 async fn test_get() {
-    let _server = run_server();
     let (mut client, mut public_client) = connect!();
     let (_, prompt, field) = setup!(client);
 

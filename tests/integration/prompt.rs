@@ -20,14 +20,13 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use common::*;
 use feedback_fusion_common::proto::{
     CreatePromptRequest, CreateTargetRequest, DeletePromptRequest, GetPromptRequest,
     GetPromptsRequest, UpdatePromptRequest,
 };
 use test_log::test;
 
-mod common;
+use crate::connect;
 
 fn create_target() -> CreateTargetRequest {
     CreateTargetRequest {
@@ -47,7 +46,6 @@ fn create_prompt(target: String) -> CreatePromptRequest {
 
 #[test(tokio::test)]
 async fn test_create() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let target = client
@@ -63,7 +61,6 @@ async fn test_create() {
 
 #[test(tokio::test)]
 async fn test_get() {
-    let _server = run_server();
     let (mut client, mut public_client) = connect!();
 
     let target = client
@@ -84,19 +81,21 @@ async fn test_get() {
     let response = public_client.get_prompt(request).await;
     assert!(response.is_ok_and(|response| response.into_inner().eq(&prompt)));
 
-    let request = GetPromptsRequest { target: target.id, ..Default::default() };
+    let request = GetPromptsRequest {
+        target: target.id,
+        ..Default::default()
+    };
     let response = client.get_prompts(request).await;
     assert!(response.is_ok_and(|response| response
         .into_inner()
         .prompts
-        .first()
-        .unwrap()
-        .eq(&prompt)));
+        .iter()
+        .find(|p| p.eq(&&prompt))
+        .is_some()));
 }
 
 #[test(tokio::test)]
 async fn test_update() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let target = client
@@ -156,7 +155,6 @@ async fn test_update() {
 
 #[test(tokio::test)]
 async fn test_delete() {
-    let _server = run_server();
     let (mut client, _) = connect!();
 
     let target = client
@@ -171,13 +169,23 @@ async fn test_delete() {
         .unwrap()
         .into_inner();
 
-    let request = DeletePromptRequest { id: prompt.id };
+    let request = DeletePromptRequest {
+        id: prompt.id.clone(),
+    };
     let response = client.delete_prompt(request).await;
     assert!(response.is_ok());
 
-    let request = GetPromptsRequest { target: target.id.clone(), ..Default::default() };
+    let request = GetPromptsRequest {
+        target: target.id.clone(),
+        ..Default::default()
+    };
     let response = client.get_prompts(request).await;
-    assert!(response.is_ok_and(|response| response.into_inner().prompts.is_empty()));
+    assert!(response.is_ok_and(|response| response
+        .into_inner()
+        .prompts
+        .iter()
+        .find(|p| p.eq(&&prompt))
+        .is_none()));
 
     let prompt = client
         .create_prompt(create_prompt(target.id.clone()))
@@ -191,15 +199,21 @@ async fn test_delete() {
         .unwrap()
         .into_inner();
 
-    let request = DeletePromptRequest { id: prompt.id };
+    let request = DeletePromptRequest {
+        id: prompt.id.clone(),
+    };
     let response = client.delete_prompt(request).await;
     assert!(response.is_ok());
 
-    let request = GetPromptsRequest { target: target.id, ..Default::default() };
+    let request = GetPromptsRequest {
+        target: target.id,
+        ..Default::default()
+    };
     let response = client.get_prompts(request).await;
     assert!(response.is_ok_and(|response| {
         let inner = response.into_inner();
 
-        inner.prompts.len() == 1 && inner.prompts.first().unwrap().id.eq(&prompt2.id)
+        inner.prompts.iter().find(|t| t.eq(&&prompt)).is_none()
+            && inner.prompts.iter().find(|t| t.eq(&&prompt2)).is_some()
     }));
 }

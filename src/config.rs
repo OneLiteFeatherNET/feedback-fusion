@@ -42,6 +42,7 @@ pub struct Config {
     oidc_discovery_url: String,
     #[serde(default = "default_oidc_audience")]
     oidc_audience: String,
+    oidc_issuer: Option<String>,
     config_path: Option<String>,
 }
 
@@ -187,7 +188,11 @@ pub async fn sync_target(target: TargetConfig, transaction: &dyn Executor) -> Re
 }
 
 #[instrument(skip_all)]
-pub async fn sync_prompt(prompt: PromptConfig, transaction: &dyn Executor, target: String) -> Result<()> {
+pub async fn sync_prompt(
+    prompt: PromptConfig,
+    transaction: &dyn Executor,
+    target: String,
+) -> Result<()> {
     let id = prompt.id.clone();
     update_otherwise_create!(transaction, Prompt, prompt, title, description, active => target = target);
 
@@ -201,7 +206,11 @@ pub async fn sync_prompt(prompt: PromptConfig, transaction: &dyn Executor, targe
 }
 
 #[instrument(skip_all)]
-pub async fn sync_field(field: FieldConfig, transaction: &dyn Executor, prompt: String) -> Result<()> {
+pub async fn sync_field(
+    field: FieldConfig,
+    transaction: &dyn Executor,
+    prompt: String,
+) -> Result<()> {
     update_otherwise_create!(transaction, Field, field, title, description, field_type, options => prompt = prompt);
 
     Ok(())
