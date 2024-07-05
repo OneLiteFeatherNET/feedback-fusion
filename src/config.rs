@@ -102,7 +102,7 @@ pub async fn sync_config(connection: &DatabaseConnection) -> Result<()> {
         })?;
 
     // parse the config
-    let config: InstanceConfig = toml::from_str(content.as_str()).map_err(|error| {
+    let config: InstanceConfig = serde_yaml::from_str(content.as_str()).map_err(|error| {
         FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
     })?;
     info!("Sucessfully parsed config");
