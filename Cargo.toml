@@ -22,6 +22,7 @@ getset = "0.1.2"
 itertools = "0.12.1"
 kanal = "0.1.0-pre8"
 lazy_static = "1.4.0"
+log = "0.4.22"
 nanoid = "0.4.0"
 notify = { version = "6.1.1", default-features = false, features = [
   "macos_kqueue",

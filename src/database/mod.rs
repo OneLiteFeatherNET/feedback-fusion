@@ -106,6 +106,8 @@ macro_rules! database_configuration {
                             Self::$ident(config) => {
                                 let url = config.to_url($scheme);
                                 connection.init($driver {}, url.as_str())?;
+                                connection.intercepts.clear();
+                                connection.intercepts.push(std::sync::Arc::new(rbatis::plugin::intercept_log::LogInterceptor::new(log::LevelFilter::Debug)));
 
                                 // perform migrations
                                 let last: Option<Migration> = Migration::select_latest(&connection).await.unwrap_or_default();
