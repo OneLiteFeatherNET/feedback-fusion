@@ -23,6 +23,10 @@
 
 use crate::{database::migration::Migration, prelude::*};
 use rbatis::RBatis;
+use tokio_retry::{
+    strategy::{jitter, FibonacciBackoff},
+    Retry,
+};
 
 pub mod migration;
 pub mod schema;
@@ -105,7 +109,23 @@ macro_rules! database_configuration {
                             #[cfg(feature = $scheme)]
                             Self::$ident(config) => {
                                 let url = config.to_url($scheme);
-                                connection.init($driver {}, url.as_str())?;
+
+                                let retry_strategy = FibonacciBackoff::from_millis(500)
+                                    .map(jitter)
+                                    .take(5);
+
+                                Retry::spawn(retry_strategy.clone(), || async {
+                                    match connection.init($driver {}, url.as_str()) {
+                                        Ok(result) => Ok(result),
+                                        Err(error) => {
+                                            error!("Failed to establish DatabaseConnection, retrying in {}s", retry_strategy.clone().next().unwrap().as_secs());
+                                            error!("{}", error);
+
+                                            Err(error)
+                                        }
+                                    }
+                                }).await?;
+
                                 connection.intercepts.clear();
                                 connection.intercepts.push(std::sync::Arc::new(rbatis::plugin::intercept_log::LogInterceptor::new(log::LevelFilter::Debug)));
 

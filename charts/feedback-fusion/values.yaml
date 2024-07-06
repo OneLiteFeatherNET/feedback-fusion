@@ -65,9 +65,12 @@ resources: {}
 livenessProbe:
   grpc:
     port: 8000
-readinessProbe:
+  periodSeconds: 5
+startupProbe:
   grpc:
     port: 8000
+  periodSeconds: 2
+  failureThreshold: 10
 
 # Additional volumes on the output Deployment definition.
 volumes: []
