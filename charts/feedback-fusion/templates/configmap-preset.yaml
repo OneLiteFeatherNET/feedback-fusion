@@ -4,8 +4,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.feedbackFusion.preset.name }}
 data:
-  {{- if .Values.feedbackFusion.preset.data }}
+  {{- with .Values.feedbackFusion.preset.data }}
   config.yaml: |
-    {{ .Values.feedbackFusion.preset.data | indent 4 }}
+    {{ toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}

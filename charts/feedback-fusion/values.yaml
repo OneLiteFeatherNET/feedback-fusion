@@ -93,7 +93,25 @@ feedbackFusion:
     enabled: false
     name: feedback-fusion-preset
     create: false 
-    data: |
+    data:
+      # targets:
+      #   - id: target 
+      #     name: TestTarget 
+      #     description: A nice Target 
+      #     prompts:
+      #       - id: prompt 
+      #         title: Testprompt 
+      #         description: A nice Prompt 
+      #         active: true
+      #         fields:
+      #           - id: field1 
+      #             title: TextField
+      #             field_type: text 
+      #             options:
+      #               type: text
+      #               lines: 1 
+      #               placeholder: test
+
 
   config: 
     secret: feedback-fusion-config
