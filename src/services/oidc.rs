@@ -38,7 +38,7 @@ use openidconnect::{
 pub async fn authority() -> Result<Authority> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
     // discover the oidc endpoints
-    let issuer = IssuerUrl::new(CONFIG.oidc_discovery_url().clone())
+    let issuer = IssuerUrl::new(CONFIG.oidc_provider().clone())
         .map_err(|error| FeedbackFusionError::ConfigurationError(format!("Invalid discovery url: {}", error)))?;
     let metadata = CoreProviderMetadata::discover_async(
         issuer.clone(),

@@ -65,9 +65,12 @@ resources: {}
 livenessProbe:
   grpc:
     port: 8000
-readinessProbe:
+  periodSeconds: 5
+startupProbe:
   grpc:
     port: 8000
+  periodSeconds: 2
+  failureThreshold: 10
 
 # Additional volumes on the output Deployment definition.
 volumes: []
@@ -93,14 +96,32 @@ feedbackFusion:
     enabled: false
     name: feedback-fusion-preset
     create: false 
-    data: |
+    data:
+      # targets:
+      #   - id: target 
+      #     name: TestTarget 
+      #     description: A nice Target 
+      #     prompts:
+      #       - id: prompt 
+      #         title: Testprompt 
+      #         description: A nice Prompt 
+      #         active: true
+      #         fields:
+      #           - id: field1 
+      #             title: TextField
+      #             field_type: text 
+      #             options:
+      #               type: text
+      #               lines: 1 
+      #               placeholder: test
+
 
   config: 
     secret: feedback-fusion-config
     # RUST_LOG: INFO
     # GLOBAL_RATE_LIMIT: 10
     # OIDC_AUDIENCE: ""
-    # OIDC_DISCOVERY_URL: ""
+    # OIDC_PROVIDER: ""
     #
     # POSTGRES_ENDPOINT: ""
     # POSTGRES_USERNAME: ""

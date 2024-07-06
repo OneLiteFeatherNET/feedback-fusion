@@ -30,7 +30,7 @@ pub const GRPC_ENDPOINT: &str = "http://localhost:8000";
 
 #[allow(unused)]
 pub async fn authenticate() -> String {
-    let issuer = IssuerUrl::new(env!("OIDC_DISCOVERY_URL").to_owned()).unwrap();
+    let issuer = IssuerUrl::new(env!("OIDC_PROVIDER").to_owned()).unwrap();
     let metadata = CoreProviderMetadata::discover_async(issuer, async_http_client)
         .await
         .unwrap();

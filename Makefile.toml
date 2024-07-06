@@ -70,7 +70,7 @@ dependencies = ["docker_network"]
 script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d && sleep 5 && curl -s -o /dev/null http://localhost:5151/.well-known/openid-configuration"
 
 [tasks.integration_test]
-env = { OIDC_DISCOVERY_URL = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "INFO" }
+env = { OIDC_PROVIDER = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "INFO" }
 command = "cargo"
 args = ["test", "--no-fail-fast", "--test", "integration_test"]
 
@@ -86,7 +86,7 @@ docker run --name feedback-fusion -d \
   -e POSTGRES_PASSWORD=password \
   -e POSTGRES_DATABASE=postgres \
   -e POSTGRES_ENDPOINT=postgres:5432 \
-  -e OIDC_DISCOVERY_URL=http://oidc-server-mock \
+  -e OIDC_PROVIDER=http://oidc-server-mock \
   -e OIDC_ISSUER=http://localhost:5151 \
   -e RUST_LOG=DEBUG \
   --network feedback-fusion -p 8000:8000 feedback-fusion
@@ -125,7 +125,7 @@ docker run --name feedback-fusion -d \
   -e MYSQL_PASSWORD=password \
   -e MYSQL_DATABASE=database \
   -e MYSQL_ENDPOINT=mysql:3306 \
-  -e OIDC_DISCOVERY_URL=http://oidc-server-mock \
+  -e OIDC_PROVIDER=http://oidc-server-mock \
   -e OIDC_ISSUER=http://localhost:5151 \
   -e RUST_LOG=DEBUG \
   --network feedback-fusion -p 8000:8000 feedback-fusion
@@ -183,7 +183,7 @@ docker run --name feedback-fusion -d \
   -e MSSQL_PASSWORD=Password1 \
   -e MSSQL_DATABASE=master \
   -e MSSQL_ENDPOINT=mssql:1433 \
-  -e OIDC_DISCOVERY_URL=http://oidc-server-mock \
+  -e OIDC_PROVIDER=http://oidc-server-mock \
   -e OIDC_ISSUER=http://localhost:5151 \
   -e RUST_LOG=DEBUG \
   --network feedback-fusion -p 8000:8000 feedback-fusion

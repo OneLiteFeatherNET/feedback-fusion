@@ -27,6 +27,7 @@ use feedback_fusion_common::proto::{
 };
 use validator::Validate;
 
+#[instrument(skip_all)]
 pub async fn create_prompt(
     context: &FeedbackFusionV1Context,
     request: Request<CreatePromptRequest>,
@@ -47,6 +48,7 @@ pub async fn create_prompt(
     Ok(Response::new(prompt.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn get_prompt(
     context: &PublicFeedbackFusionV1Context,
     request: Request<GetPromptRequest>,
@@ -65,6 +67,7 @@ pub async fn get_prompt(
     }
 }
 
+#[instrument(skip_all)]
 pub async fn get_prompts(
     context: &FeedbackFusionV1Context,
     request: Request<GetPromptsRequest>,
@@ -91,6 +94,7 @@ pub async fn get_prompts(
     }))
 }
 
+#[instrument(skip_all)]
 pub async fn update_prompt(
     context: &FeedbackFusionV1Context,
     request: Request<UpdatePromptRequest>,
@@ -112,6 +116,7 @@ pub async fn update_prompt(
     Ok(Response::new(prompt.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn delete_prompt(
     context: &FeedbackFusionV1Context,
     request: Request<DeletePromptRequest>,

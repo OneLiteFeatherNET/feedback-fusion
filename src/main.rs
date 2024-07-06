@@ -54,12 +54,16 @@ async fn main() {
         .init();
 
     // init config
+    debug!("Reading ServerConfig");
     lazy_static::initialize(&CONFIG);
+    debug!("Reading Databaseconfig");
     lazy_static::initialize(&DATABASE_CONFIG);
 
     // connect to the database
+    debug!("Connecting to the Database");
     let connection = DATABASE_CONFIG.connect().await.unwrap();
     let connection = DatabaseConnection::from(connection);
+    info!("Connection to the Database established");
 
     // start config file watcher
     if let Some(config_path) = CONFIG.config_path().as_ref() {
@@ -95,6 +99,7 @@ async fn main() {
             while let Some(response) = stream.next().await {
                 match response {
                     Ok(_) => {
+                        info!("Detected config chage");
                         let span = info_span!("ConfigReload");
                         let _ = span.enter();
 
@@ -109,16 +114,20 @@ async fn main() {
 
             Ok::<(), FeedbackFusionError>(())
         });
+    } else {
+        warn!("CONFIG_PATH not set, wont start watcher");
     }
 
     let (sender, receiver) = kanal::oneshot_async::<()>();
 
     tokio::spawn(async move {
+        debug!("Constructing health reporter");
         let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
         health_reporter
             .set_serving::<PublicFeedbackFusionV1Server<PublicFeedbackFusionV1Context>>()
             .await;
 
+        debug!("Constructing reflection service");
         let reflection_service = tonic_reflection::server::Builder::configure()
             .register_encoded_file_descriptor_set(
                 feedback_fusion_common::proto::FILE_DESCRIPTOR_SET,
@@ -127,6 +136,7 @@ async fn main() {
             .unwrap();
 
         // build the authority
+        info!("Tryng to contact the OIDC Provider");
         let authority = oidc::authority().await.unwrap();
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
@@ -159,6 +169,7 @@ async fn main() {
             .unwrap();
     });
 
+    debug!("Trying to listen for graceful shutdown");
     match tokio::signal::ctrl_c().await {
         Ok(()) => {}
         Err(error) => {
