@@ -38,4 +38,5 @@ jobs:
         uses: JS-DevTools/npm-publish@v3
         with:
           package: lib
+          access: public
           token: ${{ secrets.NPM_TOKEN }}
