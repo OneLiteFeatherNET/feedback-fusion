@@ -39,7 +39,7 @@ lazy_static! {
 pub struct Config {
     #[serde(default = "default_global_rate_limit")]
     global_rate_limit: u64,
-    oidc_discovery_url: String,
+    oidc_provider: String,
     #[serde(default = "default_oidc_audience")]
     oidc_audience: String,
     oidc_issuer: Option<String>,

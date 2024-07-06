@@ -118,7 +118,7 @@ feedbackFusion:
     # RUST_LOG: INFO
     # GLOBAL_RATE_LIMIT: 10
     # OIDC_AUDIENCE: ""
-    # OIDC_DISCOVERY_URL: ""
+    # OIDC_PROVIDER: ""
     #
     # POSTGRES_ENDPOINT: ""
     # POSTGRES_USERNAME: ""
