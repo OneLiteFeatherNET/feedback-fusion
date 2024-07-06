@@ -30,6 +30,7 @@ use feedback_fusion_common::proto::{
     UpdateFieldRequest,
 };
 
+#[instrument(skip_all)]
 pub async fn create_field(
     context: &FeedbackFusionV1Context,
     request: Request<CreateFieldRequest>,
@@ -51,6 +52,7 @@ pub async fn create_field(
     Ok(Response::new(field.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn get_active_fields(
     context: &PublicFeedbackFusionV1Context,
     request: Request<GetFieldsRequest>,
@@ -88,6 +90,7 @@ pub async fn get_active_fields(
     }))
 }
 
+#[instrument(skip_all)]
 pub async fn get_fields(
     context: &FeedbackFusionV1Context,
     request: Request<GetFieldsRequest>,
@@ -117,6 +120,7 @@ pub async fn get_fields(
     }))
 }
 
+#[instrument(skip_all)]
 pub async fn update_field(
     context: &FeedbackFusionV1Context,
     request: Request<UpdateFieldRequest>,
@@ -144,6 +148,7 @@ pub async fn update_field(
     Ok(Response::new(field.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn delete_field(
     context: &FeedbackFusionV1Context,
     request: Request<DeleteFieldRequest>,

@@ -85,7 +85,7 @@ macro_rules! handler {
                 )*
             ];
 
-             match policy.evaluate(
+            match policy.evaluate(
                 $request
                     .extensions()
                     .get::<OIDCClaims>()
@@ -96,7 +96,10 @@ macro_rules! handler {
                     handler!($handler, $self, $request)
                 },
                 Err(_) => {
-                    let target = async $target.await;
+                    let target = info_span!("Extracting referenced target")
+                                    .in_scope(|| async {
+                                        async $target.await
+                                    }).await;
 
                     match target {
                         Ok(target) => {
@@ -107,7 +110,7 @@ macro_rules! handler {
                                      )*
                                 ];
 
-                                 policy
+                                policy
                                     .evaluate(
                                         $request
                                             .extensions()
@@ -139,7 +142,7 @@ macro_rules! handler {
                     }
 
                 }
-            } 
+            }
         }
     }};
     ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*) => {{
@@ -150,7 +153,7 @@ macro_rules! handler {
             )*
         ];
 
-         policy
+        policy
             .evaluate(
                 $request
                     .extensions()

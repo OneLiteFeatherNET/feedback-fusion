@@ -32,6 +32,7 @@ use feedback_fusion_common::proto::{
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::HashMap;
 
+#[instrument(skip_all)]
 pub async fn create_responses(
     context: &PublicFeedbackFusionV1Context,
     request: Request<CreateResponsesRequest>,
@@ -107,6 +108,7 @@ async fn field_responses(
     impled!()
 }
 
+#[instrument(skip_all)]
 pub async fn get_responses(
     context: &FeedbackFusionV1Context,
     request: Request<GetResponsesRequest>,
