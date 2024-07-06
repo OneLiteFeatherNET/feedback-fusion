@@ -36,7 +36,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: grpc
-              containerPort: {{ .Values.service.port }}
+              containerPort: 8000 
               protocol: TCP
           envFrom:
             - secretRef:
