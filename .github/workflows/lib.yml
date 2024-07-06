@@ -1,4 +1,4 @@
-name: Release 
+name: Publish library 
 
 on:
   push:
@@ -27,11 +27,15 @@ jobs:
         working-directory: lib
 
       - name: Build
+        run: pnpm run protoc
+        working-directory: lib
+
+      - name: Build
         run: pnpm run tsc
         working-directory: lib
 
       - name: Publish
         uses: JS-DevTools/npm-publish@v3
-        working-directory: lib
         with:
+          package: lib
           token: ${{ secrets.NPM_TOKEN }}

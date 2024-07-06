@@ -12,6 +12,7 @@
   },
   "scripts": {
     "analyze": "cem analyze --litelement",
+    "protoc": "npx protoc --ts_out src --ts_opt server_none --proto_path ../proto ../proto/feedback-fusion-v1.proto",
     "build": "tsc && npm run analyze -- --exclude dist",
     "prepublish": "tsc && npm run analyze -- --exclude dist",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",

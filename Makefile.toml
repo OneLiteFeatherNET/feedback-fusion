@@ -12,18 +12,9 @@ args = ["i"]
 
 [tasks.core_generate]
 dependencies = ["pnpm"]
-cwd = "./lib/src/"
-command = "npx"
-args = [
-  "protoc",
-  "--ts_out",
-  ".",
-  "--ts_opt",
-  "server_none",
-  "--proto_path",
-  "../../proto",
-  "../../proto/feedback-fusion-v1.proto",
-]
+cwd = "./lib/"
+command = "pnpm"
+args = ["run", "protoc"]
 
 [tasks.docs]
 dependencies = ["core_generate"]
