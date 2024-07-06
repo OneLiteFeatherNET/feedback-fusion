@@ -10,7 +10,7 @@ feedback_fusion_codegen = { path = "./codegen" }
 
 aliri = "0.6.3"
 aliri_clock = "0.1.4"
-aliri_oauth2 = "0.10.1"
+aliri_oauth2 = { version = "0.10.1", features = ["rustls-tls"] }
 aliri_tower = "=0.5.0"
 aliri_traits = "0.1.1"
 async-trait = "0.1.80"
