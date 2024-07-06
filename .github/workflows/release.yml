@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "server-*"
+      - "feedback-fusion-*"
 
 jobs:
   check:
@@ -126,4 +126,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/onelitefeathernet/feedback-fusion:${env.VERSION},ghcr.io/onelitefeathernet/feedback-fusion:latest
+          tags: ghcr.io/onelitefeathernet/feedback-fusion:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion:latest

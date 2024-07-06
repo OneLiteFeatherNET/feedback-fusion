@@ -1,4 +1,4 @@
-name: Release 
+name: Publish library 
 
 on:
   push:
@@ -32,6 +32,6 @@ jobs:
 
       - name: Publish
         uses: JS-DevTools/npm-publish@v3
-        working-directory: lib
         with:
+          package: lib
           token: ${{ secrets.NPM_TOKEN }}
