@@ -110,11 +110,13 @@ const handlers = [
               "fieldType": FieldType.TEXT,
               "description": "description",
               "options": {
-                "oneofKind": "text",
-                "text": {
-                  "placeholder": "placeholder",
-                  "lines": 1,
-                },
+                "options": {
+                  "oneofKind": "text",
+                  "text": {
+                    "placeholder": "placeholder",
+                    "lines": 1,
+                  },
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -126,11 +128,14 @@ const handlers = [
               "fieldType": FieldType.TEXT,
               "description": "description",
               "options": {
-                "oneofKind": "text",
-                "text": {
-                  "placeholder": "placeholder",
-                  "lines": 3,
-                },
+                "options": {
+                  "oneofKind": "text",
+                  "text": {
+                    "placeholder": "placeholder",
+                    "lines": 3,
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -142,10 +147,13 @@ const handlers = [
               "fieldType": FieldType.RATING,
               "description": "description",
               "options": {
-                "oneofKind": "rating",
-                "rating": {
-                  "max": 5,
-                },
+                "options": {
+                  "oneofKind": "rating",
+                  "rating": {
+                    "max": 5,
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -157,11 +165,14 @@ const handlers = [
               "title": "Checkbox",
               "description": "description",
               "options": {
-                "oneofKind": "checkbox",
-                checkbox: {
-                  "defaultState": true,
-                  "style": CheckboxStyle.NORMAL,
-                },
+                "options": {
+                  "oneofKind": "checkbox",
+                  checkbox: {
+                    "defaultState": true,
+                    "style": CheckboxStyle.NORMAL,
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -173,11 +184,14 @@ const handlers = [
               "title": "Switch",
               "description": "description",
               "options": {
-                "oneofKind": "checkbox",
-                checkbox: {
-                  "defaultState": true,
-                  "style": CheckboxStyle.SWITCH,
-                },
+                "options": {
+                  "oneofKind": "checkbox",
+                  checkbox: {
+                    "defaultState": true,
+                    "style": CheckboxStyle.SWITCH,
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -190,12 +204,15 @@ const handlers = [
               "fieldType": FieldType.SELECTION,
               "description": "description",
               "options": {
-                "oneofKind": "selection",
-                "selection": {
-                  "values": ["foo", "bar"],
-                  "combobox": false,
-                  "multiple": true,
-                },
+                "options": {
+                  "oneofKind": "selection",
+                  "selection": {
+                    "values": ["foo", "bar"],
+                    "combobox": false,
+                    "multiple": true,
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -207,12 +224,15 @@ const handlers = [
               "fieldType": FieldType.SELECTION,
               "description": "description",
               "options": {
-                "oneofKind": "selection",
-                "selection": {
-                  "values": ["foo", "bar"],
-                  "combobox": true,
-                  "multiple": true,
-                },
+                "options": {
+                  "oneofKind": "selection",
+                  "selection": {
+                    "values": ["foo", "bar"],
+                    "combobox": true,
+                    "multiple": true,
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -224,11 +244,14 @@ const handlers = [
               "prompt": "prompt",
               "fieldType": FieldType.RANGE,
               "options": {
-                "oneofKind": "range",
-                "range": {
-                  "min": 1,
-                  "max": 10,
-                },
+                "options": {
+                  "oneofKind": "range",
+                  "range": {
+                    "min": 1,
+                    "max": 10,
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
@@ -240,12 +263,15 @@ const handlers = [
               "fieldType": FieldType.NUMBER,
               "description": "description",
               "options": {
-                "oneofKind": "number",
-                "number": {
-                  "min": 1,
-                  "max": 10,
-                  "placeholder": "placeholder",
-                },
+                "options": {
+                  "oneofKind": "number",
+                  "number": {
+                    "min": 1,
+                    "max": 10,
+                    "placeholder": "placeholder",
+                  },
+
+                }
               },
               "updatedAt": Timestamp.now(),
               "createdAt": Timestamp.now(),
