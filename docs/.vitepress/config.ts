@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "FeedbackFusion",
   description: "A VitePress Site",
+  base: "/feedback-fusion/",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -15,6 +16,12 @@ export default defineConfig({
       {
         text: "Docs",
         items: [
+          { text: "Configuration", link: "/docs/configuration" },
+          { text: "Deployment", items: [
+              { text: "Helm", link: "/docs/deployment/helm" },
+              { text: "Docker", link: "/docs/deployment/docker" }
+            ]
+          },
           {
             text: "Frontend Library", link: "/docs/frontend-library", items: [
               { text: "Prompt", link: "/docs/frontend-library/prompt" },
