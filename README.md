@@ -9,6 +9,10 @@
 
 FeedbackFusion is a cloud-native application meticulously crafted for seamless compatibility with Kubernetes. It is designed to efficiently collect and manage user feedback at a large scale.
 
+## Documentation
+
+[Click](https://onelitefeathernet.github.com/feedback-fusion/nightly/docs)
+
 ## Key Features
 
 - **Cloud-native and Kubernetes-compatible**: The application operates in a fully stateless manner (except for the database connection), ensuring smooth integration into Kubernetes environments.

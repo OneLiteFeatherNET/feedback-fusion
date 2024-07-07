@@ -25,7 +25,7 @@ is a basic example using Vue:
 
 ```vue 
 <template>
-    <feedback-fusion-prompt baseUrl="https://example.com" prompt="prompt" /> // [!code highlight]
+    <feedback-fusion-prompt baseUrl="https://example.com" promptId="prompt" /> // [!code highlight]
 </template>
 
 <script setup>
@@ -48,7 +48,7 @@ you can import the module via a js cdn, e.g:
     <script src="https://cdn.jsdelivr.net/npm/@onelitefeathernet/feedback-fusion@latest/src/index.js"></script> // [!code highlight]
 </head>
 <body>
-    <feedback-fusion-prompt baseUrl="https://example.com" prompt="prompt" /> // [!code highlight]
+    <feedback-fusion-prompt baseUrl="https://example.com" promptId="prompt" /> // [!code highlight]
 </body>
 </html>
 ```
