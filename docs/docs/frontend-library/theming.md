@@ -17,7 +17,7 @@ feedback-fusion-prompt {
 ```
 
 Using the default configuration your prompt should look something like this:
-<feedback-fusion-prompt baseUrl="http://mock.mock" prompt="prompt" />
+<feedback-fusion-prompt baseUrl="https://mock.mock" prompt="prompt" />
 
 ## Using a custom theme 
 Therefore we can just overwrite these css variables in our required scope by e.g just defining
@@ -45,7 +45,7 @@ Specyfing a hex value or removing the commas will break the functionality.
 <feedback-fusion-prompt baseUrl="http://example.com" prompt="prompt" class="nice-theme" />
 ```
 
-<feedback-fusion-prompt baseUrl="http://mock.mock" prompt="prompt" class="nice-theme" />
+<feedback-fusion-prompt baseUrl="https://mock.mock" prompt="prompt" class="nice-theme" />
 
 <script setup>
 import "../../../lib/dist/src/components/Prompt.js"

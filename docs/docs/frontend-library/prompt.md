@@ -1,6 +1,6 @@
 # Prompt
 
-## Default options
+## Usage
 
 ```html 
 <feedback-fusion-prompt baseUrl="https://example.com" prompt="prompt" />
