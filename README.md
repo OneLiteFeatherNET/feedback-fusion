@@ -1,26 +1,39 @@
-# Feedback-Fusion (WIP)
+<h1 align="center">
+    FeedbackFusion <br />
 
-## What is Feedback-Fusion
+  <img src="https://img.shields.io/badge/built_with-Rust-dca282" />
+  <img src="https://img.shields.io/badge/License-MIT-blue" />
+</h1>
 
-Feedback-Fusion is a WIP enterprise ready tool designed to make it easier to 
-collect feedback in the web. 
-With Feedback-Fusion you can create Survey Prompts and Feedback Fields in an efficent
-and easier way with the ability to directly include them in your webpage.
+## About
 
-**Key Features:**
-- **Support for multiple databases**: Relying on the rbatis ORM Feedback-Fusion has native support 
-for a wide range of relational database backends. [List of supported drivers](https://github.com/rbatis/rbatis?tab=readme-ov-file#supported-database-driver)
-- **Scalable**: The rust backend works stateless and therefore can be scaled with ease matching to your needs.
-- **Easy webintegration**: We ship an open-wc compatible frontend library using lit. 
+FeedbackFusion is a cloud-native application meticulously crafted for seamless compatibility with Kubernetes. It is designed to efficiently collect and manage user feedback at a large scale.
 
-## Examples (Coming soon)
+## Key Features
 
-## Deployment (Coming soon)
+- **Cloud-native and Kubernetes-compatible**: The application operates in a fully stateless manner (except for the database connection), ensuring smooth integration into Kubernetes environments.
+
+- **Support for Multiple Databases**: Utilizing the rbatis ORM, FeedbackFusion supports a variety of databases, including MySQL, MariaDB, PostgreSQL, and MSSQL.
+
+- **High-Scale Feedback Collection**: Engineered for high scalability, the application leverages gRPC for efficient, high-performance communication, enabling the collection of large volumes of user feedback.
+
+- **Universal Frontend**: The frontend is built on the lit library and adheres to Open-WC standards, providing flexibility and independence from specific frameworks.
+
+## Quickstart
+
+### Helm
+
+```sh
+helm repo add feedback-fusion https://onelitefeathernet.github.io/feedback-fusion 
+helm install feedback-fusion feedback-fusion/feedback-fusion
+```
 
 ### Docker
 
-### Helm 
+```sh 
+docker run --name feedback-fusion ghcr.io/onelitefeathernet/feedback-fusion
+```
 
-## License 
+## License
 
-Feedback-Fusion is licensed under the MIT-License.
+FeedbackFusion is licensed under the MIT License.
