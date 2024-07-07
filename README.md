@@ -11,7 +11,7 @@ FeedbackFusion is a cloud-native application meticulously crafted for seamless c
 
 ## Documentation
 
-[Click](https://onelitefeathernet.github.com/feedback-fusion/nightly/docs)
+[Click](https://onelitefeathernet.github.io/feedback-fusion/nightly/docs)
 
 ## Key Features
 
