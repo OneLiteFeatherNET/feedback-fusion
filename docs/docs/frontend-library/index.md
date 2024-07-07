@@ -2,7 +2,7 @@
 
 ::: info 
 The documentation reuses the same prompt definition in the most parts. As we do not want to strip 
-down all our underlying functions we use the `msw` to mock the GRpc requests made by the library.
+down all our underlying functions we use the `msw` to mock the gRPC requests made by the library.
 :::
 
 ## About
@@ -25,7 +25,7 @@ is a basic example using Vue:
 
 ```vue 
 <template>
-    <feedback-fusion-prompt baseUrl="http://example.com" prompt="prompt" /> // [!code highlight]
+    <feedback-fusion-prompt baseUrl="https://example.com" prompt="prompt" /> // [!code highlight]
 </template>
 
 <script setup>
@@ -48,7 +48,7 @@ you can import the module via a js cdn, e.g:
     <script src="https://cdn.jsdelivr.net/npm/@onelitefeathernet/feedback-fusion@latest/src/index.js"></script> // [!code highlight]
 </head>
 <body>
-    <feedback-fusion-prompt baseUrl="http://example.com" prompt="prompt" /> // [!code highlight]
+    <feedback-fusion-prompt baseUrl="https://example.com" prompt="prompt" /> // [!code highlight]
 </body>
 </html>
 ```

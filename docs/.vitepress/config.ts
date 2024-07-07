@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "FeedbackFusion",
   description: "A VitePress Site",
+  base: "/feedback-fusion/",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
