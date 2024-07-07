@@ -10,7 +10,7 @@ You can set the following environment variables:
 | `OIDC_PROVIDER`         | `String`          | N/A                        | The OIDC provider URL.                                                      |
 | `OIDC_AUDIENCE`         | `String`          | `"feedback-fusion"`        | The audience for the OIDC tokens.                                           |
 | `OIDC_ISSUER`           | `Option<String>`  | `None`                     | The optional issuer URL for the OIDC tokens.                                |
-| `CONFIG_PATH`           | `Option<String>`  | `None`                     | The optional path to the configuration file.                                |
+| `CONFIG_PATH`           | `Option<String>`  | `None`                     | The optional path to the configuration file. (Not Required using the helm chart) |
 | `RUST_LOG`              | `String`          | `None`                     | The log level for the application. [Possible values](https://docs.rs/log/latest/log/enum.Level.html) |   
 
 ## Database Configuration
