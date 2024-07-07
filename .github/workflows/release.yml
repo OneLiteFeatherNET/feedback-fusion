@@ -153,6 +153,18 @@ jobs:
         with:
           version: 8
 
+      - name: Install dependencies for lib
+        run: pnpm i
+        working-directory: lib
+
+      - name: Build lib
+        run: pnpm run protoc
+        working-directory: lib
+
+      - name: Build lib
+        run: pnpm run tsc
+        working-directory: lib
+
       - name: Install dependencies
         run: pnpm i
         working-directory: docs
