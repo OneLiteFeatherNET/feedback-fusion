@@ -124,3 +124,42 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/onelitefeathernet/feedback-fusion:nightly
+
+  docs: 
+    needs: [docker]
+    name: docs 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm i
+        working-directory: docs
+
+      - name: Update paths 
+        working-directory: docs/.vitepress
+        run: |
+          sed -i "s|/feedback-fusion/|/feedback-fusion/nightly/|g" config.ts
+          sed -i "s|/feedback-fusion/|/feedback-fusion/nightly/|g" theme/index.ts
+
+      - name: Build
+        run: pnpm run docs:build
+        working-directory: docs
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/.vitepress/dist
+          destination_dir: ./${{ env.VERSION }}
