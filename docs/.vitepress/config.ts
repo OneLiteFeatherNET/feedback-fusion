@@ -20,7 +20,8 @@ export default defineConfig({
           {
             text: "Deployment", items: [
               { text: "Helm", link: "/docs/deployment/helm" },
-              { text: "Docker", link: "/docs/deployment/docker" }
+              { text: "Docker", link: "/docs/deployment/docker" },
+              { text: "Verify deployment", link: "/docs/deployment/verify" }
             ]
           },
           {
