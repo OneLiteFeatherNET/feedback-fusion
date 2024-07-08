@@ -148,11 +148,7 @@ jobs:
         working-directory: lib
 
       - name: Build lib
-        run: pnpm run protoc:docs
-        working-directory: lib
-
-      - name: Build lib
-        run: pnpm run tsc
+        run: pnpm run build
         working-directory: lib
 
       - name: Install dependencies

@@ -27,11 +27,7 @@ jobs:
         working-directory: lib
 
       - name: Build
-        run: pnpm run protoc:size
-        working-directory: lib
-
-      - name: Build
-        run: pnpm run tsc
+        run: pnpm run build
         working-directory: lib
 
       - name: Publish
