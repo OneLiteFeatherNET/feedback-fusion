@@ -72,7 +72,7 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
         // make the span
         let span = tracing::info_span!(
             "gRPC Request",
-            host = ?request.uri().host(),
+            host = %request.uri().host().unwrap_or_default(),
             path = %request.uri().path(),
             version = ?request.version()
         );
