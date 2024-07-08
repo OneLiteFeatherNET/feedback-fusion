@@ -47,7 +47,7 @@ you can import the module via a js cdn, e.g:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Title</title>
-    <script src="https://cdn.jsdelivr.net/npm/@onelitefeathernet/feedback-fusion@latest/src/index.js"></script> // [!code highlight]
+    <script src="https://cdn.jsdelivr.net/npm/@onelitefeathernet/feedback-fusion@latest"></script> // [!code highlight]
 </head>
 <body>
     <feedback-fusion-prompt baseUrl="https://example.com" promptId="prompt" /> // [!code highlight]
