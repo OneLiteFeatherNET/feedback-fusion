@@ -48,8 +48,9 @@ pub async fn create_responses(
 
     // fetch the fields of the prompt
     let fields = database_request!(
-        Field::select_by_column(&transaction, "prompt", data.prompt.as_str()).await?
-    );
+        Field::select_by_column(&transaction, "prompt", data.prompt.as_str()).await,
+        "Select fields by prompt"
+    )?;
     // as we can assume a prompt has to have at least 1 field we can throw the 400 here
     if fields.is_empty() {
         return Err(FeedbackFusionError::BadRequest("invalid prompt".to_owned()));
@@ -57,7 +58,10 @@ pub async fn create_responses(
 
     // insert the response dataprompt
     let response = PromptResponse::builder().prompt(data.prompt).build();
-    database_request!(PromptResponse::insert(&transaction, &response).await?);
+    database_request!(
+        PromptResponse::insert(&transaction, &response).await,
+        "Insert response id"
+    )?;
 
     // transform the hashmap into a field data vec
     let data = data
@@ -87,8 +91,9 @@ pub async fn create_responses(
         .collect::<Result<Vec<FieldResponse>>>()?;
     // insert them as batch
     database_request!(
-        FieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64).await?
-    );
+        FieldResponse::insert_batch(&transaction, data.as_slice(), data.len() as u64).await,
+        "Insert response data"
+    )?;
 
     // commit the transaction
     transaction.commit().await?;
@@ -124,8 +129,9 @@ pub async fn get_responses(
             &page_request,
             data.prompt.as_str()
         )
-        .await?
-    );
+        .await,
+        "Select responses by prompt"
+    )?;
 
     let records = if responses.total > 0 {
         database_request!(
@@ -138,8 +144,8 @@ pub async fn get_responses(
                     .collect::<Vec<String>>()
                     .as_slice(),
             )
-            .await?
-        )
+            .await, "Select responses by id"
+        )?
         .into_iter()
         .group_by(|value| value.response().clone())
         .into_iter()

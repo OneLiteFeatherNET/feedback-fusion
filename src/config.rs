@@ -44,6 +44,9 @@ pub struct Config {
     oidc_audience: String,
     oidc_issuer: Option<String>,
     config_path: Option<String>,
+    otlp_endpoint: Option<String>,
+    #[serde(default = "default_service_name")]
+    service_name: String
 }
 
 #[inline]
@@ -53,6 +56,11 @@ fn default_global_rate_limit() -> u64 {
 
 #[inline]
 fn default_oidc_audience() -> String {
+    "feedback-fusion".to_owned()
+}
+
+#[inline]
+fn default_service_name() -> String {
     "feedback-fusion".to_owned()
 }
 

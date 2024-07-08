@@ -22,7 +22,7 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldType, Prompt, FieldOptions},
+    database::schema::feedback::{Field, FieldOptions, FieldType, Prompt},
     prelude::*,
 };
 use feedback_fusion_common::proto::{
@@ -47,7 +47,7 @@ pub async fn create_field(
         .options(TryInto::<FieldOptions>::try_into(data.options.unwrap())?)
         .prompt(data.prompt)
         .build();
-    database_request!(Field::insert(connection, &field).await?);
+    database_request!(Field::insert(connection, &field).await, "Insert field")?;
 
     Ok(Response::new(field.into()))
 }
@@ -62,20 +62,22 @@ pub async fn get_active_fields(
     let connection = context.connection();
 
     // fetch the prompt
-    let prompt = database_request!(Prompt::select_by_id(connection, data.prompt.as_str())
-        .await?
-        .ok_or(FeedbackFusionError::BadRequest(
-            "invalid prompt".to_string()
-        ))?);
+    let prompt = database_request!(
+        Prompt::select_by_id(connection, data.prompt.as_str()).await,
+        "Fetch prompt by id"
+    )?
+    .ok_or(FeedbackFusionError::BadRequest(
+        "invalid prompt".to_string(),
+    ))?;
     // only allow active prompts
     if !prompt.active() {
         return Err(FeedbackFusionError::Forbidden("inactive prompt".to_owned()));
     }
 
     let page = database_request!(
-        Field::select_page_by_prompt_wrapper(connection, &page_request, prompt.id().as_str())
-            .await?
-    );
+        Field::select_page_by_prompt_wrapper(connection, &page_request, prompt.id().as_str()).await,
+        "Select fields by prompt"
+    )?;
 
     Ok(Response::new(FieldPage {
         page_token: page_request.page_no().try_into()?,
@@ -104,8 +106,9 @@ pub async fn get_fields(
             &page_request,
             data.prompt.as_str()
         )
-        .await?
-    );
+        .await,
+        "Select fields by prompt"
+    )?;
 
     Ok(Response::new(FieldPage {
         page_token: page_request.page_no().try_into()?,
@@ -129,9 +132,11 @@ pub async fn update_field(
     data.validate()?;
     let connection = context.connection();
 
-    let mut field = database_request!(Field::select_by_id(connection, data.id.as_str())
-        .await?
-        .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+    let mut field = database_request!(
+        Field::select_by_id(connection, data.id.as_str()).await,
+        "Select field by id"
+    )?
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?;
 
     if let Some(title) = data.title {
         field.set_title(title);
@@ -143,7 +148,10 @@ pub async fn update_field(
         field.set_options(options.try_into()?);
     };
 
-    database_request!(Field::update_by_column(connection, &field, "id").await?);
+    database_request!(
+        Field::update_by_column(connection, &field, "id").await,
+        "Update field by id"
+    )?;
 
     Ok(Response::new(field.into()))
 }
@@ -154,9 +162,9 @@ pub async fn delete_field(
     request: Request<DeleteFieldRequest>,
 ) -> Result<Response<()>> {
     database_request!(
-        Field::delete_by_column(context.connection(), "id", request.into_inner().id.as_str())
-            .await?
-    );
+        Field::delete_by_column(context.connection(), "id", request.into_inner().id.as_str()).await,
+        "Delete field by id"
+    )?;
 
     Ok(Response::new(()))
 }

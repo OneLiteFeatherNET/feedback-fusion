@@ -1,6 +1,6 @@
 FROM rust:slim as build
 
-ARG features=all-databases
+ARG features=all-databases,otlp
 
 COPY ./Cargo.toml . 
 COPY ./Cargo.lock . 

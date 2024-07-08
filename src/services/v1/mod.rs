@@ -97,9 +97,9 @@ macro_rules! handler {
                 },
                 Err(_) => {
                     let target = info_span!("Extracting referenced target")
-                                    .in_scope(|| async {
-                                        async $target.await
-                                    }).await;
+                        .in_scope(|| async {
+                            async $target.await
+                        }).await;
 
                     match target {
                         Ok(target) => {
@@ -301,12 +301,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             "feedback-fusion:write",
             "feedback-fusion:putPrompt",
             {
-                Ok::<_, FeedbackFusionError>(database_request!(
-                    Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
-                        .await?
-                        .map(|prompt| prompt.target().clone()),
-                    "Authorization"
-                ))
+                Ok::<_, FeedbackFusionError>(
+                    database_request!(
+                        Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
+                            .await,
+                        "Authorization"
+                    )?
+                    .map(|prompt| prompt.target().clone()),
+                )
             }
         )
     }
@@ -323,12 +325,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             "feedback-fusion:write",
             "feedback-fusion:deleteTarget",
             {
-                Ok::<_, FeedbackFusionError>(database_request!(
-                    Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
-                        .await?
-                        .map(|prompt| prompt.target().clone()),
-                    "Authorization"
-                ))
+                Ok::<_, FeedbackFusionError>(
+                    database_request!(
+                        Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
+                            .await,
+                        "Authorization"
+                    )?
+                    .map(|prompt| prompt.target().clone()),
+                )
             }
         )
     }
@@ -345,12 +349,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             "feedback-fusion:write",
             "feedback-fusion:writeField",
             {
-                Ok::<_, FeedbackFusionError>(database_request!(
-                    Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
-                        .await?
-                        .map(|prompt| prompt.target().clone()),
-                    "Authorization"
-                ))
+                Ok::<_, FeedbackFusionError>(
+                    database_request!(
+                        Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
+                            .await,
+                        "Authorization"
+                    )?
+                    .map(|prompt| prompt.target().clone()),
+                )
             }
         )
     }
@@ -367,12 +373,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             "feedback-fusion:read",
             "feedback-fusion:listFields",
             {
-                Ok::<_, FeedbackFusionError>(database_request!(
-                    Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
-                        .await?
-                        .map(|prompt| prompt.target().clone()),
-                    "Authorization"
-                ))
+                Ok::<_, FeedbackFusionError>(
+                    database_request!(
+                        Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
+                            .await,
+                        "Authorization"
+                    )?
+                    .map(|prompt| prompt.target().clone()),
+                )
             }
         )
     }
@@ -395,9 +403,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                             "SELECT prompt.* FROM prompt INNER JOIN field ON field.prompt = prompt.id WHERE field.id = ?",
                             vec![rbs::to_value!(request.get_ref().id.as_str())]
                         )
-                        .await?,
+                        .await,
                     "Authorization"
-                );
+                )?;
                 Ok::<_, FeedbackFusionError>(prompt.map(|prompt| prompt.target().clone()))
             }
         )
@@ -421,9 +429,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
                             "SELECT prompt.* FROM prompt INNER JOIN field ON field.prompt = prompt.id WHERE field.id = ?",
                             vec![rbs::to_value!(request.get_ref().id.as_str())]
                         )
-                        .await?,
+                        .await,
                     "Authorization"
-                );
+                )?;
                 Ok::<_, FeedbackFusionError>(prompt.map(|prompt| prompt.target().clone()))
             }
         )
@@ -441,12 +449,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             "feedback-fusion:read",
             "feedback-fusion:listResponses",
             {
-                Ok::<_, FeedbackFusionError>(database_request!(
-                    Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
-                        .await?
-                        .map(|prompt| prompt.target().clone()),
-                    "Authorization"
-                ))
+                Ok::<_, FeedbackFusionError>(
+                    database_request!(
+                        Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
+                            .await,
+                        "Authorization"
+                    )?
+                    .map(|prompt| prompt.target().clone()),
+                )
             }
         )
     }
