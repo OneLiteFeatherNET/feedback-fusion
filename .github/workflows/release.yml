@@ -158,7 +158,7 @@ jobs:
         working-directory: lib
 
       - name: Build lib
-        run: pnpm run protoc
+        run: pnpm run protoc:docs
         working-directory: lib
 
       - name: Build lib

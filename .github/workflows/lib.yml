@@ -27,7 +27,7 @@ jobs:
         working-directory: lib
 
       - name: Build
-        run: pnpm run protoc
+        run: pnpm run protoc:size
         working-directory: lib
 
       - name: Build
