@@ -3,6 +3,8 @@
 ::: info 
 The documentation reuses the same prompt definition in the most parts. As we do not want to strip 
 down all our underlying functions we use the `msw` to mock the gRPC requests made by the library.
+Therefore we have to wait till the msw is up and running and longer loading times for the components 
+will occur.
 :::
 
 ## About

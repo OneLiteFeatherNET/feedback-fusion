@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.9.4",
-    "msw": "^2.3.1"
+    "msw": "^2.3.1",
+    "vue": "^3.4.31"
   }
 }

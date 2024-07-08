@@ -6,7 +6,7 @@
 <feedback-fusion-prompt baseUrl="https://example.com" promptId="prompt" />
 ```
 
-<feedback-fusion-prompt baseUrl="https://mock.mock" promptId="prompt" />
+<feedback-fusion-prompt v-if="show" baseUrl="https://mock.mock" promptId="prompt" />
 
 # Attributes 
 
@@ -19,5 +19,9 @@
 | `promptId`  | String  |          | Specifies which prompt should be used.                                                                                    | Yes      |
 
 <script setup>
+import { ref, onMounted } from "vue";
 import "../../../lib/dist/src/components/Prompt.js";
+
+const show = ref(false);
+onMounted(() => setTimeout(() => show.value = true, 500))
 </script>
