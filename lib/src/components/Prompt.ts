@@ -26,8 +26,6 @@ import { customElement, property } from "lit/decorators.js";
 import { Field, Prompt } from "../feedback-fusion-v1.js";
 import { localized } from "@lit/localize";
 import { PublicFeedbackFusionV1Client } from "../feedback-fusion-v1.client.js";
-import { client } from "../context.js";
-import { provide } from "@lit/context";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import "./Field.js";
 import { setLocale } from "../locales.js";
@@ -150,7 +148,6 @@ export class FeedbackFusionPrompt extends LitElement {
 
   // internal
 
-  @provide({ context: client })
   @property({ attribute: false })
   clientProvider!: PublicFeedbackFusionV1Client;
 

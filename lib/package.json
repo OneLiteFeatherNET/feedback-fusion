@@ -3,7 +3,7 @@
   "description": "Webcomponent feedback-fusion following open-wc recommendations",
   "license": "MIT",
   "author": "OneLiteFeatherNet",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "main": "dist/src/index.js",
   "module": "dist/src/index.js",
@@ -24,7 +24,6 @@
     "translations:build": "lit-localize build"
   },
   "dependencies": {
-    "@lit/context": "^1.1.2",
     "@lit/localize": "^0.12.1",
     "@protobuf-ts/grpcweb-transport": "^2.9.4",
     "@protobuf-ts/runtime": "^2.9.4",
