@@ -3,24 +3,25 @@
   "description": "Webcomponent feedback-fusion following open-wc recommendations",
   "license": "MIT",
   "author": "OneLiteFeatherNet",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "main": "dist/src/index.js",
   "module": "dist/src/index.js",
   "exports": {
-    ".": "./dist/src/index.js"
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "browser": "./dist/src/index.min.js"
+    }
   },
   "scripts": {
     "analyze": "cem analyze --litelement",
-    "protoc:docs": "npx protoc --ts_out src --ts_opt server_none --proto_path ../proto ../proto/feedback-fusion-v1.proto",
-    "protoc:size": "npx protoc --ts_out src --ts_opt server_none --ts_opt optimize_code_size --proto_path ../proto ../proto/feedback-fusion-v1.proto",
-    "build": "tsc && npm run analyze -- --exclude dist",
-    "prepublish": "tsc && npm run analyze -- --exclude dist",
+    "protoc": "npx protoc --ts_out src --ts_opt server_none --proto_path ../proto ../proto/feedback-fusion-v1.proto",
+    "build": "pnpm run protoc && tsc && esbuild dist/src/index.js --bundle --minify --sourcemap --outfile=dist/src/index.min.js",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
     "prepare": "husky",
-    "tsc": "tsc",
-    "dev": "pnpm run protoc:docs && concurrently \"tsc --watch\" \"cd ../docs && pnpm run docs:dev\" ",
+    "dev": "pnpm run protoc && concurrently \"tsc --watch\" \"cd ../docs && pnpm run docs:dev\" ",
     "translations:extract": "lit-localize extract",
     "translations:build": "lit-localize build"
   },
@@ -40,6 +41,7 @@
     "@typescript-eslint/eslint-plugin": "^7.15.0",
     "@typescript-eslint/parser": "^7.15.0",
     "concurrently": "^8.2.2",
+    "esbuild": "^0.23.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-storybook": "^0.8.0",
@@ -84,5 +86,8 @@
       "eslint --fix",
       "prettier --write"
     ]
-  }
+  },
+  "files": [
+    "dist/**/*"
+  ]
 }
