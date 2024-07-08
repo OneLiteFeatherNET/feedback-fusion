@@ -183,15 +183,14 @@ database_configuration!(
 
 #[macro_export]
 macro_rules! database_request {
-    ($expr: expr) => {{
-        let span = info_span!("Database Request");
-        let _ = span.enter();
-        $expr
-    }};
     ($expr: expr, $title: expr) => {{
-        let span = info_span!(concat!("Database Request: ", $title));
-        let _ = span.enter();
-        $expr
+        let span = info_span!(concat!("Database request: ", $title));
+        
+        async  {
+            $expr
+        }
+        .instrument(span)
+        .await
     }};
 }
 

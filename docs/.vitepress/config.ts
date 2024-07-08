@@ -17,9 +17,17 @@ export default defineConfig({
         text: "Docs",
         items: [
           { text: "Configuration", link: "/docs/configuration" },
-          { text: "Deployment", items: [
+          {
+            text: "Deployment", items: [
               { text: "Helm", link: "/docs/deployment/helm" },
-              { text: "Docker", link: "/docs/deployment/docker" }
+              { text: "Docker", link: "/docs/deployment/docker" },
+              { text: "Verify deployment", link: "/docs/deployment/verify" }
+            ]
+          },
+          {
+            text: "Observability", items: [
+              { text: "Logging", link: "/docs/observability/logging" },
+              { text: "Tracing", link: "/docs/observability/tracing" }
             ]
           },
           {

@@ -43,7 +43,7 @@ pub async fn create_target(
         .build();
 
     // create the target
-    database_request!(Target::insert(connection, &target).await?);
+    database_request!(Target::insert(connection, &target).await, "Insert target")?;
 
     Ok(Response::new(target.into()))
 }
@@ -55,7 +55,10 @@ pub async fn get_target(
     let data = request.into_inner();
     let connection = context.connection();
 
-    let target = database_request!(Target::select_by_id(connection, data.id.as_str()).await?);
+    let target = database_request!(
+        Target::select_by_id(connection, data.id.as_str()).await,
+        "Select target by id"
+    )?;
     match target {
         Some(target) => Ok(Response::new(target.into())),
         None => Err(FeedbackFusionError::BadRequest(
@@ -74,8 +77,9 @@ pub async fn get_targets(
 
     // TODO: write translation macro
     let page = database_request!(
-        Target::select_page_wrapper(connection, &page_request, data.query.as_str()).await?
-    );
+        Target::select_page_wrapper(connection, &page_request, data.query.as_str()).await,
+        "Select targets by query"
+    )?;
 
     Ok(Response::new(TargetPage {
         page_token: page_request.page_no().try_into()?,
@@ -98,14 +102,15 @@ pub async fn update_target(
     data.validate()?;
     let connection = context.connection();
 
-    let mut target =
-        database_request!(Target::select_by_id(connection, data.id.as_str())
-            .await?
-            .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+    let mut target = database_request!(
+        Target::select_by_id(connection, data.id.as_str()).await,
+        "Select target by id"
+    )?
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?;
     target.set_name(data.name.unwrap_or(target.name().clone()));
     target.set_description(data.description.or(target.description().clone()));
 
-    database_request!(Target::update_by_column(connection, &target, "id").await?);
+    database_request!(Target::update_by_column(connection, &target, "id").await, "Update target")?;
     Ok(Response::new(target.into()))
 }
 
@@ -116,6 +121,6 @@ pub async fn delete_target(
     let data = request.into_inner();
     let connection = context.connection();
 
-    database_request!(Target::delete_by_column(connection, "id", data.id.as_str()).await?);
+    database_request!(Target::delete_by_column(connection, "id", data.id.as_str()).await, "Delete target by id")?;
     Ok(Response::new(()))
 }

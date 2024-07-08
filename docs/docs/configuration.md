@@ -11,7 +11,9 @@ You can set the following environment variables:
 | `OIDC_AUDIENCE`         | `String`          | `"feedback-fusion"`        | The audience for the OIDC tokens.                                           |
 | `OIDC_ISSUER`           | `Option<String>`  | `None`                     | The optional issuer URL for the OIDC tokens.                                |
 | `CONFIG_PATH`           | `Option<String>`  | `None`                     | The optional path to the configuration file. (Not Required using the helm chart) |
-| `RUST_LOG`              | `String`          | `None`                     | The log level for the application. [Possible values](https://docs.rs/log/latest/log/enum.Level.html) |   
+| `RUST_LOG`              | `String`          | `None`                     | The log level for the application. [Possible values](https://docs.rs/log/latest/log/enum.Level.html) | 
+| `OTLP_ENDPOINT`         | `Option<String>`  | `None`                     | The gRPC OTLP endpoint to send the trace spans to                           |
+| `SERVICE_NAME`          | `String`          | `"feedback-fusion"`        | Service name used in tracing context                                        |
 
 ## Database Configuration
 

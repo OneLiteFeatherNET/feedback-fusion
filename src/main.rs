@@ -34,28 +34,38 @@ use feedback_fusion_common::proto::{
 };
 use futures::stream::StreamExt;
 use notify::{RecommendedWatcher, Watcher};
+#[cfg(feature = "otlp")]
+use opentelemetry::global::shutdown_tracer_provider;
 use tonic::transport::Server;
 use tonic_web::GrpcWebLayer;
+#[cfg(not(feature = "otlp"))]
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod config;
 pub mod database;
 pub mod error;
+#[cfg(feature = "otlp")]
+pub mod otlp;
 pub mod services;
 
 const ADDRESS: &str = "0.0.0.0:8000";
 
 #[tokio::main]
 async fn main() {
-    // init the tracing subscriber with the `RUST_LOG` env filter
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(tracing_subscriber::fmt::layer())
-        .init();
-
     // init config
-    debug!("Reading ServerConfig");
     lazy_static::initialize(&CONFIG);
+    // init the tracing subscriber with the `RUST_LOG` env filter
+    if CONFIG.otlp_endpoint().is_none() {
+        tracing_subscriber::registry()
+            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(tracing_subscriber::fmt::layer())
+            .init();
+    }
+
+    #[cfg(feature = "otlp")]
+    otlp::init_tracing();
+
     debug!("Reading Databaseconfig");
     lazy_static::initialize(&DATABASE_CONFIG);
 
@@ -100,8 +110,6 @@ async fn main() {
                 match response {
                     Ok(_) => {
                         info!("Detected config chage");
-                        let span = info_span!("ConfigReload");
-                        let _ = span.enter();
 
                         match config::sync_config(&connection).await {
                             Ok(_) => info!("Config reloaded"),
@@ -154,8 +162,13 @@ async fn main() {
 
         info!("Listening for incoming requests on {ADDRESS}");
 
+        #[cfg(not(feature = "otlp"))]
+        let trace_layer = TraceLayer::new_for_grpc();
+        #[cfg(feature = "otlp")]
+        let trace_layer = otlp::trace_layer();
+
         Server::builder()
-            .layer(tower_http::trace::TraceLayer::new_for_grpc())
+            .layer(trace_layer)
             .accept_http1(true)
             .layer(GrpcWebLayer::new())
             .add_service(health_service)
@@ -179,6 +192,8 @@ async fn main() {
 
     info!("Received shutdown signal... shutting down...");
     sender.send(()).await.unwrap();
+    #[cfg(feature = "otlp")]
+    shutdown_tracer_provider()
 }
 
 pub mod prelude {
@@ -202,7 +217,7 @@ pub mod prelude {
     };
     pub use serde::{Deserialize, Serialize};
     pub use tonic::{Request, Response};
-    pub use tracing::{debug, error, info, info_span, instrument, warn};
+    pub use tracing::{debug, error, info, info_span, instrument, warn, Instrument};
     pub use typed_builder::TypedBuilder;
     pub use validator::Validate;
 }

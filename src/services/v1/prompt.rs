@@ -43,7 +43,7 @@ pub async fn create_prompt(
         .active(data.active)
         .target(data.target)
         .build();
-    database_request!(Prompt::insert(connection, &prompt).await?);
+    database_request!(Prompt::insert(connection, &prompt).await, "Insert prompt")?;
 
     Ok(Response::new(prompt.into()))
 }
@@ -56,8 +56,10 @@ pub async fn get_prompt(
     let data = request.into_inner();
     let connection = context.connection();
 
-    let prompt: Option<Prompt> =
-        database_request!(Prompt::select_by_id(connection, data.id.as_str()).await?);
+    let prompt: Option<Prompt> = database_request!(
+        Prompt::select_by_id(connection, data.id.as_str()).await,
+        "Select prompt by id"
+    )?;
 
     match prompt {
         Some(prompt) => Ok(Response::new(prompt.into())),
@@ -78,8 +80,9 @@ pub async fn get_prompts(
 
     let prompts = database_request!(
         Prompt::select_page_by_target_wrapper(connection, &page_request, data.target.as_str())
-            .await?
-    );
+            .await,
+        "Select prompts by target"
+    )?;
 
     Ok(Response::new(PromptPage {
         page_token: page_request.page_no().try_into()?,
@@ -103,16 +106,18 @@ pub async fn update_prompt(
     data.validate()?;
     let connection = context.connection();
 
-    let mut prompt =
-        database_request!(Prompt::select_by_id(connection, data.id.as_str())
-            .await?
-            .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?);
+    let mut prompt = database_request!(
+        Prompt::select_by_id(connection, data.id.as_str())
+            .await,
+        "Select prompt by id"
+    )?
+            .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?;
 
     prompt.set_title(data.title.unwrap_or(prompt.title().clone()));
     prompt.set_description(data.description.unwrap_or(prompt.description().clone()));
     prompt.set_active(data.active.unwrap_or(*prompt.active()));
 
-    database_request!(Prompt::update_by_column(connection, &prompt, "id").await?);
+    database_request!(Prompt::update_by_column(connection, &prompt, "id").await, "Update prompt")?;
     Ok(Response::new(prompt.into()))
 }
 
@@ -123,8 +128,9 @@ pub async fn delete_prompt(
 ) -> Result<Response<()>> {
     database_request!(
         Prompt::delete_by_column(context.connection(), "id", request.into_inner().id.as_str())
-            .await?
-    );
+            .await,
+        "Delete prompt by id"
+    )?;
 
     Ok(Response::new(()))
 }
