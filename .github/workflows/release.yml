@@ -138,6 +138,11 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - name: Extract version
+        run: |
+          VERSION=$(grep '^version = ' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Login into repository
         uses: docker/login-action@v3
         with:
