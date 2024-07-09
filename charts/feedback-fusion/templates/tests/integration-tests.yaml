@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "feedback-fusion.fullname" . }}-integration-tests"
+  labels:
+    {{- include "feedback-fusion.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: integration-tests
+      image: "{{ .Values.image.testRepository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      envFrom:
+        - secretRef:
+          name: {{ .Values.feedbackFusion.testSecret }}
+  restartPolicy: Never

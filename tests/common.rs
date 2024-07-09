@@ -20,24 +20,29 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use lazy_static::lazy_static;
 use openidconnect::{
     core::{CoreClient, CoreProviderMetadata},
     reqwest::async_http_client,
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
 
-pub const GRPC_ENDPOINT: &str = "http://localhost:8000";
+lazy_static! {
+    pub static ref GRPC_ENDPOINT: String = std::env::var("GRPC_ENDPOINT").unwrap();
+}
 
 #[allow(unused)]
 pub async fn authenticate() -> String {
-    let issuer = IssuerUrl::new(env!("OIDC_PROVIDER").to_owned()).unwrap();
+    let issuer = IssuerUrl::new(std::env::var("OIDC_PROVIDER").unwrap()).unwrap();
     let metadata = CoreProviderMetadata::discover_async(issuer, async_http_client)
         .await
         .unwrap();
     let client = CoreClient::from_provider_metadata(
         metadata,
-        ClientId::new(env!("OIDC_CLIENT_ID").to_owned()),
-        Some(ClientSecret::new(env!("OIDC_CLIENT_SECRET").to_owned())),
+        ClientId::new(std::env::var("OIDC_CLIENT_ID").unwrap()),
+        Some(ClientSecret::new(
+            std::env::var("OIDC_CLIENT_SECRET").unwrap(),
+        )),
     );
 
     let token_response = client
@@ -53,7 +58,7 @@ pub async fn authenticate() -> String {
 #[macro_export]
 macro_rules! connect {
     () => {{
-        let channel = tonic::transport::Channel::from_static(crate::common::GRPC_ENDPOINT).connect().await.unwrap();
+        let channel = tonic::transport::Channel::from_static(&crate::common::GRPC_ENDPOINT).connect().await.unwrap();
         let token: tonic::metadata::MetadataValue<_> = format!("Bearer {}", crate::common::authenticate().await).parse().unwrap();
 
         let client =
@@ -65,7 +70,7 @@ macro_rules! connect {
                 Ok(request)
             });
 
-        let public_client = feedback_fusion_common::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect(crate::common::GRPC_ENDPOINT)
+        let public_client = feedback_fusion_common::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect(crate::common::GRPC_ENDPOINT.as_str())
             .await
             .unwrap();
 

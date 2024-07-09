@@ -70,7 +70,7 @@ dependencies = ["docker_network"]
 script = "docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d && sleep 5 && curl -s -o /dev/null http://localhost:5151/.well-known/openid-configuration"
 
 [tasks.integration_test]
-env = { OIDC_PROVIDER = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "INFO" }
+env = { OIDC_PROVIDER = "http://localhost:5151", OIDC_CLIENT_ID = "client", OIDC_CLIENT_SECRET = "secret", RUST_LOG = "INFO", GRPC_ENDPOINT = "http://localhost:8000" }
 command = "cargo"
 args = ["test", "--no-fail-fast", "--test", "integration_test"]
 
