@@ -34,35 +34,62 @@ lazy_static! {
         DatabaseConfiguration::extract().unwrap();
 }
 
-#[derive(Deserialize, Debug, Clone, Getters)]
-#[get = "pub"]
-pub struct Config {
-    #[serde(default = "default_global_rate_limit")]
-    global_rate_limit: u64,
-    oidc_provider: String,
-    #[serde(default = "default_oidc_audience")]
-    oidc_audience: String,
-    oidc_issuer: Option<String>,
-    config_path: Option<String>,
-    otlp_endpoint: Option<String>,
-    #[serde(default = "default_service_name")]
-    service_name: String
+macro_rules! config {
+    (($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
+        paste! {
+            #[derive(Deserialize, Debug, Clone, Getters)]
+            #[get = "pub"]
+            pub struct Config {
+                $(
+                    $ident: $type,
+                )*
+                
+                $(
+                    #[serde(default = "default_" $dident)]
+                    $dident: $dtype,
+                )*
+            }
+
+
+            $(
+                #[inline]
+                fn [<default_ $dident>]() -> $dtype {
+                    $default.to_owned()
+                }
+            )*
+        }
+    };
 }
 
-#[inline]
-fn default_global_rate_limit() -> u64 {
-    10
-}
+config!(
+    (
+        oidc_provider: String,
+        oidc_issuer: Option<String>,
+        config_path: Option<String>,
+        otlp_endpoint: Option<String>,
+    ),
 
-#[inline]
-fn default_oidc_audience() -> String {
-    "feedback-fusion".to_owned()
-}
+    (
+        global_rate_limit: u64 = 10,
+        service_name: String = "feedback-fusion"
+        oidc_audience: String = "feedback-fusion",
 
-#[inline]
-fn default_service_name() -> String {
-    "feedback-fusion".to_owned()
-}
+        oidc_scope_api: String = "api:feedback-fusion",
+        oidc_scope_write: String = "feedback-fusion:write",
+        oidc_scope_read: String = "feedback-fusion:read",
+        
+        oidc_scope_write_target: String = "feedback-fusion:writeTarget",
+        oidc_scope_read_target: String = "feedback-fusion:readTarget"
+
+        oidc_scope_write_prompt: String = "feedback-fusion:writePrompt",
+        oidc_scope_read_prompt: String = "feedback-fusion:readPrompt"
+
+        oidc_scope_write_field: String = "feedback-fusion:writeField",
+        oidc_scope_read_field: String = "feedback-fusion:readField"
+
+        oidc_scope_read_response: String = "feedback-fusion:readResponse"
+    )
+);
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct InstanceConfig {
