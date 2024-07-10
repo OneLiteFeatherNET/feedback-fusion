@@ -10,7 +10,8 @@ spec:
   containers:
     - name: integration-tests
       image: "{{ .Values.image.testRepository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      imagePullPolicy: Always
       envFrom:
         - secretRef:
-          name: {{ .Values.feedbackFusion.testSecret }}
+            name: {{ .Values.feedbackFusion.testSecret }}
   restartPolicy: Never

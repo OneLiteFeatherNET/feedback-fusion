@@ -155,7 +155,7 @@ jobs:
         with:
           context: .
           push: true
-          dockerfile: tests/integration/Dockerfile
+          file: tests/integration/Dockerfile
           tags: ghcr.io/onelitefeathernet/feedback-fusion-integration:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion-integration:latest
 
   docs: 
