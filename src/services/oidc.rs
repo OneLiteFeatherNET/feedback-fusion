@@ -97,15 +97,16 @@ pub async fn authority() -> Result<Authority> {
 #[derive(Debug, Clone, Deserialize)]
 pub struct OIDCClaims {
     iss: jwt::Issuer,
+    iat: UnixTime,
     aud: jwt::Audiences,
-    nbf: UnixTime,
+    nbf: Option<UnixTime>,
     exp: UnixTime,
     scope: Scope,
 }
 
 impl jwt::CoreClaims for OIDCClaims {
     fn nbf(&self) -> Option<UnixTime> {
-        Some(self.nbf)
+        Some(self.nbf.unwrap_or(self.iat))
     }
     fn exp(&self) -> Option<UnixTime> {
         Some(self.exp)
