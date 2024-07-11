@@ -50,7 +50,7 @@ tonic-health = "0.11.0"
 tonic-reflection = "0.11.0"
 tonic-web = "0.11.0"
 tokio = { version = "1.37.0", features = ["full"] }
-tower = "0.4.13"
+tower = { version = "0.4.13", feature = ["limit"] }
 tokio-retry = "0.3"
 tower-http = { version = "=0.4.4", features = ["trace", "validate-request"] }
 tracing = "0.1.39"

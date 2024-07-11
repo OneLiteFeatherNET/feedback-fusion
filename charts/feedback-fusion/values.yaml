@@ -120,7 +120,6 @@ feedbackFusion:
   config: 
     secret: feedback-fusion-config
     # RUST_LOG: INFO
-    # GLOBAL_RATE_LIMIT: 10
     # OIDC_AUDIENCE: ""
     # OIDC_PROVIDER: ""
     #

@@ -70,7 +70,6 @@ config!(
     ),
 
     (
-        global_rate_limit: u64 = 10,
         service_name: String = "feedback-fusion"
         oidc_audience: String = "feedback-fusion",
 
