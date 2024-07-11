@@ -21,7 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{database::schema::feedback::Prompt, prelude::*};
-use aliri_oauth2::{policy, scope, HasScope};
+use aliri_oauth2::{policy, HasScope};
 use aliri_traits::Policy;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
@@ -53,7 +53,7 @@ pub struct PublicFeedbackFusionV1Context {
 
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
-    ($handler:path, $self:ident, $request:ident, $policy:ident, $($scope:literal $(,)?)*) => {{
+    ($handler:path, $self:ident, $request:ident, $policy:ident, $($scope:expr $(,)?)*) => {{
          $policy
             .evaluate(
                 $request
@@ -76,12 +76,12 @@ macro_rules! handler {
 
         handler!($handler, $self, $request)
     }};
-    ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*, $target:block) => {{
+    ($handler:path, $self:ident, $request:ident, $($scope:expr $(,)?)* => $target:block) => {{
         paste! {
             let policy = policy![
-                scope!["api:feedback-fusion"]
+                aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string(CONFIG.oidc_scope_api().clone()).unwrap())
                 $(,
-                    scope![$scope]
+                    aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string($scope.to_string()).unwrap())
                 )*
             ];
 
@@ -145,11 +145,11 @@ macro_rules! handler {
             }
         }
     }};
-    ($handler:path, $self:ident, $request:ident, $($scope:literal $(,)?)*) => {{
+    ($handler:path, $self:ident, $request:ident, $($scope:expr $(,)?)*) => {{
         let policy = policy![
-            scope!["api:feedback-fusion"]
+            aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string(CONFIG.oidc_scope_api().clone()).unwrap())
             $(,
-                scope![$scope]
+                aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string($scope.to_string()).unwrap())
             )*
         ];
 
@@ -196,7 +196,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::create_target,
             self,
             request,
-            "feedback-fusion:write"
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_target()
         )
     }
 
@@ -209,9 +210,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::get_target,
             self,
             request,
-            "feedback-fusion:read",
-            "feedback-fusion:getTarget",
-            { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
+            CONFIG.oidc_scope_read(),
+            CONFIG.oidc_scope_read_target()
+            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
         )
     }
 
@@ -224,8 +225,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::get_targets,
             self,
             request,
-            "feedback-fusion:read",
-            "feedback-fusion:listTargets"
+            CONFIG.oidc_scope_read(),
+            CONFIG.oidc_scope_read_target()
         )
     }
 
@@ -238,9 +239,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::update_target,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:putTarget",
-            { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_target()
+            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
         )
     }
 
@@ -253,9 +254,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::delete_target,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:deleteTarget",
-            { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_target()
+            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
         )
     }
 
@@ -268,9 +269,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::create_prompt,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:writePrompt",
-            { Ok::<_, FeedbackFusionError>(Some(request.get_ref().target.clone())) }
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_prompt()
+            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().target.clone())) }
         )
     }
 
@@ -283,9 +284,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::get_prompts,
             self,
             request,
-            "feedback-fusion:read",
-            "feedback-fusion:listPrompts",
-            { Ok::<_, FeedbackFusionError>(Some(request.get_ref().target.clone())) }
+            CONFIG.oidc_scope_read(),
+            CONFIG.oidc_scope_read_prompt()
+            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().target.clone())) }
         )
     }
 
@@ -298,9 +299,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::update_prompt,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:putPrompt",
-            {
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_prompt()
+            => {
                 Ok::<_, FeedbackFusionError>(
                     database_request!(
                         Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
@@ -322,9 +323,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::delete_prompt,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:deleteTarget",
-            {
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_prompt()
+            => {
                 Ok::<_, FeedbackFusionError>(
                     database_request!(
                         Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
@@ -346,9 +347,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::create_field,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:writeField",
-            {
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_field()
+            => {
                 Ok::<_, FeedbackFusionError>(
                     database_request!(
                         Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
@@ -370,9 +371,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::get_fields,
             self,
             request,
-            "feedback-fusion:read",
-            "feedback-fusion:listFields",
-            {
+            CONFIG.oidc_scope_read(),
+            CONFIG.oidc_scope_read_field()
+            => {
                 Ok::<_, FeedbackFusionError>(
                     database_request!(
                         Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
@@ -394,9 +395,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::update_field,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:putField",
-            {
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_field()
+            => {
                 let prompt: Option<Prompt> = database_request!(
                     self.connection()
                         .query_decode(
@@ -420,9 +421,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::delete_field,
             self,
             request,
-            "feedback-fusion:write",
-            "feedback-fusion:deleteField",
-            {
+            CONFIG.oidc_scope_write(),
+            CONFIG.oidc_scope_write_field()
+            => {
                 let prompt: Option<Prompt> = database_request!(
                     self.connection()
                         .query_decode(
@@ -446,9 +447,9 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             response::get_responses,
             self,
             request,
-            "feedback-fusion:read",
-            "feedback-fusion:listResponses",
-            {
+            CONFIG.oidc_scope_read(),
+            CONFIG.oidc_scope_read_response()
+            => {
                 Ok::<_, FeedbackFusionError>(
                     database_request!(
                         Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())

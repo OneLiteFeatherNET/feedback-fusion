@@ -6,7 +6,6 @@ You can set the following environment variables:
 
 | Environment Variable    | Type              | Default Value              | Description                                                                 |
 |-------------------------|-------------------|----------------------------|-----------------------------------------------------------------------------|
-| `GLOBAL_RATE_LIMIT`     | `u64`             | `10`                       | The global rate limit for requests.                                         |
 | `OIDC_PROVIDER`         | `String`          | N/A                        | The OIDC provider URL.                                                      |
 | `OIDC_AUDIENCE`         | `String`          | `"feedback-fusion"`        | The audience for the OIDC tokens.                                           |
 | `OIDC_ISSUER`           | `Option<String>`  | `None`                     | The optional issuer URL for the OIDC tokens.                                |
@@ -14,6 +13,21 @@ You can set the following environment variables:
 | `RUST_LOG`              | `String`          | `None`                     | The log level for the application. [Possible values](https://docs.rs/log/latest/log/enum.Level.html) | 
 | `OTLP_ENDPOINT`         | `Option<String>`  | `None`                     | The gRPC OTLP endpoint to send the trace spans to                           |
 | `SERVICE_NAME`          | `String`          | `"feedback-fusion"`        | Service name used in tracing context                                        |
+
+## Scope Configuration
+
+| Environment Variable              | Description                        |
+|-----------------------------------|------------------------------------|
+| `OIDC_SCOPE_API`                  | Scope for API access               |
+| `OIDC_SCOPE_WRITE`                | Scope for write access             |
+| `OIDC_SCOPE_READ`                 | Scope for read access              |
+| `OIDC_SCOPE_WRITE_TARGET`         | Scope for writing targets          |
+| `OIDC_SCOPE_READ_TARGET`          | Scope for reading targets          |
+| `OIDC_SCOPE_WRITE_PROMPT`         | Scope for writing prompts          |
+| `OIDC_SCOPE_READ_PROMPT`          | Scope for reading prompts          |
+| `OIDC_SCOPE_WRITE_FIELD`          | Scope for writing fields           |
+| `OIDC_SCOPE_READ_FIELD`           | Scope for reading fields           |
+| `OIDC_SCOPE_READ_RESPONSE`        | Scope for reading responses        |
 
 ## Database Configuration
 
