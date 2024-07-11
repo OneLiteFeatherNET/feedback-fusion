@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   feedback-fusion:
   - apiVersion: v2
+    appVersion: 0.2.0
+    created: "2024-07-11T17:18:14.329932923Z"
+    description: Feedback-Fusion helm chart
+    digest: 0a51ea6f72966b0e480ebc62f785172807912ece2e2ca2dde8b71cb5b22fe934
+    name: feedback-fusion
+    type: application
+    urls:
+    - https://github.com/OneLiteFeatherNET/feedback-fusion/releases/download/feedback-fusion-0.2.0/feedback-fusion-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
     appVersion: 0.1.4
     created: "2024-07-10T18:09:34.172504518Z"
     description: Feedback-Fusion helm chart
@@ -81,4 +91,4 @@ entries:
     urls:
     - https://github.com/OneLiteFeatherNET/feedback-fusion/releases/download/feedback-fusion-0.1.0/feedback-fusion-0.1.0.tgz
     version: 0.1.0
-generated: "2024-07-10T18:09:34.172754608Z"
+generated: "2024-07-11T17:18:14.329972416Z"
