@@ -8,6 +8,7 @@ COPY ./proto ./proto
 COPY ./common ./common
 COPY ./codegen ./codegen
 COPY ./src ./src
+COPY ./benches ./benches
 COPY ./rust-toolchain.toml .
 
 RUN apt-get update \ 
