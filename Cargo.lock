@@ -401,6 +401,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "bb8"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b10cf871f3ff2ce56432fddc2615ac7acc3aa22ca321f8fea800846fbb32f188"
+dependencies = [
+ "async-trait",
+ "futures-util",
+ "parking_lot",
+ "tokio",
+]
+
+[[package]]
 name = "bigdecimal"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -521,6 +533,42 @@ name = "bytes"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "514de17de45fdb8dc022b1a7975556c53c86f9f0aa5f534b98977b171857c2c9"
+
+[[package]]
+name = "cached"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8466736fe5dbcaf8b8ee24f9bbefe43c884dc3e9ff7178da70f55bffca1133c"
+dependencies = [
+ "ahash 0.8.11",
+ "async-trait",
+ "cached_proc_macro",
+ "cached_proc_macro_types",
+ "futures",
+ "hashbrown 0.14.5",
+ "instant",
+ "once_cell",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "cached_proc_macro"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "575f32e012222055211b70f5b0601f951f84523410a0e65c81f2744a6042450d"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.68",
+]
+
+[[package]]
+name = "cached_proc_macro_types"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 
 [[package]]
 name = "cast"
@@ -1168,6 +1216,7 @@ dependencies = [
  "aliri_tower",
  "aliri_traits",
  "async-trait",
+ "cached",
  "chrono",
  "criterion",
  "derivative",
@@ -1201,6 +1250,7 @@ dependencies = [
  "serde-this-or-that",
  "serde_json",
  "serde_yaml",
+ "skytable",
  "test-log",
  "thiserror",
  "tokio",
@@ -1881,6 +1931,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e05c02b5e89bff3b946cedeca278abc628fe811e604f027c45a8aa3cf793d0eb"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "instant"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0242819d153cba4b4b05a5a8f2a7e9bbf97b6055b2a002b395c96b5ff3c0222"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -2873,6 +2932,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "r2d2"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "51de85fb3fb6524929c8a2eb85e6b6d363de4e8c48f9e2c2eac4944abc181c93"
+dependencies = [
+ "log",
+ "parking_lot",
+ "scheduled-thread-pool",
+]
+
+[[package]]
 name = "radium"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3560,6 +3630,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "scheduled-thread-pool"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cbc66816425a074528352f5789333ecff06ca41b36b0b0efdfbb29edc391a19"
+dependencies = [
+ "parking_lot",
+]
+
+[[package]]
 name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3811,6 +3890,34 @@ name = "simdutf8"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27f6278552951f1f2b8cf9da965d10969b2efdea95a6ec47987ab46edfe263a"
+
+[[package]]
+name = "sky-derive"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "653a697e7fcd1ecf5f9af1d3277d6d48290f29f076cb0190011eb09cff2238ea"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "skytable"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ad7801f368596253646e42e1a11360431d115ab576fffa26e5da08e6ddb9d8d"
+dependencies = [
+ "async-trait",
+ "bb8",
+ "itoa",
+ "native-tls",
+ "r2d2",
+ "rand",
+ "sky-derive",
+ "tokio",
+ "tokio-native-tls",
+]
 
 [[package]]
 name = "slab"

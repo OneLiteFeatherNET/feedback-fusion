@@ -1,10 +1,10 @@
 .PHONY: pnpm core_generate docs lib_build docs_build extract_translations build_translations \
         check clippy unittest docker_network oidc-server-mock integration_test \
-        postgres_database postgres_backend postgres_cleanup postgres \
-        mysql_database mysql_backend mysql_cleanup mysql \
+        postgres_database postgres_backend cleanup postgres \
+        mysql_database mysql_backend mysql \
         mariadb_database mariadb \
-        mssql_database mssql_backend mssql_cleanup mssql \
-        integration
+        mssql_database mssql_backend mssql \
+        integration skytable
 
 pnpm:
 	cd ./lib && pnpm i
@@ -44,6 +44,15 @@ unittest:
 docker_network:
 	docker network rm feedback-fusion; docker network create feedback-fusion
 
+skytable:
+	docker run \
+		-p 2003:2003 \
+		--entrypoint skyd \
+		--rm --name skytable \
+		-d skytable/skytable \
+		--auth-root-password=passwordpassword \
+		--endpoint=tcp@0.0.0.0:2003
+
 # run oidc server for integration tests
 oidc-server-mock: 
 	docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d 
@@ -55,7 +64,7 @@ integration_test:
 	cargo test --no-fail-fast --test integration_test
 
 cleanup:
-	docker rm -f database;docker rm -f oidc-server-mock;docker rm -f feedback-fusion;docker network rm feedback-fusion; echo ""
+	docker rm -f database;docker rm -f oidc-server-mock;docker rm -f feedback-fusion;docker rm -f skytable;docker network rm feedback-fusion; echo ""
 
 # Postgres
 postgres_database:
