@@ -504,8 +504,8 @@ impl TryInto<FieldData> for feedback_fusion_common::proto::ResponseData {
 macro_rules! validate_data {
     ($self: expr, $voptions: expr, $rident:ident, $ident:ident, $($type:path = $options:path => $if:block $(,)?)*) => {
         $(
-            if let &$type($rident) = &$self {
-                if let &$options($ident) = &$voptions {
+            if let $type($rident) = $self {
+                if let $options($ident) = $voptions {
                     $if
                 } else {
                     Err(FeedbackFusionError::BadRequest(concat!("invalid data type: expected ", stringify!($options)).to_owned()))
@@ -539,12 +539,8 @@ impl FieldData {
                 if !options.multiple && response.values.len() > 1 {
                     Err(FeedbackFusionError::BadRequest("selecting multiple is not allowed".to_owned()))
                 } else if !options.combobox {
-                    let invalid = response.values.iter().find(|value| !options.values.contains(value));
-
-                    if let Some(invalid) = invalid {
-                        Err(FeedbackFusionError::BadRequest(format!(
-                            "found invalid value '{}'", invalid
-                        )))
+                    if response.values.iter().any(|value| !options.values.contains(value)) {
+                        Err(FeedbackFusionError::BadRequest("found invalid value in selection".to_owned()))
                     } else {
                         Ok(())
                     }
