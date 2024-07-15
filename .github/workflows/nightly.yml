@@ -27,14 +27,8 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
       - name: Run check
-        run: cargo make check
+        run: make check
 
   clippy:
     name: clippy
@@ -59,14 +53,8 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
       - name: Run clippy
-        run: cargo make clippy 
+        run: make clippy 
 
   tests:
     name: tests
@@ -94,14 +82,8 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
       - name: Tests
-        run: cargo make ${{ matrix.test }}
+        run: make ${{ matrix.test }}
 
   docker:
     needs: [tests, clippy, check]
@@ -166,18 +148,6 @@ jobs:
         with:
           version: 8
 
-      - name: Install dependencies for lib
-        run: pnpm i
-        working-directory: lib
-
-      - name: Build lib
-        run: pnpm run build
-        working-directory: lib
-
-      - name: Install dependencies
-        run: pnpm i
-        working-directory: docs
-
       - name: Update paths 
         working-directory: docs/.vitepress
         run: |
@@ -185,8 +155,7 @@ jobs:
           sed -i "s|/feedback-fusion/|/feedback-fusion/nightly/|g" theme/index.ts
 
       - name: Build
-        run: pnpm run docs:build
-        working-directory: docs
+        run: make docs_build
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4

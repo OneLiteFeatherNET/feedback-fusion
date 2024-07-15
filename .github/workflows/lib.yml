@@ -22,13 +22,8 @@ jobs:
         with:
           version: 8
 
-      - name: Install dependencies
-        run: pnpm i
-        working-directory: lib
-
       - name: Build
-        run: pnpm run build
-        working-directory: lib
+        run: make lib_build
 
       - name: Publish
         uses: JS-DevTools/npm-publish@v3

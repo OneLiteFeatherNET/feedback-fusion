@@ -30,14 +30,8 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
       - name: Run check
-        run: cargo make check
+        run: make check
 
   clippy:
     name: clippy
@@ -62,14 +56,8 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
       - name: Run clippy
-        run: cargo make clippy 
+        run: make clippy 
 
   test:
     name: tests
@@ -97,11 +85,5 @@ jobs:
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-make
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-make
-
       - name: Tests
-        run: cargo make ${{ matrix.test }}
+        run: make ${{ matrix.test }}
