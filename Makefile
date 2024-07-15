@@ -55,7 +55,7 @@ integration_test:
 	cargo test --no-fail-fast --test integration_test
 
 cleanup:
-	docker rm -f database;docker rm -f oidc-server-mock;docker rm -f feedback-fusion;docker network rm feedback-fusion
+	docker rm -f database;docker rm -f oidc-server-mock;docker rm -f feedback-fusion;docker network rm feedback-fusion; echo ""
 
 # Postgres
 postgres_database:
