@@ -237,8 +237,9 @@ where
 
         if self.refresh {
             pipeline.push(&query!(
-                format!("update {} set ttl = ?", self.build_model()).as_str(),
-                Utc::now().timestamp() + self.seconds as i64
+                format!("update {} set ttl += ? where key = ?", self.build_model()).as_str(),
+                self.seconds,
+                k.to_string()
             ));
         }
 
