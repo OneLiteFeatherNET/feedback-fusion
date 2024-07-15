@@ -6,6 +6,7 @@ COPY ./proto ./proto
 COPY ./common ./common
 COPY ./codegen ./codegen
 COPY ./src ./src
+COPY ./benches ./benches
 COPY ./tests ./tests
 COPY ./rust-toolchain.toml .
 
