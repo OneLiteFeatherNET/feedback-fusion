@@ -286,7 +286,7 @@ where
 
     #[instrument(skip_all)]
     async fn cache_get(&self, k: &K) -> std::result::Result<Option<V>, Self::Error> {
-        let mut connection = self.pool.get().await.unwrap();
+        let mut connection = self.pool.get().await?;
         let response: ClientResult<CachedSkytableValue> = connection
             .query_parse(&query!(
                 format!("select * from {} where ckey = ?", self.build_model()).as_str(),
