@@ -62,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [postgres, mysql, mariadb, mssql, unittest]
+        test: [postgres, mysql, mariadb, mssql, unittest, distributed_caching]
     steps:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
