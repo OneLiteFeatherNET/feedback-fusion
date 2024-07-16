@@ -22,7 +22,7 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldData, FieldResponse, PromptResponse},
+    database::schema::feedback::{FieldData, FieldResponse, PromptResponse},
     prelude::*,
 };
 use feedback_fusion_common::proto::{

@@ -212,7 +212,7 @@ pub enum SkytableCacheError {
     #[error(transparent)]
     SkytableError(#[from] skytable::error::Error),
     #[error(transparent)]
-    SerdeError(#[from] serde_json::Error),
+    BincodeError(#[from] bincode::Error),
     #[error("{0}")]
     PoolError(String),
 }
@@ -229,11 +229,11 @@ where
 #[derive(Clone, Query, Response)]
 struct CachedSkytableValue {
     pub ckey: String,
-    pub cvalue: String,
+    pub cvalue: Vec<u8>,
     pub ttl: i64,
 }
 impl CachedSkytableValue {
-    fn new(ckey: String, cvalue: String, ttl: i64) -> Self {
+    fn new(ckey: String, cvalue: Vec<u8>, ttl: i64) -> Self {
         Self { ckey, cvalue, ttl }
     }
 }
@@ -266,7 +266,7 @@ where
                 self.space
             )))
             .add(&query!(format!(
-                "CREATE MODEL IF NOT EXISTS {}.{}(ckey: string, cvalue: string, ttl: sint64)",
+                "CREATE MODEL IF NOT EXISTS {}.{}(ckey: string, cvalue: binary, ttl: sint64)",
                 self.space, self.model
             )));
         connection.execute_pipeline(&pipeline).await.unwrap();
@@ -313,7 +313,7 @@ where
                             .await?;
                     }
 
-                    Ok(serde_json::from_str(response.cvalue.as_str())?)
+                    Ok(bincode::deserialize(response.cvalue.as_slice())?)
                 }
             }
             Err(error) => match error {
@@ -325,11 +325,10 @@ where
 
     #[instrument(skip_all)]
     async fn cache_set(&self, k: K, v: V) -> std::result::Result<Option<V>, Self::Error> {
-        let value = CachedSkytableValue::new(
-            k.to_string(),
-            serde_json::to_string(&v)?,
-            Utc::now().timestamp() + self.seconds as i64,
-        );
+        let encoded = bincode::serialize(&v)?;
+        let ttl = Utc::now().timestamp() + self.seconds as i64;
+        let value = CachedSkytableValue::new(k.to_string(), encoded, ttl);
+
         self.pool
             .get()
             .await?
@@ -360,7 +359,7 @@ where
             .await?;
 
         match response {
-            Ok(response) => Ok(serde_json::from_str(response.cvalue.as_str())?),
+            Ok(response) => Ok(bincode::deserialize(response.cvalue.as_slice())?),
             Err(error) => match error {
                 skytable::error::Error::ServerError(111) => Ok(None),
                 error => Err(SkytableCacheError::from(error)),

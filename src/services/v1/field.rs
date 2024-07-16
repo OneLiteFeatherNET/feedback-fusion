@@ -22,7 +22,7 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldOptions, FieldType, Prompt},
+    database::schema::feedback::{Field, FieldOptions, FieldType},
     prelude::*,
 };
 use feedback_fusion_common::proto::{
@@ -78,7 +78,7 @@ pub async fn get_active_fields(
         return Err(FeedbackFusionError::Forbidden("inactive prompt".to_owned()));
     }
 
-    // may consider caching this as well 
+    // may consider caching this as well
     let page = database_request!(
         Field::select_page_by_prompt_wrapper(connection, &page_request, prompt.id().as_str()).await,
         "Select fields by prompt"
