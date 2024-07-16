@@ -33,7 +33,12 @@ use skytable::{
     pool::{ConnectionMgrTcp, ConnectionMgrTls},
     query, ClientResult, Pipeline, Query, Response,
 };
-use std::{fmt::Display, marker::PhantomData, ops::DerefMut, time::Duration};
+use std::{
+    fmt::{Debug, Display},
+    marker::PhantomData,
+    ops::DerefMut,
+    time::Duration,
+};
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tracing::{instrument, Instrument};
@@ -208,6 +213,17 @@ pub enum SkytableCacheError {
     SkytableError(#[from] skytable::error::Error),
     #[error(transparent)]
     SerdeError(#[from] serde_json::Error),
+    #[error("{0}")]
+    PoolError(String),
+}
+
+impl<E> From<bb8::RunError<E>> for SkytableCacheError
+where
+    E: Debug,
+{
+    fn from(value: bb8::RunError<E>) -> Self {
+        Self::PoolError(format!("{:?}", value))
+    }
 }
 
 #[derive(Clone, Query, Response)]
@@ -270,19 +286,6 @@ where
 
     #[instrument(skip_all)]
     async fn cache_get(&self, k: &K) -> std::result::Result<Option<V>, Self::Error> {
-        if self.refresh {
-            self.pool
-                .get()
-                .await
-                .unwrap()
-                .query(&query!(
-                    format!("update {} set ttl += ? where ckey = ?", self.build_model()).as_str(),
-                    self.seconds,
-                    k.to_string()
-                ))
-                .await?;
-        }
-
         let mut connection = self.pool.get().await.unwrap();
         let response: ClientResult<CachedSkytableValue> = connection
             .query_parse(&query!(
@@ -292,7 +295,27 @@ where
             .await;
 
         match response {
-            Ok(response) => Ok(serde_json::from_str(response.cvalue.as_str())?),
+            Ok(response) => {
+                if response.ttl < Utc::now().timestamp() {
+                    Ok(None)
+                } else {
+                    if self.refresh {
+                        connection
+                            .query(&query!(
+                                format!(
+                                    "update {} set ttl += ? where ckey = ?",
+                                    self.build_model()
+                                )
+                                .as_str(),
+                                self.seconds,
+                                k.to_string()
+                            ))
+                            .await?;
+                    }
+
+                    Ok(serde_json::from_str(response.cvalue.as_str())?)
+                }
+            }
             Err(error) => match error {
                 skytable::error::Error::ServerError(111) => Ok(None),
                 error => Err(SkytableCacheError::from(error)),
@@ -309,8 +332,7 @@ where
         );
         self.pool
             .get()
-            .await
-            .unwrap()
+            .await?
             .query(&query!(
                 format!("insert into {}(?, ?, ?)", self.build_model()).as_str(),
                 value
@@ -321,21 +343,16 @@ where
     }
 
     async fn cache_remove(&self, k: &K) -> std::result::Result<Option<V>, Self::Error> {
-        let response: ClientResult<CachedSkytableValue> = self
-            .pool
-            .get()
-            .await
-            .unwrap()
+        let mut connection = self.pool.get().await?;
+
+        let response: ClientResult<CachedSkytableValue> = connection
             .query_parse(&query!(
                 format!("select * from {} where key = ?", self.build_model()).as_str(),
                 k.to_string()
             ))
             .await;
 
-        self.pool
-            .get()
-            .await
-            .unwrap()
+        connection
             .query(&query!(
                 format!("delete from {} where key = ?", self.build_model()).as_str(),
                 k.to_string()
@@ -367,7 +384,10 @@ where
     } "##,
     convert = r#"{ format!("prompt-{}", id) }"#
 )]
-pub async fn fetch_prompt(connection: &DatabaseConnection, id: &str) -> crate::Result<Option<Prompt>> {
+pub async fn fetch_prompt(
+    connection: &DatabaseConnection,
+    id: &str,
+) -> crate::Result<Option<Prompt>> {
     let result = database_request!(
         Prompt::select_by_id(connection, id).await,
         "Select prompt by id"
