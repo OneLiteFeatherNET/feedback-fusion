@@ -48,6 +48,7 @@ pub async fn create_prompt(
     Ok(Response::new(prompt.into()))
 }
 
+
 #[instrument(skip_all)]
 pub async fn get_prompt(
     context: &PublicFeedbackFusionV1Context,
@@ -56,10 +57,13 @@ pub async fn get_prompt(
     let data = request.into_inner();
     let connection = context.connection();
 
+    #[cfg(not(feature = "caching-skytable"))]
     let prompt: Option<Prompt> = database_request!(
         Prompt::select_by_id(connection, data.id.as_str()).await,
         "Select prompt by id"
     )?;
+    #[cfg(feature = "caching-skytable")]
+    let prompt = fetch_prompt(connection, data.id.as_str()).await?;
 
     match prompt {
         Some(prompt) => Ok(Response::new(prompt.into())),
@@ -107,17 +111,19 @@ pub async fn update_prompt(
     let connection = context.connection();
 
     let mut prompt = database_request!(
-        Prompt::select_by_id(connection, data.id.as_str())
-            .await,
+        Prompt::select_by_id(connection, data.id.as_str()).await,
         "Select prompt by id"
     )?
-            .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?;
+    .ok_or(FeedbackFusionError::BadRequest("not found".to_owned()))?;
 
     prompt.set_title(data.title.unwrap_or(prompt.title().clone()));
     prompt.set_description(data.description.unwrap_or(prompt.description().clone()));
     prompt.set_active(data.active.unwrap_or(*prompt.active()));
 
-    database_request!(Prompt::update_by_column(connection, &prompt, "id").await, "Update prompt")?;
+    database_request!(
+        Prompt::update_by_column(connection, &prompt, "id").await,
+        "Update prompt"
+    )?;
     Ok(Response::new(prompt.into()))
 }
 

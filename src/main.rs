@@ -199,6 +199,8 @@ async fn main() {
 }
 
 pub mod prelude {
+    #[cfg(feature = "caching-skytable")]
+    pub use crate::{cache::*, skytable_configuration, skytable_configuration_tls};
     pub use crate::{
         config::*,
         database::{DatabaseConfiguration, DatabaseConnection},

@@ -12,7 +12,7 @@ COPY ./benches ./benches
 COPY ./rust-toolchain.toml .
 
 RUN apt-get update \ 
-  && apt-get install libssl-dev protobuf-compiler libprotobuf-dev -y --no-install-recommends \
+  && apt-get install libssl-dev protobuf-compiler libprotobuf-dev pkg-config -y --no-install-recommends \
   && apt-get clean \
   && cargo build --release --features $features
 

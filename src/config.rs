@@ -43,7 +43,7 @@ macro_rules! config {
                 $(
                     $ident: $type,
                 )*
-                
+
                 $(
                     #[serde(default = "default_" $dident)]
                     $dident: $dtype,
@@ -67,16 +67,25 @@ config!(
         oidc_issuer: Option<String>,
         config_path: Option<String>,
         otlp_endpoint: Option<String>,
+
+        skytable_host: Option<String>,
+        skytable_port: Option<u16>,
+        skytable_certificate: Option<String>,
+        skytable_username: Option<String>,
+        skytable_password: Option<String>
     ),
 
     (
         service_name: String = "feedback-fusion"
         oidc_audience: String = "feedback-fusion",
 
+        skytable_space: String = "cache",
+        skytable_model: String = "feedbackfusion",
+
         oidc_scope_api: String = "api:feedback-fusion",
         oidc_scope_write: String = "feedback-fusion:write",
         oidc_scope_read: String = "feedback-fusion:read",
-        
+
         oidc_scope_write_target: String = "feedback-fusion:writeTarget",
         oidc_scope_read_target: String = "feedback-fusion:readTarget"
 
@@ -89,6 +98,45 @@ config!(
         oidc_scope_read_response: String = "feedback-fusion:readResponse"
     )
 );
+
+#[macro_export]
+macro_rules! skytable_configuration {
+    () => {{
+        $crate::cache::SkytableCacheBuilder::new(
+            CONFIG.skytable_host().as_ref().unwrap().as_str(),
+            *CONFIG.skytable_port().as_ref().unwrap(),
+            CONFIG.skytable_username().as_ref().unwrap().as_str(),
+            CONFIG.skytable_password().as_ref().unwrap().as_str(),
+        )
+        .set_space(CONFIG.skytable_space())
+        .set_model(CONFIG.skytable_model())
+        .set_refresh(false)
+        .set_lifetime(std::time::Duration::from_secs(300))
+        .build()
+        .await
+        .unwrap()
+    }};
+}
+
+#[macro_export]
+macro_rules! skytable_configuration_tls {
+    () => {{
+        $crate::cache::SkytableTlsCacheBuilder::new(
+            CONFIG.skytable_host().as_ref().unwrap().as_str(),
+            *CONFIG.skytable_port().as_ref().unwrap(),
+            CONFIG.skytable_username().as_ref().unwrap().as_str(),
+            CONFIG.skytable_password().as_ref().unwrap().as_str(),
+        )
+        .set_certificate(CONFIG.skytable_certificate().as_ref().unwrap().as_str())
+        .set_space(CONFIG.skytable_space())
+        .set_model(CONFIG.skytable_model())
+        .set_refresh(false)
+        .set_lifetime(std::time::Duration::from_secs(300))
+        .build()
+        .await
+        .unwrap()
+    }};
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct InstanceConfig {

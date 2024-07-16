@@ -32,6 +32,7 @@ use feedback_fusion_common::proto::{
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::HashMap;
 
+
 #[instrument(skip_all)]
 pub async fn create_responses(
     context: &PublicFeedbackFusionV1Context,
@@ -47,6 +48,9 @@ pub async fn create_responses(
     });
 
     // fetch the fields of the prompt
+    #[cfg(feature = "caching-skytable")]
+    let fields = fields_by_prompt(context.connection(), data.prompt.as_str()).await?;
+    #[cfg(not(feature = "caching-skytable"))]
     let fields = database_request!(
         Field::select_by_column(&transaction, "prompt", data.prompt.as_str()).await,
         "Select fields by prompt"
@@ -144,7 +148,8 @@ pub async fn get_responses(
                     .collect::<Vec<String>>()
                     .as_slice(),
             )
-            .await, "Select responses by id"
+            .await,
+            "Select responses by id"
         )?
         .into_iter()
         .group_by(|value| value.response().clone())

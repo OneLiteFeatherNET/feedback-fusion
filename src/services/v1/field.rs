@@ -62,11 +62,15 @@ pub async fn get_active_fields(
     let connection = context.connection();
 
     // fetch the prompt
+    #[cfg(not(feature = "caching-skytable"))]
     let prompt = database_request!(
         Prompt::select_by_id(connection, data.prompt.as_str()).await,
         "Fetch prompt by id"
-    )?
-    .ok_or(FeedbackFusionError::BadRequest(
+    )?;
+    #[cfg(feature = "caching-skytable")]
+    let prompt = fetch_prompt(connection, data.prompt.as_str()).await?;
+
+    let prompt = prompt.ok_or(FeedbackFusionError::BadRequest(
         "invalid prompt".to_string(),
     ))?;
     // only allow active prompts
@@ -74,6 +78,7 @@ pub async fn get_active_fields(
         return Err(FeedbackFusionError::Forbidden("inactive prompt".to_owned()));
     }
 
+    // may consider caching this as well 
     let page = database_request!(
         Field::select_page_by_prompt_wrapper(connection, &page_request, prompt.id().as_str()).await,
         "Select fields by prompt"

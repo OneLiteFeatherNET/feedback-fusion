@@ -1216,6 +1216,7 @@ dependencies = [
  "aliri_tower",
  "aliri_traits",
  "async-trait",
+ "bb8",
  "cached",
  "chrono",
  "criterion",

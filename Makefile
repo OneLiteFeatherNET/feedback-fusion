@@ -49,6 +49,7 @@ skytable:
 		-p 2003:2003 \
 		--entrypoint skyd \
 		--rm --name skytable \
+		--network feedback-fusion \
 		-d skytable/skytable \
 		--auth-root-password=passwordpassword \
 		--endpoint=tcp@0.0.0.0:2003
@@ -66,6 +67,9 @@ integration_test:
 cleanup:
 	docker rm -f database;docker rm -f oidc-server-mock;docker rm -f feedback-fusion;docker rm -f skytable;docker network rm feedback-fusion; echo ""
 
+bench: cleanup docker_network skytable oidc-server-mock postgres_database postgres_backend 
+	GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
+
 # Postgres
 postgres_database:
 	docker run --name database -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres --network feedback-fusion -d postgres
@@ -74,6 +78,10 @@ postgres_database:
 postgres_backend:
 	docker build -t feedback-fusion .
 	docker run --name feedback-fusion -d \
+		-e SKYTABLE_HOST=skytable \
+		-e SKYTABLE_PORT=2003 \
+		-e SKYTABLE_USERNAME=root \
+		-e SKYTABLE_PASSWORD=passwordpassword \
 		-e POSTGRES_USERNAME=postgres \
 		-e POSTGRES_PASSWORD=password \
 		-e POSTGRES_DATABASE=postgres \
@@ -84,7 +92,7 @@ postgres_backend:
 		--network feedback-fusion -p 8000:8000 feedback-fusion
 	sleep 1
 
-postgres: cleanup docker_network oidc-server-mock postgres_database postgres_backend integration_test 
+postgres: cleanup docker_network skytable oidc-server-mock postgres_database postgres_backend integration_test 
 	${MAKE} cleanup
 
 # Mysql
