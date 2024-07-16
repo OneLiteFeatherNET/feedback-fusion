@@ -69,13 +69,14 @@ cleanup:
 
 bench: cleanup docker_network skytable oidc-server-mock postgres_database postgres_backend 
 	GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
+	${MAKE} cleanup
 
 # Postgres
 postgres_database:
 	docker run --name database -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres --network feedback-fusion -d postgres
 	sleep 1
 
-postgres_backend:
+distributed_caching_backend:
 	docker build -t feedback-fusion .
 	docker run --name feedback-fusion -d \
 		-e SKYTABLE_HOST=skytable \
@@ -92,7 +93,24 @@ postgres_backend:
 		--network feedback-fusion -p 8000:8000 feedback-fusion
 	sleep 1
 
-postgres: cleanup docker_network skytable oidc-server-mock postgres_database postgres_backend integration_test 
+distributed_caching: cleanup docker_network skytable oidc-server-mock postgres_database distributed_caching_backend integration_test 
+	${MAKE} cleanup
+
+
+postgres_backend:
+	docker build -t feedback-fusion .
+	docker run --name feedback-fusion -d \
+		-e POSTGRES_USERNAME=postgres \
+		-e POSTGRES_PASSWORD=password \
+		-e POSTGRES_DATABASE=postgres \
+		-e POSTGRES_ENDPOINT=database:5432 \
+		-e OIDC_PROVIDER=http://oidc-server-mock \
+		-e OIDC_ISSUER=http://localhost:5151 \
+		-e RUST_LOG=DEBUG \
+		--network feedback-fusion -p 8000:8000 feedback-fusion
+	sleep 1
+
+postgres: cleanup docker_network oidc-server-mock postgres_database postgres_backend integration_test 
 	${MAKE} cleanup
 
 # Mysql
@@ -166,3 +184,4 @@ integration:
 	${MAKE} mariadb
 	${MAKE} mysql
 	${MAKE} mssql
+	${MAKE} distributed_caching_backend

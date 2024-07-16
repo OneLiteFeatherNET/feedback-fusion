@@ -25,8 +25,9 @@ use crate::{
     prelude::*,
 };
 use bb8::ManageConnection;
-use cached::{proc_macro::io_cached, IOCachedAsync};
+use cached::IOCachedAsync;
 use chrono::Utc;
+use feedback_fusion_codegen::dynamic_cache;
 use serde::{de::DeserializeOwned, Serialize};
 use skytable::{
     aio::TcpConnection,
@@ -303,11 +304,8 @@ where
                         let new_ttl = Utc::now().timestamp() + self.seconds as i64;
                         connection
                             .query(&query!(
-                                format!(
-                                    "update {} set ttl = ? where ckey = ?",
-                                    self.build_model()
-                                )
-                                .as_str(),
+                                format!("update {} set ttl = ? where ckey = ?", self.build_model())
+                                    .as_str(),
                                 new_ttl,
                                 k.to_string()
                             ))
@@ -362,6 +360,7 @@ where
         match response {
             Ok(response) => Ok(bincode::deserialize(response.cvalue.as_slice())?),
             Err(error) => match error {
+                // 111 = NotFound https://docs.skytable.io/protocol/errors
                 skytable::error::Error::ServerError(111) => Ok(None),
                 error => Err(SkytableCacheError::from(error)),
             },
@@ -375,19 +374,8 @@ where
     }
 }
 
-// TODO:find a way to implement optional tls here
-#[io_cached(
-    map_error = r##"|e| FeedbackFusionError::ConfigurationError(format!("{:?}", e))"##,
-    ty = "SkytableCache<skytable::pool::ConnectionMgrTcp, String, Option<Prompt>>",
-    create = r##" {
-        skytable_configuration!()
-    } "##,
-    convert = r#"{ format!("prompt-{}", id) }"#
-)]
-pub async fn fetch_prompt(
-    connection: &DatabaseConnection,
-    id: &str,
-) -> crate::Result<Option<Prompt>> {
+#[dynamic_cache(ttl = "300", key = r#"format!('prompt-{}', id)"#)]
+pub async fn fetch_prompt(connection: &DatabaseConnection, id: &str) -> Result<Option<Prompt>> {
     let result = database_request!(
         Prompt::select_by_id(connection, id).await,
         "Select prompt by id"
@@ -396,14 +384,7 @@ pub async fn fetch_prompt(
     Ok(result)
 }
 
-#[io_cached(
-    map_error = r##"|e| FeedbackFusionError::ConfigurationError(format!("{:?}", e))"##,
-    ty = "SkytableCache<skytable::pool::ConnectionMgrTcp, String, Vec<Field>>",
-    create = r##" {
-        skytable_configuration!()
-    } "##,
-    convert = r#"{ format!("fields-{}", prompt) }"#
-)]
+#[dynamic_cache(ttl = "300", key = r#"format!('fields-{}', prompt)"#)]
 pub async fn fields_by_prompt(connection: &DatabaseConnection, prompt: &str) -> Result<Vec<Field>> {
     let result = database_request!(
         Field::select_by_column(connection, "prompt", prompt).await,
