@@ -300,14 +300,15 @@ where
                     Ok(None)
                 } else {
                     if self.refresh {
+                        let new_ttl = Utc::now().timestamp() + self.seconds as i64;
                         connection
                             .query(&query!(
                                 format!(
-                                    "update {} set ttl += ? where ckey = ?",
+                                    "update {} set ttl = ? where ckey = ?",
                                     self.build_model()
                                 )
                                 .as_str(),
-                                self.seconds,
+                                new_ttl,
                                 k.to_string()
                             ))
                             .await?;
