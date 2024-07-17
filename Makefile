@@ -67,7 +67,7 @@ integration_test:
 cleanup:
 	docker rm -f database;docker rm -f oidc-server-mock;docker rm -f feedback-fusion;docker rm -f skytable;docker network rm feedback-fusion; echo ""
 
-bench: cleanup docker_network skytable oidc-server-mock postgres_database postgres_backend 
+bench: cleanup docker_network oidc-server-mock postgres_database postgres_backend 
 	GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
 	${MAKE} cleanup
 

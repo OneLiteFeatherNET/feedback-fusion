@@ -22,8 +22,7 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldOptions, FieldType},
-    prelude::*,
+    cache::fetch_prompt, database::schema::feedback::{Field, FieldOptions, FieldType}, prelude::*
 };
 use feedback_fusion_common::proto::{
     CreateFieldRequest, DeleteFieldRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
@@ -62,12 +61,6 @@ pub async fn get_active_fields(
     let connection = context.connection();
 
     // fetch the prompt
-    #[cfg(not(feature = "caching-skytable"))]
-    let prompt = database_request!(
-        Prompt::select_by_id(connection, data.prompt.as_str()).await,
-        "Fetch prompt by id"
-    )?;
-    #[cfg(feature = "caching-skytable")]
     let prompt = fetch_prompt(connection, data.prompt.as_str()).await?;
 
     let prompt = prompt.ok_or(FeedbackFusionError::BadRequest(

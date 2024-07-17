@@ -48,7 +48,6 @@ pub async fn create_prompt(
     Ok(Response::new(prompt.into()))
 }
 
-
 #[instrument(skip_all)]
 pub async fn get_prompt(
     context: &PublicFeedbackFusionV1Context,
@@ -57,12 +56,6 @@ pub async fn get_prompt(
     let data = request.into_inner();
     let connection = context.connection();
 
-    #[cfg(not(feature = "caching-skytable"))]
-    let prompt: Option<Prompt> = database_request!(
-        Prompt::select_by_id(connection, data.id.as_str()).await,
-        "Select prompt by id"
-    )?;
-    #[cfg(feature = "caching-skytable")]
     let prompt = fetch_prompt(connection, data.id.as_str()).await?;
 
     match prompt {

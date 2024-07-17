@@ -42,7 +42,6 @@ use tonic_web::GrpcWebLayer;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-#[cfg(feature = "caching-skytable")]
 pub mod cache;
 pub mod config;
 pub mod database;
