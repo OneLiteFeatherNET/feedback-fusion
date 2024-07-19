@@ -397,6 +397,19 @@ where
     }
 }
 
+#[macro_export]
+macro_rules! invalidate {
+    ($cache: ident, $key: expr) => {
+        paste! {{
+            let key = async { $key }.await;    
+
+            tokio::spawn(async move {
+                [<invalidate_ $cache>](key).await.unwrap();
+            });
+        }
+    }};
+}
+
 #[dynamic_cache(ttl = "300", key = r#"format!('prompt-{}', id)"#)]
 pub async fn fetch_prompt(connection: &DatabaseConnection, id: &str) -> Result<Option<Prompt>> {
     let result = database_request!(

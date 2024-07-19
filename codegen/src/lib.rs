@@ -134,10 +134,14 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
         })
         .collect::<Vec<Ident>>();
 
+    let invalidate = format_ident!("invalidate_{}", &sig.ident);
     let wrapper = format_ident!("__{}", &sig.ident);
     let skytable_tls = format_ident!("__{}_skytable_tls", &sig.ident);
+    let skytable_tls_static = format_ident!("{}", skytable_tls.to_string().to_uppercase());
     let skytable = format_ident!("__{}_skytable", &sig.ident);
+    let skytable_static = format_ident!("{}", skytable.to_string().to_uppercase());
     let memory = format_ident!("__{}_memory", &sig.ident);
+    let memory_static = format_ident!("{}", memory.to_string().to_uppercase());
 
     let mut wrapper_sig = sig.clone();
     wrapper_sig.ident = wrapper.clone();
@@ -249,6 +253,34 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
 
             #[cfg(not(feature = "caching-skytable"))]
             #memory(#(#args),*).await
+        }
+
+        #vis async fn #invalidate(key: String) -> Result<()> {
+            use cached::Cached;
+            // check if the user did configure skytable
+            #[cfg(feature = "caching-skytable")]
+            if CONFIG.skytable_host().is_some() {
+                // now check if the user did configure tls
+                match CONFIG.skytable_certificate() {
+                    None => {
+                        // tls is inactive so we do use the raw tcp stream
+                        #skytable_static.get().unwrap().cache_remove(&key).await?;
+                    },
+                    Some(_) => {
+                        // tls is active so we use the tls cache
+                        #skytable_tls_static.get().unwrap().cache_remove(&key).await?;
+                    }
+                }
+            } else {
+                // otherwise use timed in memory caching
+                #memory_static.lock().await.cache_remove(&key);
+            }
+
+            #[cfg(not(feature = "caching-skytable"))]
+            #memory_static.lock().await.cache_remove(&key);
+
+
+            Ok(())
         }
 
         // create the wrapper containing the original data logic

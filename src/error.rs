@@ -40,6 +40,9 @@ pub enum FeedbackFusionError {
     Unauthorized,
     #[error("{0}")]
     Forbidden(String),
+    #[cfg(feature = "caching-skytable")]
+    #[error(transparent)]
+    CacheError(#[from] crate::cache::SkytableCacheError)
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {

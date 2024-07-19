@@ -22,7 +22,9 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    cache::fetch_prompt, database::schema::feedback::{Field, FieldOptions, FieldType}, prelude::*
+    cache::fetch_prompt,
+    database::schema::feedback::{Field, FieldOptions, FieldType},
+    prelude::*,
 };
 use feedback_fusion_common::proto::{
     CreateFieldRequest, DeleteFieldRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
@@ -47,6 +49,8 @@ pub async fn create_field(
         .prompt(data.prompt)
         .build();
     database_request!(Field::insert(connection, &field).await, "Insert field")?;
+
+    invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
 
     Ok(Response::new(field.into()))
 }
@@ -150,6 +154,8 @@ pub async fn update_field(
         Field::update_by_column(connection, &field, "id").await,
         "Update field by id"
     )?;
+
+    invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
 
     Ok(Response::new(field.into()))
 }

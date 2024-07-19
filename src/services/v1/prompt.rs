@@ -117,6 +117,9 @@ pub async fn update_prompt(
         Prompt::update_by_column(connection, &prompt, "id").await,
         "Update prompt"
     )?;
+
+    invalidate!(fetch_prompt, format!("prompt-{}", prompt.id()));
+
     Ok(Response::new(prompt.into()))
 }
 
