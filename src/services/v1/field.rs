@@ -22,7 +22,8 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldOptions, FieldType, Prompt},
+    cache::fetch_prompt,
+    database::schema::feedback::{Field, FieldOptions, FieldType},
     prelude::*,
 };
 use feedback_fusion_common::proto::{
@@ -49,6 +50,8 @@ pub async fn create_field(
         .build();
     database_request!(Field::insert(connection, &field).await, "Insert field")?;
 
+    invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
+
     Ok(Response::new(field.into()))
 }
 
@@ -62,11 +65,9 @@ pub async fn get_active_fields(
     let connection = context.connection();
 
     // fetch the prompt
-    let prompt = database_request!(
-        Prompt::select_by_id(connection, data.prompt.as_str()).await,
-        "Fetch prompt by id"
-    )?
-    .ok_or(FeedbackFusionError::BadRequest(
+    let prompt = fetch_prompt(connection, data.prompt.as_str()).await?;
+
+    let prompt = prompt.ok_or(FeedbackFusionError::BadRequest(
         "invalid prompt".to_string(),
     ))?;
     // only allow active prompts
@@ -74,6 +75,7 @@ pub async fn get_active_fields(
         return Err(FeedbackFusionError::Forbidden("inactive prompt".to_owned()));
     }
 
+    // may consider caching this as well
     let page = database_request!(
         Field::select_page_by_prompt_wrapper(connection, &page_request, prompt.id().as_str()).await,
         "Select fields by prompt"
@@ -152,6 +154,8 @@ pub async fn update_field(
         Field::update_by_column(connection, &field, "id").await,
         "Update field by id"
     )?;
+
+    invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
 
     Ok(Response::new(field.into()))
 }

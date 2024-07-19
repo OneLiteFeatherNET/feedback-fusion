@@ -42,6 +42,7 @@ use tonic_web::GrpcWebLayer;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+pub mod cache;
 pub mod config;
 pub mod database;
 pub mod error;
@@ -197,6 +198,7 @@ async fn main() {
 }
 
 pub mod prelude {
+    pub use crate::{cache::*, skytable_configuration, skytable_configuration_tls, invalidate};
     pub use crate::{
         config::*,
         database::{DatabaseConfiguration, DatabaseConnection},

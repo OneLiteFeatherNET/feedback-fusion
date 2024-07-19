@@ -22,8 +22,7 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    database::schema::feedback::{Field, FieldData, FieldResponse, PromptResponse},
-    prelude::*,
+    cache::fields_by_prompt, database::schema::feedback::{FieldData, FieldResponse, PromptResponse}, prelude::*
 };
 use feedback_fusion_common::proto::{
     CreateResponsesRequest, FieldResponse as ProtoFieldResponse, FieldResponseList,
@@ -47,10 +46,7 @@ pub async fn create_responses(
     });
 
     // fetch the fields of the prompt
-    let fields = database_request!(
-        Field::select_by_column(&transaction, "prompt", data.prompt.as_str()).await,
-        "Select fields by prompt"
-    )?;
+    let fields = fields_by_prompt(context.connection(), data.prompt.as_str()).await?;
     // as we can assume a prompt has to have at least 1 field we can throw the 400 here
     if fields.is_empty() {
         return Err(FeedbackFusionError::BadRequest("invalid prompt".to_owned()));
@@ -144,7 +140,8 @@ pub async fn get_responses(
                     .collect::<Vec<String>>()
                     .as_slice(),
             )
-            .await, "Select responses by id"
+            .await,
+            "Select responses by id"
         )?
         .into_iter()
         .group_by(|value| value.response().clone())
