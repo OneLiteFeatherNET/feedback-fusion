@@ -7,10 +7,10 @@ edition = "2021"
 feedback_fusion_codegen = { path = "../codegen" }
 
 rbatis = "4.5.21"
-tonic = "0.11.0"
-prost = "0.12.4"
-prost-types = "0.12.4"
+tonic = "0.12.0"
+prost = "0.13.0"
+prost-types = "0.13.0"
 validator = { version = "0.18.1", features = ["derive"] }
 
 [build-dependencies]
-tonic-build = "0.11.0"
+tonic-build = "0.12.0"

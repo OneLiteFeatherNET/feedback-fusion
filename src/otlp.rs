@@ -21,7 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use opentelemetry::{global, KeyValue};
+use opentelemetry::{global, trace::TracerProvider, KeyValue};
 use opentelemetry_http::{HeaderExtractor, Request};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
@@ -31,7 +31,7 @@ use tower_http::{
     trace::{MakeSpan, TraceLayer},
 };
 use tracing::Span;
-use tracing_opentelemetry::OpenTelemetrySpanExt;
+use tracing_opentelemetry::{OpenTelemetryLayer, OpenTelemetrySpanExt};
 use tracing_subscriber::layer::SubscriberExt;
 
 pub fn init_tracing() {
@@ -58,8 +58,9 @@ pub fn init_tracing() {
             .install_batch(opentelemetry_sdk::runtime::Tokio)
             .unwrap();
 
-        let layer = tracing_opentelemetry::layer().with_tracer(tracer_provider);
-        let subscriber = subscriber.with(layer);
+        let subscriber = subscriber.with(OpenTelemetryLayer::new(
+            tracer_provider.tracer("feedback-fusion"),
+        ));
         tracing::subscriber::set_global_default(subscriber).ok();
     }
 }
