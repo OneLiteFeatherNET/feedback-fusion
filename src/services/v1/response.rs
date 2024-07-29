@@ -144,7 +144,7 @@ pub async fn get_responses(
             "Select responses by id"
         )?
         .into_iter()
-        .group_by(|value| value.response().clone())
+        .chunk_by(|value| value.response().clone())
         .into_iter()
         .map(|(key, value)| {
             let value = FieldResponseList {
