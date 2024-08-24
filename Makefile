@@ -7,9 +7,7 @@
         integration skytable
 
 pnpm:
-	cd ./lib && pnpm i
-
-pnpm_docs:
+	cd ./lib && pnpm i 
 	cd ./docs && pnpm i
 
 core_generate: pnpm
