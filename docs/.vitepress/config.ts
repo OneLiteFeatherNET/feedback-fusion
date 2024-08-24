@@ -29,6 +29,7 @@ export default defineConfig({
               { text: "Tracing", link: "/docs/observability/tracing" }
             ]
           },
+          { text: "Caching", link: "/docs/caching" },
           {
             text: "Frontend Library", link: "/docs/frontend-library", items: [
               { text: "Prompt", link: "/docs/frontend-library/prompt" },
