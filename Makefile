@@ -19,7 +19,7 @@ docs: core_generate
 lib_build: core_generate
 	cd ./lib && pnpm run build
 
-docs_build: lib_build pnpm_docs
+docs_build: lib_build
 	cd ./docs && pnpm run docs:build
 
 extract_translations: pnpm
