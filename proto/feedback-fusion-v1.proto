@@ -24,6 +24,8 @@ service FeedbackFusionV1 {
   rpc DeleteField(DeleteFieldRequest) returns (google.protobuf.Empty);
 
   rpc GetResponses(GetResponsesRequest) returns (ResponsePage);
+
+  rpc GetGrafanaData(GetGrafanaData) returns (GrafanaData);
 }
 
 // does not use oidc authentication
@@ -289,4 +291,32 @@ message PromptResponse {
   string id = 1;
   string prompt = 2;
   google.protobuf.Timestamp created_at = 3;
+}
+
+// 
+// Grafana 
+//
+
+message GetGrafanaData {
+  // if not specified the server will return all targets 
+  optional string target = 1;
+  // if not specified the server will return all prompts in the given target 
+  optional string prompt = 2;
+  // if not specified it will return responses of every field 
+  optional string field = 3;
+  optional int32 page_token = 4;
+  optional int32 page_size = 5;
+}
+
+message GrafanaData {
+  repeated Target targets = 1;
+  repeated Prompt prompts = 2;
+
+  repeated Field fields = 3;
+
+  int32 total = 4;
+  int32 page_size = 5;
+  int32 next_page_token = 6; 
+  int32 page_token = 7;
+  map<string, FieldResponseList> data = 8;
 }
