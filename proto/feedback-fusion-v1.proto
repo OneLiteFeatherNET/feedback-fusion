@@ -25,7 +25,7 @@ service FeedbackFusionV1 {
 
   rpc GetResponses(GetResponsesRequest) returns (ResponsePage);
 
-  rpc GetGrafanaData(GetGrafanaData) returns (GrafanaData);
+  rpc GetGrafanaData(GrafanaDataRequest) returns (GrafanaData);
 }
 
 // does not use oidc authentication
@@ -297,7 +297,7 @@ message PromptResponse {
 // Grafana 
 //
 
-message GetGrafanaData {
+message GrafanaDataRequest {
   // if not specified the server will return all targets 
   optional string target = 1;
   // if not specified the server will return all prompts in the given target 
