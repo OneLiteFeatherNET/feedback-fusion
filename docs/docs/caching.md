@@ -41,9 +41,3 @@ via skytable
 | `skytable_password`    | `Option<String>` | `None`             | The password for authentication                   | 
 | `skytable_space`       | `String`         | `"cache"`          | The skytable space to use                         | 
 | `skytable_model`       | `String`         | `"feedbackfusion"` | The skytable model to use                         | 
-
-
-
-        skytable_space: String = "cache",
-        skytable_model: String = "feedbackfusion",
-
