@@ -32,11 +32,18 @@ If you use the default provided image it is automatically enabled.
 If you set the following values feedback-fusion will automatically enable distributed caching 
 via skytable 
 
-| Environment Variable   | Type             | Default   | Description                                       |
-|------------------------|------------------|-----------|---------------------------------------------------|
-| `skytable_host`        | `Option<String>` | `None`    | The hostname or IP address of the Skytable server |
-| `skytable_port`        | `Option<u16>`    | `None`    | The port on which the Skytable server is running  |
-| `skytable_certificate` | `Option<String>` | `None`    | The Skytable servers ca certificate               |
-| `skytable_username`    | `Option<String>` | `None`    | The username for authentication                   |
-| `skytable_password`    | `Option<String>` | `None`    | The password for authentication                   | 
+| Environment Variable   | Type             | Default            | Description                                       |
+|------------------------|------------------|--------------------|---------------------------------------------------|
+| `skytable_host`        | `Option<String>` | `None`             | The hostname or IP address of the Skytable server |
+| `skytable_port`        | `Option<u16>`    | `None`             | The port on which the Skytable server is running  |
+| `skytable_certificate` | `Option<String>` | `None`             | The Skytable servers ca certificate               |
+| `skytable_username`    | `Option<String>` | `None`             | The username for authentication                   |
+| `skytable_password`    | `Option<String>` | `None`             | The password for authentication                   | 
+| `skytable_space`       | `String`         | `"cache"`          | The skytable space to use                         | 
+| `skytable_model`       | `String`         | `"feedbackfusion"` | The skytable model to use                         | 
+
+
+
+        skytable_space: String = "cache",
+        skytable_model: String = "feedbackfusion",
 
