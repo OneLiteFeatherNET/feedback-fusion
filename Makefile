@@ -20,6 +20,17 @@ extract_translations: pnpm
 build_translations: pnpm
 	cd ./lib && pnpm run translations:build
 
+# dasboard 
+
+dashboard_setup:
+	cd ./dashboard && pnpm i 
+	 
+dashboard: dashboard_setup
+	cd ./dashboard/ && pnpm run dev
+
+dashboard_lint: dashboard_setup 
+	cd ./dashboard && pnpm run lint
+
 # linting
 
 check:
