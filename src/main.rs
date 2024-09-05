@@ -141,7 +141,7 @@ async fn main() {
             .register_encoded_file_descriptor_set(
                 feedback_fusion_common::proto::FILE_DESCRIPTOR_SET,
             )
-            .build()
+            .build_v1()
             .unwrap();
 
         // build the authority
