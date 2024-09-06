@@ -34,6 +34,26 @@ services:
       API_RESOURCES_INLINE: |
         - Name: feedback-fusion 
           Scopes: ["api:feedback-fusion", "feedback-fusion:write", "feedback-fusion:read"]
+      USERS_CONFIGURATION_INLINE: |
+        [
+          {
+            "SubjectId":"1",
+            "Username":"username",
+            "Password":"password",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "Max Mustermann",
+                "ValueType": "string"
+              },
+              {
+                "Type": "email",
+                "Value": "max@mustermann.de",
+                "ValueType": "string"
+              },
+            ]
+          }
+        ]
       CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
       ASPNET_SERVICES_OPTIONS_INLINE: |
         { 
