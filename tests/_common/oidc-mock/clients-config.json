@@ -20,9 +20,7 @@
     "AllowedScopes": [
       "api:feedback-fusion"
     ],
-    "RedirectUris": [
-      "https://oidcdebugger.com/debug"
-    ],
+    "RedirectUris": ["http://localhost:3000/auth/callback"],
     "RequirePkce": false
   }
 ]
