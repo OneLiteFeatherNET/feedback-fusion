@@ -25,8 +25,9 @@ build_translations: pnpm
 dashboard_setup:
 	cd ./dashboard && pnpm i 
 	 
-dashboard: dashboard_setup
+dashboard: docker_network oidc-server-mock dashboard_setup
 	cd ./dashboard/ && pnpm run dev
+	${MAKE} cleanup
 
 dashboard_lint: dashboard_setup 
 	cd ./dashboard && pnpm run lint
