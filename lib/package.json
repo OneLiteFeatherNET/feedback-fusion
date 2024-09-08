@@ -40,7 +40,7 @@
     "@protobuf-ts/plugin": "^2.9.4",
     "@typescript-eslint/eslint-plugin": "^7.15.0",
     "@typescript-eslint/parser": "^7.15.0",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.0.0",
     "esbuild": "^0.23.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.0",
