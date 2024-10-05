@@ -35,17 +35,17 @@ lazy_static! {
 }
 
 macro_rules! config {
-    (($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
+    ($config:ident, ($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
         paste! {
             #[derive(Deserialize, Debug, Clone, Getters)]
             #[get = "pub"]
-            pub struct Config {
+            pub struct $config {
                 $(
                     $ident: $type,
                 )*
 
                 $(
-                    #[serde(default = "default_" $dident)]
+                    #[serde(default = "default_" $config:lower "_" $dident)]
                     $dident: $dtype,
                 )*
             }
@@ -53,7 +53,7 @@ macro_rules! config {
 
             $(
                 #[inline]
-                fn [<default_ $dident>]() -> $dtype {
+                fn [<default_ $config:lower _ $dident>]() -> $dtype {
                     $default.to_owned()
                 }
             )*
@@ -61,7 +61,57 @@ macro_rules! config {
     };
 }
 
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct NConfig {
+    cache: Option<CacheConfiguration>,
+    oidc: OIDCConfiguration,
+    #[cfg(feature = "otlp")]
+    otlp: OTLPConfiguration,
+}
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct CacheConfiguration {
+    skytable: Option<SkytableConfiguration>,
+}
+
 config!(
+    SkytableConfiguration,
+    (
+        host: String,
+        port: u16,
+        certificate: Option<String>,
+        username: String,
+        password: String
+    ),
+
+    (
+        space: String = "cache",
+        model: String = "feedbackfusion",
+    )
+);
+
+config!(
+    OIDCConfiguration,
+    (
+        issser: Option<String>,
+        provider: String
+    ),
+
+    (
+        audience: String = "feedback-fusion"
+    )
+);
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct OTLPConfiguration {
+    endpoint: String,
+}
+
+config!(
+    Config,
     (
         oidc_provider: String,
         oidc_issuer: Option<String>,
@@ -93,9 +143,11 @@ config!(
         oidc_scope_read_prompt: String = "feedback-fusion:readPrompt"
 
         oidc_scope_write_field: String = "feedback-fusion:writeField",
-        oidc_scope_read_field: String = "feedback-fusion:readField"
+        oidc_scope_read_field: String = "feedback-fusion:readField",
 
-        oidc_scope_read_response: String = "feedback-fusion:readResponse"
+        oidc_scope_read_response: String = "feedback-fusion:readResponse",
+
+        oidc_groups_claim: String = "groups",
     )
 );
 

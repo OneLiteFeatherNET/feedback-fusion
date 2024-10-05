@@ -34,18 +34,25 @@ use openidconnect::{
     core::{CoreJwsSigningAlgorithm, CoreProviderMetadata},
     IssuerUrl,
 };
+use serde::{
+    de::{MapAccess, Visitor},
+    Deserializer,
+};
 
 pub async fn authority() -> Result<Authority> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
     // discover the oidc endpoints
-    let issuer = IssuerUrl::new(CONFIG.oidc_provider().clone())
-        .map_err(|error| FeedbackFusionError::ConfigurationError(format!("Invalid discovery url: {}", error)))?;
+    let issuer = IssuerUrl::new(CONFIG.oidc_provider().clone()).map_err(|error| {
+        FeedbackFusionError::ConfigurationError(format!("Invalid discovery url: {}", error))
+    })?;
     let metadata = CoreProviderMetadata::discover_async(
         issuer.clone(),
         openidconnect::reqwest::async_http_client,
     )
     .await
-    .map_err(|error| FeedbackFusionError::ConfigurationError(format!("Invalid oidc endpoint: {}", error)))?;
+    .map_err(|error| {
+        FeedbackFusionError::ConfigurationError(format!("Invalid oidc endpoint: {}", error))
+    })?;
     // extract the jwks
     let jwks_url = metadata.jwks_uri().url();
     // extract the algorithms
@@ -94,7 +101,9 @@ pub async fn authority() -> Result<Authority> {
     Ok(authority)
 }
 
-#[derive(Debug, Clone, Deserialize)]
+// we do not know the group claim names during the compile time, therefore we do have to use this
+// huge custom deserializer
+#[derive(Debug, Clone)]
 pub struct OIDCClaims {
     iss: jwt::Issuer,
     iat: UnixTime,
@@ -102,6 +111,79 @@ pub struct OIDCClaims {
     nbf: Option<UnixTime>,
     exp: UnixTime,
     scope: Scope,
+}
+
+impl<'de> Deserialize<'de> for OIDCClaims {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_map(OIDCClaimsVisitor)
+    }
+}
+
+struct OIDCClaimsVisitor;
+
+impl<'de> Visitor<'de> for OIDCClaimsVisitor {
+    type Value = OIDCClaims;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a map")
+    }
+
+    fn visit_map<V>(self, mut map: V) -> std::result::Result<OIDCClaims, V::Error>
+    where
+        V: MapAccess<'de>,
+    {
+        let mut iss = None;
+        let mut iat = None;
+        let mut aud = None;
+        let mut nbf = None;
+        let mut exp = None;
+        let mut scope = None;
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "iss" => {
+                    iss = Some(map.next_value()?);
+                }
+                "iat" => {
+                    iat = Some(map.next_value()?);
+                }
+                "aud" => {
+                    aud = Some(map.next_value()?);
+                }
+                "nbf" => {
+                    nbf = Some(map.next_value()?);
+                }
+                "exp" => {
+                    exp = Some(map.next_value()?);
+                }
+                "scope" => {
+                    scope = Some(map.next_value()?);
+                }
+                _ => {
+                    // Skip unknown fields
+                    let _: serde_json::Value = map.next_value()?;
+                }
+            }
+        }
+
+        let iss = iss.ok_or_else(|| serde::de::Error::missing_field("iss"))?;
+        let iat = iat.ok_or_else(|| serde::de::Error::missing_field("iat"))?;
+        let aud = aud.ok_or_else(|| serde::de::Error::missing_field("aud"))?;
+        let exp = exp.ok_or_else(|| serde::de::Error::missing_field("exp"))?;
+        let scope = scope.ok_or_else(|| serde::de::Error::missing_field("scope"))?;
+
+        Ok(OIDCClaims {
+            iss,
+            iat,
+            aud,
+            nbf,
+            exp,
+            scope,
+        })
+    }
 }
 
 impl jwt::CoreClaims for OIDCClaims {
