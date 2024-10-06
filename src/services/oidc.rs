@@ -112,6 +112,7 @@ pub struct OIDCClaims {
     nbf: Option<UnixTime>,
     exp: UnixTime,
     scope: Scope,
+    groups: Vec<String>,
 }
 
 impl<'de> Deserialize<'de> for OIDCClaims {
@@ -142,6 +143,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
         let mut nbf = None;
         let mut exp = None;
         let mut scope = None;
+        let mut groups = None;
 
         while let Some(key) = map.next_key::<String>()? {
             match key.as_str() {
@@ -163,8 +165,10 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
                 "scope" => {
                     scope = Some(map.next_value()?);
                 }
+                _ if key.as_str() == CONFIG.oidc().group_claim().as_str() => {
+                    groups = Some(map.next_value()?);
+                }
                 _ => {
-                    // Skip unknown fields
                     let _: serde_json::Value = map.next_value()?;
                 }
             }
@@ -175,6 +179,8 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
         let aud = aud.ok_or_else(|| serde::de::Error::missing_field("aud"))?;
         let exp = exp.ok_or_else(|| serde::de::Error::missing_field("exp"))?;
         let scope = scope.ok_or_else(|| serde::de::Error::missing_field("scope"))?;
+        let groups = groups
+            .ok_or_else(|| serde::de::Error::missing_field(CONFIG.oidc().group_claim().as_str()))?;
 
         Ok(OIDCClaims {
             iss,
@@ -183,6 +189,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
             nbf,
             exp,
             scope,
+            groups,
         })
     }
 }
@@ -208,6 +215,12 @@ impl jwt::CoreClaims for OIDCClaims {
 impl HasScope for OIDCClaims {
     fn scope(&self) -> &Scope {
         &self.scope
+    }
+}
+
+impl OIDCClaims {
+    pub fn groups(&self) -> &Vec<String> {
+        &self.groups
     }
 }
 

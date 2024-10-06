@@ -20,9 +20,8 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::feedback::Prompt, prelude::*};
-use aliri_oauth2::{policy, HasScope};
-use aliri_traits::Policy;
+use crate::{prelude::*};
+use aliri_oauth2::{HasScope};
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
@@ -53,125 +52,11 @@ pub struct PublicFeedbackFusionV1Context {
 
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
-    ($handler:path, $self:ident, $request:ident, $policy:ident, $($scope:expr $(,)?)*) => {{
-         $policy
-            .evaluate(
-                $request
-                    .extensions()
-                    .get::<OIDCClaims>()
-                    .ok_or_else(|| Status::permission_denied("missing claims"))?
-                    .scope(),
-            )
-            .map_err(|_| {
-                let message = format!(
-                    "insufficient scopes, requires one of: [\"{}\"]",
-                    (&$policy)
-                        .into_iter()
-                        .map(|s| s.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(" "))
-                        .collect::<Vec<_>>()
-                        .join("\" or \"")
-                );
-                Status::permission_denied(message)
-            })?;
-
-        handler!($handler, $self, $request)
-    }};
-    ($handler:path, $self:ident, $request:ident, $($scope:expr $(,)?)* => $target:block) => {{
-        paste! {
-            let policy = policy![
-                aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string(CONFIG.oidc_scope_api().clone()).unwrap())
-                $(,
-                    aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string($scope.to_string()).unwrap())
-                )*
-            ];
-
-            match policy.evaluate(
-                $request
-                    .extensions()
-                    .get::<OIDCClaims>()
-                    .ok_or_else(|| Status::permission_denied("missing claims"))?
-                    .scope(),
-            ) {
-                Ok(_) => {
-                    handler!($handler, $self, $request)
-                },
-                Err(_) => {
-                    let target = info_span!("Extracting referenced target")
-                        .in_scope(|| async {
-                            async $target.await
-                        }).await;
-
-                    match target {
-                        Ok(target) => {
-                            if let Some(target ) = target {
-                                let policy = policy![
-                                    $(
-                                        aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string(format!("{}:target:{}", $scope, target)).unwrap()),
-                                     )*
-                                ];
-
-                                policy
-                                    .evaluate(
-                                        $request
-                                            .extensions()
-                                            .get::<OIDCClaims>()
-                                            .ok_or_else(|| Status::permission_denied("missing claims"))?
-                                            .scope(),
-                                    )
-                                    .map_err(|_| {
-                                        let message = format!(
-                                            "insufficient scopes, requires one of: [\"{}\"]",
-                                            (&policy)
-                                                .into_iter()
-                                                .map(|s| s.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(" "))
-                                                .collect::<Vec<_>>()
-                                                .join("\" or \"")
-                                        );
-                                        Status::permission_denied(message)
-                                    })?;
-
-                                handler!($handler, $self, $request)
-                             } else {
-                                Err(Status::invalid_argument("Resource target could not be found"))
-                            }
-                        },
-                        Err(error) => {
-                            error!("Error occurred during target fetch: {}", error);
-                            Err(error.into())
-                        }
-                    }
-
-                }
-            }
+    ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {{
+        if let Err(error) = FeedbackFusionV1Context::authorize(&$request, &$endpoint, &$permission)
+        {
+            return Err(error.into());
         }
-    }};
-    ($handler:path, $self:ident, $request:ident, $($scope:expr $(,)?)*) => {{
-        let policy = policy![
-            aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string(CONFIG.oidc_scope_api().clone()).unwrap())
-            $(,
-                aliri_oauth2::Scope::empty().and(aliri_oauth2::scope::ScopeToken::from_string($scope.to_string()).unwrap())
-            )*
-        ];
-
-        policy
-            .evaluate(
-                $request
-                    .extensions()
-                    .get::<OIDCClaims>()
-                    .ok_or_else(|| Status::permission_denied("missing claims"))?
-                    .scope(),
-            )
-            .map_err(|_| {
-                let message = format!(
-                    "insufficient scopes, requires one of: [\"{}\"]",
-                    (&policy)
-                        .into_iter()
-                        .map(|s| s.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(" "))
-                        .collect::<Vec<_>>()
-                        .join("\" or \"")
-                );
-                Status::permission_denied(message)
-            })?;
 
         handler!($handler, $self, $request)
     }};
@@ -181,6 +66,59 @@ macro_rules! handler {
             Err(error) => Err(error.into()),
         }
     }};
+}
+
+impl FeedbackFusionV1Context {
+    fn authorize<T>(
+        request: &Request<T>,
+        endpoint: &Endpoint,
+        permission: &Permission,
+    ) -> Result<()> {
+        // extract the claims from the request
+        let claims = request
+            .extensions()
+            .get::<OIDCClaims>()
+            .ok_or_else(|| FeedbackFusionError::Unauthorized)?;
+
+        // verify the scopes
+        claims.scope().iter().any(|scope| {
+            let result = || {
+                Ok::<bool, FeedbackFusionError>(
+                    PERMISSION_MATRIX
+                        .get(&(endpoint.clone(), permission.clone()))
+                        .ok_or_else(|| FeedbackFusionError::Unauthorized)?
+                        .0
+                        .contains(&scope.to_string()),
+                )
+            };
+
+            match result() {
+                Ok(result) => result,
+                Err(_) => false,
+            }
+        });
+
+        // TODO: create a macro therefore
+        // verify the groups
+        claims.groups().iter().any(|scope| {
+            let result = || {
+                Ok::<bool, FeedbackFusionError>(
+                    PERMISSION_MATRIX
+                        .get(&(endpoint.clone(), permission.clone()))
+                        .ok_or_else(|| FeedbackFusionError::Unauthorized)?
+                        .0
+                        .contains(&scope.to_string()),
+                )
+            };
+
+            match result() {
+                Ok(result) => result,
+                Err(_) => false,
+            }
+        });
+
+        Ok(())
+    }
 }
 
 // may consider to divide the service into its parts, but as of now this wouldn't be a real
@@ -196,8 +134,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::create_target,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_target()
+            Endpoint::Target,
+            Permission::Write
         )
     }
 
@@ -210,9 +148,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::get_target,
             self,
             request,
-            CONFIG.oidc_scope_read(),
-            CONFIG.oidc_scope_read_target()
-            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
+            Endpoint::Target,
+            Permission::Write
         )
     }
 
@@ -225,8 +162,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::get_targets,
             self,
             request,
-            CONFIG.oidc_scope_read(),
-            CONFIG.oidc_scope_read_target()
+            Endpoint::Target,
+            Permission::List
         )
     }
 
@@ -239,9 +176,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::update_target,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_target()
-            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
+            Endpoint::Target,
+            Permission::Write
         )
     }
 
@@ -254,9 +190,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::delete_target,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_target()
-            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().id.clone())) }
+            Endpoint::Target,
+            Permission::Write
         )
     }
 
@@ -269,9 +204,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::create_prompt,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_prompt()
-            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().target.clone())) }
+            Endpoint::Prompt,
+            Permission::Write
         )
     }
 
@@ -284,9 +218,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::get_prompts,
             self,
             request,
-            CONFIG.oidc_scope_read(),
-            CONFIG.oidc_scope_read_prompt()
-            => { Ok::<_, FeedbackFusionError>(Some(request.get_ref().target.clone())) }
+            Endpoint::Prompt,
+            Permission::List
         )
     }
 
@@ -299,18 +232,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::update_prompt,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_prompt()
-            => {
-                Ok::<_, FeedbackFusionError>(
-                    database_request!(
-                        Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
-                            .await,
-                        "Authorization"
-                    )?
-                    .map(|prompt| prompt.target().clone()),
-                )
-            }
+            Endpoint::Prompt,
+            Permission::Write
         )
     }
 
@@ -323,18 +246,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::delete_prompt,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_prompt()
-            => {
-                Ok::<_, FeedbackFusionError>(
-                    database_request!(
-                        Prompt::select_by_id(self.connection(), request.get_ref().id.as_str())
-                            .await,
-                        "Authorization"
-                    )?
-                    .map(|prompt| prompt.target().clone()),
-                )
-            }
+            Endpoint::Prompt,
+            Permission::Write
         )
     }
 
@@ -347,18 +260,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::create_field,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_field()
-            => {
-                Ok::<_, FeedbackFusionError>(
-                    database_request!(
-                        Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
-                            .await,
-                        "Authorization"
-                    )?
-                    .map(|prompt| prompt.target().clone()),
-                )
-            }
+            Endpoint::Field,
+            Permission::Write
         )
     }
 
@@ -371,18 +274,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::get_fields,
             self,
             request,
-            CONFIG.oidc_scope_read(),
-            CONFIG.oidc_scope_read_field()
-            => {
-                Ok::<_, FeedbackFusionError>(
-                    database_request!(
-                        Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
-                            .await,
-                        "Authorization"
-                    )?
-                    .map(|prompt| prompt.target().clone()),
-                )
-            }
+            Endpoint::Field,
+            Permission::List
         )
     }
 
@@ -395,20 +288,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::update_field,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_field()
-            => {
-                let prompt: Option<Prompt> = database_request!(
-                    self.connection()
-                        .query_decode(
-                            "SELECT prompt.* FROM prompt INNER JOIN field ON field.prompt = prompt.id WHERE field.id = ?",
-                            vec![rbs::to_value!(request.get_ref().id.as_str())]
-                        )
-                        .await,
-                    "Authorization"
-                )?;
-                Ok::<_, FeedbackFusionError>(prompt.map(|prompt| prompt.target().clone()))
-            }
+            Endpoint::Field,
+            Permission::Write
         )
     }
 
@@ -421,20 +302,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::delete_field,
             self,
             request,
-            CONFIG.oidc_scope_write(),
-            CONFIG.oidc_scope_write_field()
-            => {
-                let prompt: Option<Prompt> = database_request!(
-                    self.connection()
-                        .query_decode(
-                            "SELECT prompt.* FROM prompt INNER JOIN field ON field.prompt = prompt.id WHERE field.id = ?",
-                            vec![rbs::to_value!(request.get_ref().id.as_str())]
-                        )
-                        .await,
-                    "Authorization"
-                )?;
-                Ok::<_, FeedbackFusionError>(prompt.map(|prompt| prompt.target().clone()))
-            }
+            Endpoint::Field,
+            Permission::Write
         )
     }
 
@@ -447,18 +316,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             response::get_responses,
             self,
             request,
-            CONFIG.oidc_scope_read(),
-            CONFIG.oidc_scope_read_response()
-            => {
-                Ok::<_, FeedbackFusionError>(
-                    database_request!(
-                        Prompt::select_by_id(self.connection(), request.get_ref().prompt.as_str())
-                            .await,
-                        "Authorization"
-                    )?
-                    .map(|prompt| prompt.target().clone()),
-                )
-            }
+            Endpoint::Response,
+            Permission::List
         )
     }
 }

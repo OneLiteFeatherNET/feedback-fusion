@@ -21,15 +21,21 @@
  *
  */
 
+use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
 
 use crate::{
-    database::{schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target}, DatabseConfigurationScheme},
+    database::{
+        schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
+        DatabseConfigurationScheme,
+    },
     prelude::*,
 };
 
 lazy_static! {
     pub static ref CONFIG: Config = read_config().unwrap();
+    pub static ref PERMISSION_MATRIX: DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> =
+        read_permission_matrix(CONFIG.oidc().scopes(), CONFIG.oidc().groups());
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
         DatabaseConfiguration::extract().unwrap();
 }
@@ -69,7 +75,7 @@ pub struct Config {
     #[cfg(feature = "otlp")]
     otlp: Option<OTLPConfiguration>,
     preset: Option<PresetConfig>,
-    database: DatabseConfigurationScheme
+    database: DatabseConfigurationScheme,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
@@ -94,13 +100,19 @@ config!(
     )
 );
 
-#[derive(Deserialize, Debug, Clone)]
-pub enum Endpoint {}
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone)]
+pub enum Endpoint {
+    Target,
+    Prompt,
+    Field,
+    Response,
+}
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone)]
 pub enum Permission {
     Read,
     Write,
+    List,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
@@ -194,6 +206,53 @@ pub fn read_config() -> Result<Config> {
     info!("Sucessfully parsed config");
 
     Ok(config)
+}
+
+/// This function does require CONFIG to be already initialized and performs the reverse /
+/// backwards mapping from endpoint and permission to a list of scopes and grouops instead of the
+/// other way.
+pub fn read_permission_matrix(
+    scopes: &Vec<AuthorizationMapping>,
+    groups: &Vec<AuthorizationMapping>,
+) -> DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> {
+    let map: DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> = DashMap::new();
+
+    for (index, list) in vec![scopes, groups].iter().enumerate() {
+        for mapping in list.iter() {
+            for permissions in mapping.permissions.iter() {
+                for permission in permissions.permissions.iter() {
+                    // check wether the entry does already exist in the map
+                    if let Some(mut entry) =
+                        map.get_mut(&(permissions.endpoint().clone(), permission.clone()))
+                    {
+                        let (ref mut scopes, ref mut groups) = *entry;
+
+                        if index == 0 {
+                            scopes.insert(mapping.name().clone());
+                        } else {
+                            groups.insert(mapping.name().clone());
+                        }
+                    } else {
+                        let groups = DashSet::new();
+                        let scopes = DashSet::new();
+
+                        if index == 0 {
+                            scopes.insert(mapping.name().clone());
+                        } else {
+                            groups.insert(mapping.name().clone());
+                        }
+
+                        map.insert(
+                            (permissions.endpoint().clone(), permission.clone()),
+                            (scopes, groups),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    map
 }
 
 pub async fn sync_preset(connection: &DatabaseConnection) -> Result<()> {
@@ -304,4 +363,12 @@ pub async fn sync_field(
     update_otherwise_create!(transaction, Field, field, title, description, field_type, options => prompt = prompt);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_read_permission_matrix() {
+        // TODO
+    }
 }
