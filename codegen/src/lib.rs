@@ -180,12 +180,12 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
     let skytable_tls_create = proc_macro2::TokenStream::from_str(
         format!(
             "\"{{ 
-                let config = CONFIG.skytable().as_ref().unwrap();
+                let config = CONFIG.cache().as_ref().unwrap().skytable().as_ref().unwrap();
                 crate::cache::SkytableTlsCacheBuilder::new(
-                    config.host().as_ref().unwrap().as_str(),
-                    *config.port().as_ref().unwrap(),
-                    config.username().as_ref().unwrap().as_str(),
-                    config.password().as_ref().unwrap().as_str(),
+                    config.host().as_str(),
+                    *config.port(),
+                    config.username().as_str(),
+                    config.password().as_str(),
                 )
                 .set_certificate(config.certificate().as_ref().unwrap().as_str())
                 .set_space(config.space())
@@ -213,12 +213,12 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
     let skytable_create = proc_macro2::TokenStream::from_str(
         format!(
             "\"{{
-                let config = CONFIG.skytable().as_ref().unwrap();
+                let config = CONFIG.cache().as_ref().unwrap().skytable().as_ref().unwrap();
                 crate::cache::SkytableCacheBuilder::new(
-                    config.host().as_ref().unwrap().as_str(),
-                    *config.port().as_ref().unwrap(),
-                    config.username().as_ref().unwrap().as_str(),
-                    config.password().as_ref().unwrap().as_str(),
+                    config.host(),
+                    *config.port(),
+                    config.username().as_str(),
+                    config.password().as_str(),
                 )
                 .set_space(config.space())
                 .set_model(config.model())
@@ -238,9 +238,11 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
         #vis #sig {
             // check if the user did configure skytable
             #[cfg(feature = "caching-skytable")]
-            if CONFIG.skytable_host().is_some() {
+            let config = CONFIG.cache();
+            #[cfg(feature = "caching-skytable")]
+            if config.is_some() && config.as_ref().unwrap().skytable().is_some() {
                 // now check if the user did configure tls
-                match CONFIG.skytable_certificate() {
+                match config.as_ref().unwrap().skytable().as_ref().unwrap().certificate() {
                     None => {
                         // tls is inactive so we do use the raw tcp stream
                         #skytable(#(#args),*).await
@@ -263,9 +265,11 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
             use cached::Cached;
             // check if the user did configure skytable
             #[cfg(feature = "caching-skytable")]
-            if CONFIG.skytable_host().is_some() {
+            let config = CONFIG.cache();
+            #[cfg(feature = "caching-skytable")]
+            if config.is_some() && config.as_ref().unwrap().skytable().is_some() {
                 // now check if the user did configure tls
-                match CONFIG.skytable_certificate() {
+                match config.as_ref().unwrap().skytable().as_ref().unwrap().certificate() {
                     None => {
                         // tls is inactive so we do use the raw tcp stream
                         #skytable_static.get().unwrap().cache_remove(&key).await?;
