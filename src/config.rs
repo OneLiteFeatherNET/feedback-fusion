@@ -29,7 +29,7 @@ use crate::{
 };
 
 lazy_static! {
-    pub static ref CONFIG: Config = envy::from_env::<Config>().unwrap();
+    pub static ref CONFIG: Config = read_config().unwrap();
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
         DatabaseConfiguration::extract().unwrap();
 }
@@ -63,11 +63,12 @@ macro_rules! config {
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct NConfig {
+pub struct Config {
     cache: Option<CacheConfiguration>,
     oidc: OIDCConfiguration,
     #[cfg(feature = "otlp")]
-    otlp: OTLPConfiguration,
+    otlp: Option<OTLPConfiguration>,
+    preset: Option<PresetConfig>,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
@@ -92,106 +93,57 @@ config!(
     )
 );
 
-config!(
-    OIDCConfiguration,
-    (
-        issser: Option<String>,
-        provider: String
-    ),
+#[derive(Deserialize, Debug, Clone)]
+pub enum Endpoint {}
 
-    (
-        audience: String = "feedback-fusion"
-    )
-);
+#[derive(Deserialize, Debug, Clone)]
+pub enum Permission {
+    Read,
+    Write,
+}
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct OTLPConfiguration {
-    endpoint: String,
+pub struct PermissionMapping {
+    endpoint: Endpoint,
+    permissions: Vec<Permission>,
+}
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct AuthorizationMapping {
+    name: String,
+    permissions: Vec<PermissionMapping>,
 }
 
 config!(
-    Config,
+    OIDCConfiguration,
     (
-        oidc_provider: String,
-        oidc_issuer: Option<String>,
-        config_path: Option<String>,
-        otlp_endpoint: Option<String>,
+        issuer: Option<String>,
+        provider: String,
+        scopes: Vec<AuthorizationMapping>,
+        groups: Vec<AuthorizationMapping>,
+    ),
 
-        skytable_host: Option<String>,
-        skytable_port: Option<u16>,
-        skytable_certificate: Option<String>,
-        skytable_username: Option<String>,
-        skytable_password: Option<String>
+    (
+        audience: String = "feedback-fusion",
+        group_claim: String = "groups"
+    )
+);
+
+config!(
+    OTLPConfiguration,
+    (
+        endpoint: String,
     ),
 
     (
         service_name: String = "feedback-fusion"
-        oidc_audience: String = "feedback-fusion",
-
-        skytable_space: String = "cache",
-        skytable_model: String = "feedbackfusion",
-
-        oidc_scope_api: String = "api:feedback-fusion",
-        oidc_scope_write: String = "feedback-fusion:write",
-        oidc_scope_read: String = "feedback-fusion:read",
-
-        oidc_scope_write_target: String = "feedback-fusion:writeTarget",
-        oidc_scope_read_target: String = "feedback-fusion:readTarget"
-
-        oidc_scope_write_prompt: String = "feedback-fusion:writePrompt",
-        oidc_scope_read_prompt: String = "feedback-fusion:readPrompt"
-
-        oidc_scope_write_field: String = "feedback-fusion:writeField",
-        oidc_scope_read_field: String = "feedback-fusion:readField",
-
-        oidc_scope_read_response: String = "feedback-fusion:readResponse",
-
-        oidc_groups_claim: String = "groups",
     )
 );
 
-#[macro_export]
-macro_rules! skytable_configuration {
-    () => {{
-        $crate::cache::SkytableCacheBuilder::new(
-            CONFIG.skytable_host().as_ref().unwrap().as_str(),
-            *CONFIG.skytable_port().as_ref().unwrap(),
-            CONFIG.skytable_username().as_ref().unwrap().as_str(),
-            CONFIG.skytable_password().as_ref().unwrap().as_str(),
-        )
-        .set_space(CONFIG.skytable_space())
-        .set_model(CONFIG.skytable_model())
-        .set_refresh(false)
-        .set_lifetime(std::time::Duration::from_secs(300))
-        .build()
-        .await
-        .unwrap()
-    }};
-}
-
-#[macro_export]
-macro_rules! skytable_configuration_tls {
-    () => {{
-        $crate::cache::SkytableTlsCacheBuilder::new(
-            CONFIG.skytable_host().as_ref().unwrap().as_str(),
-            *CONFIG.skytable_port().as_ref().unwrap(),
-            CONFIG.skytable_username().as_ref().unwrap().as_str(),
-            CONFIG.skytable_password().as_ref().unwrap().as_str(),
-        )
-        .set_certificate(CONFIG.skytable_certificate().as_ref().unwrap().as_str())
-        .set_space(CONFIG.skytable_space())
-        .set_model(CONFIG.skytable_model())
-        .set_refresh(false)
-        .set_lifetime(std::time::Duration::from_secs(300))
-        .build()
-        .await
-        .unwrap()
-    }};
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-pub struct InstanceConfig {
+pub struct PresetConfig {
     targets: Vec<TargetConfig>,
 }
 
@@ -222,36 +174,39 @@ pub struct FieldConfig {
     options: FieldOptions,
 }
 
-#[instrument(skip_all)]
-pub async fn sync_config(connection: &DatabaseConnection) -> Result<()> {
+pub fn read_config() -> Result<Config> {
     // as this function can only be called when the notify watch agent got created we can use
     // unwrap here
-    let config_path = CONFIG.config_path.as_ref().unwrap();
-    let content = tokio::fs::read_to_string(config_path)
-        .await
-        .map_err(|error| {
-            FeedbackFusionError::ConfigurationError(format!(
-                "Error while reading config: {}",
-                error
-            ))
-        })?;
+    let config_path = std::env::var("FEEDBACK_FUSION_CONFIG").map_err(|_| {
+        FeedbackFusionError::ConfigurationError(
+            "Missing FEEDBACK_FUSION_CONFIG environment variable".to_owned(),
+        )
+    })?;
+    let content = std::fs::read_to_string(config_path).map_err(|error| {
+        FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
+    })?;
 
     // parse the config
-    let config: InstanceConfig = serde_yaml::from_str(content.as_str()).map_err(|error| {
+    let config: Config = serde_yaml::from_str(content.as_str()).map_err(|error| {
         FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
     })?;
     info!("Sucessfully parsed config");
 
-    // start a database transaction
-    let transaction = connection.acquire_begin().await?;
-    let transaction = transaction.defer_async(|mut tx| async move {
-        if !tx.done {
-            let _ = tx.rollback().await;
-        }
-    });
+    Ok(config)
+}
 
-    for target in config.targets.into_iter() {
-        sync_target(target, &transaction).await?;
+pub async fn sync_preset(connection: &DatabaseConnection) -> Result<()> {
+    if let Some(preset) = CONFIG.preset() {
+        let transaction = connection.acquire_begin().await?;
+        let transaction = transaction.defer_async(|mut tx| async move {
+            if !tx.done {
+                let _ = tx.rollback().await;
+            }
+        });
+
+        for target in preset.clone().targets.into_iter() {
+            sync_target(target, &transaction).await?;
+        }
     }
 
     Ok(())

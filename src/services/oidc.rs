@@ -42,7 +42,7 @@ use serde::{
 pub async fn authority() -> Result<Authority> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
     // discover the oidc endpoints
-    let issuer = IssuerUrl::new(CONFIG.oidc_provider().clone()).map_err(|error| {
+    let issuer = IssuerUrl::new(CONFIG.oidc().provider().clone()).map_err(|error| {
         FeedbackFusionError::ConfigurationError(format!("Invalid discovery url: {}", error))
     })?;
     let metadata = CoreProviderMetadata::discover_async(
@@ -76,13 +76,14 @@ pub async fn authority() -> Result<Authority> {
     // build the validator
     let mut validator = CoreValidator::default()
         .add_allowed_audience(
-            jwt::Audience::from_str(CONFIG.oidc_audience().as_str())
+            jwt::Audience::from_str(CONFIG.oidc().audience().as_str())
                 .expect("Invalid oidc audience"),
         )
         .require_issuer(
             jwt::Issuer::from_str(
                 CONFIG
-                    .oidc_issuer()
+                    .oidc()
+                    .issuer()
                     .clone()
                     .unwrap_or(issuer.clone().to_string())
                     .as_str(),

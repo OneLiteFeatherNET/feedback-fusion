@@ -179,15 +179,17 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
     .unwrap();
     let skytable_tls_create = proc_macro2::TokenStream::from_str(
         format!(
-            "\"{{ crate::cache::SkytableTlsCacheBuilder::new(
-                    CONFIG.skytable_host().as_ref().unwrap().as_str(),
-                    *CONFIG.skytable_port().as_ref().unwrap(),
-                    CONFIG.skytable_username().as_ref().unwrap().as_str(),
-                    CONFIG.skytable_password().as_ref().unwrap().as_str(),
+            "\"{{ 
+                let config = CONFIG.skytable().as_ref().unwrap();
+                crate::cache::SkytableTlsCacheBuilder::new(
+                    config.host().as_ref().unwrap().as_str(),
+                    *config.port().as_ref().unwrap(),
+                    config.username().as_ref().unwrap().as_str(),
+                    config.password().as_ref().unwrap().as_str(),
                 )
-                .set_certificate(CONFIG.skytable_certificate().as_ref().unwrap().as_str())
-                .set_space(CONFIG.skytable_space())
-                .set_model(CONFIG.skytable_model())
+                .set_certificate(config.certificate().as_ref().unwrap().as_str())
+                .set_space(config.space())
+                .set_model(config.model())
                 .set_refresh({})
                 .set_lifetime(std::time::Duration::from_secs({}))
                 .build()
@@ -210,14 +212,16 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
     .unwrap();
     let skytable_create = proc_macro2::TokenStream::from_str(
         format!(
-            "\"{{ crate::cache::SkytableCacheBuilder::new(
-                    CONFIG.skytable_host().as_ref().unwrap().as_str(),
-                    *CONFIG.skytable_port().as_ref().unwrap(),
-                    CONFIG.skytable_username().as_ref().unwrap().as_str(),
-                    CONFIG.skytable_password().as_ref().unwrap().as_str(),
+            "\"{{
+                let config = CONFIG.skytable().as_ref().unwrap();
+                crate::cache::SkytableCacheBuilder::new(
+                    config.host().as_ref().unwrap().as_str(),
+                    *config.port().as_ref().unwrap(),
+                    config.username().as_ref().unwrap().as_str(),
+                    config.password().as_ref().unwrap().as_str(),
                 )
-                .set_space(CONFIG.skytable_space())
-                .set_model(CONFIG.skytable_model())
+                .set_space(config.space())
+                .set_model(config.model())
                 .set_refresh({})
                 .set_lifetime(std::time::Duration::from_secs({}))
                 .build()
