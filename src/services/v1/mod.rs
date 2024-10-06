@@ -20,8 +20,8 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{prelude::*};
-use aliri_oauth2::{HasScope};
+use crate::prelude::*;
+use aliri_oauth2::HasScope;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
@@ -100,14 +100,14 @@ impl FeedbackFusionV1Context {
 
         // TODO: create a macro therefore
         // verify the groups
-        claims.groups().iter().any(|scope| {
+        claims.groups().iter().any(|group| {
             let result = || {
                 Ok::<bool, FeedbackFusionError>(
                     PERMISSION_MATRIX
                         .get(&(endpoint.clone(), permission.clone()))
                         .ok_or_else(|| FeedbackFusionError::Unauthorized)?
-                        .0
-                        .contains(&scope.to_string()),
+                        .1
+                        .contains(&group.to_string()),
                 )
             };
 
