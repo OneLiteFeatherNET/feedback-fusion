@@ -24,7 +24,7 @@
 use rbatis::executor::Executor;
 
 use crate::{
-    database::schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
+    database::{schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target}, DatabseConfigurationScheme},
     prelude::*,
 };
 
@@ -69,6 +69,7 @@ pub struct Config {
     #[cfg(feature = "otlp")]
     otlp: Option<OTLPConfiguration>,
     preset: Option<PresetConfig>,
+    database: DatabseConfigurationScheme
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
