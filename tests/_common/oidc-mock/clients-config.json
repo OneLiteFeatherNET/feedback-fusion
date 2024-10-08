@@ -1,10 +1,23 @@
 [
   {
     "ClientId": "client",
-    "ClientSecrets": ["secret"],
+    "ClientSecrets": [
+      "secret"
+    ],
     "Description": "mock client",
-    "AllowedGrantTypes": ["client_credentials"],
-    "AllowedScopes": ["api:feedback-fusion"],
-    "ClientClaimsPrefix": ""
+    "AllowedGrantTypes": [
+      "client_credentials"
+    ],
+    "AllowedScopes": [
+      "api:feedback-fusion"
+    ],
+    "ClientClaimsPrefix": "",
+    "Claims": [
+      {
+        "Type": "groups",
+        "Value": "[\"admin\"]",
+        "ValueType": "json"
+      }
+    ]
   }
 ]

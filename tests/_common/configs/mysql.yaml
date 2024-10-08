@@ -1,0 +1,21 @@
+database:
+  mysql:
+    username: username
+    password: password
+    database: database
+    endpoint: database:3306
+oidc:
+  provider: http://oidc-server-mock
+  issuer: http://localhost:5151
+  scopes:
+    - name: "api:feedback-fusion"
+      grants:
+        - endpoint: "*"
+          permissions:
+            - "*"
+  groups:
+    - name: "admin"
+      grants:
+        - endpoint: "*"
+          permissions:
+            - "*"

@@ -126,8 +126,10 @@ pub enum Permission {
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct AuthorizationGrants {
-    endpoint: Endpoint,
-    permissions: Vec<Permission>,
+    // should match an `Endpoint`
+    endpoint: String,
+    // should match `Permission`
+    permissions: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
