@@ -53,7 +53,7 @@ pub struct PublicFeedbackFusionV1Context {
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
     ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {{
-        if let Err(error) = FeedbackFusionV1Context::authorize(&$request, &$endpoint, &$permission)
+        if let Err(error) = FeedbackFusionV1Context::authorize(&$request, $endpoint, $permission)
         {
             return Err(error.into());
         }
@@ -71,52 +71,31 @@ macro_rules! handler {
 impl FeedbackFusionV1Context {
     fn authorize<T>(
         request: &Request<T>,
-        endpoint: &Endpoint,
-        permission: &Permission,
+        endpoint: Endpoint,
+        permission: Permission,
     ) -> Result<()> {
         // extract the claims from the request
         let claims = request
             .extensions()
             .get::<OIDCClaims>()
             .ok_or(FeedbackFusionError::Unauthorized)?;
+        // get the matrix entry
+        let entry = PERMISSION_MATRIX
+            .get(&(endpoint, permission))
+            .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
         claims
             .scope()
             .iter()
-            .find(|scope| {
-                let result = || {
-                    Ok::<bool, FeedbackFusionError>(
-                        PERMISSION_MATRIX
-                            .get(&(endpoint.clone(), permission.clone()))
-                            .ok_or(FeedbackFusionError::Unauthorized)?
-                            .0
-                            .contains(scope.as_str()),
-                    )
-                };
-
-                result().unwrap_or(false)
-            })
+            .find(|scope| entry.0.contains(scope.as_str()))
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
-        // TODO: create a macro therefore
         // verify the groups
         claims
             .groups()
             .iter()
-            .find(|group| {
-                let result = || {
-                    Ok::<bool, FeedbackFusionError>(
-                        PERMISSION_MATRIX
-                            .get(&(endpoint.clone(), permission.clone()))
-                            .ok_or(FeedbackFusionError::Unauthorized)?
-                            .1
-                            .contains(group.as_str()),
-                    )
-                };
-
-                result().unwrap_or(false)
-            })
+            .find(|group| entry.1.contains(group.as_str()))
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
         Ok(())
