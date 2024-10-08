@@ -387,8 +387,72 @@ pub async fn sync_field(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use lazy_static::lazy_static;
+
+    lazy_static! {
+        static ref SCOPES: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "scope1".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: Endpoint::Target.to_string(),
+                permissions: vec![Permission::Read.to_string()],
+            },],
+        },];
+        static ref GROUPS: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "group1".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: Endpoint::Prompt.to_string(),
+                permissions: vec![Permission::Write.to_string()],
+            },],
+        },];
+        static ref SCOPES_WILDCARD: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "scope2".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: "*".to_string(),
+                permissions: vec!["*".to_string()],
+            },],
+        },];
+        static ref SCOPES_NO_MATCH: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "scope3".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: "NonExistent".to_string(),
+                permissions: vec!["NonExistent".to_string()],
+            },],
+        },];
+    }
+
     #[test]
     fn test_read_permission_matrix() {
-        // TODO
+        let matrix = read_permission_matrix(&SCOPES, &GROUPS);
+
+        assert!(matrix.contains_key(&(Endpoint::Target, Permission::Read)));
+        assert!(matrix.contains_key(&(Endpoint::Prompt, Permission::Write)));
+
+        let entry = matrix.get(&(Endpoint::Target, Permission::Read)).unwrap();
+        assert!(entry.0.contains(&Cow::Borrowed("scope1")));
+        assert!(entry.1.is_empty());
+
+        let entry = matrix.get(&(Endpoint::Prompt, Permission::Write)).unwrap();
+        assert!(entry.0.is_empty());
+        assert!(entry.1.contains(&Cow::Borrowed("group1")));
+    }
+
+    #[test]
+    fn test_read_permission_matrix_with_wildcards() {
+        let matrix = read_permission_matrix(&SCOPES_WILDCARD, &[]);
+
+        for endpoint in Endpoint::iter() {
+            for permission in Permission::iter() {
+                let entry = matrix.get(&(endpoint.clone(), permission.clone())).unwrap();
+                assert!(entry.0.contains(&Cow::Borrowed("scope2")));
+            }
+        }
+    }
+
+    #[test]
+    fn test_read_permission_matrix_no_matches() {
+        let matrix = read_permission_matrix(&SCOPES_NO_MATCH, &[]);
+
+        assert!(matrix.is_empty());
     }
 }
