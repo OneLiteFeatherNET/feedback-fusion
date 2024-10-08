@@ -81,35 +81,43 @@ impl FeedbackFusionV1Context {
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
-        claims.scope().iter().any(|scope| {
-            let result = || {
-                Ok::<bool, FeedbackFusionError>(
-                    PERMISSION_MATRIX
-                        .get(&(endpoint.clone(), permission.clone()))
-                        .ok_or(FeedbackFusionError::Unauthorized)?
-                        .0
-                        .contains(scope.as_str()),
-                )
-            };
+        claims
+            .scope()
+            .iter()
+            .find(|scope| {
+                let result = || {
+                    Ok::<bool, FeedbackFusionError>(
+                        PERMISSION_MATRIX
+                            .get(&(endpoint.clone(), permission.clone()))
+                            .ok_or(FeedbackFusionError::Unauthorized)?
+                            .0
+                            .contains(scope.as_str()),
+                    )
+                };
 
-            result().unwrap_or_default() 
-        });
+                result().unwrap_or(false)
+            })
+            .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // TODO: create a macro therefore
         // verify the groups
-        claims.groups().iter().any(|group| {
-            let result = || {
-                Ok::<bool, FeedbackFusionError>(
-                    PERMISSION_MATRIX
-                        .get(&(endpoint.clone(), permission.clone()))
-                        .ok_or(FeedbackFusionError::Unauthorized)?
-                        .1
-                        .contains(group.as_str()),
-                )
-            };
+        claims
+            .groups()
+            .iter()
+            .find(|group| {
+                let result = || {
+                    Ok::<bool, FeedbackFusionError>(
+                        PERMISSION_MATRIX
+                            .get(&(endpoint.clone(), permission.clone()))
+                            .ok_or(FeedbackFusionError::Unauthorized)?
+                            .1
+                            .contains(group.as_str()),
+                    )
+                };
 
-            result().unwrap_or_default()
-        });
+                result().unwrap_or(false)
+            })
+            .ok_or(FeedbackFusionError::Unauthorized)?;
 
         Ok(())
     }
