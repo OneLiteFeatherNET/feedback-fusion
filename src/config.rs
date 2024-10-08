@@ -23,6 +23,9 @@
 
 use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter};
+use wildcard::Wildcard;
 
 use crate::{
     database::{
@@ -100,7 +103,7 @@ config!(
     )
 );
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
 pub enum Endpoint {
     Target,
     Prompt,
@@ -108,7 +111,7 @@ pub enum Endpoint {
     Response,
 }
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
 pub enum Permission {
     Read,
     Write,
@@ -117,7 +120,7 @@ pub enum Permission {
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct PermissionMapping {
+pub struct AuthorizationGrants {
     endpoint: Endpoint,
     permissions: Vec<Permission>,
 }
@@ -126,7 +129,7 @@ pub struct PermissionMapping {
 #[get = "pub"]
 pub struct AuthorizationMapping {
     name: String,
-    permissions: Vec<PermissionMapping>,
+    grants: Vec<AuthorizationGrants>,
 }
 
 config!(
@@ -215,37 +218,64 @@ pub fn read_permission_matrix(
     scopes: &Vec<AuthorizationMapping>,
     groups: &Vec<AuthorizationMapping>,
 ) -> DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> {
+    // TODO: increase performance
     let map: DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> = DashMap::new();
 
     for (index, list) in vec![scopes, groups].iter().enumerate() {
         for mapping in list.iter() {
-            for permissions in mapping.permissions.iter() {
-                for permission in permissions.permissions.iter() {
-                    // check wether the entry does already exist in the map
-                    if let Some(mut entry) =
-                        map.get_mut(&(permissions.endpoint().clone(), permission.clone()))
-                    {
-                        let (ref mut scopes, ref mut groups) = *entry;
+            for grant in mapping.grants.iter() {
+                // the grant does support wildcards for the `endpoint` field.
+                // therefore we here try to match the endpoint variatns
+                let endpoints = {
+                    let endpoint = grant.endpoint.to_string();
+                    let pattern = Wildcard::new(endpoint.as_bytes()).unwrap();
+                    Endpoint::iter()
+                        .filter(|endpoint| pattern.is_match(endpoint.to_string().as_bytes()))
+                        .collect::<Vec<Endpoint>>()
+                };
 
-                        if index == 0 {
-                            scopes.insert(mapping.name().clone());
-                        } else {
-                            groups.insert(mapping.name().clone());
+                for permission in grant.permissions.iter() {
+                    // the permissions field does support wildcards for the `permission` field.
+                    // therefore we here try to match the permission variatns
+                    let permissions = {
+                        let stringified = permission.to_string();
+                        let pattern = Wildcard::new(stringified.as_bytes()).unwrap();
+                        Permission::iter()
+                            .filter(|permission| {
+                                pattern.is_match(permission.to_string().as_bytes())
+                            })
+                            .collect::<Vec<Permission>>()
+                    };
+
+                    for endpoint in endpoints.iter() {
+                        for permission in permissions.iter() {
+                            // check wether the entry does already exist in the map
+                            if let Some(mut entry) =
+                                map.get_mut(&(endpoint.clone(), permission.clone()))
+                            {
+                                let (ref mut scopes, ref mut groups) = *entry;
+
+                                if index == 0 {
+                                    scopes.insert(mapping.name().clone());
+                                } else {
+                                    groups.insert(mapping.name().clone());
+                                }
+                            } else {
+                                let groups = DashSet::new();
+                                let scopes = DashSet::new();
+
+                                if index == 0 {
+                                    scopes.insert(mapping.name().clone());
+                                } else {
+                                    groups.insert(mapping.name().clone());
+                                }
+
+                                map.insert(
+                                    (endpoint.clone(), permission.clone()),
+                                    (scopes, groups),
+                                );
+                            }
                         }
-                    } else {
-                        let groups = DashSet::new();
-                        let scopes = DashSet::new();
-
-                        if index == 0 {
-                            scopes.insert(mapping.name().clone());
-                        } else {
-                            groups.insert(mapping.name().clone());
-                        }
-
-                        map.insert(
-                            (permissions.endpoint().clone(), permission.clone()),
-                            (scopes, groups),
-                        );
                     }
                 }
             }
