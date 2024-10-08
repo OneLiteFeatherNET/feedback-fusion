@@ -78,7 +78,7 @@ impl FeedbackFusionV1Context {
         let claims = request
             .extensions()
             .get::<OIDCClaims>()
-            .ok_or_else(|| FeedbackFusionError::Unauthorized)?;
+            .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
         claims.scope().iter().any(|scope| {
@@ -86,16 +86,13 @@ impl FeedbackFusionV1Context {
                 Ok::<bool, FeedbackFusionError>(
                     PERMISSION_MATRIX
                         .get(&(endpoint.clone(), permission.clone()))
-                        .ok_or_else(|| FeedbackFusionError::Unauthorized)?
+                        .ok_or(FeedbackFusionError::Unauthorized)?
                         .0
                         .contains(scope.as_str()),
                 )
             };
 
-            match result() {
-                Ok(result) => result,
-                Err(_) => false,
-            }
+            result().unwrap_or_default() 
         });
 
         // TODO: create a macro therefore
@@ -105,16 +102,13 @@ impl FeedbackFusionV1Context {
                 Ok::<bool, FeedbackFusionError>(
                     PERMISSION_MATRIX
                         .get(&(endpoint.clone(), permission.clone()))
-                        .ok_or_else(|| FeedbackFusionError::Unauthorized)?
+                        .ok_or(FeedbackFusionError::Unauthorized)?
                         .1
                         .contains(group.as_str()),
                 )
             };
 
-            match result() {
-                Ok(result) => result,
-                Err(_) => false,
-            }
+            result().unwrap_or_default()
         });
 
         Ok(())

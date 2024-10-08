@@ -141,8 +141,7 @@ async fn main() {
 
     info!("Received shutdown signal... shutting down...");
     sender.send(()).await.unwrap();
-    #[cfg(feature = "otlp")]
-    shutdown_tracer_provider()
+    shutdown_tracer_provider();
 }
 
 pub mod prelude {
