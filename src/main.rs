@@ -21,8 +21,6 @@
  */
 #![allow(clippy::too_many_arguments)]
 
-use std::{path::PathBuf, str::FromStr};
-
 use crate::{
     prelude::*,
     services::v1::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context},
@@ -32,8 +30,6 @@ use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1Server,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1Server,
 };
-use futures::stream::StreamExt;
-use notify::{RecommendedWatcher, Watcher};
 #[cfg(feature = "otlp")]
 use opentelemetry::global::shutdown_tracer_provider;
 use tonic::transport::Server;
@@ -56,8 +52,9 @@ const ADDRESS: &str = "0.0.0.0:8000";
 async fn main() {
     // init config
     lazy_static::initialize(&CONFIG);
-    // init the tracing subscriber with the `RUST_LOG` env filter
-    if CONFIG.otlp_endpoint().is_none() {
+
+    // init the tracing subscriber with the `RUST_LOG` env filter if otlp is disabled
+    if CONFIG.otlp().is_none() {
         tracing_subscriber::registry()
             .with(tracing_subscriber::EnvFilter::from_default_env())
             .with(tracing_subscriber::fmt::layer())
@@ -67,7 +64,7 @@ async fn main() {
     #[cfg(feature = "otlp")]
     otlp::init_tracing();
 
-    debug!("Reading Databaseconfig");
+    debug!("Reading DatabaseConfig");
     lazy_static::initialize(&DATABASE_CONFIG);
 
     // connect to the database
@@ -76,59 +73,10 @@ async fn main() {
     let connection = DatabaseConnection::from(connection);
     info!("Connection to the Database established");
 
-    // start config file watcher
-    if let Some(config_path) = CONFIG.config_path().as_ref() {
-        let connection = connection.clone();
-        info!("CONFIG_PATH present, starting watcher");
-        // initial load
-        match config::sync_config(&connection).await {
-            Ok(_) => info!("Config reloaded"),
-            Err(error) => error!("Error occurred while syncinc config: {error}"),
-        };
-
-        tokio::spawn(async move {
-            let (sender, receiver) = kanal::bounded_async(1);
-
-            let mut watcher = RecommendedWatcher::new(
-                move |response| {
-                    let sender = sender.clone();
-                    tokio::spawn(async move { sender.send(response).await.unwrap() });
-                },
-                notify::Config::default(),
-            )
-            .unwrap();
-
-            watcher
-                .watch(
-                    &PathBuf::from_str(config_path.as_str()).unwrap(),
-                    notify::RecursiveMode::NonRecursive,
-                )
-                .unwrap();
-            info!("Watching for changes at {config_path}");
-
-            let mut stream = receiver.stream();
-            while let Some(response) = stream.next().await {
-                match response {
-                    Ok(_) => {
-                        info!("Detected config chage");
-
-                        match config::sync_config(&connection).await {
-                            Ok(_) => info!("Config reloaded"),
-                            Err(error) => error!("Error occurred while syncinc config: {error}"),
-                        }
-                    }
-                    Err(error) => error!("Error occurred during watch: {error}"),
-                }
-            }
-
-            Ok::<(), FeedbackFusionError>(())
-        });
-    } else {
-        warn!("CONFIG_PATH not set, wont start watcher");
-    }
+    // sync the presets
+    config::sync_preset(&connection).await.unwrap();
 
     let (sender, receiver) = kanal::oneshot_async::<()>();
-
     tokio::spawn(async move {
         debug!("Constructing health reporter");
         let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
@@ -194,17 +142,17 @@ async fn main() {
     info!("Received shutdown signal... shutting down...");
     sender.send(()).await.unwrap();
     #[cfg(feature = "otlp")]
-    shutdown_tracer_provider()
+    shutdown_tracer_provider();
 }
 
 pub mod prelude {
-    pub use crate::{cache::*, skytable_configuration, skytable_configuration_tls, invalidate};
     pub use crate::{
+        cache::*,
         config::*,
         database::{DatabaseConfiguration, DatabaseConnection},
         database_request,
         error::*,
-        impl_select_page_wrapper,
+        impl_select_page_wrapper, invalidate,
         services::{oidc::*, *},
     };
     pub use derivative::Derivative;

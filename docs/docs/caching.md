@@ -27,17 +27,31 @@ If you use the default provided image it is automatically enabled.
 
 - A fully configured Skytable database. [Setup a skytable database](https://docs.skytable.io/installation)
 
-#### Values 
+#### Values
 
-If you set the following values feedback-fusion will automatically enable distributed caching 
-via skytable 
+```yaml
+cache:
+  skytable:
+    host: "skytable.example.com"
+    port: 2003
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+      -----END CERTIFICATE-----
+    username: "skytable_user"
+    password: "skytable_password"
+    space: "cache"
+    model: "feedbackfusion"
+```
 
-| Environment Variable   | Type             | Default            | Description                                       |
-|------------------------|------------------|--------------------|---------------------------------------------------|
-| `skytable_host`        | `Option<String>` | `None`             | The hostname or IP address of the Skytable server |
-| `skytable_port`        | `Option<u16>`    | `None`             | The port on which the Skytable server is running  |
-| `skytable_certificate` | `Option<String>` | `None`             | The Skytable servers ca certificate               |
-| `skytable_username`    | `Option<String>` | `None`             | The username for authentication                   |
-| `skytable_password`    | `Option<String>` | `None`             | The password for authentication                   | 
-| `skytable_space`       | `String`         | `"cache"`          | The skytable space to use                         | 
-| `skytable_model`       | `String`         | `"feedbackfusion"` | The skytable model to use                         | 
+##### Reference
+
+| Parameter   | Description                        | Default        | Data Type |
+|-------------|------------------------------------|----------------|-----------|
+| host        | Hostname of the Skytable server    | N/A            | String    |
+| port        | Port of the Skytable server        | 2003           | Integer   |
+| certificate | PEM certificate for Skytable       | N/A            | String    |
+| username    | Username for Skytable authentication | N/A          | String    |
+| password    | Password for Skytable authentication | N/A          | String    |
+| space       | Skytable space to use              | "cache"        | String    |
+| model       | Skytable model to use              | "feedbackfusion" | String    |

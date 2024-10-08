@@ -298,7 +298,7 @@ where
 
 #[cfg(feature = "caching-skytable")]
 #[async_trait::async_trait]
-impl<'a, C, I, S, K, V> IOCachedAsync<K, V> for SkytableCache<'a, C, K, V>
+impl<C, I, S, K, V> IOCachedAsync<K, V> for SkytableCache<'_, C, K, V>
 where
     S: AsyncRead + AsyncWrite + Send + Sync + Unpin,
     I: DerefMut<Target = TcpConnection<S>> + Send + Sync,

@@ -1,0 +1,21 @@
+database:
+  mssql:
+    username: sa
+    password: Password1
+    database: master
+    endpoint: database:1433
+oidc:
+  provider: http://oidc-server-mock
+  issuer: http://localhost:5151
+  scopes:
+    - name: "api:feedback-fusion"
+      grants:
+        - endpoint: "*"
+          permissions:
+            - "*"
+  groups:
+    - name: "admin"
+      grants:
+        - endpoint: "*"
+          permissions:
+            - "*"

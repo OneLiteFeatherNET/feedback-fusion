@@ -1,0 +1,27 @@
+database:
+  postgres:
+    username: postgres
+    password: password
+    database: postgres
+    endpoint: database:5432
+oidc:
+  provider: http://oidc-server-mock
+  issuer: http://localhost:5151
+  scopes:
+    - name: "api:feedback-fusion"
+      grants:
+        - endpoint: "*"
+          permissions:
+            - "*"
+  groups:
+    - name: "admin"
+      grants:
+        - endpoint: "*"
+          permissions:
+            - "*"
+cache:
+  skytable:
+    host: skytable
+    port: 2003
+    username: root 
+    password: passwordpassword

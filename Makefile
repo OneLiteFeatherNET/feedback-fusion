@@ -1,11 +1,3 @@
-.PHONY: pnpm core_generate docs lib_build docs_build extract_translations build_translations \
-        check clippy unittest docker_network oidc-server-mock integration_test \
-        postgres_database postgres_backend cleanup postgres \
-        mysql_database mysql_backend mysql \
-        mariadb_database mariadb \
-        mssql_database mssql_backend mssql \
-        integration skytable
-
 pnpm:
 	cd ./lib && pnpm i 
 	cd ./docs && pnpm i
@@ -77,16 +69,8 @@ postgres_database:
 distributed_caching_backend:
 	docker build -t feedback-fusion .
 	docker run --name feedback-fusion -d \
-		-e SKYTABLE_HOST=skytable \
-		-e SKYTABLE_PORT=2003 \
-		-e SKYTABLE_USERNAME=root \
-		-e SKYTABLE_PASSWORD=passwordpassword \
-		-e POSTGRES_USERNAME=postgres \
-		-e POSTGRES_PASSWORD=password \
-		-e POSTGRES_DATABASE=postgres \
-		-e POSTGRES_ENDPOINT=database:5432 \
-		-e OIDC_PROVIDER=http://oidc-server-mock \
-		-e OIDC_ISSUER=http://localhost:5151 \
+		-e FEEDBACK_FUSION_CONFIG="/etc/feedback-fusion/config.yaml" \
+		-v ./tests/_common/configs/skytable.yaml:/etc/feedback-fusion/config.yaml \
 		-e RUST_LOG=DEBUG \
 		--network feedback-fusion -p 8000:8000 feedback-fusion
 	sleep 1
@@ -94,17 +78,12 @@ distributed_caching_backend:
 distributed_caching: cleanup docker_network skytable oidc-server-mock postgres_database distributed_caching_backend integration_test 
 	${MAKE} cleanup
 
-
 postgres_backend:
 	docker build -t feedback-fusion .
 	docker run --name feedback-fusion -d \
-		-e POSTGRES_USERNAME=postgres \
-		-e POSTGRES_PASSWORD=password \
-		-e POSTGRES_DATABASE=postgres \
-		-e POSTGRES_ENDPOINT=database:5432 \
-		-e OIDC_PROVIDER=http://oidc-server-mock \
-		-e OIDC_ISSUER=http://localhost:5151 \
 		-e RUST_LOG=DEBUG \
+		-e FEEDBACK_FUSION_CONFIG="/etc/feedback-fusion/config.yaml" \
+		-v ./tests/_common/configs/postgres.yaml:/etc/feedback-fusion/config.yaml \
 		--network feedback-fusion -p 8000:8000 feedback-fusion
 	sleep 1
 
@@ -125,12 +104,8 @@ mysql_database:
 mysql_backend:
 	docker build -t feedback-fusion .
 	docker run --name feedback-fusion -d \
-		-e MYSQL_USERNAME=username \
-		-e MYSQL_PASSWORD=password \
-		-e MYSQL_DATABASE=database \
-		-e MYSQL_ENDPOINT=database:3306 \
-		-e OIDC_PROVIDER=http://oidc-server-mock \
-		-e OIDC_ISSUER=http://localhost:5151 \
+		-e FEEDBACK_FUSION_CONFIG="/etc/feedback-fusion/config.yaml" \
+		-v ./tests/_common/configs/mysql.yaml:/etc/feedback-fusion/config.yaml \
 		-e RUST_LOG=DEBUG \
 		--network feedback-fusion -p 8000:8000 feedback-fusion
 	sleep 1
@@ -164,12 +139,8 @@ mssql_database:
 mssql_backend:
 	docker build -t feedback-fusion .
 	docker run --name feedback-fusion -d \
-  	-e MSSQL_USERNAME=sa \
-  	-e MSSQL_PASSWORD=Password1 \
-  	-e MSSQL_DATABASE=master \
-  	-e MSSQL_ENDPOINT=database:1433 \
-  	-e OIDC_PROVIDER=http://oidc-server-mock \
-  	-e OIDC_ISSUER=http://localhost:5151 \
+		-e FEEDBACK_FUSION_CONFIG="/etc/feedback-fusion/config.yaml" \
+		-v ./tests/_common/configs/mssql.yaml:/etc/feedback-fusion/config.yaml \
   	-e RUST_LOG=DEBUG \
   	--network feedback-fusion -p 8000:8000 feedback-fusion
 	sleep 1
@@ -182,4 +153,4 @@ integration:
 	${MAKE} mariadb
 	${MAKE} mysql
 	${MAKE} mssql
-	${MAKE} distributed_caching_backend
+	${MAKE} distributed_caching

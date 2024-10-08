@@ -21,31 +21,45 @@
  *
  */
 
+use std::borrow::Cow;
+
+use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter};
+use wildcard::Wildcard;
 
 use crate::{
-    database::schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
+    database::{
+        schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
+        DatabseConfigurationScheme,
+    },
     prelude::*,
 };
 
+pub type PermissionMatrix =
+    DashMap<(Endpoint, Permission), (DashSet<Cow<'static, str>>, DashSet<Cow<'static, str>>)>;
+
 lazy_static! {
-    pub static ref CONFIG: Config = envy::from_env::<Config>().unwrap();
+    pub static ref CONFIG: Config = read_config().unwrap();
+    pub static ref PERMISSION_MATRIX: PermissionMatrix =
+        read_permission_matrix(CONFIG.oidc().scopes(), CONFIG.oidc().groups());
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
         DatabaseConfiguration::extract().unwrap();
 }
 
 macro_rules! config {
-    (($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
+    ($config:ident, ($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
         paste! {
             #[derive(Deserialize, Debug, Clone, Getters)]
             #[get = "pub"]
-            pub struct Config {
+            pub struct $config {
                 $(
                     $ident: $type,
                 )*
 
                 $(
-                    #[serde(default = "default_" $dident)]
+                    #[serde(default = "default_" $config:lower "_" $dident)]
                     $dident: $dtype,
                 )*
             }
@@ -53,7 +67,7 @@ macro_rules! config {
 
             $(
                 #[inline]
-                fn [<default_ $dident>]() -> $dtype {
+                fn [<default_ $config:lower _ $dident>]() -> $dtype {
                     $default.to_owned()
                 }
             )*
@@ -61,85 +75,98 @@ macro_rules! config {
     };
 }
 
-config!(
-    (
-        oidc_provider: String,
-        oidc_issuer: Option<String>,
-        config_path: Option<String>,
-        otlp_endpoint: Option<String>,
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct Config {
+    cache: Option<CacheConfiguration>,
+    oidc: OIDCConfiguration,
+    #[cfg(feature = "otlp")]
+    otlp: Option<OTLPConfiguration>,
+    preset: Option<PresetConfig>,
+    database: DatabseConfigurationScheme,
+}
 
-        skytable_host: Option<String>,
-        skytable_port: Option<u16>,
-        skytable_certificate: Option<String>,
-        skytable_username: Option<String>,
-        skytable_password: Option<String>
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct CacheConfiguration {
+    skytable: Option<SkytableConfiguration>,
+}
+
+config!(
+    SkytableConfiguration,
+    (
+        host: String,
+        port: u16,
+        certificate: Option<String>,
+        username: String,
+        password: String
+    ),
+
+    (
+        space: String = "cache",
+        model: String = "feedbackfusion",
+    )
+);
+
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
+pub enum Endpoint {
+    Target,
+    Prompt,
+    Field,
+    Response,
+}
+
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
+pub enum Permission {
+    Read,
+    Write,
+    List,
+}
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct AuthorizationGrants {
+    // should match an `Endpoint`
+    endpoint: String,
+    // should match `Permission`
+    permissions: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct AuthorizationMapping {
+    name: String,
+    grants: Vec<AuthorizationGrants>,
+}
+
+config!(
+    OIDCConfiguration,
+    (
+        issuer: Option<String>,
+        provider: String,
+        scopes: Vec<AuthorizationMapping>,
+        groups: Vec<AuthorizationMapping>,
+    ),
+
+    (
+        audience: String = "feedback-fusion",
+        group_claim: String = "groups"
+    )
+);
+
+config!(
+    OTLPConfiguration,
+    (
+        endpoint: String,
     ),
 
     (
         service_name: String = "feedback-fusion"
-        oidc_audience: String = "feedback-fusion",
-
-        skytable_space: String = "cache",
-        skytable_model: String = "feedbackfusion",
-
-        oidc_scope_api: String = "api:feedback-fusion",
-        oidc_scope_write: String = "feedback-fusion:write",
-        oidc_scope_read: String = "feedback-fusion:read",
-
-        oidc_scope_write_target: String = "feedback-fusion:writeTarget",
-        oidc_scope_read_target: String = "feedback-fusion:readTarget"
-
-        oidc_scope_write_prompt: String = "feedback-fusion:writePrompt",
-        oidc_scope_read_prompt: String = "feedback-fusion:readPrompt"
-
-        oidc_scope_write_field: String = "feedback-fusion:writeField",
-        oidc_scope_read_field: String = "feedback-fusion:readField"
-
-        oidc_scope_read_response: String = "feedback-fusion:readResponse"
     )
 );
 
-#[macro_export]
-macro_rules! skytable_configuration {
-    () => {{
-        $crate::cache::SkytableCacheBuilder::new(
-            CONFIG.skytable_host().as_ref().unwrap().as_str(),
-            *CONFIG.skytable_port().as_ref().unwrap(),
-            CONFIG.skytable_username().as_ref().unwrap().as_str(),
-            CONFIG.skytable_password().as_ref().unwrap().as_str(),
-        )
-        .set_space(CONFIG.skytable_space())
-        .set_model(CONFIG.skytable_model())
-        .set_refresh(false)
-        .set_lifetime(std::time::Duration::from_secs(300))
-        .build()
-        .await
-        .unwrap()
-    }};
-}
-
-#[macro_export]
-macro_rules! skytable_configuration_tls {
-    () => {{
-        $crate::cache::SkytableTlsCacheBuilder::new(
-            CONFIG.skytable_host().as_ref().unwrap().as_str(),
-            *CONFIG.skytable_port().as_ref().unwrap(),
-            CONFIG.skytable_username().as_ref().unwrap().as_str(),
-            CONFIG.skytable_password().as_ref().unwrap().as_str(),
-        )
-        .set_certificate(CONFIG.skytable_certificate().as_ref().unwrap().as_str())
-        .set_space(CONFIG.skytable_space())
-        .set_model(CONFIG.skytable_model())
-        .set_refresh(false)
-        .set_lifetime(std::time::Duration::from_secs(300))
-        .build()
-        .await
-        .unwrap()
-    }};
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-pub struct InstanceConfig {
+pub struct PresetConfig {
     targets: Vec<TargetConfig>,
 }
 
@@ -170,36 +197,96 @@ pub struct FieldConfig {
     options: FieldOptions,
 }
 
-#[instrument(skip_all)]
-pub async fn sync_config(connection: &DatabaseConnection) -> Result<()> {
+pub fn read_config() -> Result<Config> {
     // as this function can only be called when the notify watch agent got created we can use
     // unwrap here
-    let config_path = CONFIG.config_path.as_ref().unwrap();
-    let content = tokio::fs::read_to_string(config_path)
-        .await
-        .map_err(|error| {
-            FeedbackFusionError::ConfigurationError(format!(
-                "Error while reading config: {}",
-                error
-            ))
-        })?;
+    let config_path = std::env::var("FEEDBACK_FUSION_CONFIG").map_err(|_| {
+        FeedbackFusionError::ConfigurationError(
+            "Missing FEEDBACK_FUSION_CONFIG environment variable".to_owned(),
+        )
+    })?;
+    let content = std::fs::read_to_string(config_path).map_err(|error| {
+        FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
+    })?;
 
     // parse the config
-    let config: InstanceConfig = serde_yaml::from_str(content.as_str()).map_err(|error| {
+    let config: Config = serde_yaml::from_str(content.as_str()).map_err(|error| {
         FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
     })?;
     info!("Sucessfully parsed config");
 
-    // start a database transaction
-    let transaction = connection.acquire_begin().await?;
-    let transaction = transaction.defer_async(|mut tx| async move {
-        if !tx.done {
-            let _ = tx.rollback().await;
-        }
-    });
+    Ok(config)
+}
 
-    for target in config.targets.into_iter() {
-        sync_target(target, &transaction).await?;
+/// This function does require CONFIG to be already initialized and performs the reverse /
+/// backwards mapping from endpoint and permission to a list of scopes and grouops instead of the
+/// other way.
+pub fn read_permission_matrix(
+    scopes: &'static [AuthorizationMapping],
+    groups: &'static [AuthorizationMapping],
+) -> PermissionMatrix {
+    let map: PermissionMatrix = DashMap::new();
+
+    for (index, list) in [scopes, groups].iter().enumerate() {
+        for mapping in list.iter() {
+            let name = Cow::Borrowed(mapping.name().as_str());
+            for grant in mapping.grants.iter() {
+                // the grant does support wildcards for the `endpoint` field.
+                // therefore we here try to match the endpoint variatns
+                let endpoints = {
+                    let endpoint = grant.endpoint.to_string();
+                    let pattern = Wildcard::new(endpoint.as_bytes()).unwrap();
+                    Endpoint::iter()
+                        .filter(|endpoint| pattern.is_match(endpoint.to_string().as_bytes()))
+                        .collect::<Vec<Endpoint>>()
+                };
+
+                for permission in grant.permissions.iter() {
+                    // the permissions field does support wildcards for the `permission` field.
+                    // therefore we here try to match the permission variatns
+                    let permissions = {
+                        let stringified = permission.to_string();
+                        let pattern = Wildcard::new(stringified.as_bytes()).unwrap();
+                        Permission::iter()
+                            .filter(|permission| {
+                                pattern.is_match(permission.to_string().as_bytes())
+                            })
+                            .collect::<Vec<Permission>>()
+                    };
+
+                    for endpoint in endpoints.clone().into_iter() {
+                        for permission in permissions.clone().into_iter() {
+                            map.entry((endpoint.clone(), permission.clone()))
+                                .or_insert_with(|| (DashSet::new(), DashSet::new()));
+
+                            let entry = map.get_mut(&(endpoint.clone(), permission)).unwrap();
+                            if index == 0 {
+                                entry.0.insert(name.clone());
+                            } else {
+                                entry.1.insert(name.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    map
+}
+
+pub async fn sync_preset(connection: &DatabaseConnection) -> Result<()> {
+    if let Some(preset) = CONFIG.preset() {
+        let transaction = connection.acquire_begin().await?;
+        let transaction = transaction.defer_async(|mut tx| async move {
+            if !tx.done {
+                let _ = tx.rollback().await;
+            }
+        });
+
+        for target in preset.clone().targets.into_iter() {
+            sync_target(target, &transaction).await?;
+        }
     }
 
     Ok(())
@@ -296,4 +383,76 @@ pub async fn sync_field(
     update_otherwise_create!(transaction, Field, field, title, description, field_type, options => prompt = prompt);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lazy_static::lazy_static;
+
+    lazy_static! {
+        static ref SCOPES: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "scope1".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: Endpoint::Target.to_string(),
+                permissions: vec![Permission::Read.to_string()],
+            },],
+        },];
+        static ref GROUPS: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "group1".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: Endpoint::Prompt.to_string(),
+                permissions: vec![Permission::Write.to_string()],
+            },],
+        },];
+        static ref SCOPES_WILDCARD: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "scope2".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: "*".to_string(),
+                permissions: vec!["*".to_string()],
+            },],
+        },];
+        static ref SCOPES_NO_MATCH: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+            name: "scope3".to_string(),
+            grants: vec![AuthorizationGrants {
+                endpoint: "NonExistent".to_string(),
+                permissions: vec!["NonExistent".to_string()],
+            },],
+        },];
+    }
+
+    #[test]
+    fn test_read_permission_matrix() {
+        let matrix = read_permission_matrix(&SCOPES, &GROUPS);
+
+        assert!(matrix.contains_key(&(Endpoint::Target, Permission::Read)));
+        assert!(matrix.contains_key(&(Endpoint::Prompt, Permission::Write)));
+
+        let entry = matrix.get(&(Endpoint::Target, Permission::Read)).unwrap();
+        assert!(entry.0.contains(&Cow::Borrowed("scope1")));
+        assert!(entry.1.is_empty());
+
+        let entry = matrix.get(&(Endpoint::Prompt, Permission::Write)).unwrap();
+        assert!(entry.0.is_empty());
+        assert!(entry.1.contains(&Cow::Borrowed("group1")));
+    }
+
+    #[test]
+    fn test_read_permission_matrix_with_wildcards() {
+        let matrix = read_permission_matrix(&SCOPES_WILDCARD, &[]);
+
+        for endpoint in Endpoint::iter() {
+            for permission in Permission::iter() {
+                let entry = matrix.get(&(endpoint.clone(), permission.clone())).unwrap();
+                assert!(entry.0.contains(&Cow::Borrowed("scope2")));
+            }
+        }
+    }
+
+    #[test]
+    fn test_read_permission_matrix_no_matches() {
+        let matrix = read_permission_matrix(&SCOPES_NO_MATCH, &[]);
+
+        assert!(matrix.is_empty());
+    }
 }

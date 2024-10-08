@@ -35,7 +35,9 @@ use tracing_opentelemetry::{OpenTelemetryLayer, OpenTelemetrySpanExt};
 use tracing_subscriber::layer::SubscriberExt;
 
 pub fn init_tracing() {
-    if let Some(endpoint) = CONFIG.otlp_endpoint() {
+    if let Some(config) = CONFIG.otlp() {
+        let endpoint = config.endpoint();
+
         let subscriber = tracing_subscriber::registry()
             .with(tracing_subscriber::EnvFilter::from_default_env())
             .with(tracing_subscriber::fmt::layer());
@@ -52,7 +54,7 @@ pub fn init_tracing() {
             .with_trace_config(opentelemetry_sdk::trace::Config::default().with_resource(
                 Resource::new(vec![KeyValue::new(
                     SERVICE_NAME,
-                    CONFIG.service_name().clone(),
+                    config.service_name().clone(),
                 )]),
             ))
             .install_batch(opentelemetry_sdk::runtime::Tokio)

@@ -86,13 +86,22 @@ macro_rules! database_configuration {
                 )*
             }
 
+            #[derive(Debug, Clone, Getters, Deserialize)]
+            #[get = "pub"]
+            pub struct DatabseConfigurationScheme {
+                $(
+                    #[cfg(feature = $scheme)]
+                        [<$ident:lower>]: Option<$config>,
+                )*
+            }
+
             impl DatabaseConfiguration {
                 #[inline(always)]
                 pub fn extract() -> crate::error::Result<Self> {
                     $(
                        #[cfg(feature = $scheme)]
-                       if let Ok(config) = envy::prefixed(stringify!([<$ident:upper _>])).from_env::<$config>() {
-                           return Ok(Self::$ident(config));
+                       if let Some(config) = CONFIG.database().[<$ident:lower>]() {
+                           return Ok(Self::$ident(config.clone()));
                       }
                  )*
 
