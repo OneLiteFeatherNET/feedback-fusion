@@ -21,6 +21,8 @@
  *
  */
 
+use std::borrow::Cow;
+
 use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
 use strum::IntoEnumIterator;
@@ -35,9 +37,12 @@ use crate::{
     prelude::*,
 };
 
+pub type PermissionMatrix =
+    DashMap<(Endpoint, Permission), (DashSet<Cow<'static, str>>, DashSet<Cow<'static, str>>)>;
+
 lazy_static! {
     pub static ref CONFIG: Config = read_config().unwrap();
-    pub static ref PERMISSION_MATRIX: DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> =
+    pub static ref PERMISSION_MATRIX: PermissionMatrix =
         read_permission_matrix(CONFIG.oidc().scopes(), CONFIG.oidc().groups());
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
         DatabaseConfiguration::extract().unwrap();
@@ -215,14 +220,14 @@ pub fn read_config() -> Result<Config> {
 /// backwards mapping from endpoint and permission to a list of scopes and grouops instead of the
 /// other way.
 pub fn read_permission_matrix(
-    scopes: &Vec<AuthorizationMapping>,
-    groups: &Vec<AuthorizationMapping>,
-) -> DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> {
-    // TODO: increase performance
-    let map: DashMap<(Endpoint, Permission), (DashSet<String>, DashSet<String>)> = DashMap::new();
+    scopes: &'static [AuthorizationMapping],
+    groups: &'static [AuthorizationMapping],
+) -> PermissionMatrix {
+    let map: PermissionMatrix = DashMap::new();
 
-    for (index, list) in vec![scopes, groups].iter().enumerate() {
+    for (index, list) in [scopes, groups].iter().enumerate() {
         for mapping in list.iter() {
+            let name = Cow::Borrowed(mapping.name().as_str());
             for grant in mapping.grants.iter() {
                 // the grant does support wildcards for the `endpoint` field.
                 // therefore we here try to match the endpoint variatns
@@ -247,33 +252,16 @@ pub fn read_permission_matrix(
                             .collect::<Vec<Permission>>()
                     };
 
-                    for endpoint in endpoints.iter() {
-                        for permission in permissions.iter() {
-                            // check wether the entry does already exist in the map
-                            if let Some(mut entry) =
-                                map.get_mut(&(endpoint.clone(), permission.clone()))
-                            {
-                                let (ref mut scopes, ref mut groups) = *entry;
+                    for endpoint in endpoints.clone().into_iter() {
+                        for permission in permissions.clone().into_iter() {
+                            map.entry((endpoint.clone(), permission.clone()))
+                                .or_insert_with(|| (DashSet::new(), DashSet::new()));
 
-                                if index == 0 {
-                                    scopes.insert(mapping.name().clone());
-                                } else {
-                                    groups.insert(mapping.name().clone());
-                                }
+                            let entry = map.get_mut(&(endpoint.clone(), permission)).unwrap();
+                            if index == 0 {
+                                entry.0.insert(name.clone());
                             } else {
-                                let groups = DashSet::new();
-                                let scopes = DashSet::new();
-
-                                if index == 0 {
-                                    scopes.insert(mapping.name().clone());
-                                } else {
-                                    groups.insert(mapping.name().clone());
-                                }
-
-                                map.insert(
-                                    (endpoint.clone(), permission.clone()),
-                                    (scopes, groups),
-                                );
+                                entry.1.insert(name.clone());
                             }
                         }
                     }

@@ -20,6 +20,8 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use std::borrow::{Borrow, Cow};
+
 use crate::prelude::*;
 use aliri_oauth2::HasScope;
 use feedback_fusion_common::proto::{
@@ -88,7 +90,7 @@ impl FeedbackFusionV1Context {
                         .get(&(endpoint.clone(), permission.clone()))
                         .ok_or_else(|| FeedbackFusionError::Unauthorized)?
                         .0
-                        .contains(&scope.to_string()),
+                        .contains(scope.as_str()),
                 )
             };
 
@@ -107,7 +109,7 @@ impl FeedbackFusionV1Context {
                         .get(&(endpoint.clone(), permission.clone()))
                         .ok_or_else(|| FeedbackFusionError::Unauthorized)?
                         .1
-                        .contains(&group.to_string()),
+                        .contains(group.as_str()),
                 )
             };
 
