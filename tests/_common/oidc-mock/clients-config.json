@@ -18,9 +18,10 @@
       "authorization_code"
     ],
     "AllowedScopes": [
-      "api:feedback-fusion"
+      "api:feedback-fusion",
+      "openid"
     ],
-    "RedirectUris": ["http://localhost:3000/auth/callback"],
+    "RedirectUris": ["http://localhost:3000/auth/oidc/callback"],
     "RequirePkce": false
   }
 ]

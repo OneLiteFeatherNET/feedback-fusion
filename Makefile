@@ -25,8 +25,16 @@ build_translations: pnpm
 dashboard_setup:
 	cd ./dashboard && pnpm i 
 	 
-dashboard: docker_network oidc-server-mock dashboard_setup
-	cd ./dashboard/ && pnpm run dev
+dashboard: cleanup docker_network oidc-server-mock dashboard_setup
+	cd ./dashboard/ && \
+		FEEDBACK_FUSION_API_SCOPE="api:feedback-fusion" \
+		FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
+		FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL="http://localhost:5151/connect/token" \
+		FEEDBACK_FUSION_OIDC_CLIENT_ID="client" \
+		FEEDBACK_FUSION_OIDC_CLIENT_SECRET="secret" \
+		FEEDBACK_FUSION_OIDC_REDIRECT_URL="http://localhost:3000/auth/oidc/callback" \
+		FEEDBACK_FUSION_OIDC_PROVIDER_DISCOVERY_URL="http://localhost:5151/.well-known/openid-configuration" \
+		pnpm run dev
 	${MAKE} cleanup
 
 dashboard_lint: dashboard_setup 

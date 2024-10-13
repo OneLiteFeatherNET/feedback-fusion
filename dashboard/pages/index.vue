@@ -1,5 +1,3 @@
 <template>
-  <div>
-    <v-app> </v-app>
-  </div>
+  <div></div>
 </template>
