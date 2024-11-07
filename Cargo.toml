@@ -50,7 +50,7 @@ serde_yaml = "0.9.34"
 skytable = { version = "0.8.10", optional = true }
 strum = "0.26.3"
 strum_macros = "0.26.4"
-thiserror = "1.0.58"
+thiserror = "2.0.0"
 tonic = "0.12.0"
 tonic-health = "0.12.0"
 tonic-reflection = "0.12.0"
