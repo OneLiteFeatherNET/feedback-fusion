@@ -15,6 +15,8 @@ export default defineNuxtConfig({
         validateAccessToken: true,
         scope: ["openid"],
         tokenRequestType: "form-urlencoded",
+        exposeAccessToken: true,
+        exposeIdToken: true,
         authorizationUrl:
           process.env.FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL,
         tokenUrl: process.env.FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL,
@@ -25,6 +27,11 @@ export default defineNuxtConfig({
         clientId: process.env.FEEDBACK_FUSION_OIDC_CLIENT_ID,
         clientSecret: process.env.FEEDBACK_FUSION_OIDC_CLIENT_SECRET,
       },
+    },
+  },
+  runtimeConfig: {
+    public: {
+      feedbackFusionEndpoint: "NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT",
     },
   },
 });

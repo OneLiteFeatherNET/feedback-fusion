@@ -7,6 +7,7 @@ services:
     ports:
       - 5151:80
     environment:
+      OVERRIDE_STANDARD_IDENTITY_RESOURCES: true
       ASPNETCORE_ENVIRONMENT: Development
       SERVER_OPTIONS_INLINE: |
         {
@@ -28,6 +29,10 @@ services:
           "AutomaticRedirectAfterSignOut": true
         }
       API_SCOPES_INLINE: |
+        - Name: openid
+          UserClaims:
+            - groups
+            - audience
         - Name: api:feedback-fusion
         - Name: feedback-fusion:write 
         - Name: feedback-fusion:read
@@ -51,6 +56,16 @@ services:
                 "Value": "max@mustermann.de",
                 "ValueType": "string"
               },
+              {
+                "Type": "groups",
+                "Value": "[\"admin\"]",
+                "ValueType": "json"
+              },
+              {
+                "Type": "audience",
+                "Value": "feedback-fusion",
+                "ValueType": "string"
+              }
             ]
           }
         ]

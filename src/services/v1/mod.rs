@@ -53,8 +53,7 @@ pub struct PublicFeedbackFusionV1Context {
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
     ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {{
-        if let Err(error) = FeedbackFusionV1Context::authorize(&$request, $endpoint, $permission)
-        {
+        if let Err(error) = FeedbackFusionV1Context::authorize(&$request, $endpoint, $permission) {
             return Err(error.into());
         }
 
@@ -85,20 +84,22 @@ impl FeedbackFusionV1Context {
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
-        claims
+        let scope = claims
             .scope()
             .iter()
-            .find(|scope| entry.0.contains(scope.as_str()))
-            .ok_or(FeedbackFusionError::Unauthorized)?;
+            .find(|scope| entry.0.contains(scope.as_str()));
 
         // verify the groups
-        claims
+        let group = claims
             .groups()
             .iter()
-            .find(|group| entry.1.contains(group.as_str()))
-            .ok_or(FeedbackFusionError::Unauthorized)?;
+            .find(|group| entry.1.contains(group.as_str()));
 
-        Ok(())
+        return if scope.is_none() && group.is_none() {
+            Err(FeedbackFusionError::Unauthorized)
+        } else {
+            Ok(())
+        };
     }
 }
 

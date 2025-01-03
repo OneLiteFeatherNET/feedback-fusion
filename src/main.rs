@@ -34,6 +34,7 @@ use feedback_fusion_common::proto::{
 use opentelemetry::global::shutdown_tracer_provider;
 use tonic::transport::Server;
 use tonic_web::GrpcWebLayer;
+use tower_http::cors::{Any, CorsLayer};
 #[cfg(not(feature = "otlp"))]
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -119,6 +120,7 @@ async fn main() {
         Server::builder()
             .layer(trace_layer)
             .accept_http1(true)
+            .layer(CorsLayer::new().allow_origin(Any))
             .layer(GrpcWebLayer::new())
             .add_service(health_service)
             .add_service(reflection_service)
