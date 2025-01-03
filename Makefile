@@ -28,7 +28,6 @@ dashboard_setup:
 dashboard: cleanup docker_network oidc-server-mock postgres_database postgres_backend dashboard_setup
 	cd ./dashboard/ && \
 		FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
-		FEEDBACK_FUSION_API_SCOPE="api:feedback-fusion" \
 		FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
 		FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL="http://localhost:5151/connect/token" \
 		FEEDBACK_FUSION_OIDC_CLIENT_ID="client" \

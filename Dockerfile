@@ -14,8 +14,7 @@ RUN apt-get update \
   && apt-get install libssl-dev protobuf-compiler libprotobuf-dev pkg-config -y --no-install-recommends \
   && apt-get clean
 
-RUN rustup toolchain install stable
-RUN rustup default stable
+RUN rustup toolchain install stable && rustup default stable
 RUN cargo build --release --features $features
 
 FROM gcr.io/distroless/cc-debian12

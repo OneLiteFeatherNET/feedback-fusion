@@ -13,7 +13,7 @@ export default defineNuxtConfig({
       oidc: {
         pkce: false,
         validateAccessToken: true,
-        scope: ["openid", process.env.FEEDBACK_FUSION_API_SCOPE!],
+        scope: ["openid"],
         tokenRequestType: "form-urlencoded",
         authorizationUrl:
           process.env.FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL,
