@@ -1,4 +1,4 @@
-//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2025 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
@@ -20,9 +20,19 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-mod authentication;
-mod field;
-mod prompt;
-mod response;
-mod target;
-mod user;
+use test_log::test;
+use tonic::Request;
+
+use crate::connect;
+
+#[test(tokio::test)]
+async fn test_get_user_info() {
+    let (mut client, _) = connect!();
+
+    let response = client.get_user_info(Request::new(())).await;
+    assert!(response.is_ok());
+
+    let data = response.unwrap().into_inner();
+    // this client should be admin so everything should be true
+    assert!(data.permissions.values().all(|element| *element))
+}

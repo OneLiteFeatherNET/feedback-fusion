@@ -24,6 +24,8 @@ service FeedbackFusionV1 {
   rpc DeleteField(DeleteFieldRequest) returns (google.protobuf.Empty);
 
   rpc GetResponses(GetResponsesRequest) returns (ResponsePage);
+
+  rpc GetUserInfo(google.protobuf.Empty) returns (UserInfoResponse);
 }
 
 // does not use oidc authentication
@@ -289,4 +291,8 @@ message PromptResponse {
   string id = 1;
   string prompt = 2;
   google.protobuf.Timestamp created_at = 3;
+}
+
+message UserInfoResponse {
+  map<string, bool> permissions = 1;
 }

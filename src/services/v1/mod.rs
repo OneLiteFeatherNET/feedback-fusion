@@ -29,7 +29,7 @@ use feedback_fusion_common::proto::{
     DeletePromptRequest, DeleteTargetRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
     GetPromptRequest, GetPromptsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
     Prompt as ProtoPrompt, PromptPage, PromptResponse, ResponsePage, Target as ProtoTarget,
-    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateTargetRequest,
+    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
 };
 use tonic::{Response, Status};
 
@@ -37,6 +37,7 @@ pub mod field;
 pub mod prompt;
 pub mod response;
 pub mod target;
+pub mod user;
 
 #[derive(Clone, Getters)]
 #[get = "pub"]
@@ -68,7 +69,8 @@ macro_rules! handler {
 }
 
 impl FeedbackFusionV1Context {
-    fn authorize<T>(
+    #[instrument(skip_all)]
+    pub fn authorize<T>(
         request: &Request<T>,
         endpoint: Endpoint,
         permission: Permission,
@@ -301,6 +303,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             Endpoint::Response,
             Permission::List
         )
+    }
+
+    #[instrument(skip_all)]
+    async fn get_user_info(
+        &self,
+        request: Request<()>,
+    ) -> std::result::Result<Response<UserInfoResponse>, Status> {
+        handler!(user::get_user_info, self, request)
     }
 }
 
