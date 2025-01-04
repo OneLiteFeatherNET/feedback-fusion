@@ -1,32 +1,37 @@
 pnpm:
-	cd ./lib && pnpm i 
-	cd ./docs && pnpm i
+	pnpm i -C lib 
+	pnpm i -C docs
 
 core_generate: pnpm
-	cd ./lib && pnpm run protoc
+	pnpm run -C lib protoc
 
 docs: core_generate
-	cd ./lib && pnpm run dev
+	pnpm run -C lib dev
 
 lib_build: core_generate
-	cd ./lib && pnpm run build
+	pnpm run -C lib build
 
 docs_build: lib_build
-	cd ./docs && pnpm run docs:build
+	cd ./docs && pnpm run -C lib docs:build
 
 extract_translations: pnpm
-	cd ./lib && pnpm run translations:extract
+	pnpm run -C lib translations:extract
 
 build_translations: pnpm
-	cd ./lib && pnpm run translations:build
+	pnpm run -C lib translations:build
 
 # dashboard 
 
 dashboard_setup:
-	cd ./dashboard && pnpm i && pnpm run protoc 
+	pnpm i -C dashboard
+
+dashboard_protoc: dashboard_setup
+	pnpm run -C dashboard protoc
+
+dashboard_build: dashboard_protoc
+	pnpm run -C dashboard build
 	 
-dashboard: cleanup docker_network oidc-server-mock postgres_database postgres_backend dashboard_setup
-	cd ./dashboard/ && \
+dashboard: cleanup docker_network oidc-server-mock postgres_database postgres_backend dashboard_protoc
 		NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
 		FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
 		FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL="http://localhost:5151/connect/token" \
@@ -34,11 +39,11 @@ dashboard: cleanup docker_network oidc-server-mock postgres_database postgres_ba
 		FEEDBACK_FUSION_OIDC_CLIENT_SECRET="secret" \
 		FEEDBACK_FUSION_OIDC_REDIRECT_URL="http://localhost:3000/auth/oidc/callback" \
 		FEEDBACK_FUSION_OIDC_PROVIDER_DISCOVERY_URL="http://localhost:5151/.well-known/openid-configuration" \
-		pnpm run dev
+		pnpm run -C dashboard dev
 	${MAKE} cleanup
 
-dashboard_lint: dashboard_setup 
-	cd ./dashboard && pnpm run lint
+dashboard_lint: dashboard_protoc 
+	pnpm run -C dashboard lint
 
 # linting
 

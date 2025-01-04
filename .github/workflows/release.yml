@@ -57,6 +57,7 @@ jobs:
         run: make clippy 
 
   tests:
+    needs: [clippy, check]
     name: tests
     runs-on: ubuntu-latest
     strategy:
@@ -86,7 +87,7 @@ jobs:
         run: make ${{ matrix.test }}
 
   docker:
-    needs: [tests, clippy, check]
+    needs: [tests]
     name: docker
     runs-on: ubuntu-latest
     steps:
