@@ -39,7 +39,7 @@ use openidconnect::{
 };
 use rand::{seq::IteratorRandom, thread_rng, Rng};
 use tokio::runtime::Runtime;
-use tonic::{metadata::MetadataValue, transport::Channel};
+use tonic::{metadata::MetadataValue, transport::Channel, Request};
 
 pub async fn authenticate() -> String {
     let issuer = IssuerUrl::new(std::env::var("OIDC_PROVIDER").unwrap()).unwrap();
@@ -281,6 +281,25 @@ fn benchmark_endpoints(c: &mut Criterion) {
         ))
         .unwrap();
 
+    let channel = runtime
+        .block_on(
+            Channel::from_shared(std::env::var("GRPC_ENDPOINT").unwrap())
+                .unwrap()
+                .connect(),
+        )
+        .unwrap();
+    let token: MetadataValue<_> = format!("Bearer {}", runtime.block_on(authenticate()))
+        .parse()
+        .unwrap();
+    let mut client =
+        FeedbackFusionV1Client::with_interceptor(channel, move |mut request: tonic::Request<()>| {
+            request
+                .metadata_mut()
+                .insert("authorization", token.clone());
+
+            Ok(request)
+        });
+
     c.bench_function("Get Prompt with invalid id", |b| {
         b.iter(|| {
             runtime
@@ -339,6 +358,12 @@ fn benchmark_endpoints(c: &mut Criterion) {
             },
             BatchSize::SmallInput,
         )
+    });
+
+    c.bench_function("Get UserInfo", |b| {
+        b.iter(|| {
+            runtime.block_on(client.get_user_info(Request::new(()))).ok();
+        });
     });
 }
 
