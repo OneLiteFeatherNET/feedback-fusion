@@ -1,3 +1,5 @@
 <template>
-  <div></div>
+  <div>
+    <TargetList />
+  </div>
 </template>
