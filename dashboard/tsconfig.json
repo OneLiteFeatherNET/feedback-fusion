@@ -2,12 +2,6 @@
   // https://nuxt.com/docs/guide/concepts/typescript
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "typeRoots": [
-      "~/index.d.ts"
-    ],
-    "types": [
-      "@types/node"
-    ],
     "resolveJsonModule": true
   }
 }

@@ -5,5 +5,12 @@
   },
   "navigation": {
     "logout": "Logout"
+  },
+  "form": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "prompt": {
+    "list": "Prompts"
   }
 }
