@@ -9,6 +9,17 @@ export default defineNuxtConfig({
     "nuxt-oidc-auth",
     "@pinia/nuxt",
   ],
+  i18n: {
+    locales: [{ code: "en", language: "en-US", file: "en.json" }],
+    lazy: true,
+    defaultLocale: "en",
+    detectBrowserLanguage: {
+      cookieKey: "lang",
+      useCookie: true,
+      redirectOn: "root",
+      alwaysRedirect: true,
+    },
+  },
   oidc: {
     middleware: {
       globalMiddlewareEnabled: true,

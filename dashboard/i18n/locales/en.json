@@ -1,0 +1,9 @@
+{
+  "login": {
+    "title": "Login",
+    "oidc": "Login with oidc"
+  },
+  "navigation": {
+    "logout": "Logout"
+  }
+}
