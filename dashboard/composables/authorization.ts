@@ -13,12 +13,9 @@ export const useAuthorizationStore = defineStore("authorization", () => {
       .then((value) => value.response.permissions);
   }
 
-  async function hasPermission(
-    endpoint: string,
-    action: string,
-  ): Promise<boolean> {
+  function hasPermission(endpoint: string, action: string): boolean {
     if (Object.keys(permissions.value).length === 0) {
-      await fetch();
+      fetch();
     }
 
     return permissions.value[`${endpoint}::${action}`] || false;
