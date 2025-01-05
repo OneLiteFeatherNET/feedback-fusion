@@ -34,9 +34,6 @@ pub async fn get_user_info(
     // we have the permission matrix in format endpoint, permission -> scopes, groups and therefore
     // we would just have to iterate over the entryset and perform the context authorization for
     // each entry.
-    //
-    // TODO: We would have to bench this function probably as it could be faster if we divide the
-    // authorie function into multiple parts in the futore
     let permissions = PERMISSION_MATRIX
         .clone()
         .into_iter()

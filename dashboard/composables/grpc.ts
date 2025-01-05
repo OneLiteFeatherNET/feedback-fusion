@@ -3,8 +3,6 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 export const useRpcOptions = (): RpcOptions => {
   const { user } = useOidcAuth();
 
-  console.log(user);
-
   return {
     // https://github.com/timostamm/protobuf-ts/blob/main/MANUAL.md#rpc-options
     interceptors: [
