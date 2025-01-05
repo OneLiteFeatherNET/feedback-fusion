@@ -19,7 +19,9 @@
     ],
     "AllowedScopes": [
       "api:feedback-fusion",
-      "openid"
+      "openid",
+      "profile",
+      "test"
     ],
     "RedirectUris": ["http://localhost:3000/auth/oidc/callback"],
     "RequirePkce": false

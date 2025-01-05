@@ -7,7 +7,6 @@ services:
     ports:
       - 5151:80
     environment:
-      OVERRIDE_STANDARD_IDENTITY_RESOURCES: true
       ASPNETCORE_ENVIRONMENT: Development
       SERVER_OPTIONS_INLINE: |
         {
@@ -29,10 +28,11 @@ services:
           "AutomaticRedirectAfterSignOut": true
         }
       API_SCOPES_INLINE: |
-        - Name: openid
+        - Name: test
           UserClaims:
             - groups
             - audience
+            - preferred_username
         - Name: api:feedback-fusion
         - Name: feedback-fusion:write 
         - Name: feedback-fusion:read
@@ -47,13 +47,8 @@ services:
             "Password":"password",
             "Claims": [
               {
-                "Type": "name",
-                "Value": "Max Mustermann",
-                "ValueType": "string"
-              },
-              {
-                "Type": "email",
-                "Value": "max@mustermann.de",
+                "Type": "preferred_username",
+                "Value": "username",
                 "ValueType": "string"
               },
               {

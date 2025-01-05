@@ -10,15 +10,18 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
   ],
   oidc: {
-    defaultProvider: "oidc",
     middleware: {
       globalMiddlewareEnabled: true,
+      customLoginPage: true,
     },
     providers: {
       oidc: {
         pkce: false,
         validateAccessToken: true,
-        scope: ["openid"],
+        scope:
+          process.env.NODE_ENV == "development"
+            ? ["openid", "profile", "test"]
+            : ["openid", "profile"],
         tokenRequestType: "form-urlencoded",
         exposeAccessToken: true,
         exposeIdToken: true,
@@ -31,6 +34,8 @@ export default defineNuxtConfig({
         redirectUri: process.env.FEEDBACK_FUSION_OIDC_REDIRECT_URL!,
         clientId: process.env.FEEDBACK_FUSION_OIDC_CLIENT_ID,
         clientSecret: process.env.FEEDBACK_FUSION_OIDC_CLIENT_SECRET,
+        optionalClaims: ["groups"],
+        userNameClaim: "preferred_username",
       },
     },
   },

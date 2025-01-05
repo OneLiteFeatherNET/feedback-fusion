@@ -13,7 +13,10 @@ export const useAuthorizationStore = defineStore("authorization", () => {
       .then((value) => value.response.permissions);
   }
 
-  async function canAccess(endpoint: string, action: string): Promise<boolean> {
+  async function hasPermission(
+    endpoint: string,
+    action: string,
+  ): Promise<boolean> {
     if (Object.keys(permissions.value).length === 0) {
       await fetch();
     }
@@ -24,6 +27,6 @@ export const useAuthorizationStore = defineStore("authorization", () => {
   return {
     permissions,
     fetch,
-    canAccess,
+    hasPermission,
   };
 });
