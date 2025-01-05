@@ -120,7 +120,12 @@ async fn main() {
         Server::builder()
             .layer(trace_layer)
             .accept_http1(true)
-            .layer(CorsLayer::new().allow_origin(Any))
+            .layer(
+                CorsLayer::new()
+                    .allow_origin(Any)
+                    .allow_methods(Any)
+                    .allow_headers(Any),
+            )
             .layer(GrpcWebLayer::new())
             .add_service(health_service)
             .add_service(reflection_service)

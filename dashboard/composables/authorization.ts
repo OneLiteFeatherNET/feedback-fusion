@@ -2,14 +2,14 @@ interface PermissionMatrix {
   [key: string]: boolean;
 }
 
-const { $feedbackFusion } = useNuxtApp();
-
 export const useAuthorizationStore = defineStore("authorization", () => {
   const permissions = ref({} as PermissionMatrix);
 
   async function fetch() {
+    const { $feedbackFusion } = useNuxtApp();
+
     permissions.value = await $feedbackFusion
-      .getUserInfo({})
+      .getUserInfo({}, useRpcOptions())
       .then((value) => value.response.permissions);
   }
 
