@@ -8,9 +8,15 @@
   },
   "form": {
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "prompt": {
     "list": "Prompts"
+  },
+  "target": {
+    "delete": "Are you sure you want to delete the target {name}? This will also delete all prompts and gathered data."
   }
 }

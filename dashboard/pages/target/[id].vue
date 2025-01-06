@@ -13,13 +13,18 @@
     </v-card-text>
 
     <v-card-actions v-if="target">
-      <v-btn
+      <FormEdit
         v-if="authorization.hasPermission('Target', 'Write')"
-        color="primary"
-        text
+        v-model="editTarget"
+        :fields="editFields"
+        :action="save"
       >
-        {{ $t("form.edit") }}
-      </v-btn>
+        <template #default="{ props }">
+          <v-btn color="primary" text v-bind="props">
+            {{ $t("form.edit") }}
+          </v-btn>
+        </template>
+      </FormEdit>
 
       <v-spacer />
 
@@ -39,7 +44,14 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter, onMounted, ref, useNuxtApp, useRoute } from "#imports";
+import {
+  useRouter,
+  onMounted,
+  ref,
+  useNuxtApp,
+  useRoute,
+  useI18n,
+} from "#imports";
 import { useAuthorizationStore } from "~/composables/authorization";
 import { useRpcOptions } from "~/composables/grpc";
 
@@ -47,8 +59,24 @@ const authorization = useAuthorizationStore();
 const router = useRouter();
 const route = useRoute();
 const { $feedbackFusion } = useNuxtApp();
+const { t } = useI18n();
 
 const target = ref(undefined);
+const editTarget = ref(undefined);
+
+const editFields = ref([
+  {
+    name: "name",
+    label: t("target.name"),
+    type: "text",
+    required: true,
+  },
+  {
+    name: "description",
+    label: t("target.description"),
+    type: "textarea",
+  },
+]);
 
 onMounted(async () => {
   await authorization.fetch();
@@ -60,9 +88,17 @@ onMounted(async () => {
   target.value = await $feedbackFusion
     .getTarget({ id: route.params.id }, useRpcOptions())
     .then((value) => value.response);
+
+  editTarget.value = JSON.parse(JSON.stringify(target.value));
 });
 
 const deleteTarget = (id: number) => async () => {
   await $feedbackFusion.deleteTarget({ id }, useRpcOptions());
+};
+
+const save = async () => {
+  await $feedbackFusion
+    .updateTarget(editTarget.value, useRpcOptions())
+    .then((value) => (target.value = value.response));
 };
 </script>
