@@ -1,67 +1,28 @@
 <template>
-  <div>
-    <v-breadcrumbs :items="breadcrumbs" />
+  <InstanceCard
+    endpoint="Prompt"
+    :breadcrumbs="breadcrumbs"
+    :editFields="editFields"
+    :fetch="fetch"
+    :delete="deletePrompt"
+    :edit="edit"
+    :deleteMessage="$t('prompt.delete')"
+  >
+    <template #title="{ instance }">
+      {{ instance?.title }}
+    </template>
 
-    <v-card :loading="!prompt">
-      <v-card-title>
-        {{ prompt?.title }}
-      </v-card-title>
-
-      <v-card-subtitle>
-        {{ prompt?.description }}
-      </v-card-subtitle>
-
-      <v-card-text class="mt-4"> </v-card-text>
-
-      <v-card-actions v-if="prompt">
-        <FormEdit
-          v-if="authorization.hasPermission('Prompt', 'Write')"
-          v-model="editPrompt"
-          :fields="editFields"
-          :action="save"
-          :subtitle="prompt.id"
-        >
-          <template #default="{ props }">
-            <v-btn color="primary" text v-bind="props">
-              {{ $t("form.edit") }}
-            </v-btn>
-          </template>
-        </FormEdit>
-
-        <v-spacer />
-
-        <FormConfirm
-          v-if="authorization.hasPermission('Prompt', 'Write')"
-          :message="$t('prompt.delete', { name: prompt.name })"
-          :action="deletePrompt(prompt.id)"
-        >
-          <template #default="{ props }">
-            <v-btn v-bind="props" color="error" text>
-              {{ $t("form.delete") }}
-            </v-btn>
-          </template>
-        </FormConfirm>
-      </v-card-actions>
-    </v-card>
-  </div>
+    <template #subtitle="{ instance }">
+      {{ instance?.description }}
+    </template>
+  </InstanceCard>
 </template>
 
 <script setup lang="ts">
-import {
-  useRouter,
-  onMounted,
-  ref,
-  useNuxtApp,
-  useRoute,
-  useI18n,
-  useLocalePath,
-} from "#imports";
-import { useAuthorizationStore } from "~/composables/authorization";
+import { ref, useNuxtApp, useRoute, useI18n, useLocalePath } from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 
 const localePath = useLocalePath();
-const authorization = useAuthorizationStore();
-const router = useRouter();
 const route = useRoute();
 const { $feedbackFusion, $publicFeedbackFusion } = useNuxtApp();
 const { t } = useI18n();
@@ -86,8 +47,6 @@ const breadcrumbs = ref([
     disabled: false,
   },
 ]);
-const prompt = ref(undefined);
-const editPrompt = ref(undefined);
 
 const editFields = ref([
   {
@@ -104,27 +63,19 @@ const editFields = ref([
   },
 ]);
 
-onMounted(async () => {
-  await authorization.fetch();
-
-  if (!authorization.hasPermission("Prompt", "Read")) {
-    return router.push("/");
-  }
-
-  prompt.value = await $publicFeedbackFusion
+const fetch = async () => {
+  return await $publicFeedbackFusion
     .getPrompt({ id: route.params.prompt }, useRpcOptions())
     .then((value) => value.response);
-
-  editPrompt.value = JSON.parse(JSON.stringify(prompt.value));
-});
+};
 
 const deletePrompt = (id: number) => async () => {
   await $feedbackFusion.deletePrompt({ id }, useRpcOptions());
 };
 
-const save = async () => {
-  await $feedbackFusion
-    .updatePrompt(editPrompt.value, useRpcOptions())
-    .then((value) => (prompt.value = value.response));
+const edit = (prompt) => async () => {
+  return await $feedbackFusion
+    .updatePrompt(prompt, useRpcOptions())
+    .then((value) => value.response);
 };
 </script>

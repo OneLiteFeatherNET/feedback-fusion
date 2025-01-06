@@ -1,68 +1,31 @@
 <template>
-  <div>
-    <v-breadcrumbs :items="breadcrumbs" />
+  <InstanceCard
+    endpoint="Target"
+    :breadcrumbs="breadcrumbs"
+    :editFields="editFields"
+    :fetch="fetch"
+    :delete="deleteTarget"
+    :edit="edit"
+    :deleteMessage="$t('target.delete')"
+  >
+    <template #title="{ instance }">
+      {{ instance?.name }}
+    </template>
 
-    <v-card :loading="!target">
-      <v-card-title>
-        {{ target?.name }}
-      </v-card-title>
+    <template #subtitle="{ instance }">
+      {{ instance?.description }}
+    </template>
 
-      <v-card-subtitle>
-        {{ target?.description }}
-      </v-card-subtitle>
-
-      <v-card-text class="mt-4">
-        <PromptList v-if="target" :target="target.id" />
-      </v-card-text>
-
-      <v-card-actions v-if="target">
-        <FormEdit
-          v-if="authorization.hasPermission('Target', 'Write')"
-          v-model="editTarget"
-          :fields="editFields"
-          :action="save"
-          :subtitle="target.id"
-        >
-          <template #default="{ props }">
-            <v-btn color="primary" text v-bind="props">
-              {{ $t("form.edit") }}
-            </v-btn>
-          </template>
-        </FormEdit>
-
-        <v-spacer />
-
-        <FormConfirm
-          v-if="authorization.hasPermission('Target', 'Write')"
-          :message="$t('target.delete', { name: target.name })"
-          :action="deleteTarget(target.id)"
-        >
-          <template #default="{ props }">
-            <v-btn v-bind="props" color="error" text>
-              {{ $t("form.delete") }}
-            </v-btn>
-          </template>
-        </FormConfirm>
-      </v-card-actions>
-    </v-card>
-  </div>
+    <template #default="{ instance }">
+      <PromptList v-if="instance" :target="instance.id" />
+    </template>
+  </InstanceCard>
 </template>
 
 <script setup lang="ts">
-import {
-  useRouter,
-  onMounted,
-  ref,
-  useNuxtApp,
-  useRoute,
-  useI18n,
-  useLocalePath,
-} from "#imports";
-import { useAuthorizationStore } from "~/composables/authorization";
+import { ref, useNuxtApp, useRoute, useI18n, useLocalePath } from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 
-const authorization = useAuthorizationStore();
-const router = useRouter();
 const route = useRoute();
 const { $feedbackFusion } = useNuxtApp();
 const { t } = useI18n();
@@ -78,8 +41,6 @@ const breadcrumbs = ref([
     to: localePath(`/target/${route.params.target}`),
   },
 ]);
-const target = ref(undefined);
-const editTarget = ref(undefined);
 
 const editFields = ref([
   {
@@ -95,27 +56,19 @@ const editFields = ref([
   },
 ]);
 
-onMounted(async () => {
-  await authorization.fetch();
-
-  if (!authorization.hasPermission("Target", "Read")) {
-    return router.push("/");
-  }
-
-  target.value = await $feedbackFusion
+const fetch = async () => {
+  return await $feedbackFusion
     .getTarget({ id: route.params.target }, useRpcOptions())
     .then((value) => value.response);
-
-  editTarget.value = JSON.parse(JSON.stringify(target.value));
-});
+};
 
 const deleteTarget = (id: number) => async () => {
   await $feedbackFusion.deleteTarget({ id }, useRpcOptions());
 };
 
-const save = async () => {
-  await $feedbackFusion
-    .updateTarget(editTarget.value, useRpcOptions())
-    .then((value) => (target.value = value.response));
+const edit = (target) => async () => {
+  return await $feedbackFusion
+    .updateTarget(target, useRpcOptions())
+    .then((value) => value.response);
 };
 </script>
