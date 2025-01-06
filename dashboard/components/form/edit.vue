@@ -28,7 +28,7 @@
             v-if="field.type === 'textarea'"
             :label="field.label"
             outlined
-            color="primary"
+            color="error"
             v-model="data[field.name]"
             :rules="field.required ? [required($t)] : []"
           />
@@ -45,7 +45,7 @@
         <v-btn
           @click="execute"
           text
-          color="error"
+          color="success"
           :disabled="
             disabled(
               $t,
@@ -81,13 +81,6 @@ const data = computed({
 const dialog = ref(false);
 
 const execute = () => {
-  console.log(
-    disabled(
-      props.fields
-        .filter((field) => field.required)
-        .map((field) => data.value[field.name]),
-    ),
-  );
   dialog.value = false;
 
   props.action();

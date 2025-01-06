@@ -1,24 +1,22 @@
 <template>
-  <v-card :loading="!target">
+  <v-card :loading="!prompt">
     <v-card-title>
-      {{ target?.name }}
+      {{ prompt?.title }}
     </v-card-title>
 
     <v-card-subtitle>
-      {{ target?.description }}
+      {{ prompt?.description }}
     </v-card-subtitle>
 
-    <v-card-text class="mt-4">
-      <PromptList v-if="target" :target="target.id" />
-    </v-card-text>
+    <v-card-text class="mt-4"> </v-card-text>
 
-    <v-card-actions v-if="target">
+    <v-card-actions v-if="prompt">
       <FormEdit
-        v-if="authorization.hasPermission('Target', 'Write')"
-        v-model="editTarget"
+        v-if="authorization.hasPermission('Prompt', 'Write')"
+        v-model="editPrompt"
         :fields="editFields"
         :action="save"
-        :subtitle="target.id"
+        :subtitle="prompt.id"
       >
         <template #default="{ props }">
           <v-btn color="primary" text v-bind="props">
@@ -30,9 +28,9 @@
       <v-spacer />
 
       <FormConfirm
-        v-if="authorization.hasPermission('Target', 'Write')"
-        :message="$t('target.delete', { name: target.name })"
-        :action="deleteTarget(target.id)"
+        v-if="authorization.hasPermission('Prompt', 'Write')"
+        :message="$t('prompt.delete', { name: prompt.name })"
+        :action="deletePrompt(prompt.id)"
       >
         <template #default="{ props }">
           <v-btn v-bind="props" color="error" text>
@@ -59,47 +57,48 @@ import { useRpcOptions } from "~/composables/grpc";
 const authorization = useAuthorizationStore();
 const router = useRouter();
 const route = useRoute();
-const { $feedbackFusion } = useNuxtApp();
+const { $feedbackFusion, $publicFeedbackFusion } = useNuxtApp();
 const { t } = useI18n();
 
-const target = ref(undefined);
-const editTarget = ref(undefined);
+const prompt = ref(undefined);
+const editPrompt = ref(undefined);
 
 const editFields = ref([
   {
-    name: "name",
-    label: t("target.name"),
+    name: "title",
+    label: t("prompt.title"),
     type: "text",
     required: true,
   },
   {
     name: "description",
-    label: t("target.description"),
+    label: t("prompt.description"),
     type: "textarea",
+    required: true,
   },
 ]);
 
 onMounted(async () => {
   await authorization.fetch();
 
-  if (!authorization.hasPermission("Target", "Read")) {
+  if (!authorization.hasPermission("Prompt", "Read")) {
     return router.push("/");
   }
 
-  target.value = await $feedbackFusion
-    .getTarget({ id: route.params.id }, useRpcOptions())
+  prompt.value = await $publicFeedbackFusion
+    .getPrompt({ id: route.params.prompt }, useRpcOptions())
     .then((value) => value.response);
 
-  editTarget.value = JSON.parse(JSON.stringify(target.value));
+  editPrompt.value = JSON.parse(JSON.stringify(prompt.value));
 });
 
-const deleteTarget = (id: number) => async () => {
-  await $feedbackFusion.deleteTarget({ id }, useRpcOptions());
+const deletePrompt = (id: number) => async () => {
+  await $feedbackFusion.deletePrompt({ id }, useRpcOptions());
 };
 
 const save = async () => {
   await $feedbackFusion
-    .updateTarget(editTarget.value, useRpcOptions())
-    .then((value) => (target.value = value.response));
+    .updatePrompt(editPrompt.value, useRpcOptions())
+    .then((value) => (prompt.value = value.response));
 };
 </script>

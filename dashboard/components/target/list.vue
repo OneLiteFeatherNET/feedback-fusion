@@ -9,7 +9,7 @@
         :title="target.name"
         :subtitle="target.description"
         link
-        :href="localePath(`/target/${target.id}`)"
+        :to="localePath(`/target/${target.id}`)"
       />
     </v-list>
 

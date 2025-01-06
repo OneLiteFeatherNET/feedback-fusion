@@ -9,7 +9,7 @@
         :title="prompt.title"
         :subtitle="prompt.description"
         link
-        :href="localePath(`/target/${props.target}/prompt/${prompt.id}`)"
+        :to="localePath(`/target/${props.target}/prompt/${prompt.id}`)"
       />
     </v-list>
 
