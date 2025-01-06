@@ -4,7 +4,7 @@
       <slot :props="props" />
     </template>
 
-    <v-card class="mx-auto" style="max-width: 500px">
+    <v-card class="mx-auto" style="max-width: 500px; width: 95vw">
       <v-card-title>
         {{ $t("form.edit") }}
       </v-card-title>

@@ -18,6 +18,7 @@
         v-model="editTarget"
         :fields="editFields"
         :action="save"
+        :subtitle="target.id"
       >
         <template #default="{ props }">
           <v-btn color="primary" text v-bind="props">
