@@ -1,47 +1,51 @@
 <template>
-  <v-card :loading="!target">
-    <v-card-title>
-      {{ target?.name }}
-    </v-card-title>
+  <div>
+    <v-breadcrumbs :items="breadcrumbs" />
 
-    <v-card-subtitle>
-      {{ target?.description }}
-    </v-card-subtitle>
+    <v-card :loading="!target">
+      <v-card-title>
+        {{ target?.name }}
+      </v-card-title>
 
-    <v-card-text class="mt-4">
-      <PromptList v-if="target" :target="target.id" />
-    </v-card-text>
+      <v-card-subtitle>
+        {{ target?.description }}
+      </v-card-subtitle>
 
-    <v-card-actions v-if="target">
-      <FormEdit
-        v-if="authorization.hasPermission('Target', 'Write')"
-        v-model="editTarget"
-        :fields="editFields"
-        :action="save"
-        :subtitle="target.id"
-      >
-        <template #default="{ props }">
-          <v-btn color="primary" text v-bind="props">
-            {{ $t("form.edit") }}
-          </v-btn>
-        </template>
-      </FormEdit>
+      <v-card-text class="mt-4">
+        <PromptList v-if="target" :target="target.id" />
+      </v-card-text>
 
-      <v-spacer />
+      <v-card-actions v-if="target">
+        <FormEdit
+          v-if="authorization.hasPermission('Target', 'Write')"
+          v-model="editTarget"
+          :fields="editFields"
+          :action="save"
+          :subtitle="target.id"
+        >
+          <template #default="{ props }">
+            <v-btn color="primary" text v-bind="props">
+              {{ $t("form.edit") }}
+            </v-btn>
+          </template>
+        </FormEdit>
 
-      <FormConfirm
-        v-if="authorization.hasPermission('Target', 'Write')"
-        :message="$t('target.delete', { name: target.name })"
-        :action="deleteTarget(target.id)"
-      >
-        <template #default="{ props }">
-          <v-btn v-bind="props" color="error" text>
-            {{ $t("form.delete") }}
-          </v-btn>
-        </template>
-      </FormConfirm>
-    </v-card-actions>
-  </v-card>
+        <v-spacer />
+
+        <FormConfirm
+          v-if="authorization.hasPermission('Target', 'Write')"
+          :message="$t('target.delete', { name: target.name })"
+          :action="deleteTarget(target.id)"
+        >
+          <template #default="{ props }">
+            <v-btn v-bind="props" color="error" text>
+              {{ $t("form.delete") }}
+            </v-btn>
+          </template>
+        </FormConfirm>
+      </v-card-actions>
+    </v-card>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -52,6 +56,7 @@ import {
   useNuxtApp,
   useRoute,
   useI18n,
+  useLocalePath,
 } from "#imports";
 import { useAuthorizationStore } from "~/composables/authorization";
 import { useRpcOptions } from "~/composables/grpc";
@@ -61,7 +66,18 @@ const router = useRouter();
 const route = useRoute();
 const { $feedbackFusion } = useNuxtApp();
 const { t } = useI18n();
+const localePath = useLocalePath();
 
+const breadcrumbs = ref([
+  {
+    title: "target",
+    to: localePath("/"),
+  },
+  {
+    title: route.params.target,
+    to: localePath(`/target/${route.params.target}`),
+  },
+]);
 const target = ref(undefined);
 const editTarget = ref(undefined);
 
