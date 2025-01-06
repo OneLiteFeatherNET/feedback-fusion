@@ -26,6 +26,7 @@ export default [
     },
     rules: {
       "prettier/prettier": "error",
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ];

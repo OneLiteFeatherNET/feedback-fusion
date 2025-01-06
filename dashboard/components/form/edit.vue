@@ -21,6 +21,7 @@
             outlined
             :label="field.label"
             v-model="data[field.name]"
+            :rules="field.required ? [required($t)] : []"
           />
 
           <v-textarea
@@ -29,6 +30,7 @@
             outlined
             color="primary"
             v-model="data[field.name]"
+            :rules="field.required ? [required($t)] : []"
           />
         </template>
       </v-card-text>
@@ -40,7 +42,19 @@
 
         <v-spacer />
 
-        <v-btn @click="execute" text color="error">
+        <v-btn
+          @click="execute"
+          text
+          color="error"
+          :disabled="
+            disabled(
+              $t,
+              ...fields
+                .filter((field) => field.required)
+                .map((field) => data[field.name]),
+            )
+          "
+        >
           {{ $t("form.save") }}
         </v-btn>
       </v-card-actions>
@@ -50,6 +64,7 @@
 
 <script setup lang="ts">
 import { defineProps, ref, computed } from "#imports";
+import { disabled } from "~/composables/form";
 
 const props = defineProps({
   action: Function,
@@ -66,6 +81,13 @@ const data = computed({
 const dialog = ref(false);
 
 const execute = () => {
+  console.log(
+    disabled(
+      props.fields
+        .filter((field) => field.required)
+        .map((field) => data.value[field.name]),
+    ),
+  );
   dialog.value = false;
 
   props.action();
