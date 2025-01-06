@@ -76,7 +76,7 @@ const breadcrumbs = ref([
     to: localePath(`/target/${route.params.target}`),
   },
   {
-    title: "target",
+    title: "prompt",
   },
   {
     title: route.params.prompt,
