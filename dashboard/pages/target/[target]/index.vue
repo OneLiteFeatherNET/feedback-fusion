@@ -62,7 +62,7 @@ const fetch = async () => {
     .then((value) => value.response);
 };
 
-const deleteTarget = (id: number) => async () => {
+const deleteTarget = (id) => async () => {
   await $feedbackFusion.deleteTarget({ id }, useRpcOptions());
 };
 

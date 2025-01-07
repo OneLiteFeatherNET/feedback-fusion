@@ -69,7 +69,7 @@ const fetch = async () => {
     .then((value) => value.response);
 };
 
-const deletePrompt = (id: number) => async () => {
+const deletePrompt = (id) => async () => {
   await $feedbackFusion.deletePrompt({ id }, useRpcOptions());
 };
 

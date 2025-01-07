@@ -6,7 +6,7 @@
 
     <v-card class="mx-auto" style="max-width: 500px; width: 95vw">
       <v-card-title>
-        {{ $t("form.edit") }}
+        {{ !!title ? title : $t("form.edit") }}
       </v-card-title>
 
       <v-card-subtitle>
@@ -71,6 +71,7 @@ const props = defineProps({
   subtitle: String,
   modelValue: Object,
   fields: Array,
+  title: String,
 });
 const emit = defineEmits(["update:modelValue"]);
 
