@@ -12,9 +12,6 @@ jobs:
     steps:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
 
       - name: Checkout Sources
         uses: actions/checkout@v4
@@ -37,8 +34,6 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           components: clippy
           profile: minimal
 
@@ -68,8 +63,6 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           profile: minimal
 
       - name: Checkout Sources
