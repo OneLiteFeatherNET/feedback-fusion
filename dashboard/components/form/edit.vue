@@ -28,15 +28,39 @@
             v-if="field.type === 'textarea'"
             :label="field.label"
             outlined
-            color="error"
+            color="primary"
             v-model="data[field.name]"
             :rules="field.required ? [required($t)] : []"
+          />
+
+          <v-select
+            v-if="field.type === 'select'"
+            :label="field.label"
+            outlined
+            chips
+            color="primary"
+            v-model="data[field.name]"
+            :items="field.items"
+            :rules="field.required ? [required($t)] : []"
+            :multiple="field.multiple"
+          />
+
+          <v-combobox
+            v-if="field.type === 'combobox'"
+            :label="field.label"
+            outlined
+            chips
+            color="primary"
+            v-model="data[field.name]"
+            :items="field.items"
+            :rules="field.required ? [required($t)] : []"
+            :multiple="field.multiple"
           />
         </template>
       </v-card-text>
 
       <v-card-actions>
-        <v-btn @click="dialog = false" text>
+        <v-btn @click="dialog = false" text color="error">
           {{ $t("form.cancel") }}
         </v-btn>
 

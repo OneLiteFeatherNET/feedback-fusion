@@ -15,6 +15,14 @@
     <template #subtitle="{ instance }">
       {{ instance?.description }}
     </template>
+
+    <template #default="{ instance }">
+      <FieldList
+        v-if="instance"
+        :target="route.params.target"
+        :prompt="instance.id"
+      />
+    </template>
   </InstanceCard>
 </template>
 
@@ -44,7 +52,6 @@ const breadcrumbs = ref([
     to: localePath(
       `/target/${route.params.target}/prompt/${route.params.prompt}`,
     ),
-    disabled: false,
   },
 ]);
 

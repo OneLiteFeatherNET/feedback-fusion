@@ -26,5 +26,19 @@
     "name": "Name",
     "description": "Description",
     "create": "Create new target"
+  },
+  "field": {
+    "list": "Fields",
+    "create": "Create new field",
+    "type": {
+      "0": "Text",
+      "1": "Rating",
+      "2": "Checkbox",
+      "3": "Selection",
+      "4": "Range",
+      "5": "Number"
+    },
+    "title": "Title",
+    "description": "Description"
   }
 }
