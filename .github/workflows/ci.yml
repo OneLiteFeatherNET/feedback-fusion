@@ -30,7 +30,7 @@ jobs:
         run: make dashboard_build
 
   lib_build:
-    name: dashboard-build
+    name: lib-build 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
