@@ -1,99 +1,230 @@
-image:
-  repository: ghcr.io/onelitefeathernet/feedback-fusion
-  testRepository: ghcr.io/onelitefeathernet/feedback-fusion-integration
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+api:
+  image:
+    # -- image repository
+    repository: ghcr.io/onelitefeathernet/feedback-fusion
+    # -- pull policy
+    pullPolicy: IfNotPresent
+    # -- Overrides the image tag whose default is the chart appVersion.
+    tag: ""
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+  # -- optional pull secrets
+  imagePullSecrets: []
+  # -- name override
+  nameOverride: ""
+  # -- full name override
+  fullnameOverride: ""
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  serviceAccount:
+    # -- Specifies whether a service account should be created
+    create: true
+    # -- Automatically mount a ServiceAccount's API credentials?
+    automount: true
+    # -- Annotations to add to the service account
+    annotations: {}
+    # -- The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
 
-podAnnotations: {}
-podLabels: {}
+  # -- annotatiosn to attach to the pod
+  podAnnotations: {}
+  # -- labels to attach to the pod
+  podLabels: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+  # -- the pod security context
+  podSecurityContext: {}
+    # fsGroup: 2000
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+  # -- security context
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
 
-service:
-  type: ClusterIP
+  service:
+    # -- service type
+    type: ClusterIP
 
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    # - host: chart-example.local
-    #   paths:
-    #     - path: /
-    #       pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  ingress:
+    # -- wether to create the ingress
+    enabled: false
+    # -- which ingress class to use
+    className: ""
+    # -- annotations to attach to the ingress resource
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    # -- hosts to listen on
+    hosts:
+      # - host: chart-example.local
+      #   paths:
+      #     - path: /
+      #       pathType: ImplementationSpecific
+    # -- tls secret reference
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
 
-resources: {}
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+  # -- pod resources
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
 
-livenessProbe:
-  grpc:
-    port: 8000
-  periodSeconds: 5
-startupProbe:
-  grpc:
-    port: 8000
-  periodSeconds: 2
-  failureThreshold: 10
+  livenessProbe:
+    grpc:
+      port: 8000
+    periodSeconds: 5
+  startupProbe:
+    grpc:
+      port: 8000
+    periodSeconds: 2
+    failureThreshold: 10
 
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+  # -- Additional volumes on the output Deployment definition.
+  volumes: []
+  # - name: foo
+  #   secret:
+  #     secretName: mysecret
+  #     optional: false
 
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
+  # -- Additional volumeMounts on the output Deployment definition.
+  volumeMounts: []
+  # - name: foo
+  #   mountPath: "/etc/foo"
+  #   readOnly: true
 
-nodeSelector: {}
+  nodeSelector: {}
 
-tolerations: []
+  tolerations: []
 
-affinity: {}
+  affinity: {}
 
-# -- If you want to use high availability make sure to configure skytable distributed caching as 
-# otherwise the replicas won't know a different instance modified the dataset.
-# See https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/caching.html#caching
-replicaCount: 1
+  # -- If you want to use high availability make sure to configure skytable distributed caching as 
+  # otherwise the replicas won't know a different instance modified the dataset.
+  # See https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/caching.html#caching
+  replicaCount: 1
+
+dashboard:
+  enabled: true
+
+  image:
+    # -- image repository
+    repository: ghcr.io/onelitefeathernet/feedback-fusion-dashboard
+    # -- pull policy
+    pullPolicy: IfNotPresent
+    # -- Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  # -- optional pull secrets
+  imagePullSecrets: []
+  # -- name override
+  nameOverride: ""
+  # -- full name override
+  fullnameOverride: ""
+
+  serviceAccount:
+    # -- Specifies whether a service account should be created
+    create: true
+    # -- Automatically mount a ServiceAccount's API credentials?
+    automount: true
+    # -- Annotations to add to the service account
+    annotations: {}
+    # -- The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  # -- annotatiosn to attach to the pod
+  podAnnotations: {}
+  # -- labels to attach to the pod
+  podLabels: {}
+
+  # -- the pod security context
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  # -- security context
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    # -- service type
+    type: ClusterIP
+
+  ingress:
+    # -- wether to create the ingress
+    enabled: false
+    # -- which ingress class to use
+    className: ""
+    # -- annotations to attach to the ingress resource
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    # -- hosts to listen on
+    hosts:
+      # - host: chart-example.local
+      #   paths:
+      #     - path: /
+      #       pathType: ImplementationSpecific
+    # -- tls secret reference
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+  # -- pod resources
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  livenessProbe:
+    httpGet:
+      port: 3000
+      path: /
+    periodSeconds: 5
+  startupProbe:
+    httpGet:
+      port: 3000
+      path: /
+    periodSeconds: 2
+    failureThreshold: 10
+
+  # -- Additional volumes on the output Deployment definition.
+  volumes: []
+  # - name: foo
+  #   secret:
+  #     secretName: mysecret
+  #     optional: false
+
+  # -- Additional volumeMounts on the output Deployment definition.
+  volumeMounts: []
+  # - name: foo
+  #   mountPath: "/etc/foo"
+  #   readOnly: true
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # -- count of rep=licas to deploy. The dashboard is stateless so you can just increase this value.
+  replicaCount: 1
 
 # - Feedback-Fusion specific settings
 feedbackFusion:

@@ -1,20 +1,20 @@
-{{- if .Values.ingress.enabled -}}
-{{- $fullName := include "feedback-fusion.fullname" . -}}
+{{- if and .Values.dashboard.ingress.enabled .Values.dashboard.enabled -}}
+{{- $fullName := include "feedback-fusion-dashboard.fullname" . -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
-    {{- include "feedback-fusion.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+    {{- include "feedback-fusion-dashboard.labels" . | nindent 4 }}
+  {{- with .Values.dashboard.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.className }}
-  {{- if .Values.ingress.tls }}
+  ingressClassName: {{ .Values.dashboard.ingress.className }}
+  {{- if .Values.dashboard.ingress.tls }}
   tls:
-    {{- range .Values.ingress.tls }}
+    {{- range .Values.dashboard.ingress.tls }}
     - hosts:
         {{- range .hosts }}
         - {{ . | quote }}
@@ -23,7 +23,7 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
+    {{- range .Values.dashboard.ingress.hosts }}
     - host: {{ .host | quote }}
       http:
         paths:
@@ -34,7 +34,7 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: 8000
+                  number: 3000
           {{- end }}
     {{- end }}
 {{- end }}
