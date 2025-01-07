@@ -113,6 +113,29 @@ jobs:
           push: true
           tags: ghcr.io/onelitefeathernet/feedback-fusion:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion:latest
 
+  dashboard:
+    needs: [docker]
+    name: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Login into repository
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./dashboard/Dockerfile
+          push: true
+          tags: ghcr.io/onelitefeathernet/feedback-fusion-dashboard:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion-dashboard:latest
+
   integration: 
     needs: [docker]
     name: dockerize integration test 

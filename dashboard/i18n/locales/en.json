@@ -28,6 +28,7 @@
     "create": "Create new target"
   },
   "field": {
+    "delete": "Are you sure you want to delete this field?",
     "list": "Fields",
     "fieldType": "Type",
     "create": "Create new field",
