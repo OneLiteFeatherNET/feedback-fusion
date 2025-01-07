@@ -40,7 +40,7 @@ spec:
               protocol: TCP
           env:
             - name: RUST_LOG 
-              value: INFO 
+              value: {{ .Values.feedbackFusion.log }}
             - name: FEEDBACK_FUSION_CONFIG
               value: /etc/config/config.yaml
           livenessProbe:

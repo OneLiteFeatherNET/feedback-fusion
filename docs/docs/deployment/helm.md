@@ -69,38 +69,3 @@ helm install feedback-fusion feedback-fusion/feedback-fusion --wait --atomic
 ```
 
 Your instance should now be up and running :)
-
-## Verifying Deployment with Helm Test
-
-To verify the deployment of the Helm chart, you can use the `helm test` command. However, before running the test, a secret must be created with the name `feedback-fusion-integration-test`. Alternatively, the name of another secret can be set via the Helm value `feedbackFusion.testSecret`.
-
-The secret should contain the following values:
-
-| Key             | Description                                         |
-|-----------------|-----------------------------------------------------|
-| OIDC_PROVIDER   | URL of the OIDC provider                           |
-| OIDC_CLIENT_ID  | The client ID                                       |
-| OIDC_CLIENT_SECRET | The client secret                               |
-| GRPC_ENDPOINT   | The endpoint of the deployed application            |
-
-### Creating the Secret
-
-To create the secret, you can use the following `kubectl` command:
-
-```sh
-kubectl create -n <namespace> secret generic feedback-fusion-integration-test \
-  --from-literal=OIDC_PROVIDER=<oidc_provider_url> \
-  --from-literal=OIDC_CLIENT_ID=<client_id> \
-  --from-literal=OIDC_CLIENT_SECRET=<client_secret> \
-  --from-literal=GRPC_ENDPOINT=<grpc_endpoint>
-```
-
-### Run the tests 
-
-```sh 
-helm test -n <namespace> <release>
-```
-
-### On finish
-
-You should now reset your database as the integration test does not delete everything it created.

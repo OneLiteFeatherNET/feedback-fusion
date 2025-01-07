@@ -93,9 +93,7 @@ tolerations: []
 affinity: {}
 
 feedbackFusion:
+  log: INFO
   config: 
     # with config.yaml as key
     secret: feedback-fusion-config
- 
-  testSecret: feedback-fusion-integration-test
-

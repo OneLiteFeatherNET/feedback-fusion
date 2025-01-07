@@ -129,34 +129,6 @@ jobs:
           push: true
           tags: ghcr.io/onelitefeathernet/feedback-fusion-dashboard:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion-dashboard:latest
 
-  integration: 
-    needs: [docker]
-    name: dockerize integration test 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Sources
-        uses: actions/checkout@v4
-
-      - name: Extract version
-        run: |
-          VERSION=$(grep '^version = ' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Login into repository
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          file: tests/integration/Dockerfile
-          tags: ghcr.io/onelitefeathernet/feedback-fusion-integration:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion-integration:latest
-
   docs: 
     needs: [docker]
     name: docs 

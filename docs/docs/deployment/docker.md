@@ -32,32 +32,3 @@ Afterwards start the application:
 ```sh 
 docker compose up -d
 ```
-
-## Verifying Deployment
-
-To verify your deployment you can now run the dockerized integration tests using `ghcr.io/onelitefeathernet/feedback-fusion-integrtion:<version>`.
-The image requires the following environment variables to be set:
-
-| Key             | Description                                         |
-|-----------------|-----------------------------------------------------|
-| OIDC_PROVIDER   | URL of the OIDC provider                           |
-| OIDC_CLIENT_ID  | The client ID                                       |
-| OIDC_CLIENT_SECRET | The client secret                               |
-| GRPC_ENDPOINT   | The endpoint of the deployed application            |
-
-### Run the tests 
-
-```sh 
-docker run --network <network> \
-    -e OIDC_PROVIDER=<oidc_provider> \
-    -e OIDC_CLIENT_ID=<oidc_client_id> \
-    -e OIDC_CLIENT_SECRET=<oidc_client_secret> \
-    -e GRPC_ENDPOINT=<grpc_endpoint> 
-    --name feedback-fusion-integration-test \
-    --rm \
-    ghcr.io/onelitefeathernet/feedback-fusion-integrtion:<version>
-```
-
-### On finish
-
-You should now reset your database as the integration test does not delete everything it created.
