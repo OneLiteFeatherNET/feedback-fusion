@@ -37,16 +37,16 @@ pub async fn get_user_info(
     let permissions = PERMISSION_MATRIX
         .clone()
         .into_iter()
-        .filter_map(|entry| {
+        .map(|entry| {
             let (endpoint, permission) = entry.0;
             let identifier = format!("{:?}::{:?}", endpoint, permission);
 
             if FeedbackFusionV1Context::authorize(&request, endpoint.clone(), permission.clone())
                 .is_ok()
             {
-                Some((identifier, true))
+                (identifier, true)
             } else {
-                Some((identifier, false))
+                (identifier, false)
             }
         })
         .collect::<HashMap<String, bool>>();
