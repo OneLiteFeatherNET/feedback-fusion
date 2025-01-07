@@ -93,52 +93,9 @@ tolerations: []
 affinity: {}
 
 feedbackFusion:
-  preset: 
-    enabled: false
-    name: feedback-fusion-preset
-    create: false 
-    data:
-      # targets:
-      #   - id: target 
-      #     name: TestTarget 
-      #     description: A nice Target 
-      #     prompts:
-      #       - id: prompt 
-      #         title: Testprompt 
-      #         description: A nice Prompt 
-      #         active: true
-      #         fields:
-      #           - id: field1 
-      #             title: TextField
-      #             field_type: text 
-      #             options:
-      #               type: text
-      #               lines: 1 
-      #               placeholder: test
-
-
   config: 
+    # with config.yaml as key
     secret: feedback-fusion-config
-    # RUST_LOG: INFO
-    # OIDC_AUDIENCE: ""
-    # OIDC_PROVIDER: ""
-    #
-    # POSTGRES_ENDPOINT: ""
-    # POSTGRES_USERNAME: ""
-    # POSTGRES_PASWORD: ""
-    # POSTGRES_DATABASE: ""
-    #
-    # MYSQL_ENDPOINT: ""
-    # MYSQL_USERNAME: ""
-    # MYSQL_PASWORD: ""
-    # MYSQL_DATABASE: ""
-    #
-    # MSSQL_ENDPOINT: ""
-    # MSSQL_USERNAME: ""
-    # MSSQL_PASWORD: ""
-    # MSSQL_DATABASE: ""
-    # MSSQL_ENCRYPT: true
-    # MSSQL_TRUST_SERVER_CERTIFICATE: true
  
   testSecret: feedback-fusion-integration-test
 

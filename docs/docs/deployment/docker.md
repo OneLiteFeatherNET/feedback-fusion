@@ -19,11 +19,13 @@ services:
       - "8000:8000"
     environment:
       RUST_LOG: INFO 
-      # add here your configuration
+      FEEDBACK_FUSION_CONFIG: /path/to/container/config
     restart: unless-stopped
+    volumes:
+      - /path/to/config:/path/to/container/config
 ```
 
-Add in as `environment` your actual configuration values. Refer to the [configuration documentation](/docs/configuration) for the fields that need to be set.
+Refer to the [configuration documentation](/docs/configuration) for the config file details. 
 
 Afterwards start the application:
 
