@@ -29,6 +29,7 @@
   },
   "field": {
     "list": "Fields",
+    "fieldType": "Type",
     "create": "Create new field",
     "type": {
       "0": "Text",
@@ -39,6 +40,10 @@
       "5": "Number"
     },
     "title": "Title",
-    "description": "Description"
+    "description": "Description",
+    "checkboxStyle": {
+      "0": "Normal",
+      "1": "Switch"
+    }
   }
 }

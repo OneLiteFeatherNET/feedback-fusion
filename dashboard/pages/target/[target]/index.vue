@@ -23,10 +23,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useNuxtApp, useRoute, useI18n, useLocalePath } from "#imports";
+import {
+  ref,
+  useNuxtApp,
+  useRoute,
+  useI18n,
+  useLocalePath,
+  useRouter,
+} from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 
 const route = useRoute();
+const router = useRouter();
 const { $feedbackFusion } = useNuxtApp();
 const { t } = useI18n();
 const localePath = useLocalePath();
@@ -63,7 +71,9 @@ const fetch = async () => {
 };
 
 const deleteTarget = (id) => async () => {
-  await $feedbackFusion.deleteTarget({ id }, useRpcOptions());
+  await $feedbackFusion
+    .deleteTarget({ id }, useRpcOptions())
+    .then(() => router.push("/"));
 };
 
 const edit = (target) => async () => {

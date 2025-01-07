@@ -16,7 +16,7 @@
       <v-card-text>
         <template v-for="field in props.fields" :key="field.name">
           <v-text-field
-            v-if="field.type === 'text'"
+            v-if="field.type === 'text' && (!field.if || field.if())"
             color="primary"
             outlined
             :label="field.label"
@@ -24,8 +24,19 @@
             :rules="field.required ? [required($t)] : []"
           />
 
+          <v-number-input
+            v-if="field.type === 'number' && (!field.if || field.if())"
+            color="primary"
+            outlined
+            :label="field.label"
+            v-model="data[field.name]"
+            :rules="field.required ? [required($t)] : []"
+            :min="field.min"
+            :max="field.max"
+          />
+
           <v-textarea
-            v-if="field.type === 'textarea'"
+            v-if="field.type === 'textarea' && (!field.if || field.if())"
             :label="field.label"
             outlined
             color="primary"
@@ -34,7 +45,7 @@
           />
 
           <v-select
-            v-if="field.type === 'select'"
+            v-if="field.type === 'select' && (!field.if || field.if())"
             :label="field.label"
             outlined
             chips
@@ -46,7 +57,7 @@
           />
 
           <v-combobox
-            v-if="field.type === 'combobox'"
+            v-if="field.type === 'combobox' && (!field.if || field.if())"
             :label="field.label"
             outlined
             chips
@@ -55,6 +66,14 @@
             :items="field.items"
             :rules="field.required ? [required($t)] : []"
             :multiple="field.multiple"
+          />
+
+          <v-switch
+            v-if="field.type === 'switch' && (!field.if || field.if())"
+            color="primary"
+            outlined
+            :label="field.label"
+            v-model="data[field.name]"
           />
         </template>
       </v-card-text>
@@ -74,7 +93,7 @@
             disabled(
               $t,
               ...fields
-                .filter((field) => field.required)
+                .filter((field) => field.required && (!field.if || field.if()))
                 .map((field) => data[field.name]),
             )
           "

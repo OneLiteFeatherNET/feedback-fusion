@@ -72,6 +72,11 @@ const creationFields = ref([
     type: "textarea",
     required: true,
   },
+  {
+    name: "active",
+    label: t("prompt.active"),
+    type: "switch",
+  },
 ]);
 
 const fetchPage = async (pageToken: number) => {

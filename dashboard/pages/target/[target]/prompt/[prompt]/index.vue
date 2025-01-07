@@ -27,11 +27,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useNuxtApp, useRoute, useI18n, useLocalePath } from "#imports";
+import {
+  ref,
+  useNuxtApp,
+  useRoute,
+  useI18n,
+  useLocalePath,
+  useRouter,
+} from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 
 const localePath = useLocalePath();
 const route = useRoute();
+const router = useRouter();
 const { $feedbackFusion, $publicFeedbackFusion } = useNuxtApp();
 const { t } = useI18n();
 
@@ -68,6 +76,11 @@ const editFields = ref([
     type: "textarea",
     required: true,
   },
+  {
+    name: "active",
+    label: t("prompt.active"),
+    type: "switch",
+  },
 ]);
 
 const fetch = async () => {
@@ -77,7 +90,9 @@ const fetch = async () => {
 };
 
 const deletePrompt = (id) => async () => {
-  await $feedbackFusion.deletePrompt({ id }, useRpcOptions());
+  await $feedbackFusion
+    .deletePrompt({ id }, useRpcOptions())
+    .then(() => router.push(localePath(`/target/${route.params.target}`)));
 };
 
 const edit = (prompt) => async () => {

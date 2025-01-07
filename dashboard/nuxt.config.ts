@@ -1,6 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
 export default defineNuxtConfig({
+  app: {
+    head: {
+      charset: "utf-8",
+      meta: [{ content: "telephone=no", name: "format-detection" }],
+      script: [],
+      style: [],
+      title: "Feedback-Fusion",
+      viewport: "width=device-width, initial-scale=1",
+    },
+  },
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
   modules: [
@@ -53,6 +63,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       feedbackFusionEndpoint: "NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT",
+    },
+  },
+  vuetify: {
+    vuetifyOptions: {
+      labComponents: true,
     },
   },
 });
