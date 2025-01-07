@@ -11,10 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
+        uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Checkout Sources
         uses: actions/checkout@v4
@@ -35,10 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           components: clippy
           profile: minimal
 
@@ -66,10 +61,8 @@ jobs:
         test: [postgres, mysql, mariadb, mssql, unittest, distributed_caching]
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           profile: minimal
 
       - name: Checkout Sources
