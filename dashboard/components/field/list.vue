@@ -81,32 +81,10 @@ const creationFields = ref([
     label: t("field.fieldType"),
     required: true,
     type: "select",
-    items: [
-      {
-        title: t("field.type.0"),
-        value: 0,
-      },
-      {
-        title: t("field.type.1"),
-        value: 1,
-      },
-      {
-        title: t("field.type.2"),
-        value: 2,
-      },
-      {
-        title: t("field.type.3"),
-        value: 3,
-      },
-      {
-        title: t("field.type.4"),
-        value: 4,
-      },
-      {
-        title: t("field.type.5"),
-        value: 5,
-      },
-    ],
+    items: Array.from({ length: 6 }, (_, i) => ({
+      title: t(`field.type.${i}`),
+      value: i,
+    })),
   },
 ]);
 
