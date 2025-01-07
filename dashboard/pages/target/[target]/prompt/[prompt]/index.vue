@@ -29,7 +29,11 @@
         :prompt="instance.id"
       />
 
-      <PromptPreview class="mt-8" :prompt="route.params.prompt" />
+      <PromptPreview
+        v-if="instance?.active"
+        class="mt-8"
+        :prompt="route.params.prompt"
+      />
     </template>
   </InstanceCard>
 </template>
