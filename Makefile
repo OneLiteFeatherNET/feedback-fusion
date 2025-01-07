@@ -11,6 +11,10 @@ docs: core_generate
 lib_build: core_generate
 	pnpm run -C lib build
 
+helm_docs:
+	cd charts/feedback-fusion && helm-docs
+	cp charts/feedback-fusion/README.md docs/docs/deployment/helm.md
+
 docs_build: lib_build
 	cd ./docs && pnpm run -C lib docs:build
 

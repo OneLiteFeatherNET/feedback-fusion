@@ -92,8 +92,11 @@ tolerations: []
 
 affinity: {}
 
+# - Feedback-Fusion specific settings
 feedbackFusion:
+  # -- see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/observability/logging.html
   log: INFO
   config: 
-    # with config.yaml as key
+    # -- the secret containing the config.yaml
+    # For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration.html
     secret: feedback-fusion-config
