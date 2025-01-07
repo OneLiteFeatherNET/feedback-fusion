@@ -11,6 +11,7 @@ To install the chart use the following commands:
 ```sh
 helm repo add feedback-fusion https://onelitefeathernet.github.io/feedback-fusion/
 helm repo update
+helm install feedback-fusion feedback-fusion/feedback-fusion
 ```
 
 ## Values
@@ -38,7 +39,7 @@ helm repo update
 | podAnnotations | object | `{}` |  |
 | podLabels | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
-| replicaCount | int | `1` |  |
+| replicaCount | int | `1` | If you want to use high availability make sure to configure skytable distributed caching as  otherwise the replicas won't know a different instance modified the dataset. See https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/caching.html#caching |
 | resources | object | `{}` |  |
 | securityContext | object | `{}` |  |
 | service.type | string | `"ClusterIP"` |  |
