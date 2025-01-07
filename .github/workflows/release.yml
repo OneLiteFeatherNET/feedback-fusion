@@ -11,10 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
+        uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Checkout Sources
         uses: actions/checkout@v4
@@ -35,10 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           components: clippy
           profile: minimal
 
@@ -57,6 +52,7 @@ jobs:
         run: make clippy 
 
   tests:
+    needs: [clippy, check]
     name: tests
     runs-on: ubuntu-latest
     strategy:
@@ -65,10 +61,8 @@ jobs:
         test: [postgres, mysql, mariadb, mssql, unittest, distributed_caching]
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           profile: minimal
 
       - name: Checkout Sources
@@ -86,7 +80,7 @@ jobs:
         run: make ${{ matrix.test }}
 
   docker:
-    needs: [tests, clippy, check]
+    needs: [tests]
     name: docker
     runs-on: ubuntu-latest
     steps:
@@ -112,18 +106,13 @@ jobs:
           push: true
           tags: ghcr.io/onelitefeathernet/feedback-fusion:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion:latest
 
-  integration: 
+  dashboard:
     needs: [docker]
-    name: dockerize integration test 
+    name: docker
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
-
-      - name: Extract version
-        run: |
-          VERSION=$(grep '^version = ' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Login into repository
         uses: docker/login-action@v3
@@ -136,9 +125,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./dashboard/Dockerfile
           push: true
-          file: tests/integration/Dockerfile
-          tags: ghcr.io/onelitefeathernet/feedback-fusion-integration:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion-integration:latest
+          tags: ghcr.io/onelitefeathernet/feedback-fusion-dashboard:${{env.VERSION}},ghcr.io/onelitefeathernet/feedback-fusion-dashboard:latest
 
   docs: 
     needs: [docker]

@@ -6,3 +6,6 @@ common/target/
 codegen/target/
 docs/
 Makefile.toml
+dashboard/.nuxt/
+dashboard/.output/
+dashboard/node_modules/

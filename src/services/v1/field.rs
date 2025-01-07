@@ -45,7 +45,9 @@ pub async fn create_field(
         .field_type(Into::<FieldType>::into(data.field_type()))
         .title(data.title)
         .description(data.description)
-        .options(TryInto::<FieldOptions>::try_into(data.options.unwrap())?)
+        .options(TryInto::<FieldOptions>::try_into(data.options.ok_or(
+            FeedbackFusionError::BadRequest("missing fieldOptions".to_owned()),
+        )?)?)
         .prompt(data.prompt)
         .build();
     database_request!(Field::insert(connection, &field).await, "Insert field")?;

@@ -153,7 +153,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
                 "iat" => {
                     iat = Some(map.next_value()?);
                 }
-                "aud" => {
+                "aud" | "audience" => {
                     aud = Some(map.next_value()?);
                 }
                 "nbf" => {
@@ -176,7 +176,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
 
         let iss = iss.ok_or_else(|| serde::de::Error::missing_field("iss"))?;
         let iat = iat.ok_or_else(|| serde::de::Error::missing_field("iat"))?;
-        let aud = aud.ok_or_else(|| serde::de::Error::missing_field("aud"))?;
+        let aud = aud.or_else(|| Some(jwt::Audiences::default())).unwrap();
         let exp = exp.ok_or_else(|| serde::de::Error::missing_field("exp"))?;
         let scope = scope.ok_or_else(|| serde::de::Error::missing_field("scope"))?;
         let groups = groups

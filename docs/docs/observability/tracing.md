@@ -8,8 +8,9 @@ For more information regarding the documentation checkout the [Configuration](/d
 
 ## Example with Jaeger
 
-To configure FeedbackFusion to use Jaeger for distributed tracing, you need to set the `OTLP_ENDPOINT` to Jaeger's default OTLP port:
+To configure FeedbackFusion to use Jaeger for distributed tracing, you need to set the endpoint to Jaeger's default OTLP port:
 
-```sh
-OTLP_ENDPOINT=http://jaeger:4317
+```yaml
+otlp:
+  endpoint: http://jaeger:4317
 ```

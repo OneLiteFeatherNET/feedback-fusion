@@ -28,12 +28,42 @@ services:
           "AutomaticRedirectAfterSignOut": true
         }
       API_SCOPES_INLINE: |
+        - Name: test
+          UserClaims:
+            - groups
+            - audience
+            - preferred_username
         - Name: api:feedback-fusion
         - Name: feedback-fusion:write 
         - Name: feedback-fusion:read
       API_RESOURCES_INLINE: |
         - Name: feedback-fusion 
           Scopes: ["api:feedback-fusion", "feedback-fusion:write", "feedback-fusion:read"]
+      USERS_CONFIGURATION_INLINE: |
+        [
+          {
+            "SubjectId":"1",
+            "Username":"username",
+            "Password":"password",
+            "Claims": [
+              {
+                "Type": "preferred_username",
+                "Value": "username",
+                "ValueType": "string"
+              },
+              {
+                "Type": "groups",
+                "Value": "[\"admin\"]",
+                "ValueType": "json"
+              },
+              {
+                "Type": "audience",
+                "Value": "feedback-fusion",
+                "ValueType": "string"
+              }
+            ]
+          }
+        ]
       CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
       ASPNET_SERVICES_OPTIONS_INLINE: |
         { 

@@ -19,3 +19,21 @@ oidc:
         - endpoint: "*"
           permissions:
             - "*"
+preset:
+  targets:
+  - id: target 
+    name: TestTarget 
+    description: A nice Target 
+    prompts:
+      - id: prompt 
+        title: Testprompt 
+        description: A nice Prompt 
+        active: true
+        fields:
+          - id: field1 
+            title: TextField
+            field_type: text 
+            options:
+              type: text
+              lines: 1 
+              placeholder: test

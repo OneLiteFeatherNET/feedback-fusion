@@ -1,4 +1,10 @@
-FROM rust:slim as build
+FROM rust:slim AS build
+
+RUN apt-get update \ 
+  && apt-get install libssl-dev protobuf-compiler libprotobuf-dev pkg-config -y --no-install-recommends \
+  && apt-get clean \
+  && rustup toolchain install stable \
+  && rustup default stable
 
 ARG features=all-databases,otlp
 
@@ -9,12 +15,8 @@ COPY ./common ./common
 COPY ./codegen ./codegen
 COPY ./src ./src
 COPY ./benches ./benches
-COPY ./rust-toolchain.toml .
 
-RUN apt-get update \ 
-  && apt-get install libssl-dev protobuf-compiler libprotobuf-dev pkg-config -y --no-install-recommends \
-  && apt-get clean \
-  && cargo build --release --features $features
+RUN cargo build --release --features $features
 
 FROM gcr.io/distroless/cc-debian12
 

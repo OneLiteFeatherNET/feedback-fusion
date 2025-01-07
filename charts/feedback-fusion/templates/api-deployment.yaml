@@ -5,19 +5,19 @@ metadata:
   labels:
     {{- include "feedback-fusion.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.api.replicaCount }}
   selector:
     matchLabels:
       {{- include "feedback-fusion.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.api.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "feedback-fusion.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
+        {{- with .Values.api.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
@@ -27,59 +27,52 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "feedback-fusion.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{- toYaml .Values.api.securityContext | nindent 12 }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
             - name: grpc
               containerPort: 8000 
               protocol: TCP
-          envFrom:
-            - secretRef:
-                name: {{ .Values.feedbackFusion.config.secret }}
           env:
-            {{- if .Values.feedbackFusion.preset.enabled }}
-            - name: CONFIG_PATH
+            - name: RUST_LOG 
+              value: {{ .Values.feedbackFusion.log }}
+            - name: FEEDBACK_FUSION_CONFIG
               value: /etc/config/config.yaml
-            {{- end }}
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.api.livenessProbe | nindent 12 }}
           startupProbe:
-            {{- toYaml .Values.startupProbe | nindent 12 }}
+            {{- toYaml .Values.api.startupProbe | nindent 12 }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.api.resources | nindent 12 }}
           volumeMounts:
-            {{- with .Values.volumeMounts }}
+            {{- with .Values.api.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
 
-            {{- if .Values.feedbackFusion.preset.enabled  }}
-            - name: {{ .Values.feedbackFusion.preset.name }}
+            - name: {{ .Values.feedbackFusion.config.secret }}
               mountPath: /etc/config
-            {{- end }}
       volumes:
-        {{- with .Values.volumes }}
+        {{- with .Values.api.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
 
-        {{- if .Values.feedbackFusion.preset.enabled  }}
-        - name: {{ .Values.feedbackFusion.preset.name }}
-          configMap:
-            name: {{ .Values.feedbackFusion.preset.name }}
-        {{- end }}
-      {{- with .Values.nodeSelector }}
+        - name: {{ .Values.feedbackFusion.config.secret }}
+          secret:
+            secretName: {{ .Values.feedbackFusion.config.secret }}
+      {{- with .Values.api.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.api.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.api.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

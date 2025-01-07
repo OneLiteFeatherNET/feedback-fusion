@@ -9,15 +9,52 @@ on:
       - main
 
 jobs:
+  dashboard_build:
+    name: dashboard-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Dashboard build
+        run: make dashboard_build
+
+  lib_build:
+    name: lib-build 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Lib build
+        run: make lib_build 
+
   check:
     name: check
     runs-on: ubuntu-latest
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
+        uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Checkout Sources
         uses: actions/checkout@v4
@@ -38,10 +75,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           components: clippy
           profile: minimal
 
@@ -60,6 +95,7 @@ jobs:
         run: make clippy 
 
   test:
+    needs: [clippy, check]
     name: tests
     runs-on: ubuntu-latest
     strategy:
@@ -68,10 +104,8 @@ jobs:
         test: [postgres, mysql, mariadb, mssql, unittest, distributed_caching]
     steps:
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: nightly
-          override: true
           profile: minimal
 
       - name: Checkout Sources
