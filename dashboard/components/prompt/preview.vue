@@ -1,8 +1,8 @@
 <template>
-  <v-expansion-panels>
+  <v-expansion-panels color="secondary">
     <v-expansion-panel :title="$t('prompt.preview')">
       <v-expansion-panel-text>
-        <v-tabs bg-color="primary" v-model="tab">
+        <v-tabs bg-color="secondary" v-model="tab">
           <v-tab value="preview">
             {{ $t("prompt.preview") }}
           </v-tab>
@@ -30,8 +30,6 @@
               &lt;feedback-fusion-prompt
                 baseUrl="{{ config.public.feedbackFusionEndpoint }}"
                 promptId="{{ prompt }}"
-                class="mt-4 mb-4"
-                style="width: 500px; max-width: 95vw"
               /&gt;
               </code>
             </pre>

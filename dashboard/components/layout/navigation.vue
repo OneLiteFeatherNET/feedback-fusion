@@ -10,7 +10,8 @@
 
         <v-spacer />
 
-        <LayoutAuthentication v-if="loggedIn" />
+        <LayoutTheme class="mr-4" />
+        <LayoutProfile v-if="loggedIn" />
       </v-row>
     </v-container>
   </v-app-bar>

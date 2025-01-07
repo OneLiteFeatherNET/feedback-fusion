@@ -18,6 +18,7 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "nuxt-oidc-auth",
     "@pinia/nuxt",
+    "@nuxtjs/color-mode",
   ],
   i18n: {
     locales: [{ code: "en", language: "en-US", file: "en.json" }],
@@ -70,9 +71,6 @@ export default defineNuxtConfig({
   },
   vuetify: {
     vuetifyOptions: {
-      theme: {
-        defaultTheme: "dark",
-      },
       labComponents: true,
     },
   },
