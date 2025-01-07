@@ -2,7 +2,7 @@
   <div>
     <h2>{{ $t("dashboard.targets") }}</h2>
 
-    <v-list>
+    <v-list class="mt-4">
       <v-list-item
         v-for="target in targets?.targets"
         :key="target.id"

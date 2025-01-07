@@ -6,6 +6,9 @@
   "navigation": {
     "logout": "Logout"
   },
+  "dashboard": {
+    "targets": "Targets"
+  },
   "form": {
     "edit": "Edit",
     "delete": "Delete",
