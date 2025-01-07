@@ -30,6 +30,9 @@ export default defineNuxtConfig({
       alwaysRedirect: true,
     },
   },
+  build: {
+    transpile: ["@onelitefeathernet/feedback-fusion"],
+  },
   oidc: {
     middleware: {
       globalMiddlewareEnabled: true,
@@ -67,6 +70,9 @@ export default defineNuxtConfig({
   },
   vuetify: {
     vuetifyOptions: {
+      theme: {
+        defaultTheme: "dark",
+      },
       labComponents: true,
     },
   },

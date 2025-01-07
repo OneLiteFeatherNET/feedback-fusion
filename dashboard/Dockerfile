@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y protobuf-compiler libprotobuf-dev make 
 
 COPY ./dashboard/ ./dashboard
 COPY ./proto ./proto
+COPY ./lib ./lib
 COPY ./Makefile .
 
 RUN make dashboard_build

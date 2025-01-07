@@ -28,10 +28,10 @@ dashboard_setup:
 dashboard_protoc: dashboard_setup
 	pnpm run -C dashboard protoc
 
-dashboard_build: dashboard_protoc
+dashboard_build: lib_build dashboard_protoc
 	pnpm run -C dashboard build
 	 
-dashboard: cleanup docker_network oidc-server-mock postgres_database postgres_backend dashboard_protoc
+dashboard: cleanup docker_network oidc-server-mock postgres_database postgres_backend lib_build dashboard_protoc
 		NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
 		FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
 		FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL="http://localhost:5151/connect/token" \

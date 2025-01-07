@@ -9,9 +9,9 @@
   "module": "dist/src/index.js",
   "exports": {
     ".": {
+      "browser": "./dist/src/index.min.js",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js",
-      "browser": "./dist/src/index.min.js"
+      "require": "./dist/src/index.js"
     }
   },
   "scripts": {

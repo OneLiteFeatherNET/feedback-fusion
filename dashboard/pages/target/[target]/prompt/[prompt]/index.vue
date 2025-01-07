@@ -9,7 +9,13 @@
     :deleteMessage="$t('prompt.delete')"
   >
     <template #title="{ instance }">
-      {{ instance?.title }}
+      {{ instance?.title }} -
+      <v-chip
+        v-if="instance?.active"
+        color="success"
+        :text="$t('prompt.active')"
+      />
+      <v-chip v-else color="error" :text="$t('prompt.disabled')" />
     </template>
 
     <template #subtitle="{ instance }">
@@ -22,6 +28,8 @@
         :target="route.params.target"
         :prompt="instance.id"
       />
+
+      <PromptPreview class="mt-8" :prompt="route.params.prompt" />
     </template>
   </InstanceCard>
 </template>

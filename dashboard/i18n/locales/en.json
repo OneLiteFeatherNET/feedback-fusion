@@ -19,7 +19,11 @@
     "title": "Title",
     "delete": "Are you sure you want to delete the prompt? This will also delete all fields and gathered data.",
     "description": "description",
-    "create": "Create new prompt"
+    "create": "Create new prompt",
+    "active": "active",
+    "disabled": "disabled",
+    "preview": "Preview",
+    "code": "Code"
   },
   "target": {
     "delete": "Are you sure you want to delete the target? This will also delete all prompts and gathered data.",
