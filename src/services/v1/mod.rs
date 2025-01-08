@@ -25,14 +25,16 @@ use aliri_oauth2::HasScope;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
-    CreatePromptRequest, CreateResponsesRequest, CreateTargetRequest, DeleteFieldRequest,
-    DeletePromptRequest, DeleteTargetRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
-    GetPromptRequest, GetPromptsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
-    Prompt as ProtoPrompt, PromptPage, PromptResponse, ResponsePage, Target as ProtoTarget,
-    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
+    CreatePromptRequest, CreateResponsesRequest, CreateTargetRequest, DataExportRequest,
+    DataExportResponse, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
+    Field as ProtoField, FieldPage, GetFieldsRequest, GetPromptRequest, GetPromptsRequest,
+    GetResponsesRequest, GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage,
+    PromptResponse, ResponsePage, Target as ProtoTarget, TargetPage, UpdateFieldRequest,
+    UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
 };
 use tonic::{Response, Status};
 
+pub mod export;
 pub mod field;
 pub mod prompt;
 pub mod response;
@@ -311,6 +313,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         request: Request<()>,
     ) -> std::result::Result<Response<UserInfoResponse>, Status> {
         handler!(user::get_user_info, self, request)
+    }
+
+    #[instrument(skip_all)]
+    async fn export_data(
+        &self,
+        request: Request<DataExportRequest>,
+    ) -> std::result::Result<Response<DataExportResponse>, Status> {
+        handler!(export::export_data, self, request, Endpoint::Export, Permission::Read)
     }
 }
 
