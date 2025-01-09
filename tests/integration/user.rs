@@ -23,7 +23,7 @@
 use test_log::test;
 use tonic::Request;
 
-use crate::connect;
+use feedback_fusion_common::connect;
 
 #[test(tokio::test)]
 async fn test_get_user_info() {

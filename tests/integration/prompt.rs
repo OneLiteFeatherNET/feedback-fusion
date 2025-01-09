@@ -26,7 +26,7 @@ use feedback_fusion_common::proto::{
 };
 use test_log::test;
 
-use crate::connect;
+use feedback_fusion_common::connect;
 
 fn create_target() -> CreateTargetRequest {
     CreateTargetRequest {

@@ -34,7 +34,7 @@ macro_rules! test_authentication {
         paste::paste! {
             #[test(tokio::test)]
             async fn [<test_$method>]() {
-                let mut client = FeedbackFusionV1Client::connect(crate::common::GRPC_ENDPOINT.as_str())
+                let mut client = FeedbackFusionV1Client::connect(feedback_fusion_common::tests::GRPC_ENDPOINT.as_str())
                     .await
                     .unwrap();
 

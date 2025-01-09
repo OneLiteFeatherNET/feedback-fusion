@@ -28,7 +28,7 @@ use openidconnect::{
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
 
-use crate::proto::{field_options::Options, CreateFieldRequest, FieldType};
+use crate::proto::CreateFieldRequest;
 
 lazy_static! {
     pub static ref GRPC_ENDPOINT: String = std::env::var("GRPC_ENDPOINT").unwrap();
