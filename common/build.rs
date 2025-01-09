@@ -130,19 +130,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .type_attribute(
             "GetTargetsRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .type_attribute(
             "GetPromptsRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .type_attribute(
             "GetFieldsRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .type_attribute(
             "GetResponsesRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
         .compile(&["../proto/feedback-fusion-v1.proto"], &["../proto"])

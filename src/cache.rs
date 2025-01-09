@@ -270,7 +270,7 @@ pub struct SkytableCache<'a, C: ManageConnection, K, V> {
 }
 
 #[cfg(feature = "caching-skytable")]
-impl<'a, C, I, S, K, V> SkytableCache<'a, C, K, V>
+impl<C, I, S, K, V> SkytableCache<'_, C, K, V>
 where
     S: AsyncRead + AsyncWrite + Send + Sync + Unpin,
     I: DerefMut<Target = TcpConnection<S>> + Send + Sync,

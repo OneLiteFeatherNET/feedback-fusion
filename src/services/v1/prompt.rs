@@ -72,7 +72,7 @@ pub async fn get_prompts(
     request: Request<GetPromptsRequest>,
 ) -> Result<Response<PromptPage>> {
     let data = request.into_inner();
-    let page_request = data.into_page_request();
+    let page_request = data.page_request();
     let connection = context.connection();
 
     let prompts = database_request!(

@@ -29,6 +29,6 @@ pub mod proto {
         tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
 }
 
-pub trait IntoPageRequest {
-    fn into_page_request(&self) -> rbatis::plugin::page::PageRequest;
+pub trait PageRequest {
+    fn page_request(&self) -> rbatis::plugin::page::PageRequest;
 }

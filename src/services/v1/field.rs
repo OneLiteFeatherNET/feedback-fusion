@@ -63,7 +63,7 @@ pub async fn get_active_fields(
     request: Request<GetFieldsRequest>,
 ) -> Result<Response<FieldPage>> {
     let data = request.into_inner();
-    let page_request = data.into_page_request();
+    let page_request = data.page_request();
     let connection = context.connection();
 
     // fetch the prompt
@@ -102,7 +102,7 @@ pub async fn get_fields(
     request: Request<GetFieldsRequest>,
 ) -> Result<Response<FieldPage>> {
     let data = request.into_inner();
-    let page_request = data.into_page_request();
+    let page_request = data.page_request();
 
     let page = database_request!(
         Field::select_page_by_prompt_wrapper(

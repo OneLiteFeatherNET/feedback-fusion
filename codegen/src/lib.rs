@@ -29,14 +29,14 @@ use syn::{
     parse_macro_input, DeriveInput, GenericArgument, Ident, ItemFn, PathArguments, ReturnType, Type,
 };
 
-#[proc_macro_derive(IntoPageRequest)]
-pub fn into_page_request_derive(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(PageRequest)]
+pub fn page_request_derive(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input as DeriveInput);
     let ident = &input.ident;
 
     let expanded = quote! {
-        impl crate::IntoPageRequest for #ident {
-            fn into_page_request(&self) -> rbatis::plugin::page::PageRequest {
+        impl crate::PageRequest for #ident {
+            fn page_request(&self) -> rbatis::plugin::page::PageRequest {
                 let page_size = if self.page_size > 0 { self.page_size as u64 } else { 20 };
                 let page = if self.page_token > 0 { self.page_token as u64 } else { 1 };
 
@@ -172,7 +172,7 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
     let skytable_tls_type = proc_macro2::TokenStream::from_str(
         format!(
             "\"crate::cache::SkytableCache<skytable::pool::ConnectionMgrTls, String, {}>\"",
-            inner_type.to_token_stream().to_string()
+            inner_type.to_token_stream()
         )
         .as_str(),
     )
@@ -205,7 +205,7 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
     let skytable_type = proc_macro2::TokenStream::from_str(
         format!(
             "\"crate::cache::SkytableCache<skytable::pool::ConnectionMgrTcp, String, {}>\"",
-            inner_type.to_token_stream().to_string()
+            inner_type.to_token_stream()
         )
         .as_str(),
     )

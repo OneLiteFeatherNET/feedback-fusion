@@ -163,7 +163,7 @@ pub mod prelude {
         services::{oidc::*, *},
     };
     pub use derivative::Derivative;
-    pub use feedback_fusion_common::IntoPageRequest;
+    pub use feedback_fusion_common::PageRequest;
     pub use getset::{Getters, MutGetters, Setters};
     pub use itertools::Itertools;
     pub use lazy_static::lazy_static;
