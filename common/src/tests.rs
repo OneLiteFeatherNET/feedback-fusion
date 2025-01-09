@@ -1,4 +1,4 @@
-//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2025 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
@@ -58,11 +58,11 @@ pub async fn authenticate() -> String {
 #[macro_export]
 macro_rules! connect {
     () => {{
-        let channel = tonic::transport::Channel::from_static(&crate::common::GRPC_ENDPOINT).connect().await.unwrap();
-        let token: tonic::metadata::MetadataValue<_> = format!("Bearer {}", crate::common::authenticate().await).parse().unwrap();
+        let channel = tonic::transport::Channel::from_static(&$crate::tests::GRPC_ENDPOINT).connect().await.unwrap();
+        let token: tonic::metadata::MetadataValue<_> = format!("Bearer {}", $crate::tests::authenticate().await).parse().unwrap();
 
         let client =
-            feedback_fusion_common::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(channel, move |mut request: tonic::Request<()>| {
+            $crate::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(channel, move |mut request: tonic::Request<()>| {
                 request
                     .metadata_mut()
                     .insert("authorization", token.clone());
@@ -70,7 +70,7 @@ macro_rules! connect {
                 Ok(request)
             });
 
-        let public_client = feedback_fusion_common::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect(crate::common::GRPC_ENDPOINT.as_str())
+        let public_client = $crate::proto::public_feedback_fusion_v1_client::PublicFeedbackFusionV1Client::connect($crate::tests::GRPC_ENDPOINT.as_str())
             .await
             .unwrap();
 

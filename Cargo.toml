@@ -74,6 +74,7 @@ paste = "1.0.14"
 rand = "0.8.5"
 reqwest = { version = "0.12.3", features = ["json"] }
 test-log = "0.2.15"
+feedback_fusion_common = { path = "./common", features = ["arbitrary"] }
 
 [features]
 default = ["all-databases", "otlp", "caching-skytable"]
@@ -95,3 +96,6 @@ mssql = ["rbdc-mssql"]
 [[bench]]
 name = "grpc"
 harness = false
+
+[workspace]
+members = [".", "fuzz", "common", "codegen"]

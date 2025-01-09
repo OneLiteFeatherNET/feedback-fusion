@@ -20,6 +20,9 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#[cfg(feature = "arbitrary")]
+pub mod tests;
+
 pub mod proto {
     tonic::include_proto!("feedback_fusion_v1");
     pub const FILE_DESCRIPTOR_SET: &[u8] =

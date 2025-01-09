@@ -1,10 +1,11 @@
 FROM rust:slim AS build
 
+COPY ./rust-toolchain.toml ./rust-toolchain.toml
+
 RUN apt-get update \ 
   && apt-get install libssl-dev protobuf-compiler libprotobuf-dev pkg-config -y --no-install-recommends \
   && apt-get clean \
-  && rustup toolchain install stable \
-  && rustup default stable
+  && rustup update
 
 ARG features=all-databases,otlp
 

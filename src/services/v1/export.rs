@@ -45,7 +45,7 @@ pub async fn export_data(
         "Fetch Prompts"
     )?;
 
-    let fields: Vec<Field> = if prompts.len() > 0 {
+    let fields: Vec<Field> = if !prompts.is_empty() {
         database_request!(
             Field::select_in_column(
                 connection,

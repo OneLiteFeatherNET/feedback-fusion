@@ -26,6 +26,58 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     tonic_build::configure()
+        .type_attribute(
+            "CreateTargetRequest",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "CreatePromptRequest",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "CreateFieldRequest",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "FieldOptions.options",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "FieldOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "FieldType",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "TextOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "RatingOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "CheckboxOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "SelectionOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "RangeOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "NumberOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "CheckboxStyle",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
         .type_attribute("CreateTargetRequest", "#[derive(validator::Validate)]")
         .field_attribute("CreateTargetRequest.name", "#[validate(length(max = 255))]")
         .type_attribute("UpdateTargetRequest", "#[derive(validator::Validate)]")
