@@ -7,7 +7,8 @@
     "logout": "Logout"
   },
   "dashboard": {
-    "targets": "Targets"
+    "targets": "Targets",
+    "export": "Export"
   },
   "form": {
     "edit": "Edit",
@@ -15,7 +16,8 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "save": "Save",
-    "required": "required"
+    "required": "required",
+    "copy": "Copy"
   },
   "prompt": {
     "list": "Prompts",
@@ -53,5 +55,8 @@
       "0": "Normal",
       "1": "Switch"
     }
+  },
+  "export": {
+    "title": "Preset export"
   }
 }

@@ -19,6 +19,7 @@ export default defineNuxtConfig({
     "nuxt-oidc-auth",
     "@pinia/nuxt",
     "@nuxtjs/color-mode",
+    "nuxt-shiki",
   ],
   i18n: {
     locales: [{ code: "en", language: "en-US", file: "en.json" }],
@@ -74,4 +75,9 @@ export default defineNuxtConfig({
       labComponents: true,
     },
   },
+  shiki: {
+    bundledLangs: ["html", "yaml"],
+    bundledThemes: ["github-dark", "github-light"],
+  },
 });
+

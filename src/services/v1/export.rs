@@ -45,19 +45,24 @@ pub async fn export_data(
         "Fetch Prompts"
     )?;
 
-    let fields: Vec<Field> = database_request!(
-        Field::select_in_column(
-            connection,
-            "prompt",
-            prompts
-                .iter()
-                .map(|prompt| prompt.id())
-                .collect::<Vec<_>>()
-                .as_slice()
-        )
-        .await,
-        "Fetch Fields"
-    )?;
+    let fields: Vec<Field> = if prompts.len() > 0 {
+        database_request!(
+            Field::select_in_column(
+                connection,
+                "prompt",
+                prompts
+                    .iter()
+                    .map(|prompt| prompt.id())
+                    .collect::<Vec<_>>()
+                    .as_slice()
+            )
+            .await,
+            "Fetch Fields"
+        )?
+    } else {
+        Vec::new()
+    };
+
     Ok(Response::new(DataExportResponse {
         export: serde_yaml::to_string(&serde_json::json!({
             "preset": serde_json::json!({ "targets": targets

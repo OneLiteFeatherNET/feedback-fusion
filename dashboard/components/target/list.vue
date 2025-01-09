@@ -10,7 +10,17 @@
         :subtitle="target.description"
         link
         :to="localePath(`/target/${target.id}`)"
-      />
+      >
+        <template #append>
+          <v-checkbox
+            color="primary"
+            v-model="selected"
+            :value="target.id"
+            label=""
+            @click.stop="() => {}"
+          />
+        </template>
+      </v-list-item>
     </v-list>
 
     <v-pagination
@@ -32,6 +42,23 @@
         </v-btn>
       </template>
     </FormEdit>
+
+    <v-btn
+      v-if="
+        authorization.hasPermission('Export', 'Read') && selected.length > 0
+      "
+      class="float-right mt-4"
+      variant="text"
+      color="success"
+      @click="
+        router.push({
+          path: localePath('/export'),
+          query: { targets: selected },
+        })
+      "
+    >
+      {{ $t("dashboard.export") }}
+    </v-btn>
   </div>
 </template>
 
@@ -43,6 +70,7 @@ import {
   useLocalePath,
   watch,
   useI18n,
+  useRouter,
 } from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 import { useAuthorizationStore } from "~/composables/authorization";
@@ -51,9 +79,11 @@ const { $feedbackFusion } = useNuxtApp();
 const localePath = useLocalePath();
 const { t } = useI18n();
 const authorization = useAuthorizationStore();
+const router = useRouter();
 
 const targets = ref(undefined);
 const creation = ref({});
+const selected = ref([]);
 
 const creationFields = ref([
   {
