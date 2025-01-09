@@ -4,6 +4,7 @@ lib/
 target/
 common/target/
 codegen/target/
+fuzz/target/
 docs/
 Makefile.toml
 dashboard/.nuxt/

@@ -26,53 +26,123 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     tonic_build::configure()
+        .type_attribute(
+            "CreateTargetRequest",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "CreatePromptRequest",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "FieldOptions.options",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "FieldOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "FieldType",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "TextOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "RatingOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "CheckboxOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "SelectionOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "RangeOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "NumberOptions",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
+        .type_attribute(
+            "CheckboxStyle",
+            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
+        )
         .type_attribute("CreateTargetRequest", "#[derive(validator::Validate)]")
-        .field_attribute("CreateTargetRequest.name", "#[validate(length(max = 255))]")
+        .field_attribute(
+            "CreateTargetRequest.name",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
+        )
+        .field_attribute(
+            "CreateTargetRequest.description",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
+        )
         .type_attribute("UpdateTargetRequest", "#[derive(validator::Validate)]")
-        .field_attribute("UpdateTargetRequest.name", "#[validate(length(max = 255))]")
+        .field_attribute(
+            "UpdateTargetRequest.name",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
+        )
         .field_attribute(
             "UpdateTargetRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("CreatePromptRequest", "#[derive(validator::Validate)]")
-        .field_attribute("CreatePromptRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "CreatePromptRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "UpdatePromptRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("UpdatePromptRequest", "#[derive(validator::Validate)]")
-        .field_attribute("UpdatePromptRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "UpdatePromptRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "CreatePromptRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("CreateFieldRequest", "#[derive(validator::Validate)]")
-        .field_attribute("CreateFieldRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "CreateFieldRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "CreateFieldRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("UpdateFieldRequest", "#[derive(validator::Validate)]")
-        .field_attribute("UpdateFieldRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "UpdateFieldRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "UpdateFieldRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute(
             "GetTargetsRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .type_attribute(
             "GetPromptsRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .type_attribute(
             "GetFieldsRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .type_attribute(
             "GetResponsesRequest",
-            "#[derive(feedback_fusion_codegen::IntoPageRequest)]",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
         .compile(&["../proto/feedback-fusion-v1.proto"], &["../proto"])

@@ -25,14 +25,11 @@
           </v-tabs-window-item>
 
           <v-tabs-window-item value="code">
-            <pre>
-              <code>
-              &lt;feedback-fusion-prompt
-                baseUrl="{{ config.public.feedbackFusionEndpoint }}"
-                promptId="{{ prompt }}"
-              /&gt;
-              </code>
-            </pre>
+            <Shiki
+              lang="html"
+              :code="code"
+              :highlightOptions="highlightOptions"
+            />
           </v-tabs-window-item>
         </v-tabs-window>
       </v-expansion-panel-text>
@@ -41,13 +38,25 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, useRuntimeConfig, ref } from "#imports";
+import { defineProps, useRuntimeConfig, ref, computed } from "#imports";
 import "@onelitefeathernet/feedback-fusion";
+import { useTheme } from "vuetify";
 
+const theme = useTheme();
 const config = useRuntimeConfig();
 const tab = ref("preview");
 
 const props = defineProps({
   prompt: String,
 });
+
+const code = ref(`
+<feedback-fusion-prompt
+  baseUrl="${config.public.feedbackFusionEndpoint}"
+  promptId="${props.prompt}"
+>
+`);
+const highlightOptions = computed(() => ({
+  theme: `github-${theme.global.name.value}`,
+}));
 </script>

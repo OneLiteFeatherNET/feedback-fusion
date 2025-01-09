@@ -1,3 +1,5 @@
+.PHONY: fuzz
+
 pnpm:
 	pnpm i -C lib 
 	pnpm i -C docs
@@ -82,6 +84,9 @@ oidc-server-mock:
 integration_test:
 	OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" \
 	cargo test --no-fail-fast --test integration_test
+
+fuzz:
+	OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo fuzz run fuzz_create_and_export
 
 cleanup:
 	docker rm -f database;docker rm -f oidc-server-mock;docker rm -f feedback-fusion;docker rm -f skytable;docker network rm feedback-fusion; echo ""

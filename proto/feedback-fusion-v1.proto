@@ -4,6 +4,7 @@ package feedback_fusion_v1;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 
 // uses oidc authentication
 service FeedbackFusionV1 {
@@ -26,6 +27,8 @@ service FeedbackFusionV1 {
   rpc GetResponses(GetResponsesRequest) returns (ResponsePage);
 
   rpc GetUserInfo(google.protobuf.Empty) returns (UserInfoResponse);
+
+  rpc ExportData(DataExportRequest) returns (DataExportResponse);
 }
 
 // does not use oidc authentication
@@ -295,4 +298,12 @@ message PromptResponse {
 
 message UserInfoResponse {
   map<string, bool> permissions = 1;
+}
+
+message DataExportRequest {
+  repeated string targets = 1;
+}
+
+message DataExportResponse {
+  string export = 1;
 }

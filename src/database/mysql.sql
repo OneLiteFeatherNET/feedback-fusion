@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS target (
   id          VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
-  name        VARCHAR(32) NOT NULL,
+  name        VARCHAR(255) NOT NULL,
   description VARCHAR(255),
   updated_at  TIMESTAMP(3),
   created_at  TIMESTAMP(3)
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS target (
 
 CREATE TABLE IF NOT EXISTS prompt (
   id          VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
-  title       VARCHAR(32) NOT NULL,
+  title       VARCHAR(255) NOT NULL,
   description VARCHAR(255) NOT NULL,
   target      VARCHAR(32) NOT NULL,
   active      BOOLEAN NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS prompt (
 
 CREATE TABLE IF NOT EXISTS field (
   id          VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
-  title       VARCHAR(32) NOT NULL,
+  title       VARCHAR(255) NOT NULL,
   description VARCHAR(255),
   prompt      VARCHAR(32) NOT NULL,
   field_type  VARCHAR(32) NOT NULL,

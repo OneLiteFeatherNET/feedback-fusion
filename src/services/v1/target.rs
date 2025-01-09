@@ -72,7 +72,7 @@ pub async fn get_targets(
     request: Request<GetTargetsRequest>,
 ) -> Result<Response<TargetPage>> {
     let data = request.into_inner();
-    let page_request = data.into_page_request();
+    let page_request = data.page_request();
     let connection = context.connection();
 
     // TODO: write translation macro

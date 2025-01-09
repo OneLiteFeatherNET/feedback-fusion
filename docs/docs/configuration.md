@@ -40,7 +40,7 @@ oidc:
 
 ### Available Endpoints and Permissions
 
-- **Endpoints**: "Target", "Prompt", "Field", "Response"
+- **Endpoints**: "Target", "Prompt", "Field", "Response", "Export"
 - **Permissions**: "Read", "Write", "List"
 
 ## OTLP Configuration

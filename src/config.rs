@@ -114,6 +114,7 @@ pub enum Endpoint {
     Prompt,
     Field,
     Response,
+    Export,
 }
 
 #[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]

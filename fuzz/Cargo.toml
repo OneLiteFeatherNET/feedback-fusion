@@ -1,0 +1,24 @@
+[package]
+name = "feedback-fusion-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+feedback_fusion_common = { path = "../common", features = ["arbitrary"] }
+
+arbitrary = "1.4.1"
+lazy_static ="1.5.0"
+libfuzzer-sys = "0.4"
+tonic = "0.12.0"
+tokio = { version = "1.37.0", features = ["full"] }
+
+[[bin]]
+name = "fuzz_create_and_export"
+path = "fuzz_targets/fuzz_create_and_export.rs"
+test = false
+doc = false
+bench = false

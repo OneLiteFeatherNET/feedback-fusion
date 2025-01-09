@@ -3,7 +3,7 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'targe
 BEGIN
     CREATE TABLE target (
         id           VARCHAR(32)    NOT NULL PRIMARY KEY,
-        name         VARCHAR(32)    NOT NULL,
+        name         VARCHAR(255)    NOT NULL,
         description  VARCHAR(255),
         updated_at   DATETIME,
         created_at   DATETIME
@@ -14,7 +14,7 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'promp
 BEGIN
     CREATE TABLE prompt (
         id           VARCHAR(32)    NOT NULL PRIMARY KEY,
-        title        VARCHAR(32)    NOT NULL,
+        title        VARCHAR(255)    NOT NULL,
         description  VARCHAR(255)   NOT NULL,
         target       VARCHAR(32)    NOT NULL REFERENCES target(id),
         active       BIT            NOT NULL,
@@ -27,7 +27,7 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'field
 BEGIN
     CREATE TABLE field (
         id           VARCHAR(32)    NOT NULL PRIMARY KEY,
-        title        VARCHAR(32)    NOT NULL,
+        title        VARCHAR(255)    NOT NULL,
         description  VARCHAR(255),
         prompt       VARCHAR(32)    NOT NULL REFERENCES prompt(id),
         field_type   VARCHAR(32)    NOT NULL,

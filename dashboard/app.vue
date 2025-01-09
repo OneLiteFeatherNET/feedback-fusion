@@ -10,4 +10,10 @@
 html {
   scroll-behavior: smooth;
 }
+
+code {
+  display: inline-block;
+  padding: 10px;
+  width: 100%;
+}
 </style>

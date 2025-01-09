@@ -115,7 +115,7 @@ pub async fn get_responses(
     request: Request<GetResponsesRequest>,
 ) -> Result<Response<ResponsePage>> {
     let data = request.into_inner();
-    let page_request = data.into_page_request();
+    let page_request = data.page_request();
     let connection = context.connection();
 
     // select a page of responses
