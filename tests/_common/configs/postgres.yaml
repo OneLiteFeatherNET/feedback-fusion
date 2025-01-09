@@ -3,9 +3,9 @@ database:
     username: postgres
     password: password
     database: postgres
-    endpoint: database:5432
+    endpoint: localhost:5432
 oidc:
-  provider: http://oidc-server-mock
+  provider: http://localhost:5151
   issuer: http://localhost:5151
   scopes:
     - name: "api:feedback-fusion"

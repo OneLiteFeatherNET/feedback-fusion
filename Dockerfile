@@ -16,6 +16,7 @@ COPY ./common ./common
 COPY ./codegen ./codegen
 COPY ./src ./src
 COPY ./benches ./benches
+COPY ./fuzz ./fuzz
 
 RUN cargo build --release --features $features
 

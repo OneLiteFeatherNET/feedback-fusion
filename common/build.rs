@@ -35,10 +35,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "CreateFieldRequest",
-            r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
-        )
-        .type_attribute(
             "FieldOptions.options",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
@@ -79,36 +75,58 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute("CreateTargetRequest", "#[derive(validator::Validate)]")
-        .field_attribute("CreateTargetRequest.name", "#[validate(length(max = 255))]")
+        .field_attribute(
+            "CreateTargetRequest.name",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
+        )
+        .field_attribute(
+            "CreateTargetRequest.description",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
+        )
         .type_attribute("UpdateTargetRequest", "#[derive(validator::Validate)]")
-        .field_attribute("UpdateTargetRequest.name", "#[validate(length(max = 255))]")
+        .field_attribute(
+            "UpdateTargetRequest.name",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
+        )
         .field_attribute(
             "UpdateTargetRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("CreatePromptRequest", "#[derive(validator::Validate)]")
-        .field_attribute("CreatePromptRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "CreatePromptRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "UpdatePromptRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("UpdatePromptRequest", "#[derive(validator::Validate)]")
-        .field_attribute("UpdatePromptRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "UpdatePromptRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "CreatePromptRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("CreateFieldRequest", "#[derive(validator::Validate)]")
-        .field_attribute("CreateFieldRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "CreateFieldRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "CreateFieldRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute("UpdateFieldRequest", "#[derive(validator::Validate)]")
-        .field_attribute("UpdateFieldRequest.title", "#[validate(length(max = 32))]")
+        .field_attribute(
+            "UpdateFieldRequest.title",
+            "#[validate(length(min = 1, max = 32), non_control_character)]",
+        )
         .field_attribute(
             "UpdateFieldRequest.description",
-            "#[validate(length(max = 255))]",
+            "#[validate(length(min = 1, max = 255), non_control_character)]",
         )
         .type_attribute(
             "GetTargetsRequest",
