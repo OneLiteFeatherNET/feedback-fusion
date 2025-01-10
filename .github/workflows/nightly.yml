@@ -104,7 +104,7 @@ jobs:
 
   dashboard:
     needs: [docker]
-    name: docker
+    name: dashboard
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Sources
