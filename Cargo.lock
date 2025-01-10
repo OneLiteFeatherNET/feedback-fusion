@@ -3015,9 +3015,9 @@ dependencies = [
 
 [[package]]
 name = "rbdc-mssql"
-version = "4.5.4"
+version = "4.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9f1974385412e153db720b1c4439b6744a90279f6b6f2950a22e0eca9234e93"
+checksum = "2820425207b90cdbe4431bee6fdc2ea52030cf83387e79cf444e80ec643df44b"
 dependencies = [
  "byteorder",
  "chrono",
