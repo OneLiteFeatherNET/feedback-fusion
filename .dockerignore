@@ -1,6 +1,6 @@
 .git/
 .github/
-lib/
+lib/node_modules/
 target/
 common/target/
 codegen/target/

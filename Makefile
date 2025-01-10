@@ -1,13 +1,11 @@
 .PHONY: fuzz
 
-pnpm:
-	pnpm i -C lib 
-	pnpm i -C docs
-
-core_generate: pnpm
+core_generate:
+	pnpm i -C lib
 	pnpm run -C lib protoc
 
 docs: core_generate
+	pnpm i -C docs
 	pnpm run -C lib dev
 
 lib_build: core_generate
@@ -18,12 +16,12 @@ helm_docs:
 	cp charts/feedback-fusion/README.md docs/docs/deployment/helm.md
 
 docs_build: lib_build
-	cd ./docs && pnpm run -C lib docs:build
+	pnpm run -C docs docs:build
 
-extract_translations: pnpm
+extract_translations:
 	pnpm run -C lib translations:extract
 
-build_translations: pnpm
+build_translations:
 	pnpm run -C lib translations:build
 
 # dashboard 
