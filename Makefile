@@ -16,6 +16,7 @@ helm_docs:
 	cp charts/feedback-fusion/README.md docs/docs/deployment/helm.md
 
 docs_build: lib_build
+	pnpm i -C docs
 	pnpm run -C docs docs:build
 
 extract_translations:
