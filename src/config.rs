@@ -279,8 +279,8 @@ pub fn read_permission_matrix(
 pub async fn sync_preset(connection: &DatabaseConnection) -> Result<()> {
     if let Some(preset) = CONFIG.preset() {
         let transaction = connection.acquire_begin().await?;
-        let transaction = transaction.defer_async(|tx| async move {
-            if !tx.done() {
+        let mut transaction = transaction.defer_async(|mut tx| async move {
+            if !tx.done {
                 let _ = tx.rollback().await;
             }
         });

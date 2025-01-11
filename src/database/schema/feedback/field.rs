@@ -375,7 +375,7 @@ impl From<feedback_fusion_common::proto::PromptResponse> for PromptResponse {
 }
 
 crud!(PromptResponse {});
-impl_select_page_wrapper!(PromptResponse {select_page_by_prompt(prompt: &str) => "WHERE prompt = #{prompt}"});
+impl_select_page_wrapper!(PromptResponse {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
 
 save_as_json!(FieldData, data);
 

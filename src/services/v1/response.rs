@@ -39,8 +39,8 @@ pub async fn create_responses(
     let data = request.into_inner();
     // start transaction
     let transaction = context.connection().acquire_begin().await?;
-    let transaction = transaction.defer_async(|tx| async move {
-        if !tx.done() {
+    let mut transaction = transaction.defer_async(|mut tx| async move {
+        if !tx.done {
             let _ = tx.rollback().await;
         }
     });
@@ -118,6 +118,9 @@ pub async fn get_responses(
     let page_request = data.page_request();
     let connection = context.connection();
 
+
+    error!("{:?}", page_request);
+
     // select a page of responses
     let responses = database_request!(
         PromptResponse::select_page_by_prompt_wrapper(
@@ -128,6 +131,8 @@ pub async fn get_responses(
         .await,
         "Select responses by prompt"
     )?;
+
+    error!("{:?}", responses);
 
     let records = if responses.total > 0 {
         database_request!(

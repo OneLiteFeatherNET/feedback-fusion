@@ -3131,9 +3131,9 @@ dependencies = [
 
 [[package]]
 name = "rbatis"
-version = "4.5.48"
+version = "4.5.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4d9d3165b3510dbd53cf158aa40507919f9295a42498dbb091dcc2ae404a70a"
+checksum = "c7d7d3437c2e146237e1b4f592e152f6f8c9e47180fcb4e83ec7f6ed3b6cfc6d"
 dependencies = [
  "async-trait",
  "dark-std",
@@ -3149,7 +3149,6 @@ dependencies = [
  "rbdc-pool-fast",
  "rbs",
  "serde",
- "sql-parser",
 ]
 
 [[package]]
@@ -4068,12 +4067,6 @@ dependencies = [
  "base64ct",
  "der",
 ]
-
-[[package]]
-name = "sql-parser"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e78870f15f78235f63f260f5a8497edec79048b34995f1dd112f0f316f01bdcf"
 
 [[package]]
 name = "stable_deref_trait"
