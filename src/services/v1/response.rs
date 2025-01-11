@@ -118,6 +118,9 @@ pub async fn get_responses(
     let page_request = data.page_request();
     let connection = context.connection();
 
+
+    error!("{:?}", page_request);
+
     // select a page of responses
     let responses = database_request!(
         PromptResponse::select_page_by_prompt_wrapper(
@@ -128,6 +131,8 @@ pub async fn get_responses(
         .await,
         "Select responses by prompt"
     )?;
+
+    error!("{:?}", responses);
 
     let records = if responses.total > 0 {
         database_request!(

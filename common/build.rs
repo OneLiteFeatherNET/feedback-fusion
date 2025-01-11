@@ -145,7 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
-        .compile(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
+        .compile_protos(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
         .unwrap();
     Ok(())
 }
