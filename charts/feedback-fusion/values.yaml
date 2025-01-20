@@ -234,3 +234,7 @@ feedbackFusion:
     # -- the secret containing the config.yaml
     # For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration.html
     secret: feedback-fusion-config
+
+  dashboard:
+    config:
+      secret: feedback-fusion-dashboard-config

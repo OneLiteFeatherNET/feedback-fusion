@@ -39,32 +39,19 @@ spec:
             - name: grpc
               containerPort: 8000 
               protocol: TCP
-          env:
-            - name: RUST_LOG 
-              value: {{ .Values.feedbackFusion.log }}
-            - name: FEEDBACK_FUSION_CONFIG
-              value: /etc/config/config.yaml
           livenessProbe:
             {{- toYaml .Values.dashboard.livenessProbe | nindent 12 }}
           startupProbe:
             {{- toYaml .Values.dashboard.startupProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.dashboard.resources | nindent 12 }}
-          volumeMounts:
-            {{- with .Values.dashboard.volumeMounts }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-
-            - name: {{ .Values.feedbackFusion.config.secret }}
-              mountPath: /etc/config
+          envFrom:
+            - secretRef:
+                name: {{ .Values.feedbackFusion.dashboard.config.secret }}
       volumes:
         {{- with .Values.dashboard.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-
-        - name: {{ .Values.feedbackFusion.config.secret }}
-          secret:
-            secretName: {{ .Values.feedbackFusion.config.secret }}
       {{- with .Values.dashboard.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
