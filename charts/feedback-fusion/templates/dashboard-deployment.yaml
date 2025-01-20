@@ -36,8 +36,8 @@ spec:
           image: "{{ .Values.dashboard.image.repository }}:{{ .Values.dashboard.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.dashboard.image.pullPolicy }}
           ports:
-            - name: grpc
-              containerPort: 8000 
+            - name: http
+              containerPort: 3000 
               protocol: TCP
           livenessProbe:
             {{- toYaml .Values.dashboard.livenessProbe | nindent 12 }}
