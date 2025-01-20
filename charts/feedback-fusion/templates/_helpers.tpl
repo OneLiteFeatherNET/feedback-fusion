@@ -69,11 +69,11 @@ Create the name of the service account to use
 {{- if .Values.dashboard.fullnameOverride }}
 {{- .Values.dashboard.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.dashboard.nameOverride }}
+{{- $name := default (.Chart.Name | cat "-dashboard") .Values.dashboard.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s-%s" .Release.Name $name "dashboard" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 {{- end }}
