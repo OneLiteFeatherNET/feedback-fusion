@@ -176,9 +176,9 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
 
         let iss = iss.ok_or_else(|| serde::de::Error::missing_field("iss"))?;
         let iat = iat.ok_or_else(|| serde::de::Error::missing_field("iat"))?;
-        let aud = aud.or_else(|| Some(jwt::Audiences::default())).unwrap();
+        let aud = aud.unwrap_or(jwt::Audiences::default());
         let exp = exp.ok_or_else(|| serde::de::Error::missing_field("exp"))?;
-        let scope = scope.ok_or_else(|| serde::de::Error::missing_field("scope"))?;
+        let scope = scope.unwrap_or(Scope::empty());
         let groups = groups
             .ok_or_else(|| serde::de::Error::missing_field(CONFIG.oidc().group_claim().as_str()))?;
 
