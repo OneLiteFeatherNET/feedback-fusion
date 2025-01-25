@@ -30,6 +30,7 @@ use aliri::{
 };
 use aliri_clock::UnixTime;
 use aliri_oauth2::{Authority, HasScope, Scope};
+use aliri_tower::OnJwtError;
 use openidconnect::{
     core::{CoreJwsSigningAlgorithm, CoreProviderMetadata},
     IssuerUrl,
@@ -38,6 +39,8 @@ use serde::{
     de::{MapAccess, Visitor},
     Deserializer,
 };
+use tokio::runtime::Handle;
+use tonic::{body::BoxBody, Status};
 
 pub async fn authority() -> Result<Authority> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
@@ -254,5 +257,42 @@ where
     #[inline]
     fn call(&mut self, req: R) -> Self::Future {
         self.0.call(req)
+    }
+}
+
+#[derive(Clone)]
+pub struct OIDCErrorHandler {
+    authority: Authority,
+}
+
+impl From<Authority> for OIDCErrorHandler {
+    fn from(authority: Authority) -> Self {
+        Self { authority }
+    }
+}
+
+impl OnJwtError for OIDCErrorHandler {
+    type Body = BoxBody;
+
+    fn on_jwt_invalid(
+        &self,
+        _error: aliri::error::JwtVerifyError,
+    ) -> opentelemetry_http::Response<Self::Body> {
+        warn!("Received request with invalid jwt!");
+
+        Status::unauthenticated("unauthenticated").into_http()
+    }
+
+    fn on_no_matching_jwk(&self) -> opentelemetry_http::Response<Self::Body> {
+        warn!("No matching jwk for request found, refreshing jwks...");
+
+        let handle = Handle::current();
+        handle.block_on(async { self.authority.refresh().await.ok() });
+
+        Status::unauthenticated("unauthenticated").into_http()
+    }
+
+    fn on_missing_or_malformed(&self) -> opentelemetry_http::Response<Self::Body> {
+        Status::unauthenticated("unauthenticated").into_http()
     }
 }

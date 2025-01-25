@@ -101,7 +101,7 @@ async fn main() {
         authority.spawn_refresh(Duration::from_secs(60 * 60 * 6));
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
-            .with_verbose_error_handler();
+            .with_error_handler(OIDCErrorHandler::from(authority.clone()));
 
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
