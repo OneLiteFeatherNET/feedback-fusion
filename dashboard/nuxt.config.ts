@@ -80,4 +80,3 @@ export default defineNuxtConfig({
     bundledThemes: ["github-dark", "github-light"],
   },
 });
-
