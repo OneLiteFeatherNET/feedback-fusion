@@ -345,7 +345,6 @@ macro_rules! update_otherwise_create {
     };
 }
 
-#[instrument(skip_all)]
 pub async fn sync_target(target: TargetConfig, transaction: &dyn Executor) -> Result<()> {
     let id = target.id.clone();
     update_otherwise_create!(transaction, Target, target, name, description);
@@ -359,7 +358,6 @@ pub async fn sync_target(target: TargetConfig, transaction: &dyn Executor) -> Re
     Ok(())
 }
 
-#[instrument(skip_all)]
 pub async fn sync_prompt(
     prompt: PromptConfig,
     transaction: &dyn Executor,
@@ -377,7 +375,6 @@ pub async fn sync_prompt(
     Ok(())
 }
 
-#[instrument(skip_all)]
 pub async fn sync_field(
     field: FieldConfig,
     transaction: &dyn Executor,

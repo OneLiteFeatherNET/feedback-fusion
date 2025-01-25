@@ -64,6 +64,8 @@ pub fn init_tracing() {
             tracer_provider.tracer("feedback-fusion"),
         ));
         tracing::subscriber::set_global_default(subscriber).ok();
+
+        info!("Initiating tracing with collector {}", endpoint);
     }
 }
 
@@ -72,13 +74,32 @@ pub struct MakeFeedbackFusionSpan;
 
 impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
     fn make_span(&mut self, request: &Request<B>) -> Span {
-        // make the span
-        let span = tracing::info_span!(
+        let span = if request.uri().path().contains("grpc.health.v1.Health/Check") {
+            tracing::debug_span!("HealthCheck")
+        } else {
+            let headers = request
+                .headers()
+                .iter()
+                .filter(|(key, value)| {
+                    !key.to_string()
+                        .to_lowercase()
+                        .eq(&"authorization".to_owned())
+                        && !value
+                            .to_str()
+                            .unwrap_or_default()
+                            .to_lowercase()
+                            .contains("bearer")
+                })
+                .collect_vec();
+
+            tracing::info_span!(
             "gRPC Request",
             host = %request.uri().host().unwrap_or_default(),
             path = %request.uri().path(),
+            headers = ?headers,
             version = ?request.version()
-        );
+            )
+        };
 
         // try to extract the context
         let context = global::get_text_map_propagator(|propagator| {
