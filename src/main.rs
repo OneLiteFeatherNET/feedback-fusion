@@ -21,6 +21,8 @@
  */
 #![allow(clippy::too_many_arguments)]
 
+use std::time::Duration;
+
 use crate::{
     prelude::*,
     services::v1::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context},
@@ -96,6 +98,7 @@ async fn main() {
         // build the authority
         info!("Tryng to contact the OIDC Provider");
         let authority = oidc::authority().await.unwrap();
+        authority.spawn_refresh(Duration::from_secs(60 * 60 * 6));
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
             .with_verbose_error_handler();
