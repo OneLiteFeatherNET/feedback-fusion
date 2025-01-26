@@ -2,7 +2,7 @@
 
 Feedback-Fusion helm chart
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.2.0](https://img.shields.io/badge/AppVersion-0.2.0-informational?style=flat-square)
+![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.4.0](https://img.shields.io/badge/AppVersion-0.4.0-informational?style=flat-square)
 
 ## Installing the Chart
 
@@ -86,6 +86,7 @@ helm install feedback-fusion feedback-fusion/feedback-fusion
 | dashboard.volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | dashboard.volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 | feedbackFusion.config.secret | string | `"feedback-fusion-config"` | the secret containing the config.yaml For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration.html |
+| feedbackFusion.dashboard.config.secret | string | `"feedback-fusion-dashboard-config"` |  |
 | feedbackFusion.log | string | `"INFO"` | see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/observability/logging.html |
 
 ----------------------------------------------

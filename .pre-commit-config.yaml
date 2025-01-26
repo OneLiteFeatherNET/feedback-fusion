@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: clippy 
+        name: Clippy 
+        entry: just clippy
+        language: system
+        pass_filenames: false
+        types: [rust]
+      - id: helm
+        name: Helm docs
+        entry: sh -c "just helm && git add charts docs"
+        language: system
+        pass_filenames: false
+        always_run: true

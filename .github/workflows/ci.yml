@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
         
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -27,7 +29,7 @@ jobs:
           version: 9
 
       - name: Dashboard build
-        run: make dashboard_build
+        run: just dashboard
 
   lib_build:
     name: lib-build 
@@ -35,6 +37,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
         
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -47,7 +51,7 @@ jobs:
           version: 9
 
       - name: Lib build
-        run: make lib_build 
+        run: just lib
 
   check:
     name: check
@@ -59,6 +63,8 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - uses: extractions/setup-just@v2
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
         with:
@@ -68,7 +74,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run check
-        run: make check
+        run: just check
 
   clippy:
     name: clippy
@@ -83,6 +89,8 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v4
 
+      - uses: extractions/setup-just@v2
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
         with:
@@ -92,7 +100,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run clippy
-        run: make clippy 
+        run: just clippy 
 
   test:
     needs: [clippy, check]
@@ -101,7 +109,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: [postgres, mysql, mariadb, mssql, unittest, distributed_caching]
+        test: [test-all, unittest]
     steps:
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -110,6 +118,8 @@ jobs:
 
       - name: Checkout Sources
         uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -120,4 +130,4 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Tests
-        run: make ${{ matrix.test }}
+        run: just ${{ matrix.test }}
