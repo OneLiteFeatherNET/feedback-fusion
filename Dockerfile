@@ -32,6 +32,7 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
 
 RUN rm -Rf ./src
 COPY ./src ./src
+RUN cat ./src/main.rs
 
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
         cargo build --release --target aarch64-unknown-linux-gnu --features $features; \
