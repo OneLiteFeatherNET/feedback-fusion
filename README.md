@@ -41,3 +41,52 @@ docker run --name feedback-fusion ghcr.io/onelitefeathernet/feedback-fusion
 ## License
 
 FeedbackFusion is licensed under the MIT License.
+
+## Development
+
+### Requirements
+
+- just
+- pre-commit
+- pnpm
+- helm
+- cargo
+- docker
+
+### Setup
+
+```sh
+just init
+```
+
+### Tests
+
+You can run the unittests via 
+
+```sh
+just unittest
+```
+
+The integration tests are executed for each database backend on its own therefore you can either do it for only one:
+
+```sh
+just test postgres # possible values: postgres, mariadb, mysql, mssql, skytable (this uses postgres and skytable caching)
+```
+
+or you can executed all of them:
+
+```sh
+just # or `just test-all`
+```
+
+### Lib / Docs
+
+```sh
+just lib-dev
+```
+
+### Dashboard
+
+```sh
+just dashboard-dev
+```
