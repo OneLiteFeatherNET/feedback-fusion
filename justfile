@@ -192,7 +192,7 @@ post-prepare-release TAG:
 release-server LEVEL:
   just prepare-release
 
-  cargo release --no-publish --no-push --no-tag 
+  cargo release --no-publish --no-push --no-tag --execute {{LEVEL}} 
 
   just post-prepare-release $(cargo pkgid | sed -n 's/.*#//p')
   
