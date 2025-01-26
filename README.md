@@ -52,6 +52,7 @@ FeedbackFusion is licensed under the MIT License.
 - helm
 - cargo
 - docker
+- cargo-release
 
 ### Setup
 
