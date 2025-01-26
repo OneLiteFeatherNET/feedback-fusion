@@ -30,7 +30,7 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
         cargo build --release --features $features; \
     fi
 
-RUN rm -Rf ./srt
+RUN rm -Rf ./src
 COPY ./src ./src
 
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
