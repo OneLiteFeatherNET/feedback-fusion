@@ -50,17 +50,17 @@ bench: docker oidc-server-mock postgres && cleanup
   docker network create {{DOCKER_NETWORK}} > /dev/null
 
 @oidc-server-mock:
-	docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d 
-	sleep 5
-	curl -s -o /dev/null http://localhost:5151/.well-known/openid-configuration
+  docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d 
+  sleep 5
+  curl -s -o /dev/null http://localhost:5151/.well-known/openid-configuration
 
 @postgres:
   docker run --name database -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres --network {{DOCKER_NETWORK}} -d postgres
   sleep 5
 
 @mysql:
-	docker run --name database -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_USER=username -e MYSQL_DATABASE=database --network {{DOCKER_NETWORK}} -d mysql
-	sleep 30
+  docker run --name database -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_USER=username -e MYSQL_DATABASE=database --network {{DOCKER_NETWORK}} -d mysql
+  sleep 30
 
 @mariadb:
   docker run --name database -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_USER=username -e MYSQL_DATABASE=database --network {{DOCKER_NETWORK}} -d mariadb

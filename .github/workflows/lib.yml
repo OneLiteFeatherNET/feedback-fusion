@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
         
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -23,7 +25,7 @@ jobs:
           version: 9
 
       - name: Build
-        run: make lib_build
+        run: just lib
 
       - name: Publish
         uses: JS-DevTools/npm-publish@v3
