@@ -10,6 +10,9 @@ test-all:
   just test mssql
   just test skytable
 
+init:
+  pre-commit install
+
 #
 # Linting
 #
