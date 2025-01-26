@@ -39,6 +39,8 @@ build-all DOCKERFILE="./Dockerfile":
 #
 
 backend TYPE=DEFAULT_TEST:
+  just build
+
   docker run --name {{LOCAL_DOCKER_IMAGE}} -d -e FEEDBACK_FUSION_CONFIG="/etc/feedback-fusion/config.yaml" -v ./tests/_common/configs/{{TYPE}}.yaml:/etc/feedback-fusion/config.yaml -e RUST_LOG=DEBUG --network {{DOCKER_NETWORK}} -p 8000:8000 {{LOCAL_DOCKER_IMAGE}}
 
 bench: docker oidc-server-mock postgres && cleanup
