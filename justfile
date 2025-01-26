@@ -29,7 +29,7 @@ clippy:
 
 build PLATFORM=LOCAL_PLATFORM DOCKERFILE="./Dockerfile":
   @echo "Building for {{PLATFORM}}"
-  docker buildx build -t {{LOCAL_DOCKER_IMAGE}} --platform {{PLATFORM}} -f {{DOCKERFILE}} .
+  docker buildx build -t {{LOCAL_DOCKER_IMAGE}} --platform {{PLATFORM}} -f {{DOCKERFILE}} --load .
 
 build-all DOCKERFILE="./Dockerfile":
   just build linux/arm64,linux/amd64 {{DOCKERFILE}}
