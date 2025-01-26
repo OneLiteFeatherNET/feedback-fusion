@@ -2,7 +2,6 @@ DOCKER_NETWORK := "feedback-fusion"
 LOCAL_DOCKER_IMAGE := "feedback-fusion"
 LOCAL_PLATFORM := "linux/" + replace(replace(arch(), "x86_64", "amd64"), "aarch64", "arm64") 
 DEFAULT_TEST := "postgres"
-TIMESTAMP := `date +%s`
 
 test-all:
   just test postgres
@@ -182,12 +181,12 @@ helm:
 prepare-release:
   git checkout main
   git pull
-  git checkout -b release/{{TIMESTAMP}}
 
 post-prepare-release TAG:
+  git checkout -b release/{{TAG}}
   git add -A 
-  git commit -m "chore: release {{TAG}}"
-  git push origin -u release/{{TAG}}
+  -git commit -m "chore: release {{TAG}}"
+  git push origin -u HEAD 
 
 release-server LEVEL:
   just prepare-release
