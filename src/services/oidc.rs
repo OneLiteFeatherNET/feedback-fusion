@@ -287,7 +287,8 @@ impl OnJwtError for OIDCErrorHandler {
         warn!("No matching jwk for request found, refreshing jwks...");
 
         let handle = Handle::current();
-        handle.block_on(async { self.authority.refresh().await.ok() });
+        let authority = self.authority.clone();
+        handle.spawn(async move { authority.refresh().await.ok() });
 
         Status::unauthenticated("unauthenticated").into_http()
     }
