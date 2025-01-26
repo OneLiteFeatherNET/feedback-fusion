@@ -7,19 +7,31 @@ RUN apt-get update \
   && rustup update \
   && rustup target add aarch64-unknown-linux-gnu
 
-ARG features=all-databases,otlp
+ARG features=all-databases,otlp,caching-skytable
+
+RUN USER=root cargo init --bin --name feedback-fusion
+RUN USER=root cargo init --lib --name feedback_fusion_common common
+RUN USER=root cargo init --lib --name feedback_fusion_codegen codegen
 
 COPY ./.cargo ./.cargo
 COPY ./Cargo.toml . 
-COPY ./Cargo.lock . 
+COPY ./Cargo.lock .
 COPY ./proto ./proto
 COPY ./common ./common
 COPY ./codegen ./codegen
-COPY ./src ./src
-COPY ./benches ./benches
 COPY ./fuzz ./fuzz
+COPY ./benches ./benches
 
 ARG TARGETARCH
+
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+        cargo build --release --target aarch64-unknown-linux-gnu --features $features; \
+    else \
+        cargo build --release --features $features; \
+    fi
+
+RUN rm -Rf ./srt
+COPY ./src ./src
 
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
         cargo build --release --target aarch64-unknown-linux-gnu --features $features; \

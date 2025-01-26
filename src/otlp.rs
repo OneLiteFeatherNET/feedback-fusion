@@ -34,6 +34,10 @@ use tracing::Span;
 use tracing_opentelemetry::{OpenTelemetryLayer, OpenTelemetrySpanExt};
 use tracing_subscriber::layer::SubscriberExt;
 
+lazy_static! {
+    static ref HEADERS_TO_KEEP: Vec<&'static str> = vec!["traceparent", "x-request-id", "user-agent"];
+}
+
 pub fn init_tracing() {
     if let Some(config) = CONFIG.otlp() {
         let endpoint = config.endpoint();
@@ -80,32 +84,27 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
             let headers = request
                 .headers()
                 .iter()
-                .filter(|(key, value)| {
-                    !key.to_string()
-                        .to_lowercase()
-                        .eq(&"authorization".to_owned())
-                        && !value
-                            .to_str()
-                            .unwrap_or_default()
-                            .to_lowercase()
-                            .contains("bearer")
+                .filter(|(key, _)| {
+                    HEADERS_TO_KEEP.contains(&key.as_str()) 
                 })
                 .collect_vec();
 
-            tracing::info_span!(
-            "gRPC Request",
-            host = %request.uri().host().unwrap_or_default(),
-            path = %request.uri().path(),
-            headers = ?headers,
-            version = ?request.version()
-            )
-        };
+            let span = tracing::info_span!(
+                "gRPC Request",
+                host = %request.uri().host().unwrap_or_default(),
+                path = %request.uri().path(),
+                headers = ?headers,
+                version = ?request.version()
+            );
 
-        // try to extract the context
-        let context = global::get_text_map_propagator(|propagator| {
-            propagator.extract(&HeaderExtractor(request.headers()))
-        });
-        span.set_parent(context);
+            // try to extract the context
+            let context = global::get_text_map_propagator(|propagator| {
+                propagator.extract(&HeaderExtractor(request.headers()))
+            });
+            span.set_parent(context);
+
+            span
+        };
 
         span
     }

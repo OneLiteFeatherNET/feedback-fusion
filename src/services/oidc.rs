@@ -278,8 +278,6 @@ impl OnJwtError for OIDCErrorHandler {
         &self,
         _error: aliri::error::JwtVerifyError,
     ) -> opentelemetry_http::Response<Self::Body> {
-        warn!("Received request with invalid jwt!");
-
         Status::unauthenticated("unauthenticated").into_http()
     }
 
