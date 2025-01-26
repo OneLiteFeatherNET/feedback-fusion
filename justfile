@@ -93,7 +93,7 @@ unittest:
   cargo test --bin feedback-fusion
 
 integration:
-  OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo test --no-fail-fast --test integration_test
+  OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo test --no-fail-fast --test integration_test || (docker logs feedback-fusion; exit 1)
 
 test TYPE=DEFAULT_TEST: docker oidc-server-mock
   just {{TYPE}}
