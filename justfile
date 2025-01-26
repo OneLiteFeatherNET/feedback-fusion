@@ -194,5 +194,14 @@ release-server LEVEL:
 
   cargo release --no-publish --no-push --no-tag --execute {{LEVEL}} 
 
-  just post-prepare-release $(cargo pkgid | sed -n 's/.*#//p')
-  
+  just post-prepare-release server-$(cargo pkgid | sed -n 's/.*#//p')
+ 
+release-dashboard LEVEL:
+  just prepare-release
+
+  just post-prepare-release dashboard-$(pnpm version -C dashboard --no-git-tag-version {{LEVEL}} | sed 's/^v//')
+
+release-lib LEVEL:
+  just prepare-release
+
+  just post-prepare-release dashboard-$(pnpm version -C lib --no-git-tag-version {{LEVEL}}| sed 's/^v//')
