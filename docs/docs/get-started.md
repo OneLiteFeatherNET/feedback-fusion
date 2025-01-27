@@ -17,7 +17,7 @@ Maybe targets will be converted into a composite in the future.
 ### Prompt
 
 A prompt represents a prompt on your website (e.g for feedback forms) and has a single target as its parent.
-You can include these prompts after the creation in your website by using the [frontend-library](/docs/frontend-library) with the
+You can include these prompts after the creation in your website by using the [frontend-library](/docs/frontend-library/) with the
 generated `promptId`.
 
 Prompts contain the attribute `active` which defines wether clients can load this prompt when visiting your website. If you included
