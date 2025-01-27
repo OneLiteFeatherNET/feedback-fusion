@@ -141,11 +141,9 @@ translations:
   pnpm run -C lib translations:build
 
 docs:
-  just pnpm lib
+  just lib
   just pnpm docs
   
-  just generate lib
-
   pnpm run -C docs docs:build
 
 #
