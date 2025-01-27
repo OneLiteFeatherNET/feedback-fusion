@@ -85,8 +85,8 @@ helm install feedback-fusion feedback-fusion/feedback-fusion
 | dashboard.tolerations | list | `[]` |  |
 | dashboard.volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | dashboard.volumes | list | `[]` | Additional volumes on the output Deployment definition. |
-| feedbackFusion.config.secret | string | `"feedback-fusion-config"` | the secret containing the config.yaml For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration.html |
-| feedbackFusion.dashboard.config.secret | string | `"feedback-fusion-dashboard-config"` |  |
+| feedbackFusion.config.secret | string | `"feedback-fusion-config"` | the secret containing the config.yaml For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration/server |
+| feedbackFusion.dashboard.config.secret | string | `"feedback-fusion-dashboard-config"` | the secret containing the dashboard config  For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration/dashboard |
 | feedbackFusion.log | string | `"INFO"` | see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/observability/logging.html |
 
 ----------------------------------------------

@@ -1,4 +1,4 @@
-# Configuration
+# Server-Configuration
 
 ## OIDC Configuration
 

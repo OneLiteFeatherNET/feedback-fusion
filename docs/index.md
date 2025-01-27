@@ -9,6 +9,6 @@ hero:
   actions:
     - theme: brand
       text: Documentation 
-      link: /docs/configuration
+      link: /docs/configuration/server
 ---
 

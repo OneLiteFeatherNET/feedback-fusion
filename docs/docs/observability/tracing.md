@@ -4,7 +4,7 @@
 FeedbackFusion supports distributed tracing using the OpenTelemetry Protocol (OTLP) utilizing the `HeaderExtractor` in order 
 to resolve trace parents.
 
-For more information regarding the documentation checkout the [Configuration](/docs/configuration).
+For more information regarding the documentation checkout the [Configuration](/docs/configuration/server).
 
 As of now we only support gRPC OTLP trace collection endpoints (:4317)
 

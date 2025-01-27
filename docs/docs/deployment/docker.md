@@ -3,7 +3,7 @@
 ## Prerequisites
 - Docker installed on your target machine. [Install Docker](https://docs.docker.com/get-docker/)
 - Docker Compose installed on your target machine. [Install Docker Compose](https://docs.docker.com/compose/install/)
-- A running database of your choice. [Supported Databases](/docs/configuration#database-configuration)
+- A running database of your choice. [Supported Databases](/docs/configuration/server#database-configuration)
 
 ## Docker Compose Configuration
 Create a `docker-compose.yml` file with the following content:
@@ -25,7 +25,7 @@ services:
       - /path/to/config:/path/to/container/config
 ```
 
-Refer to the [configuration documentation](/docs/configuration) for the config file details. 
+Refer to the [configuration documentation](/docs/configuration/server) for the config file details. 
 
 Afterwards start the application:
 

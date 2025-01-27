@@ -16,7 +16,12 @@ export default defineConfig({
       {
         text: "Docs",
         items: [
-          { text: "Configuration", link: "/docs/configuration" },
+          {
+            text: "Configuration", items: [
+              { text: "Server", link: "/docs/configuration/server" },
+              { text: "Dashboard", link: "/docs/configuration/dashboard" }
+            ]
+          },
           {
             text: "Deployment", items: [
               { text: "Helm", link: "/docs/deployment/helm" },
