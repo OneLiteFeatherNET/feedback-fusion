@@ -8,6 +8,9 @@ hero:
   tagline: Built with cloud in mind
   actions:
     - theme: brand
+      text: Get started 
+      link: /docs/get-started
+    - theme: alt
       text: Documentation 
       link: /docs/configuration/server
 ---
