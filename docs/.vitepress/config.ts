@@ -35,6 +35,13 @@ export default defineConfig({
               { text: "Prompt", link: "/docs/frontend-library/prompt" },
               { text: "Theming", link: "/docs/frontend-library/theming" }
             ]
+          },
+          {
+            text: "Reference", items: [
+              {
+                text: "API", link: "/docs/reference/api"
+              }
+            ]
           }
         ]
       }
