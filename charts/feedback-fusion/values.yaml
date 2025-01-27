@@ -232,9 +232,11 @@ feedbackFusion:
   log: INFO
   config: 
     # -- the secret containing the config.yaml
-    # For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration.html
+    # For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration/server
     secret: feedback-fusion-config
 
   dashboard:
     config:
+      # -- the secret containing the dashboard config 
+      # For all configuration options see https://onelitefeathernet.github.io/feedback-fusion/nightly/docs/configuration/dashboard
       secret: feedback-fusion-dashboard-config

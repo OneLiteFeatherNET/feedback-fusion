@@ -12,6 +12,8 @@ will occur.
 We ship a basic frontend component library based on [lit](https://lit.dev) providing
 web components compliant to `openwc`
 
+[NPM](https://www.npmjs.com/package/@onelitefeathernet/feedback-fusion)
+
 ## Quick Setup
 
 ### Node

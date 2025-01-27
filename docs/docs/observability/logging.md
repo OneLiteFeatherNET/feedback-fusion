@@ -9,3 +9,5 @@ FeedbackFusion uses the `RUST_LOG` environment variable to control the default l
 | INFO    | Logs informational messages, warnings, and error messages.                                        |
 | DEBUG   | Logs debug information, including database requests, informational messages, warnings, and errors.|
 | TRACE   | Logs everything, including trace-level information, debug information, database requests, informational messages, warnings, and errors. |
+
+This option also controls which traces are exported via otlp.

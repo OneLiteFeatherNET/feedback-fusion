@@ -13,3 +13,9 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+      - id: proto
+        name: Proto docs
+        entry: sh -c "just protoc-docs && git add docs"
+        language: system
+        pass_filenames: false
+        always_run: true

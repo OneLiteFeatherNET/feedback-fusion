@@ -16,7 +16,12 @@ export default defineConfig({
       {
         text: "Docs",
         items: [
-          { text: "Configuration", link: "/docs/configuration" },
+          {
+            text: "Configuration", items: [
+              { text: "Server", link: "/docs/configuration/server" },
+              { text: "Dashboard", link: "/docs/configuration/dashboard" }
+            ]
+          },
           {
             text: "Deployment", items: [
               { text: "Helm", link: "/docs/deployment/helm" },
@@ -34,6 +39,13 @@ export default defineConfig({
             text: "Frontend Library", link: "/docs/frontend-library", items: [
               { text: "Prompt", link: "/docs/frontend-library/prompt" },
               { text: "Theming", link: "/docs/frontend-library/theming" }
+            ]
+          },
+          {
+            text: "Reference", items: [
+              {
+                text: "API", link: "/docs/reference/api"
+              }
             ]
           }
         ]

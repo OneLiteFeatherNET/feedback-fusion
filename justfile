@@ -47,6 +47,9 @@ bench: docker oidc-server-mock postgres && cleanup
   just backend postgres
   GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
 
+protoc-docs:
+  docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos  pseudomuto/protoc-gen-doc --doc_opt=markdown,api.md
+
 #
 # Testing requirements
 #
@@ -138,11 +141,9 @@ translations:
   pnpm run -C lib translations:build
 
 docs:
-  just pnpm lib
+  just lib
   just pnpm docs
   
-  just generate lib
-
   pnpm run -C docs docs:build
 
 #
