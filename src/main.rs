@@ -97,7 +97,7 @@ async fn main() {
 
         // build the authority
         info!("Tryng to contact the OIDC Provider");
-        let authority = oidc::authority().await.unwrap();
+        let (authority, client) = oidc::authority().await.unwrap();
         authority.spawn_refresh(Duration::from_secs(60 * 60 * 6));
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
@@ -105,6 +105,7 @@ async fn main() {
 
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
+            client,
         };
         let service = tower::ServiceBuilder::new()
             .layer(authorizer.jwt_layer(authority))

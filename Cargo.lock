@@ -1214,6 +1214,7 @@ dependencies = [
  "feedback_fusion_common",
  "futures",
  "getset",
+ "http 1.2.0",
  "itertools 0.13.0",
  "kanal",
  "lazy_static",

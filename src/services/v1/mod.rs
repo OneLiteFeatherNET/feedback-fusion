@@ -20,8 +20,10 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use std::collections::BTreeSet;
+
 use crate::prelude::*;
-use aliri_oauth2::HasScope;
+use aliri_oauth2::{scope::ScopeTokenRef, HasScope};
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
@@ -32,6 +34,7 @@ use feedback_fusion_common::proto::{
     PromptResponse, ResponsePage, Target as ProtoTarget, TargetPage, UpdateFieldRequest,
     UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
 };
+use openidconnect::core::CoreClient;
 use tonic::{Response, Status};
 
 pub mod export;
@@ -45,6 +48,7 @@ pub mod user;
 #[get = "pub"]
 pub struct FeedbackFusionV1Context {
     pub connection: DatabaseConnection,
+    pub client: CoreClient,
 }
 
 #[derive(Clone, Getters)]
@@ -82,28 +86,34 @@ impl FeedbackFusionV1Context {
             .extensions()
             .get::<OIDCClaims>()
             .ok_or(FeedbackFusionError::Unauthorized)?;
-        // get the matrix entry
+
+        let scopes = claims.scope().iter().collect();
+        let groups = claims.groups().iter().collect();
+
+        Self::authorize_scopes_and_groups(&scopes, &groups, endpoint, permission)
+    }
+
+    pub fn authorize_scopes_and_groups(
+        scopes: &BTreeSet<&ScopeTokenRef>,
+        groups: &BTreeSet<&String>,
+        endpoint: Endpoint,
+        permission: Permission,
+    ) -> Result<()> {
         let entry = PERMISSION_MATRIX
             .get(&(endpoint, permission))
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
-        let scope = claims
-            .scope()
-            .iter()
-            .find(|scope| entry.0.contains(scope.as_str()));
+        let scope = scopes.iter().find(|scope| entry.0.contains(scope.as_str()));
 
         // verify the groups
-        let group = claims
-            .groups()
-            .iter()
-            .find(|group| entry.1.contains(group.as_str()));
+        let group = groups.iter().find(|group| entry.1.contains(group.as_str()));
 
-        return if scope.is_none() && group.is_none() {
+        if scope.is_none() && group.is_none() {
             Err(FeedbackFusionError::Unauthorized)
         } else {
             Ok(())
-        };
+        }
     }
 }
 
@@ -320,7 +330,13 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<DataExportRequest>,
     ) -> std::result::Result<Response<DataExportResponse>, Status> {
-        handler!(export::export_data, self, request, Endpoint::Export, Permission::Read)
+        handler!(
+            export::export_data,
+            self,
+            request,
+            Endpoint::Export,
+            Permission::Read
+        )
     }
 }
 

@@ -32,8 +32,7 @@ use aliri_clock::UnixTime;
 use aliri_oauth2::{Authority, HasScope, Scope};
 use aliri_tower::OnJwtError;
 use openidconnect::{
-    core::{CoreJwsSigningAlgorithm, CoreProviderMetadata},
-    IssuerUrl,
+    core::{CoreClient, CoreJwsSigningAlgorithm, CoreProviderMetadata}, ClientId, IssuerUrl
 };
 use serde::{
     de::{MapAccess, Visitor},
@@ -42,7 +41,7 @@ use serde::{
 use tokio::runtime::Handle;
 use tonic::{body::BoxBody, Status};
 
-pub async fn authority() -> Result<Authority> {
+pub async fn authority() -> Result<(Authority, CoreClient)> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
     // discover the oidc endpoints
     let issuer = IssuerUrl::new(CONFIG.oidc().provider().clone()).map_err(|error| {
@@ -102,7 +101,11 @@ pub async fn authority() -> Result<Authority> {
         .await
         .unwrap();
 
-    Ok(authority)
+    // we do not use any routes requireing client authentication therefore we can just use dummys
+    // here
+    let client = CoreClient::from_provider_metadata(metadata, ClientId::new("dummy".to_owned()), None);
+
+    Ok((authority, client))
 }
 
 // we do not know the group claim names during the compile time, therefore we do have to use this

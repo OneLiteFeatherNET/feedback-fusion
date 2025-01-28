@@ -20,11 +20,11 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use std::collections::HashMap;
+
 use crate::prelude::*;
 use openidconnect::{core::CoreUserInfoClaims, AccessToken};
 use rbatis::rbdc::DateTime;
-
-use super::authorization::ResourceAuthorization;
 
 #[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
 #[derivative(PartialEq)]
@@ -63,7 +63,7 @@ impl User {
     #[instrument(skip_all)]
     pub async fn fetch(
         access_token: AccessToken,
-        client: openidconnect::core::CoreClient,
+        client: &openidconnect::core::CoreClient,
     ) -> Result<Self> {
         let user_info: CoreUserInfoClaims = client
             .user_info(access_token, None)
@@ -79,6 +79,6 @@ impl User {
 #[derive(Deserialize, Serialize, Clone, Debug, Getters)]
 #[get = "pub"]
 pub struct UserContext {
-    user: User,
-    authorizations: Vec<ResourceAuthorization>,
+    pub user: User,
+    pub authorizations: HashMap<String, bool>,
 }
