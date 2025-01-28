@@ -165,7 +165,9 @@ pub mod prelude {
         impl_select_page_wrapper, invalidate,
         services::{oidc::*, *},
     };
+    pub use cached::IOCachedAsync;
     pub use derivative::Derivative;
+    pub use feedback_fusion_codegen::dynamic_cache;
     pub use feedback_fusion_common::PageRequest;
     pub use getset::{Getters, MutGetters, Setters};
     pub use itertools::Itertools;

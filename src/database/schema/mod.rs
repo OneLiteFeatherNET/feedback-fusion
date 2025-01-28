@@ -24,7 +24,9 @@
 use prost_types::Timestamp;
 use rbatis::rbdc::DateTime;
 
+pub mod authorization;
 pub mod feedback;
+pub mod user;
 
 pub fn date_time_to_timestamp(date_time: DateTime) -> Timestamp {
     Timestamp::date_time(
