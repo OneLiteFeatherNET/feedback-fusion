@@ -26,7 +26,7 @@ use std::borrow::Cow;
 use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
 use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter};
+use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
 use crate::{
@@ -108,16 +108,17 @@ config!(
     )
 );
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr)]
+#[serde(untagged)]
 pub enum Endpoint {
-    Target,
-    Prompt,
-    Field,
-    Response,
-    Export,
+    Target(Option<String>),
+    Prompt(Option<String>),
+    Field(Option<String>),
+    Response(Option<String>),
+    Export(Option<String>),
 }
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr)]
 pub enum Permission {
     Read,
     Write,

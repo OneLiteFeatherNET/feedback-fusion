@@ -36,6 +36,8 @@
     - [RangeResponse](#feedback_fusion_v1-RangeResponse)
     - [RatingOptions](#feedback_fusion_v1-RatingOptions)
     - [RatingResponse](#feedback_fusion_v1-RatingResponse)
+    - [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization)
+    - [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData)
     - [ResponseData](#feedback_fusion_v1-ResponseData)
     - [ResponsePage](#feedback_fusion_v1-ResponsePage)
     - [ResponsePage.DataEntry](#feedback_fusion_v1-ResponsePage-DataEntry)
@@ -51,8 +53,11 @@
     - [UserInfoResponse](#feedback_fusion_v1-UserInfoResponse)
     - [UserInfoResponse.PermissionsEntry](#feedback_fusion_v1-UserInfoResponse-PermissionsEntry)
   
+    - [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant)
+    - [AuthorizationType](#feedback_fusion_v1-AuthorizationType)
     - [CheckboxStyle](#feedback_fusion_v1-CheckboxStyle)
     - [FieldType](#feedback_fusion_v1-FieldType)
+    - [ResourceKind](#feedback_fusion_v1-ResourceKind)
   
     - [FeedbackFusionV1](#feedback_fusion_v1-FeedbackFusionV1)
     - [PublicFeedbackFusionV1](#feedback_fusion_v1-PublicFeedbackFusionV1)
@@ -602,6 +607,43 @@
 
 
 
+<a name="feedback_fusion_v1-ResourceAuthorization"></a>
+
+### ResourceAuthorization
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| resource_kind | [ResourceKind](#feedback_fusion_v1-ResourceKind) |  |  |
+| resource_id | [string](#string) | optional |  |
+| authorization_data | [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData) |  |  |
+| updated_at | [string](#string) |  |  |
+| created_at | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationData"></a>
+
+### ResourceAuthorizationData
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) |  |  |
+| grant | [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant) | repeated |  |
+| values | [string](#string) | repeated |  |
+
+
+
+
+
+
 <a name="feedback_fusion_v1-ResponseData"></a>
 
 ### ResponseData
@@ -844,6 +886,31 @@
  
 
 
+<a name="feedback_fusion_v1-AuthorizationGrant"></a>
+
+### AuthorizationGrant
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| WRITE | 0 |  |
+| READ | 1 |  |
+
+
+
+<a name="feedback_fusion_v1-AuthorizationType"></a>
+
+### AuthorizationType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TYPE_SCOPE | 0 |  |
+| TYPE_PROMPT | 1 |  |
+| TYPE_USER | 2 |  |
+
+
+
 <a name="feedback_fusion_v1-CheckboxStyle"></a>
 
 ### CheckboxStyle
@@ -869,6 +936,19 @@
 | SELECTION | 3 |  |
 | RANGE | 4 |  |
 | NUMBER | 5 |  |
+
+
+
+<a name="feedback_fusion_v1-ResourceKind"></a>
+
+### ResourceKind
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| RESOURCE_TARGET | 0 |  |
+| RESOURCE_PROMPT | 1 |  |
+| RESOURCE_FIELD | 2 |  |
 
 
  

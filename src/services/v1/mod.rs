@@ -22,8 +22,11 @@
 
 use std::collections::BTreeSet;
 
-use crate::prelude::*;
-use aliri_oauth2::{scope::ScopeTokenRef, HasScope};
+use crate::{
+    database::schema::{authorization::ResourceAuthorization, user::UserContext},
+    prelude::*,
+};
+use aliri_oauth2::scope::ScopeTokenRef;
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
@@ -60,11 +63,20 @@ pub struct PublicFeedbackFusionV1Context {
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
     ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {{
-        if let Err(error) = FeedbackFusionV1Context::authorize(&$request, $endpoint, $permission) {
-            return Err(error.into());
+        match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection).await {
+            Ok(context) => {
+                // TODO: FIXME NONE IS NOT GOOD HERE
+                if let Err(error) = context
+                    .authorize(&$self.connection, &$endpoint(None), &$permission)
+                    .await
+                {
+                    Err(error.into())
+                } else {
+                    handler!($handler, $self, $request)
+                }
+            }
+            Err(error) => Err(error.into()),
         }
-
-        handler!($handler, $self, $request)
     }};
     ($handler:path, $self:ident, $request:ident) => {{
         match $handler($self, $request).await {
@@ -72,49 +84,6 @@ macro_rules! handler {
             Err(error) => Err(error.into()),
         }
     }};
-}
-
-impl FeedbackFusionV1Context {
-    #[instrument(skip_all)]
-    pub fn authorize<T>(
-        request: &Request<T>,
-        endpoint: Endpoint,
-        permission: Permission,
-    ) -> Result<()> {
-        // extract the claims from the request
-        let claims = request
-            .extensions()
-            .get::<OIDCClaims>()
-            .ok_or(FeedbackFusionError::Unauthorized)?;
-
-        let scopes = claims.scope().iter().collect();
-        let groups = claims.groups().iter().collect();
-
-        Self::authorize_scopes_and_groups(&scopes, &groups, endpoint, permission)
-    }
-
-    pub fn authorize_scopes_and_groups(
-        scopes: &BTreeSet<&ScopeTokenRef>,
-        groups: &BTreeSet<&String>,
-        endpoint: Endpoint,
-        permission: Permission,
-    ) -> Result<()> {
-        let entry = PERMISSION_MATRIX
-            .get(&(endpoint, permission))
-            .ok_or(FeedbackFusionError::Unauthorized)?;
-
-        // verify the scopes
-        let scope = scopes.iter().find(|scope| entry.0.contains(scope.as_str()));
-
-        // verify the groups
-        let group = groups.iter().find(|group| entry.1.contains(group.as_str()));
-
-        if scope.is_none() && group.is_none() {
-            Err(FeedbackFusionError::Unauthorized)
-        } else {
-            Ok(())
-        }
-    }
 }
 
 // may consider to divide the service into its parts, but as of now this wouldn't be a real

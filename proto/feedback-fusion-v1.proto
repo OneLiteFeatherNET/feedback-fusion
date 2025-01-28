@@ -4,7 +4,6 @@ package feedback_fusion_v1;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/struct.proto";
 
 // uses oidc authentication
 service FeedbackFusionV1 {
@@ -306,4 +305,36 @@ message DataExportRequest {
 
 message DataExportResponse {
   string export = 1;
+}
+
+enum ResourceKind {
+  RESOURCE_TARGET = 0;
+  RESOURCE_PROMPT = 1;
+  RESOURCE_FIELD = 2;
+}
+
+enum AuthorizationGrant {
+  WRITE = 0;
+  READ = 1;
+}
+
+enum AuthorizationType {
+  TYPE_SCOPE = 0;
+  TYPE_PROMPT = 1;
+  TYPE_USER = 2;
+}
+
+message ResourceAuthorizationData {
+  AuthorizationType type = 1;
+  repeated AuthorizationGrant grant = 2;
+  repeated string values = 3;
+}
+
+message ResourceAuthorization {
+  string id = 1;
+  ResourceKind resource_kind = 2;
+  optional string resource_id = 3;
+  ResourceAuthorizationData authorization_data = 4;
+  string updated_at = 5;
+  string created_at = 6;
 }

@@ -20,24 +20,50 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{prelude::*, save_as_json};
+use std::collections::BTreeSet;
+
+use crate::prelude::*;
+use aliri_oauth2::scope::ScopeTokenRef;
 use rbatis::rbdc::DateTime;
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display)]
 pub enum ResourceKind {
     Target,
     Prompt,
     Field,
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
-pub enum ResourceAuthorizationData {
-    Scope(Vec<String>),
-    Prompt(Vec<String>),
-    User(Vec<String>),
+impl PartialEq<Endpoint> for ResourceKind {
+    fn eq(&self, other: &Endpoint) -> bool {
+        match self {
+            &Self::Target => matches!(other, Endpoint::Target(_)),
+            &Self::Prompt => matches!(other, Endpoint::Prompt(_)),
+            &Self::Field => matches!(other, Endpoint::Field(_)),
+        }
+    }
 }
 
-save_as_json!(ResourceAuthorizationData, authorization_data);
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+pub enum ResourceAuthorizationType {
+    Scope,
+    Group,
+    Subject,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display)]
+pub enum ResourceAuthorizationGrant {
+    Read,
+    Write,
+}
+
+impl PartialEq<Permission> for ResourceAuthorizationGrant {
+    fn eq(&self, other: &Permission) -> bool {
+        match self {
+            &Self::Write => matches!(other, Permission::Write),
+            &Self::Read => matches!(other, Permission::Read),
+        }
+    }
+}
 
 #[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
 #[derivative(PartialEq)]
@@ -48,12 +74,10 @@ pub struct ResourceAuthorization {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
     resource_kind: ResourceKind,
-    resource_id: String,
-    #[serde(
-        serialize_with = "serialize_authorization_data",
-        deserialize_with = "deserialize_authorization_data"
-    )]
-    authorization_data: ResourceAuthorizationData,
+    resource_id: Option<String>,
+    authorization_type: ResourceAuthorizationType,
+    authorization_grant: ResourceAuthorizationGrant,
+    authorization: String,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
     updated_at: DateTime,
@@ -62,4 +86,35 @@ pub struct ResourceAuthorization {
     created_at: DateTime,
 }
 
+impl ToString for ResourceAuthorization {
+    fn to_string(&self) -> String {
+        if let Some(inner) = &self.resource_id {
+            format!(
+                "{}::{}::{}",
+                self.resource_kind(),
+                inner,
+                self.authorization_grant()
+            )
+        } else {
+            format!("{}::{}", self.resource_kind(), self.authorization_grant())
+        }
+    }
+}
+
 crud!(ResourceAuthorization {});
+impl_select!(ResourceAuthorization {select_matching(scopes: &BTreeSet<&ScopeTokenRef>, groups: &BTreeSet<&String>, subject: &str) => "`WHERE (authorization_type = 'Scope' AND authorization IN #{scopes}) OR (authorization_type = 'Group' AND authorization IN #{groups}) OR (authorization_type = 'Subject' AND authorization = #{subject})`"});
+
+pub struct Authorization<'a>(pub &'a Endpoint, pub &'a Permission);
+
+impl<'a> ToString for Authorization<'a> {
+    fn to_string(&self) -> String {
+        if let Endpoint::Target(Some(inner))
+        | Endpoint::Prompt(Some(inner))
+        | Endpoint::Field(Some(inner)) = &self.0
+        {
+            format!("{}::{}::{}", self.0, inner, self.1)
+        } else {
+            format!("{}::{}", self.0, self.1)
+        }
+    }
+}
