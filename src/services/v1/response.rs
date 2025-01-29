@@ -22,7 +22,9 @@
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
-    cache::fields_by_prompt, database::schema::feedback::{FieldData, FieldResponse, PromptResponse}, prelude::*
+    cache::fields_by_prompt,
+    database::schema::{feedback::{FieldData, FieldResponse, PromptResponse}, user::UserContext},
+    prelude::*,
 };
 use feedback_fusion_common::proto::{
     CreateResponsesRequest, FieldResponse as ProtoFieldResponse, FieldResponseList,
@@ -113,11 +115,11 @@ async fn field_responses(
 pub async fn get_responses(
     context: &FeedbackFusionV1Context,
     request: Request<GetResponsesRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ResponsePage>> {
     let data = request.into_inner();
     let page_request = data.page_request();
     let connection = context.connection();
-
 
     error!("{:?}", page_request);
 

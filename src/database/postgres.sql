@@ -40,4 +40,20 @@ CREATE TABLE IF NOT EXISTS field_response (
   data        TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS oidc_user (
+  id          VARCHAR(32) UNIQUE NOT NULL,
+  username    VARCHAR(255) NOT NULL,
+  updated_at  TIMESTAMP,
+  created_at  TIMESTAMP
+);
 
+CREATE TABLE IF NOT EXISTS resource_authorization (
+  id                  VARCHAR(32) UNIQUE NOT NULL,
+  resource_kind       VARCHAR(255) NOT NULL,
+  resource_id         VARCHAR(32) NOT NULL,
+  authorization_type  VARCHAR(32) NOT NULL,
+  authoriztion_grant  VARCHAR(32) NOT NULL,
+  authorization_value VARCHAR(32) NOT NULL,
+  updated_at          TIMESTAMP,
+  created_at          TIMESTAMP     
+);

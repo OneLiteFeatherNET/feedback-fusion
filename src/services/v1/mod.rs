@@ -20,13 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use std::collections::BTreeSet;
-
-use crate::{
-    database::schema::{authorization::ResourceAuthorization, user::UserContext},
-    prelude::*,
-};
-use aliri_oauth2::scope::ScopeTokenRef;
+use crate::{database::schema::user::UserContext, prelude::*};
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
@@ -72,9 +66,15 @@ macro_rules! handler {
                 {
                     Err(error.into())
                 } else {
-                    handler!($handler, $self, $request)
+                    handler!($handler, $self, $request, context)
                 }
             }
+            Err(error) => Err(error.into()),
+        }
+    }};
+    ($handler:path, $self:ident, $request:ident, $context:ident) => {{
+        match $handler($self, $request, $context).await {
+            Ok(response) => Ok(response),
             Err(error) => Err(error.into()),
         }
     }};
@@ -291,7 +291,13 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<()>,
     ) -> std::result::Result<Response<UserInfoResponse>, Status> {
-        handler!(user::get_user_info, self, request)
+        match UserContext::get_otherwise_fetch(&request, &self.client, &self.connection).await {
+            Ok(context) => match user::get_user_info(self, request, context).await {
+                Ok(response) => Ok(response),
+                Err(error) => Err(error.into()),
+            },
+            Err(error) => Err(error.into()),
+        }
     }
 
     #[instrument(skip_all)]

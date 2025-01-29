@@ -20,6 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use rbatis::rbatis_codegen::IntoSql;
 use std::collections::BTreeSet;
 
 use crate::prelude::*;
@@ -35,10 +36,10 @@ pub enum ResourceKind {
 
 impl PartialEq<Endpoint> for ResourceKind {
     fn eq(&self, other: &Endpoint) -> bool {
-        match self {
-            &Self::Target => matches!(other, Endpoint::Target(_)),
-            &Self::Prompt => matches!(other, Endpoint::Prompt(_)),
-            &Self::Field => matches!(other, Endpoint::Field(_)),
+        match *self {
+            Self::Target => matches!(other, Endpoint::Target(_)),
+            Self::Prompt => matches!(other, Endpoint::Prompt(_)),
+            Self::Field => matches!(other, Endpoint::Field(_)),
         }
     }
 }
@@ -58,9 +59,9 @@ pub enum ResourceAuthorizationGrant {
 
 impl PartialEq<Permission> for ResourceAuthorizationGrant {
     fn eq(&self, other: &Permission) -> bool {
-        match self {
-            &Self::Write => matches!(other, Permission::Write),
-            &Self::Read => matches!(other, Permission::Read),
+        match *self {
+            Self::Write => matches!(other, Permission::Write),
+            Self::Read => matches!(other, Permission::Read),
         }
     }
 }
@@ -77,7 +78,7 @@ pub struct ResourceAuthorization {
     resource_id: Option<String>,
     authorization_type: ResourceAuthorizationType,
     authorization_grant: ResourceAuthorizationGrant,
-    authorization: String,
+    authorization_value: String,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
     updated_at: DateTime,
@@ -86,35 +87,41 @@ pub struct ResourceAuthorization {
     created_at: DateTime,
 }
 
-impl ToString for ResourceAuthorization {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for ResourceAuthorization {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(inner) = &self.resource_id {
-            format!(
+            write!(
+                f,
                 "{}::{}::{}",
                 self.resource_kind(),
                 inner,
                 self.authorization_grant()
             )
         } else {
-            format!("{}::{}", self.resource_kind(), self.authorization_grant())
+            write!(
+                f,
+                "{}::{}",
+                self.resource_kind(),
+                self.authorization_grant()
+            )
         }
     }
 }
 
 crud!(ResourceAuthorization {});
-impl_select!(ResourceAuthorization {select_matching(scopes: &BTreeSet<&ScopeTokenRef>, groups: &BTreeSet<&String>, subject: &str) => "`WHERE (authorization_type = 'Scope' AND authorization IN #{scopes}) OR (authorization_type = 'Group' AND authorization IN #{groups}) OR (authorization_type = 'Subject' AND authorization = #{subject})`"});
+impl_select!(ResourceAuthorization {select_matching(scopes: &BTreeSet<&ScopeTokenRef>, groups: &BTreeSet<&String>, subject: &str) => "`WHERE (authorization_type = 'Scope' AND authorization_value IN ${scopes.sql()}) OR (authorization_type = 'Group' AND authorization_value IN ${groups.sql()}) OR (authorization_type = 'Subject' AND authorization_value = #{subject})`"});
 
 pub struct Authorization<'a>(pub &'a Endpoint, pub &'a Permission);
 
-impl<'a> ToString for Authorization<'a> {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Authorization<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Endpoint::Target(Some(inner))
         | Endpoint::Prompt(Some(inner))
         | Endpoint::Field(Some(inner)) = &self.0
         {
-            format!("{}::{}::{}", self.0, inner, self.1)
+            write!(f, "{}::{}::{}", self.0, inner, self.1)
         } else {
-            format!("{}::{}", self.0, self.1)
+            write!(f, "{}::{}", self.0, self.1)
         }
     }
 }

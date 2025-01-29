@@ -27,7 +27,6 @@ use openidconnect::{core::CoreClient, AccessToken};
 use rbs::to_value;
 use std::collections::{BTreeSet, HashMap};
 use tonic::Request;
-use v1::FeedbackFusionV1Context;
 use wildcard::Wildcard;
 
 use crate::{
@@ -57,40 +56,40 @@ impl UserContext {
             ))?
             .to_string();
 
-        let access_token = AccessToken::new(
-            request
-                .metadata()
-                .get(AUTHORIZATION.as_str())
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .split(" ")
-                .last()
-                .unwrap()
-                .to_string(),
-        );
+        let bearer = request
+            .metadata()
+            .get(AUTHORIZATION.as_str())
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let access_token = AccessToken::new(bearer.split(" ").last().unwrap().to_string());
 
         let scopes = claims.scope().iter().collect();
         let groups = claims.groups().iter().collect();
 
-        if let Ok(context) = get_user_context(connection, subject.as_str(), &scopes, &groups).await
-        {
-            Ok(context)
-        } else {
-            let user = User::fetch(access_token, client).await?;
+        match get_user_context(connection, subject.as_str(), &scopes, &groups).await {
+            Ok(context) => Ok(context),
+            Err(FeedbackFusionError::OIDCError(_)) => {
+                let user = User::fetch(access_token, client, claims).await?;
 
-            database_request!(User::insert(connection, &user).await, "Save user")?;
-            invalidate!(
-                get_user_context,
-                format!(
-                    "get-user-context-{}-{:?}-{:?}",
-                    subject.as_str(),
-                    &scopes,
-                    &groups
-                )
-            );
+                // due to sync problems this could occur twice at the same time, therefore we just
+                // dont use the result error. As the cache already got invalidated by the other
+                // process we dont need to do it in that case :)
+                if database_request!(User::insert(connection, &user).await, "Save user").is_ok() {
+                    invalidate!(
+                        get_user_context,
+                        format!(
+                            "get-user-context-{}-{:?}-{:?}",
+                            subject.as_str(),
+                            &scopes,
+                            &groups
+                        )
+                    );
+                }
 
-            get_user_context(connection, subject.as_str(), &scopes, &groups).await
+                get_user_context(connection, subject.as_str(), &scopes, &groups).await
+            }
+            error => error,
         }
     }
 
@@ -98,7 +97,7 @@ impl UserContext {
     pub fn has_grant(
         scopes: &BTreeSet<&ScopeTokenRef>,
         groups: &BTreeSet<&String>,
-        authorizations: &Vec<ResourceAuthorization>,
+        authorizations: &[ResourceAuthorization],
         endpoint: Endpoint,
         permission: Permission,
     ) -> Result<Vec<String>> {
@@ -115,7 +114,7 @@ impl UserContext {
 
         if scope.is_none() && group.is_none() {
             // find possibly matching authorizations
-            authorizations.iter().filter(|authorization| {
+            let authorizations = authorizations.iter().filter(|authorization| {
                 let matches_permission = authorization.authorization_grant().eq(&permission);
                 let matches_endpoint = authorization.resource_kind().eq(&endpoint);
                 let matches_id = authorization.resource_id().as_ref().is_none_or(|pattern| {
@@ -136,7 +135,7 @@ impl UserContext {
         }
     }
 
-    #[instrument(skip(self))]
+    #[instrument(skip(self, connection))]
     pub async fn authorize(
         &self,
         connection: &DatabaseConnection,
@@ -167,11 +166,10 @@ impl UserContext {
                 .authorizations
                 .get(&authorization)
                 .is_some_and(|value| !*value)
-                && self
+                && !self
                     .authorizations
                     .keys()
-                    .find(|key| is_match(key, &endpoint, &Permission::Read))
-                    .is_none()
+                    .any(|key| is_match(key, &endpoint, &Permission::Read))
             {
                 return Err(FeedbackFusionError::Unauthorized);
             }
@@ -179,17 +177,15 @@ impl UserContext {
 
         // now we made sure the user can access the target and we now verify if he can access the
         // endpoint he called
-
         let authorization = Authorization(endpoint, permission).to_string();
         if self
             .authorizations
             .get(&authorization)
             .is_some_and(|value| *value)
-            && self
+            || self
                 .authorizations
                 .keys()
-                .find(|key| is_match(key, endpoint, permission))
-                .is_some()
+                .any(|key| is_match(key, endpoint, permission))
         {
             Ok(())
         } else {
@@ -255,7 +251,7 @@ async fn get_user_matrix(
     Ok(PERMISSION_MATRIX
         .clone()
         .into_iter()
-        .map(|entry| {
+        .flat_map(|entry| {
             let (endpoint, permission) = entry.0;
             let fallback = Authorization(&endpoint, &permission).to_string();
 
@@ -269,7 +265,6 @@ async fn get_user_matrix(
                 vec![(fallback, false)]
             }
         })
-        .flatten()
         .collect::<HashMap<String, bool>>())
 }
 
@@ -310,7 +305,7 @@ async fn get_target_id_by_prompt_id(connection: &DatabaseConnection, id: &str) -
         "Select target id by prompt id"
     )?;
 
-    Ok(id.ok_or(FeedbackFusionError::Unauthorized)?)
+    id.ok_or(FeedbackFusionError::Unauthorized)
 }
 
 #[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-field-id-{}', id)"#)]
@@ -325,5 +320,5 @@ async fn get_target_id_by_field_id(connection: &DatabaseConnection, id: &str) ->
         "Select target id by field id"
     )?;
 
-    Ok(id.ok_or(FeedbackFusionError::Unauthorized)?)
+    id.ok_or(FeedbackFusionError::Unauthorized)
 }

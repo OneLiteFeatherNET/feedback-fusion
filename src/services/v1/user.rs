@@ -20,36 +20,17 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use std::collections::HashMap;
-
 use feedback_fusion_common::proto::UserInfoResponse;
 use v1::FeedbackFusionV1Context;
 
-use crate::prelude::*;
+use crate::{database::schema::user::UserContext, prelude::*};
 
 pub async fn get_user_info(
     _context: &FeedbackFusionV1Context,
-    request: Request<()>,
+    _request: Request<()>,
+    user_context: UserContext,
 ) -> Result<Response<UserInfoResponse>> {
-    // we have the permission matrix in format endpoint, permission -> scopes, groups and therefore
-    // we would just have to iterate over the entryset and perform the context authorization for
-    // each entry.
-    let permissions = PERMISSION_MATRIX
-        .clone()
-        .into_iter()
-        .map(|entry| {
-            let (endpoint, permission) = entry.0;
-            let identifier = format!("{:?}::{:?}", endpoint, permission);
-
-            if FeedbackFusionV1Context::authorize(&request, endpoint.clone(), permission.clone())
-                .is_ok()
-            {
-                (identifier, true)
-            } else {
-                (identifier, false)
-            }
-        })
-        .collect::<HashMap<String, bool>>();
-
-    Ok(Response::new(UserInfoResponse { permissions }))
+    Ok(Response::new(UserInfoResponse {
+        permissions: user_context.authorizations,
+    }))
 }

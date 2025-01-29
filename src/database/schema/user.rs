@@ -23,6 +23,7 @@
 use std::collections::HashMap;
 
 use crate::prelude::*;
+use aliri::jwt::CoreClaims;
 use openidconnect::{core::CoreUserInfoClaims, AccessToken};
 use rbatis::rbdc::DateTime;
 
@@ -42,8 +43,8 @@ pub struct User {
     created_at: DateTime,
 }
 
-crud!(User {});
-impl_select!(User {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
+crud!(User {}, "oidc_user");
+impl_select!(User {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"}, "oidc_user");
 
 impl From<CoreUserInfoClaims> for User {
     fn from(claims: CoreUserInfoClaims) -> Self {
@@ -64,15 +65,25 @@ impl User {
     pub async fn fetch(
         access_token: AccessToken,
         client: &openidconnect::core::CoreClient,
+        claims: &OIDCClaims,
     ) -> Result<Self> {
-        let user_info: CoreUserInfoClaims = client
-            .user_info(access_token, None)
-            .map_err(|error| FeedbackFusionError::OIDCError(error.to_string()))?
-            .request_async(openidconnect::reqwest::async_http_client)
-            .await
-            .map_err(|error| FeedbackFusionError::OIDCError(error.to_string()))?;
+        if claims.is_application() {
+            let sub = claims
+                .sub()
+                .ok_or(FeedbackFusionError::Unauthorized)?
+                .to_string();
 
-        Ok(Self::from(user_info))
+            Ok(Self::builder().id(&sub).username(&sub).build())
+        } else {
+            let user_info: CoreUserInfoClaims = client
+                .user_info(access_token, None)
+                .map_err(|error| FeedbackFusionError::OIDCError(error.to_string()))?
+                .request_async(openidconnect::reqwest::async_http_client)
+                .await
+                .map_err(|error| FeedbackFusionError::OIDCError(error.to_string()))?;
+
+            Ok(Self::from(user_info))
+        }
     }
 }
 

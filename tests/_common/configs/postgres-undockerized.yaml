@@ -38,5 +38,5 @@ preset:
               lines: 1 
               placeholder: test
 
-otlp:
-  endpoint: http://tempo:4317
+# otlp:
+#   endpoint: http://tempo:4317
