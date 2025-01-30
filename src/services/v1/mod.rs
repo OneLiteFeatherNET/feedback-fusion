@@ -63,7 +63,6 @@ macro_rules! handler {
     ($handler:path, $self:ident, $request:ident, $endpoint:path $inner:block, $permission:path) => {{
         match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection).await {
             Ok(context) => {
-                // TODO: FIXME NONE IS NOT GOOD HERE
                 if let Err(error) = context
                     .authorize(&$self.connection, &$endpoint(async $inner.await), &$permission)
                     .await
@@ -173,7 +172,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::create_prompt,
             self,
             request,
-            Endpoint::Prompt,
+            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().target.as_str())) },
             Permission::Write
         )
     }
@@ -229,7 +228,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::create_field,
             self,
             request,
-            Endpoint::Field,
+            Endpoint::Prompt { Some(Cow::Borrowed(request.get_ref().prompt.as_str())) },
             Permission::Write
         )
     }

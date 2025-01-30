@@ -197,37 +197,28 @@ impl UserContext {
 fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool {
     let mut split = key.split("::");
 
-    // TODO: refactor this
-    if let Some(e) = split.next().as_ref() {
-        if e.eq(&Into::<&str>::into(endpoint)) {
-            if let Some(matcher) = split.next().as_ref() {
-                if let Some(p) = split.next().as_ref() {
-                    if p.eq(&Into::<&str>::into(permission)) {
-                        let wildcard = Wildcard::new(matcher.as_bytes()).unwrap();
+    let (Some(first), Some(second), Some(third)) = (split.next(), split.next(), split.next())
+    else {
+        return false;
+    };
 
-                        if let Endpoint::Target(Some(id))
-                        | Endpoint::Prompt(Some(id))
-                        | Endpoint::Field(Some(id)) = endpoint
-                        {
-                            wildcard.is_match(id.as_bytes())
-                        } else {
-                            // TODO: fix me
-                            false
-                        }
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
-        } else {
-            false
+    // verify the given endpoint is a match
+    if !first.eq(Into::<&str>::into(endpoint)) {
+        return false;
+    }
+
+    // verify it is the same permission
+    if !third.eq(Into::<&str>::into(permission)) {
+        return false;
+    }
+
+    let wildcard = Wildcard::new(second.as_bytes()).unwrap();
+
+    match endpoint {
+        Endpoint::Target(Some(id)) | Endpoint::Prompt(Some(id)) | Endpoint::Field(Some(id)) => {
+            wildcard.is_match(id.as_bytes())
         }
-    } else {
-        false
+        _ => false,
     }
 }
 
