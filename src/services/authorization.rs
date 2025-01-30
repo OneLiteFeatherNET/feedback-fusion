@@ -157,6 +157,8 @@ impl UserContext {
 
         // check wether we can access this target if its `Some`
         if let Some(target_id) = target_id {
+            debug!("Detected {:?} belongs to target {}", endpoint, target_id);
+
             let authorization =
                 Authorization(&Endpoint::Target(None), &Permission::Write).to_string();
             let endpoint = Endpoint::Target(Some(Cow::Borrowed(target_id.as_str())));
@@ -168,15 +170,20 @@ impl UserContext {
                 && !self
                     .authorizations
                     .keys()
+                    // custom authorizations have 2 times :: in it therefore we can divide the keys
+                    // into custom authorizations and permission matrix authorizations. Custom resource
+                    // authorizations are always with value true therefore we just have to search for
+                    // any matching custom auth key
                     .any(|key| is_match(key, &endpoint, &Permission::Read))
             {
+                debug!("Client is not authorized to access target {}", target_id);
                 return Err(FeedbackFusionError::Unauthorized);
             }
         }
 
         // now we made sure the user can access the target and we now verify if he can access the
         // endpoint he called
-        let authorization = Authorization(endpoint, permission).to_string();
+        let authorization = Authorization(&endpoint.none(), permission).to_string();
         if self
             .authorizations
             .get(&authorization)
@@ -188,6 +195,7 @@ impl UserContext {
         {
             Ok(())
         } else {
+            debug!("Client does not have the permission to perform {:?} on {:?}", permission, endpoint);
             Err(FeedbackFusionError::Unauthorized)
         }
     }
@@ -216,7 +224,16 @@ fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool 
 
     match endpoint {
         Endpoint::Target(Some(id)) | Endpoint::Prompt(Some(id)) | Endpoint::Field(Some(id)) => {
-            wildcard.is_match(id.as_bytes())
+            if wildcard.is_match(id.as_bytes()) {
+                debug!(
+                    "ResourceAuthorization {} does not match {:?} with {:?}",
+                    key, endpoint, permission
+                );
+
+                true
+            } else {
+                false
+            }
         }
         _ => false,
     }
@@ -303,7 +320,7 @@ async fn get_target_id_by_field_id(connection: &DatabaseConnection, id: &str) ->
     let id: Option<String> = database_request!(
         connection
             .query_decode(
-                "SELECT prompt.target FROM field JOIN prompt prompt ON prompt = prompt.id WHERE id = ?",
+                "SELECT prompt.target FROM field field JOIN prompt prompt ON field.prompt = prompt.id WHERE field.id = ?",
                 vec![to_value!(id)]
             )
             .await,

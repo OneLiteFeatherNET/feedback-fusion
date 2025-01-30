@@ -139,6 +139,16 @@ impl Endpoint<'_> {
             Endpoint::Export(opt) => Endpoint::Export(opt.as_ref().map(|s| s.to_string().into())),
         }
     }
+
+    pub fn none(&self) -> Endpoint {
+        match self {
+            Endpoint::Target(_) => Endpoint::Target(None),
+            Endpoint::Prompt(_) => Endpoint::Prompt(None),
+            Endpoint::Field(_) => Endpoint::Field(None),
+            Endpoint::Response(_) => Endpoint::Response(None),
+            Endpoint::Export(_) => Endpoint::Export(None),
+        }
+    }
 }
 
 #[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr)]
