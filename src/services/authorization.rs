@@ -148,35 +148,49 @@ impl UserContext {
         // we firrst need to verify that the user has the access to the target, therefore we get
         // the target id. We do not have to find prompts for fields as prompts and fields are
         // public available and therefore just have to verify the target
-        let target_id = match endpoint {
-            Endpoint::Target(id) => id.as_ref().map(|id| id.to_string()),
-            Endpoint::Prompt(Some(id)) => Some(get_target_id_by_prompt_id(connection, id).await?),
-            Endpoint::Field(Some(id)) => Some(get_target_id_by_field_id(connection, id).await?),
+        let target_ids = match endpoint {
+            Endpoint::Target(Some(id)) => Some(vec![id.to_string()]),
+            Endpoint::Prompt(Some(id)) => {
+                Some(vec![get_target_id_by_prompt_id(connection, id).await?])
+            }
+            Endpoint::Field(Some(id)) => {
+                Some(vec![get_target_id_by_field_id(connection, id).await?])
+            }
+            Endpoint::Response(Some(id)) => {
+                Some(vec![get_target_id_by_prompt_id(connection, id).await?])
+            }
+            Endpoint::Export(Some(ids)) => Some(ids.iter().map(|id| id.to_string()).collect()),
             _ => None,
         };
 
         // check wether we can access this target if its `Some`
-        if let Some(target_id) = target_id {
-            debug!("Detected {:?} belongs to target {}", endpoint, target_id);
+        if let Some(target_ids) = target_ids {
+            if !target_ids.into_iter().all(|target_id| {
+                debug!("Detected {:?} belongs to target {}", endpoint, target_id);
 
-            let authorization =
-                Authorization(&Endpoint::Target(None), &Permission::Write).to_string();
-            let endpoint = Endpoint::Target(Some(Cow::Borrowed(target_id.as_str())));
+                let authorization =
+                    Authorization(&Endpoint::Target(None), &Permission::Write).to_string();
+                let endpoint = Endpoint::Target(Some(Cow::Borrowed(target_id.as_str())));
 
-            if self
-                .authorizations
-                .get(&authorization)
-                .is_some_and(|value| !*value)
-                && !self
+                if self
                     .authorizations
-                    .keys()
-                    // custom authorizations have 2 times :: in it therefore we can divide the keys
-                    // into custom authorizations and permission matrix authorizations. Custom resource
-                    // authorizations are always with value true therefore we just have to search for
-                    // any matching custom auth key
-                    .any(|key| is_match(key, &endpoint, &Permission::Read))
-            {
-                debug!("Client is not authorized to access target {}", target_id);
+                    .get(&authorization)
+                    .is_some_and(|value| !*value)
+                    && !self
+                        .authorizations
+                        .keys()
+                        // custom authorizations have 2 times :: in it therefore we can divide the keys
+                        // into custom authorizations and permission matrix authorizations. Custom resource
+                        // authorizations are always with value true therefore we just have to search for
+                        // any matching custom auth key
+                        .any(|key| is_match(key, &endpoint, &Permission::Read))
+                {
+                    debug!("Client is not authorized to access target {}", target_id);
+                    false
+                } else {
+                    true
+                }
+            }) {
                 return Err(FeedbackFusionError::Unauthorized);
             }
         }
@@ -195,7 +209,10 @@ impl UserContext {
         {
             Ok(())
         } else {
-            debug!("Client does not have the permission to perform {:?} on {:?}", permission, endpoint);
+            debug!(
+                "Client does not have the permission to perform {:?} on {:?}",
+                permission, endpoint
+            );
             Err(FeedbackFusionError::Unauthorized)
         }
     }

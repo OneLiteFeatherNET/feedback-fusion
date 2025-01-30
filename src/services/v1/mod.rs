@@ -312,7 +312,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             export::export_data,
             self,
             request,
-            Endpoint::Export,
+            Endpoint::Export { Some(request.get_ref().targets.iter().map(|target| Cow::Borrowed(target.as_str())).collect()) },
             Permission::Read
         )
     }

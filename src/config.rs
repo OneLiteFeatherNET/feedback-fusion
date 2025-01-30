@@ -124,19 +124,29 @@ pub enum Endpoint<'a> {
     Prompt(Option<Cow<'a, str>>),
     Field(Option<Cow<'a, str>>),
     Response(Option<Cow<'a, str>>),
-    Export(Option<Cow<'a, str>>),
+    Export(Option<Vec<Cow<'a, str>>>),
 }
 
 impl Endpoint<'_> {
     pub fn to_static(&self) -> Endpoint<'static> {
         match self {
-            Endpoint::Target(opt) => Endpoint::Target(opt.as_ref().map(|s| s.to_string().into())),
-            Endpoint::Prompt(opt) => Endpoint::Prompt(opt.as_ref().map(|s| s.to_string().into())),
-            Endpoint::Field(opt) => Endpoint::Field(opt.as_ref().map(|s| s.to_string().into())),
-            Endpoint::Response(opt) => {
-                Endpoint::Response(opt.as_ref().map(|s| s.to_string().into()))
+            Endpoint::Target(opt) => {
+                Endpoint::Target(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
             }
-            Endpoint::Export(opt) => Endpoint::Export(opt.as_ref().map(|s| s.to_string().into())),
+            Endpoint::Prompt(opt) => {
+                Endpoint::Prompt(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
+            }
+            Endpoint::Field(opt) => {
+                Endpoint::Field(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
+            }
+            Endpoint::Response(opt) => {
+                Endpoint::Response(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
+            }
+            Endpoint::Export(opt) => Endpoint::Export(opt.as_ref().map(|vec| {
+                vec.iter()
+                    .map(|s| Cow::Owned(s.clone().into_owned()))
+                    .collect()
+            })),
         }
     }
 
