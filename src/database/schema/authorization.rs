@@ -34,8 +34,8 @@ pub enum ResourceKind {
     Field,
 }
 
-impl PartialEq<Endpoint> for ResourceKind {
-    fn eq(&self, other: &Endpoint) -> bool {
+impl PartialEq<Endpoint<'_>> for ResourceKind {
+    fn eq(&self, other: &Endpoint<'_>) -> bool {
         match *self {
             Self::Target => matches!(other, Endpoint::Target(_)),
             Self::Prompt => matches!(other, Endpoint::Prompt(_)),
@@ -111,7 +111,7 @@ impl std::fmt::Display for ResourceAuthorization {
 crud!(ResourceAuthorization {});
 impl_select!(ResourceAuthorization {select_matching(scopes: &BTreeSet<&ScopeTokenRef>, groups: &BTreeSet<&String>, subject: &str) => "`WHERE (authorization_type = 'Scope' AND authorization_value IN ${scopes.sql()}) OR (authorization_type = 'Group' AND authorization_value IN ${groups.sql()}) OR (authorization_type = 'Subject' AND authorization_value = #{subject})`"});
 
-pub struct Authorization<'a>(pub &'a Endpoint, pub &'a Permission);
+pub struct Authorization<'a>(pub &'a Endpoint<'a>, pub &'a Permission);
 
 impl std::fmt::Display for Authorization<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

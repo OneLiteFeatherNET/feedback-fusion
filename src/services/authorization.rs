@@ -25,7 +25,10 @@ use aliri_oauth2::{scope::ScopeTokenRef, HasScope};
 use http::header::AUTHORIZATION;
 use openidconnect::{core::CoreClient, AccessToken};
 use rbs::to_value;
-use std::collections::{BTreeSet, HashMap};
+use std::{
+    borrow::Cow,
+    collections::{BTreeSet, HashMap},
+};
 use tonic::Request;
 use wildcard::Wildcard;
 
@@ -94,16 +97,16 @@ impl UserContext {
     }
 
     #[instrument(skip_all)]
-    pub fn has_grant(
+    pub fn has_grant<'a>(
         scopes: &BTreeSet<&ScopeTokenRef>,
         groups: &BTreeSet<&String>,
         authorizations: &[ResourceAuthorization],
-        endpoint: Endpoint,
+        endpoint: Endpoint<'a>,
         permission: Permission,
     ) -> Result<Vec<String>> {
         let authorization_string = Authorization(&endpoint, &permission).to_string();
         let entry = PERMISSION_MATRIX
-            .get(&(endpoint.clone(), permission.clone()))
+            .get(&(endpoint.to_static(), permission.clone()))
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
@@ -139,20 +142,16 @@ impl UserContext {
     pub async fn authorize(
         &self,
         connection: &DatabaseConnection,
-        endpoint: &Endpoint,
+        endpoint: &Endpoint<'_>,
         permission: &Permission,
     ) -> Result<()> {
         // we firrst need to verify that the user has the access to the target, therefore we get
         // the target id. We do not have to find prompts for fields as prompts and fields are
         // public available and therefore just have to verify the target
         let target_id = match endpoint {
-            Endpoint::Target(id) => id.clone(),
-            Endpoint::Prompt(Some(id)) => {
-                Some(get_target_id_by_prompt_id(connection, id.as_str()).await?)
-            }
-            Endpoint::Field(Some(id)) => {
-                Some(get_target_id_by_field_id(connection, id.as_str()).await?)
-            }
+            Endpoint::Target(id) => id.as_ref().map(|id| id.to_string()),
+            Endpoint::Prompt(Some(id)) => Some(get_target_id_by_prompt_id(connection, id).await?),
+            Endpoint::Field(Some(id)) => Some(get_target_id_by_field_id(connection, id).await?),
             _ => None,
         };
 
@@ -160,7 +159,7 @@ impl UserContext {
         if let Some(target_id) = target_id {
             let authorization =
                 Authorization(&Endpoint::Target(None), &Permission::Write).to_string();
-            let endpoint = Endpoint::Target(Some(target_id));
+            let endpoint = Endpoint::Target(Some(Cow::Borrowed(target_id.as_str())));
 
             if self
                 .authorizations

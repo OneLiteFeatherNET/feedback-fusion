@@ -32,6 +32,7 @@ use feedback_fusion_common::proto::{
     UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
 };
 use openidconnect::core::CoreClient;
+use std::borrow::Cow;
 use tonic::{Response, Status};
 
 pub mod export;
@@ -56,12 +57,15 @@ pub struct PublicFeedbackFusionV1Context {
 
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
-    ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {{
+    ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {
+        handler!($handler, $self, $request, $endpoint { None }, $permission)
+    };
+    ($handler:path, $self:ident, $request:ident, $endpoint:path $inner:block, $permission:path) => {{
         match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection).await {
             Ok(context) => {
                 // TODO: FIXME NONE IS NOT GOOD HERE
                 if let Err(error) = context
-                    .authorize(&$self.connection, &$endpoint(None), &$permission)
+                    .authorize(&$self.connection, &$endpoint(async $inner.await), &$permission)
                     .await
                 {
                     Err(error.into())
@@ -113,7 +117,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::get_target,
             self,
             request,
-            Endpoint::Target,
+            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().id.as_str()) )},
             Permission::Write
         )
     }
@@ -141,7 +145,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::update_target,
             self,
             request,
-            Endpoint::Target,
+            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -155,7 +159,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::delete_target,
             self,
             request,
-            Endpoint::Target,
+            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -197,7 +201,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::update_prompt,
             self,
             request,
-            Endpoint::Prompt,
+            Endpoint::Prompt { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -211,7 +215,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::delete_prompt,
             self,
             request,
-            Endpoint::Prompt,
+            Endpoint::Prompt { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -253,7 +257,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::update_field,
             self,
             request,
-            Endpoint::Field,
+            Endpoint::Field { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -267,7 +271,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::delete_field,
             self,
             request,
-            Endpoint::Field,
+            Endpoint::Field { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
