@@ -284,7 +284,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             response::get_responses,
             self,
             request,
-            Endpoint::Response,
+            Endpoint::Response { Some(Cow::Borrowed(request.get_ref().prompt.as_str())) },
             Permission::List
         )
     }
