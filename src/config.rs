@@ -53,7 +53,8 @@ lazy_static! {
         Endpoint::Prompt(None),
         Endpoint::Field(None),
         Endpoint::Export(None),
-        Endpoint::Response(None)
+        Endpoint::Response(None),
+        Endpoint::Authorize(None)
     ];
 }
 
@@ -125,6 +126,8 @@ pub enum Endpoint<'a> {
     Field(Option<Cow<'a, str>>),
     Response(Option<Cow<'a, str>>),
     Export(Option<Vec<Cow<'a, str>>>),
+    /// this is always target based
+    Authorize(Option<Box<Endpoint<'a>>>),
 }
 
 impl Endpoint<'_> {
@@ -147,6 +150,10 @@ impl Endpoint<'_> {
                     .map(|s| Cow::Owned(s.clone().into_owned()))
                     .collect()
             })),
+            Endpoint::Authorize(Some(inner)) => {
+                Endpoint::Authorize(Some(Box::new(inner.to_static())))
+            }
+            Endpoint::Authorize(None) => Endpoint::Authorize(None),
         }
     }
 
@@ -157,6 +164,7 @@ impl Endpoint<'_> {
             Endpoint::Field(_) => Endpoint::Field(None),
             Endpoint::Response(_) => Endpoint::Response(None),
             Endpoint::Export(_) => Endpoint::Export(None),
+            Endpoint::Authorize(_) => Endpoint::Authorize(None),
         }
     }
 }

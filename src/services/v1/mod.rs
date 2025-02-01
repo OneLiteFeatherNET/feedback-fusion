@@ -24,17 +24,19 @@ use crate::{database::schema::user::UserContext, prelude::*};
 use feedback_fusion_common::proto::{
     feedback_fusion_v1_server::FeedbackFusionV1,
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
-    CreatePromptRequest, CreateResponsesRequest, CreateTargetRequest, DataExportRequest,
-    DataExportResponse, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
-    Field as ProtoField, FieldPage, GetFieldsRequest, GetPromptRequest, GetPromptsRequest,
-    GetResponsesRequest, GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage,
-    PromptResponse, ResponsePage, Target as ProtoTarget, TargetPage, UpdateFieldRequest,
-    UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
+    CreatePromptRequest, CreateResourceAuthorizationRequest, CreateResponsesRequest,
+    CreateTargetRequest, DataExportRequest, DataExportResponse, DeleteFieldRequest,
+    DeletePromptRequest, DeleteTargetRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
+    GetPromptRequest, GetPromptsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
+    Prompt as ProtoPrompt, PromptPage, PromptResponse,
+    ResourceAuthorization as ProtoResourceAuthorization, ResponsePage, Target as ProtoTarget,
+    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
 };
 use openidconnect::core::CoreClient;
 use std::borrow::Cow;
 use tonic::{Response, Status};
 
+pub mod authorization;
 pub mod export;
 pub mod field;
 pub mod prompt;
@@ -314,6 +316,19 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             request,
             Endpoint::Export { Some(request.get_ref().targets.iter().map(|target| Cow::Borrowed(target.as_str())).collect()) },
             Permission::Read
+        )
+    }
+
+    async fn create_resource_authorization(
+        &self,
+        request: Request<CreateResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
+        handler!(
+            authorization::create_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize,
+            Permission::Write
         )
     }
 }

@@ -28,6 +28,8 @@ service FeedbackFusionV1 {
   rpc GetUserInfo(google.protobuf.Empty) returns (UserInfoResponse);
 
   rpc ExportData(DataExportRequest) returns (DataExportResponse);
+
+  rpc CreateResourceAuthorization(CreateResourceAuthorizationRequest) returns (ResourceAuthorization);
 }
 
 // does not use oidc authentication
@@ -311,6 +313,9 @@ enum ResourceKind {
   RESOURCE_TARGET = 0;
   RESOURCE_PROMPT = 1;
   RESOURCE_FIELD = 2;
+  RESOURCE_EXPORT = 3;
+  RESOURCE_AUTHORIZE = 4;
+  RESOURCE_RESPONSE = 5;
 }
 
 enum AuthorizationGrant {
@@ -330,10 +335,16 @@ message ResourceAuthorizationData {
   repeated string values = 3;
 }
 
+message CreateResourceAuthorizationRequest {
+  ResourceKind resource_kind = 2;
+  repeated string resource_id = 3;
+  ResourceAuthorizationData authorization_data = 4;
+}
+
 message ResourceAuthorization {
   string id = 1;
   ResourceKind resource_kind = 2;
-  optional string resource_id = 3;
+  repeated string resource_id = 3;
   ResourceAuthorizationData authorization_data = 4;
   string updated_at = 5;
   string created_at = 6;

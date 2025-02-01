@@ -22,6 +22,7 @@
 
 use aliri::jwt::CoreClaims;
 use aliri_oauth2::{scope::ScopeTokenRef, HasScope};
+use async_recursion::async_recursion;
 use http::header::AUTHORIZATION;
 use openidconnect::{core::CoreClient, AccessToken};
 use rbs::to_value;
@@ -39,6 +40,31 @@ use crate::{
     },
     prelude::*,
 };
+
+impl Endpoint<'_> {
+    #[instrument(skip_all)]
+    #[async_recursion]
+    pub async fn get_target_ids(
+        &self,
+        connection: &DatabaseConnection,
+    ) -> Result<Option<Vec<String>>> {
+        match self {
+            Endpoint::Target(Some(id)) => Ok(Some(vec![id.to_string()])),
+            Endpoint::Prompt(Some(id)) => Ok(Some(vec![
+                get_target_id_by_prompt_id(connection, id).await?,
+            ])),
+            Endpoint::Field(Some(id)) => {
+                Ok(Some(vec![get_target_id_by_field_id(connection, id).await?]))
+            }
+            Endpoint::Response(Some(id)) => Ok(Some(vec![
+                get_target_id_by_prompt_id(connection, id).await?,
+            ])),
+            Endpoint::Export(Some(ids)) => Ok(Some(ids.iter().map(|id| id.to_string()).collect())),
+            Endpoint::Authorize(Some(inner)) => inner.as_ref().get_target_ids(connection).await,
+            _ => Ok(None),
+        }
+    }
+}
 
 impl UserContext {
     #[instrument(skip_all)]
@@ -148,20 +174,7 @@ impl UserContext {
         // we firrst need to verify that the user has the access to the target, therefore we get
         // the target id. We do not have to find prompts for fields as prompts and fields are
         // public available and therefore just have to verify the target
-        let target_ids = match endpoint {
-            Endpoint::Target(Some(id)) => Some(vec![id.to_string()]),
-            Endpoint::Prompt(Some(id)) => {
-                Some(vec![get_target_id_by_prompt_id(connection, id).await?])
-            }
-            Endpoint::Field(Some(id)) => {
-                Some(vec![get_target_id_by_field_id(connection, id).await?])
-            }
-            Endpoint::Response(Some(id)) => {
-                Some(vec![get_target_id_by_prompt_id(connection, id).await?])
-            }
-            Endpoint::Export(Some(ids)) => Some(ids.iter().map(|id| id.to_string()).collect()),
-            _ => None,
-        };
+        let target_ids = endpoint.get_target_ids(connection).await?;
 
         // check wether we can access this target if its `Some`
         if let Some(target_ids) = target_ids {
@@ -260,6 +273,7 @@ fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool 
     ttl = "300",
     key = r#"format!('get-user-matrix-{:?}-{:?}-{:?}', scopes, groups, subject)"#
 )]
+#[instrument(skip_all)]
 async fn get_user_matrix(
     connection: &DatabaseConnection,
     scopes: &BTreeSet<&ScopeTokenRef>,
@@ -296,6 +310,7 @@ async fn get_user_matrix(
     ttl = "300",
     key = r#"format!('get-user-context-{}-{:?}-{:?}', subject, scopes, groups)"#
 )]
+#[instrument(skip_all)]
 async fn get_user_context(
     connection: &DatabaseConnection,
     subject: &str,
@@ -318,6 +333,7 @@ async fn get_user_context(
 }
 
 #[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-prompt-id-{}', id)"#)]
+#[instrument(skip_all)]
 async fn get_target_id_by_prompt_id(connection: &DatabaseConnection, id: &str) -> Result<String> {
     let id: Option<String> = database_request!(
         connection
@@ -333,6 +349,7 @@ async fn get_target_id_by_prompt_id(connection: &DatabaseConnection, id: &str) -
 }
 
 #[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-field-id-{}', id)"#)]
+#[instrument(skip_all)]
 async fn get_target_id_by_field_id(connection: &DatabaseConnection, id: &str) -> Result<String> {
     let id: Option<String> = database_request!(
         connection

@@ -8,6 +8,7 @@
     - [CheckboxResponse](#feedback_fusion_v1-CheckboxResponse)
     - [CreateFieldRequest](#feedback_fusion_v1-CreateFieldRequest)
     - [CreatePromptRequest](#feedback_fusion_v1-CreatePromptRequest)
+    - [CreateResourceAuthorizationRequest](#feedback_fusion_v1-CreateResourceAuthorizationRequest)
     - [CreateResponsesRequest](#feedback_fusion_v1-CreateResponsesRequest)
     - [CreateResponsesRequest.DataEntry](#feedback_fusion_v1-CreateResponsesRequest-DataEntry)
     - [CreateTargetRequest](#feedback_fusion_v1-CreateTargetRequest)
@@ -135,6 +136,23 @@
 | title | [string](#string) |  |  |
 | description | [string](#string) |  |  |
 | active | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-CreateResourceAuthorizationRequest"></a>
+
+### CreateResourceAuthorizationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| resource_kind | [ResourceKind](#feedback_fusion_v1-ResourceKind) |  |  |
+| resource_id | [string](#string) | repeated |  |
+| authorization_data | [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData) |  |  |
 
 
 
@@ -617,7 +635,7 @@
 | ----- | ---- | ----- | ----------- |
 | id | [string](#string) |  |  |
 | resource_kind | [ResourceKind](#feedback_fusion_v1-ResourceKind) |  |  |
-| resource_id | [string](#string) | optional |  |
+| resource_id | [string](#string) | repeated |  |
 | authorization_data | [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData) |  |  |
 | updated_at | [string](#string) |  |  |
 | created_at | [string](#string) |  |  |
@@ -949,6 +967,9 @@
 | RESOURCE_TARGET | 0 |  |
 | RESOURCE_PROMPT | 1 |  |
 | RESOURCE_FIELD | 2 |  |
+| RESOURCE_EXPORT | 3 |  |
+| RESOURCE_AUTHORIZE | 4 |  |
+| RESOURCE_RESPONSE | 5 |  |
 
 
  
@@ -979,6 +1000,7 @@ uses oidc authentication
 | GetResponses | [GetResponsesRequest](#feedback_fusion_v1-GetResponsesRequest) | [ResponsePage](#feedback_fusion_v1-ResponsePage) |  |
 | GetUserInfo | [.google.protobuf.Empty](#google-protobuf-Empty) | [UserInfoResponse](#feedback_fusion_v1-UserInfoResponse) |  |
 | ExportData | [DataExportRequest](#feedback_fusion_v1-DataExportRequest) | [DataExportResponse](#feedback_fusion_v1-DataExportResponse) |  |
+| CreateResourceAuthorization | [CreateResourceAuthorizationRequest](#feedback_fusion_v1-CreateResourceAuthorizationRequest) | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) |  |
 
 
 <a name="feedback_fusion_v1-PublicFeedbackFusionV1"></a>
