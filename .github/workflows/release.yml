@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: "" 
 
       - name: Checkout Sources
         uses: actions/checkout@v4
@@ -22,9 +24,6 @@ jobs:
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup cache
-        uses: Swatinem/rust-cache@v2
 
       - name: Run check
         run: just check
@@ -36,8 +35,7 @@ jobs:
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          components: clippy
-          profile: minimal
+          rustflags: "" 
 
       - name: Checkout Sources
         uses: actions/checkout@v4
@@ -48,9 +46,6 @@ jobs:
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup cache
-        uses: Swatinem/rust-cache@v2
 
       - name: Run clippy
         run: just clippy 
@@ -67,7 +62,7 @@ jobs:
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
+          rustflags: "" 
 
       - name: Checkout Sources
         uses: actions/checkout@v4
@@ -78,9 +73,6 @@ jobs:
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup cache
-        uses: Swatinem/rust-cache@v2
 
       - name: Tests
         run: just ${{ matrix.test }}
