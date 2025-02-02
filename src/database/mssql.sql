@@ -75,8 +75,6 @@ BEGIN
         resource_id         VARCHAR(32)    NOT NULL,
         authorization_type  VARCHAR(32)    NOT NULL,
         authoriztion_grant  VARCHAR(32)    NOT NULL,
-        authorization_value VARCHAR(32)    NOT NULL,
-        updated_at          DATETIME,
-        created_at          DATETIME
+        authorization_value VARCHAR(32)    NOT NULL
     );
 END;

@@ -31,6 +31,6 @@ pub async fn get_user_info(
     user_context: UserContext,
 ) -> Result<Response<UserInfoResponse>> {
     Ok(Response::new(UserInfoResponse {
-        permissions: user_context.authorizations,
+        permissions: user_context.authorizations.into_iter().collect(),
     }))
 }

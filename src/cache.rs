@@ -32,9 +32,8 @@ use cached::IOCachedAsync;
 use chrono::Utc;
 use feedback_fusion_codegen::dynamic_cache;
 
-use gxhash::GxHasher;
 #[cfg(feature = "caching-skytable")]
-use serde::{de::DeserializeOwned, Serialize};
+use gxhash::GxHasher;
 #[cfg(feature = "caching-skytable")]
 use skytable::{
     aio::TcpConnection,
@@ -42,6 +41,7 @@ use skytable::{
     query, ClientResult, Pipeline, Query, Response,
 };
 
+#[cfg(feature = "caching-skytable")]
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "caching-skytable")]
 use std::{
@@ -57,6 +57,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 #[cfg(feature = "caching-skytable")]
 use tracing::{instrument, Instrument};
 
+#[cfg(feature = "caching-skytable")]
 #[instrument(skip_all)]
 pub fn derive_cache_key<K: Hash>(k: &K) -> String {
     let mut hasher = GxHasher::default();
@@ -83,7 +84,7 @@ pub struct SkytableCacheBuilder<'a, K, V> {
 impl<'a, K, V> SkytableCacheBuilder<'a, K, V>
 where
     K: Display,
-    V: Serialize + DeserializeOwned,
+    V: Encode + Decode,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -163,7 +164,7 @@ pub struct SkytableTlsCacheBuilder<'a, K, V> {
 impl<'a, K, V> SkytableTlsCacheBuilder<'a, K, V>
 where
     K: Hash,
-    V: Serialize + DeserializeOwned,
+    V: Encode + Decode,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -239,7 +240,9 @@ pub enum SkytableCacheError {
     #[error(transparent)]
     SkytableError(#[from] skytable::error::Error),
     #[error(transparent)]
-    BincodeError(#[from] bincode::Error),
+    EncodeError(#[from] bincode::error::EncodeError),
+    #[error(transparent)]
+    DecodeError(#[from] bincode::error::DecodeError),
     #[error("{0}")]
     PoolError(String),
 }
@@ -313,12 +316,12 @@ where
     S: AsyncRead + AsyncWrite + Send + Sync + Unpin,
     I: DerefMut<Target = TcpConnection<S>> + Send + Sync,
     C: ManageConnection<Connection = I> + Send + Sync,
-    K: Hash + Send + Sync,
-    V: Serialize + DeserializeOwned + Send + Sync,
+    K: Hash + std::fmt::Debug + Send + Sync,
+    V: Encode + Decode + Send + Sync,
 {
     type Error = SkytableCacheError;
 
-    #[instrument(skip_all)]
+    #[instrument(skip(self))]
     async fn cache_get(&self, k: &K) -> std::result::Result<Option<V>, Self::Error> {
         let mut connection = self.pool.get().await?;
 
@@ -345,7 +348,13 @@ where
                             .await?;
                     }
 
-                    Ok(bincode::deserialize(response.cvalue.as_slice())?)
+                    Ok(Some(
+                        bincode::decode_from_slice(
+                            response.cvalue.as_slice(),
+                            bincode::config::standard(),
+                        )?
+                        .0,
+                    ))
                 }
             }
             Err(error) => match error {
@@ -355,9 +364,9 @@ where
         }
     }
 
-    #[instrument(skip_all)]
+    #[instrument(skip(self, v))]
     async fn cache_set(&self, k: K, v: V) -> std::result::Result<Option<V>, Self::Error> {
-        let encoded = bincode::serialize(&v)?;
+        let encoded = bincode::encode_to_vec(&v, bincode::config::standard())?;
         let ttl = Utc::now().timestamp() + self.seconds as i64;
         let value = CachedSkytableValue::new(derive_cache_key(&k), encoded, ttl);
 
@@ -373,6 +382,7 @@ where
         Ok(Some(v))
     }
 
+    #[instrument(skip(self))]
     async fn cache_remove(&self, k: &K) -> std::result::Result<Option<V>, Self::Error> {
         let mut connection = self.pool.get().await?;
         let key = derive_cache_key(&k);
@@ -390,7 +400,11 @@ where
         connection.query(&query!(query.as_str(), key)).await?;
 
         match response {
-            Ok(response) => Ok(bincode::deserialize(response.cvalue.as_slice())?),
+            Ok(response) => Ok(bincode::decode_from_slice(
+                response.cvalue.as_slice(),
+                bincode::config::standard(),
+            )?
+            .0),
             Err(error) => match error {
                 // 111 = NotFound https://docs.skytable.io/protocol/errors
                 skytable::error::Error::ServerError(111) => Ok(None),

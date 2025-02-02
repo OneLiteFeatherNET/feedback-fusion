@@ -119,7 +119,6 @@ config!(
 );
 
 #[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr)]
-#[serde(untagged)]
 pub enum Endpoint<'a> {
     Target(Option<Cow<'a, str>>),
     Prompt(Option<Cow<'a, str>>),

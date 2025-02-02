@@ -58,7 +58,5 @@ CREATE TABLE IF NOT EXISTS resource_authorization (
   resource_id         VARCHAR(32) NOT NULL,
   authorization_type  VARCHAR(32) NOT NULL,
   authoriztion_grant  VARCHAR(32) NOT NULL,
-  authorization_value VARCHAR(32) NOT NULL,
-  updated_at          TIMESTAMP(3),
-  created_at          TIMESTAMP(3)     
+  authorization_value VARCHAR(32) NOT NULL
 );

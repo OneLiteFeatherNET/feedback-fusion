@@ -166,6 +166,8 @@ pub mod prelude {
         impl_select_page_wrapper, invalidate,
         services::{oidc::*, *},
     };
+    #[cfg(feature = "caching-skytable")]
+    pub use bincode::{Decode, Encode};
     pub use cached::IOCachedAsync;
     pub use derivative::Derivative;
     pub use feedback_fusion_codegen::dynamic_cache;

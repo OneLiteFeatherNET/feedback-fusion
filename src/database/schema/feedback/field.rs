@@ -26,6 +26,7 @@ use rbatis::rbdc::DateTime;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub enum FieldOptions {
     Text(TextOptions),
     Rating(RatingOptions),
@@ -108,6 +109,7 @@ impl TryInto<FieldOptions> for feedback_fusion_common::proto::FieldOptions {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct TextOptions {
     /// the input placeholder
     #[validate(length(max = 255))]
@@ -143,6 +145,7 @@ fn default_lines() -> u8 {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct RatingOptions {
     /// the best rating (determines how many stars / points are shown in the frontend)
     max: u8,
@@ -168,6 +171,7 @@ impl TryInto<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub enum CheckboxStyle {
     Switch,
     Normal,
@@ -217,6 +221,7 @@ impl From<feedback_fusion_common::proto::CheckboxStyle> for CheckboxStyle {
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct CheckboxOptions {
     /// the default state of the checkbox
     default_state: bool,
@@ -245,6 +250,7 @@ impl TryInto<CheckboxOptions> for feedback_fusion_common::proto::CheckboxOptions
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct SelectionOptions {
     /// all possible selections
     values: Vec<String>,
@@ -278,6 +284,7 @@ impl From<feedback_fusion_common::proto::SelectionOptions> for SelectionOptions 
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct RangeOptions {
     /// the min value
     #[serde(default)]
@@ -308,6 +315,7 @@ impl TryInto<RangeOptions> for feedback_fusion_common::proto::RangeOptions {
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct NumberOptions {
     /// the min value
     #[serde(default)]

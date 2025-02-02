@@ -25,22 +25,16 @@ use std::collections::HashMap;
 use crate::prelude::*;
 use aliri::jwt::CoreClaims;
 use openidconnect::{core::CoreUserInfoClaims, AccessToken};
-use rbatis::rbdc::DateTime;
 
 #[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 #[builder(field_defaults(setter(into)))]
 pub struct User {
     id: String,
     username: String,
-    #[derivative(PartialEq = "ignore")]
-    #[builder(default_code = r#"DateTime::utc()"#)]
-    updated_at: DateTime,
-    #[derivative(PartialEq = "ignore")]
-    #[builder(default_code = r#"DateTime::utc()"#)]
-    created_at: DateTime,
 }
 
 crud!(User {}, "oidc_user");
@@ -87,8 +81,9 @@ impl User {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, Getters)]
+#[derive(Deserialize, Serialize, Clone, Debug, Getters, PartialEq)]
 #[get = "pub"]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct UserContext {
     pub user: User,
     pub authorizations: HashMap<String, bool>,
