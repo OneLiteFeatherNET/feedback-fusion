@@ -20,16 +20,82 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::user::UserContext, prelude::*};
-use feedback_fusion_common::proto::ResourceAuthorization as ProtoResourceAuthorization;
+use crate::{
+    database::schema::{authorization::ResourceAuthorization, user::UserContext},
+    prelude::*,
+};
+use feedback_fusion_common::proto::{
+    AuthorizationGrant as ProtoAuthorizationGrant, AuthorizationType as ProtoAuthorizationType,
+    ResourceAuthorizationList, ResourceKind as ProtoResourceKind,
+};
 
 use feedback_fusion_common::proto::CreateResourceAuthorizationRequest;
 use v1::FeedbackFusionV1Context;
 
 pub async fn create_resource_authorization(
-    _context: &FeedbackFusionV1Context,
-    _request: Request<CreateResourceAuthorizationRequest>,
+    context: &FeedbackFusionV1Context,
+    request: Request<CreateResourceAuthorizationRequest>,
     _user_context: UserContext,
-) -> Result<Response<ProtoResourceAuthorization>> {
-    todo!()
+) -> Result<Response<ResourceAuthorizationList>> {
+    let connection = context.connection();
+    let data = request.into_inner();
+
+    // a creation request can contain multiple possible values therefore we have to create multiple
+    // authorizations
+    let authorization_data = data
+        .authorization_data
+        .ok_or(FeedbackFusionError::BadRequest(
+            "missing authorization_data".to_owned(),
+        ))?;
+    let grants = authorization_data
+        .grant
+        .iter()
+        .map(|repr| ProtoAuthorizationGrant::try_from(*repr).unwrap())
+        .collect::<Vec<_>>();
+    let authorization_type = ProtoAuthorizationType::try_from(authorization_data.r#type).unwrap();
+    let kind = ProtoResourceKind::try_from(data.resource_kind).unwrap();
+
+    let authorizations = authorization_data
+        .values
+        .into_iter()
+        .flat_map(|value| {
+            // for each grant
+            grants
+                .iter()
+                .flat_map(|grant| {
+                    // for each resource_id
+                    data.resource_id
+                        .iter()
+                        .map(|id| {
+                            ResourceAuthorization::builder()
+                                .resource_kind(&kind)
+                                .resource_id(id.clone())
+                                .authorization_grant(grant)
+                                .authorization_type(&authorization_type)
+                                .authorization_value(value.clone())
+                                .build()
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+
+    // insert the authorizations
+    database_request!(
+        ResourceAuthorization::insert_batch(
+            connection,
+            authorizations.as_slice(),
+            authorizations.len() as u64,
+        )
+        .await,
+        "Create ResourceAuthorizations"
+    )?;
+
+    Ok(Response::new(ResourceAuthorizationList {
+        authorizations: authorizations
+            .into_iter()
+            .map(From::from)
+            .collect::<Vec<_>>(),
+    }))
 }

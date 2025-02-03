@@ -144,6 +144,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "GetResponsesRequest",
             "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
+        .type_attribute(
+            "ResourceAuthorizationData",
+            "#[derive(validator::Validate)]",
+        )
+        .field_attribute(
+            "ResourceAuthorizationData.values",
+            "#[validate(length(min = 1))]",
+        )
+        .type_attribute(
+            "CreateResourceAuthorizationRequest",
+            "#[derive(validator::Validate)]",
+        )
+        .field_attribute(
+            "CreateResourceAuthorizationRequest.authorization_data",
+            "#[validate(nested)]",
+        )
+        .type_attribute(
+            "GetResourceAuthorizationsRequest",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
+        )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
         .compile_protos(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
         .unwrap();

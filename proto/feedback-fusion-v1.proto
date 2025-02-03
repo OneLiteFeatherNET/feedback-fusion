@@ -29,7 +29,11 @@ service FeedbackFusionV1 {
 
   rpc ExportData(DataExportRequest) returns (DataExportResponse);
 
-  rpc CreateResourceAuthorization(CreateResourceAuthorizationRequest) returns (ResourceAuthorization);
+  rpc CreateResourceAuthorization(CreateResourceAuthorizationRequest) returns (ResourceAuthorizationList);
+  rpc GetResourceAuthorizations(GetResourceAuthorizationsRequest) returns (ResourceAuthorizationPage);
+  rpc GetResourceAuthorization(GetResourceAuthorizationRequest) returns (ResourceAuthorization);
+  rpc UpdateResourceAuthorization(UpdateResourceAuthorizationRequest) returns (ResourceAuthorization);
+  rpc DeleteResourceAuthorization(DeleteResourceAuthorizationRequest) returns (google.protobuf.Empty);
 }
 
 // does not use oidc authentication
@@ -325,8 +329,8 @@ enum AuthorizationGrant {
 
 enum AuthorizationType {
   TYPE_SCOPE = 0;
-  TYPE_PROMPT = 1;
-  TYPE_USER = 2;
+  TYPE_GROUP = 1;
+  TYPE_SUBJECT = 2;
 }
 
 message ResourceAuthorizationData {
@@ -341,11 +345,49 @@ message CreateResourceAuthorizationRequest {
   ResourceAuthorizationData authorization_data = 4;
 }
 
+message GetResourceAuthorizationsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  optional string value = 3;
+  optional AuthorizationType authorization_type = 4;
+}
+
 message ResourceAuthorization {
   string id = 1;
   ResourceKind resource_kind = 2;
-  repeated string resource_id = 3;
-  ResourceAuthorizationData authorization_data = 4;
-  string updated_at = 5;
-  string created_at = 6;
+  optional string resource_id = 3;
+  AuthorizationType authorization_type = 4;
+  AuthorizationGrant authorization_grant = 5;
+  string value = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message ResourceAuthorizationList {
+  repeated ResourceAuthorization authorizations = 1;
+}
+
+message ResourceAuthorizationPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated ResourceAuthorization authorizations = 5;
+}
+
+message UpdateResourceAuthorizationRequest {
+  string id = 1;
+  optional string resource_id = 2;
+  optional AuthorizationType authorization_type = 3;
+  optional AuthorizationGrant authorization_grant = 4;
+  optional string value = 5;
+}
+
+message GetResourceAuthorizationRequest {
+  string id = 1;
+}
+
+message DeleteResourceAuthorizationRequest {
+  string id = 1;
 }

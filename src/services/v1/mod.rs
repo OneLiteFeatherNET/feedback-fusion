@@ -28,9 +28,9 @@ use feedback_fusion_common::proto::{
     CreateTargetRequest, DataExportRequest, DataExportResponse, DeleteFieldRequest,
     DeletePromptRequest, DeleteTargetRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
     GetPromptRequest, GetPromptsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
-    Prompt as ProtoPrompt, PromptPage, PromptResponse,
-    ResourceAuthorization as ProtoResourceAuthorization, ResponsePage, Target as ProtoTarget,
-    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
+    Prompt as ProtoPrompt, PromptPage, PromptResponse, ResourceAuthorizationList, ResponsePage,
+    Target as ProtoTarget, TargetPage, UpdateFieldRequest, UpdatePromptRequest,
+    UpdateTargetRequest, UserInfoResponse,
 };
 use openidconnect::core::CoreClient;
 use std::borrow::Cow;
@@ -322,7 +322,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
     async fn create_resource_authorization(
         &self,
         request: Request<CreateResourceAuthorizationRequest>,
-    ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
+    ) -> std::result::Result<Response<ResourceAuthorizationList>, Status> {
         handler!(
             authorization::create_resource_authorization,
             self,

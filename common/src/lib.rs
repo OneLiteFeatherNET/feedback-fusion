@@ -24,6 +24,7 @@
 pub mod tests;
 
 pub mod proto {
+    use validator::Validate;
     tonic::include_proto!("feedback_fusion_v1");
     pub const FILE_DESCRIPTOR_SET: &[u8] =
         tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
