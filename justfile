@@ -35,7 +35,7 @@ clippy:
 
 build PLATFORM=LOCAL_PLATFORM DOCKERFILE="./Dockerfile":
   @echo "building for {{PLATFORM}}"
-  docker buildx build -t {{LOCAL_DOCKER_IMAGE}} --platform {{PLATFORM}} -f {{DOCKERFILE}} --load --build-arg COVERAGE=true .
+  docker buildx build -t {{LOCAL_DOCKER_IMAGE}} --platform {{PLATFORM}} -f {{DOCKERFILE}} --load .
 
 build-all DOCKERFILE="./Dockerfile":
   just build linux/arm64,linux/amd64 {{DOCKERFILE}}
@@ -117,10 +117,6 @@ test TYPE=DEFAULT_TEST: oidc-server-mock
 
   just stop-backend
   -docker rm -f database > /dev/null 2>&1
-
-coverage:
-  genhtml -q --output-directory coverage ./target/coverage.lcov
-  cd coverage && python3 -m http.server 3000
 
 fuzz:
   OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo fuzz run fuzz_create_and_export
