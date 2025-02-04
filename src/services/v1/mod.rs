@@ -26,11 +26,13 @@ use feedback_fusion_common::proto::{
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
     CreatePromptRequest, CreateResourceAuthorizationRequest, CreateResponsesRequest,
     CreateTargetRequest, DataExportRequest, DataExportResponse, DeleteFieldRequest,
-    DeletePromptRequest, DeleteTargetRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
-    GetPromptRequest, GetPromptsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
-    Prompt as ProtoPrompt, PromptPage, PromptResponse, ResourceAuthorizationList, ResponsePage,
-    Target as ProtoTarget, TargetPage, UpdateFieldRequest, UpdatePromptRequest,
-    UpdateTargetRequest, UserInfoResponse,
+    DeletePromptRequest, DeleteResourceAuthorizationRequest, DeleteTargetRequest,
+    Field as ProtoField, FieldPage, GetFieldsRequest, GetPromptRequest, GetPromptsRequest,
+    GetResourceAuthorizationRequest, GetResourceAuthorizationsRequest, GetResponsesRequest,
+    GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage, PromptResponse,
+    ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationList,
+    ResourceAuthorizationPage, ResponsePage, Target as ProtoTarget, TargetPage, UpdateFieldRequest,
+    UpdatePromptRequest, UpdateResourceAuthorizationRequest, UpdateTargetRequest, UserInfoResponse,
 };
 use openidconnect::core::CoreClient;
 use std::borrow::Cow;
@@ -319,6 +321,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         )
     }
 
+    #[instrument(skip_all)]
     async fn create_resource_authorization(
         &self,
         request: Request<CreateResourceAuthorizationRequest>,
@@ -330,6 +333,38 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             Endpoint::Authorize,
             Permission::Write
         )
+    }
+
+    #[instrument(skip_all)]
+    async fn get_resource_authorization(
+        &self,
+        _request: Request<GetResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
+        todo!()
+    }
+
+    #[instrument(skip_all)]
+    async fn get_resource_authorizations(
+        &self,
+        _request: Request<GetResourceAuthorizationsRequest>,
+    ) -> std::result::Result<Response<ResourceAuthorizationPage>, Status> {
+        todo!()
+    }
+
+    #[instrument(skip_all)]
+    async fn update_resource_authorization(
+        &self,
+        _request: Request<UpdateResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
+        todo!()
+    }
+
+    #[instrument(skip_all)]
+    async fn delete_resource_authorization(
+        &self,
+        _request: Request<DeleteResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<()>, Status> {
+        todo!()
     }
 }
 

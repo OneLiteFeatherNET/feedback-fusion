@@ -25,8 +25,11 @@ use crate::{
     prelude::*,
 };
 use feedback_fusion_common::proto::{
-    AuthorizationGrant as ProtoAuthorizationGrant, AuthorizationType as ProtoAuthorizationType,
-    ResourceAuthorizationList, ResourceKind as ProtoResourceKind,
+    AuthorizationGrant as ProtoAuthorizationGrant,
+    AuthorizationType as ProtoAuthorizationType,
+    // GetResourceAuthorizationRequest, ResourceAuthorization as ProtoResourceAuthorization,
+    ResourceAuthorizationList,
+    ResourceKind as ProtoResourceKind,
 };
 
 use feedback_fusion_common::proto::CreateResourceAuthorizationRequest;
@@ -39,6 +42,7 @@ pub async fn create_resource_authorization(
 ) -> Result<Response<ResourceAuthorizationList>> {
     let connection = context.connection();
     let data = request.into_inner();
+    data.validate()?;
 
     // a creation request can contain multiple possible values therefore we have to create multiple
     // authorizations
@@ -99,3 +103,23 @@ pub async fn create_resource_authorization(
             .collect::<Vec<_>>(),
     }))
 }
+
+//pub async fn get_resoruce_authorization(
+//    context: &FeedbackFusionV1Context,
+//    request: Request<GetResourceAuthorizationRequest>,
+//    _user_context: UserContext,
+//) -> Result<Response<ProtoResourceAuthorization>> {
+//    let connection = context.connection();
+//    let data = request.into_inner();
+//    data.validate()?;
+//
+//    let authorization = database_request!(
+//        ResourceAuthorization::select_by_id(connection, data.id.as_str()).await,
+//        "Select authorization by id"
+//    )?
+//    .ok_or(FeedbackFusionError::BadRequest(
+//        "ResourceAuthorization not found".to_owned(),
+//    ))?;
+//
+//    Ok(Response::new(authorization.into()))
+//}
