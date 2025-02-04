@@ -3,9 +3,9 @@ database:
     username: sa
     password: Password1
     database: master
-    endpoint: database:1433
+    endpoint: localhost:5150
 oidc:
-  provider: http://oidc-server-mock
+  provider: http://localhost:5151
   issuer: http://localhost:5151
   scopes:
     - name: "api:feedback-fusion"
