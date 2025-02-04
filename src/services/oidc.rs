@@ -32,8 +32,8 @@ use aliri_clock::UnixTime;
 use aliri_oauth2::{Authority, HasScope, Scope};
 use aliri_tower::OnJwtError;
 use openidconnect::{
-    core::{CoreJwsSigningAlgorithm, CoreProviderMetadata},
-    IssuerUrl,
+    core::{CoreClient, CoreJwsSigningAlgorithm, CoreProviderMetadata},
+    ClientId, IssuerUrl,
 };
 use serde::{
     de::{MapAccess, Visitor},
@@ -42,7 +42,7 @@ use serde::{
 use tokio::runtime::Handle;
 use tonic::{body::BoxBody, Status};
 
-pub async fn authority() -> Result<Authority> {
+pub async fn authority() -> Result<(Authority, CoreClient)> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
     // discover the oidc endpoints
     let issuer = IssuerUrl::new(CONFIG.oidc().provider().clone()).map_err(|error| {
@@ -102,13 +102,19 @@ pub async fn authority() -> Result<Authority> {
         .await
         .unwrap();
 
-    Ok(authority)
+    // we do not use any routes requireing client authentication therefore we can just use dummys
+    // here
+    let client =
+        CoreClient::from_provider_metadata(metadata, ClientId::new("dummy".to_owned()), None);
+
+    Ok((authority, client))
 }
 
 // we do not know the group claim names during the compile time, therefore we do have to use this
 // huge custom deserializer
 #[derive(Debug, Clone)]
 pub struct OIDCClaims {
+    sub: jwt::Subject,
     iss: jwt::Issuer,
     iat: UnixTime,
     aud: jwt::Audiences,
@@ -116,6 +122,13 @@ pub struct OIDCClaims {
     exp: UnixTime,
     scope: Scope,
     groups: Vec<String>,
+    is_application: bool,
+}
+
+impl OIDCClaims {
+    pub fn is_application(&self) -> bool {
+        self.is_application
+    }
 }
 
 impl<'de> Deserialize<'de> for OIDCClaims {
@@ -140,6 +153,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
     where
         V: MapAccess<'de>,
     {
+        let mut sub = None;
         let mut iss = None;
         let mut iat = None;
         let mut aud = None;
@@ -147,9 +161,17 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
         let mut exp = None;
         let mut scope = None;
         let mut groups = None;
+        let mut is_application = false;
 
         while let Some(key) = map.next_key::<String>()? {
             match key.as_str() {
+                "sub" => {
+                    sub = Some(map.next_value()?);
+                }
+                "client_id" => {
+                    is_application = true;
+                    sub = Some(map.next_value()?);
+                }
                 "iss" => {
                     iss = Some(map.next_value()?);
                 }
@@ -177,6 +199,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
             }
         }
 
+        let sub = sub.ok_or_else(|| serde::de::Error::missing_field("sub"))?;
         let iss = iss.ok_or_else(|| serde::de::Error::missing_field("iss"))?;
         let iat = iat.ok_or_else(|| serde::de::Error::missing_field("iat"))?;
         let aud = aud.unwrap_or(jwt::Audiences::default());
@@ -186,6 +209,8 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
             .ok_or_else(|| serde::de::Error::missing_field(CONFIG.oidc().group_claim().as_str()))?;
 
         Ok(OIDCClaims {
+            is_application,
+            sub,
             iss,
             iat,
             aud,
@@ -211,7 +236,7 @@ impl jwt::CoreClaims for OIDCClaims {
         Some(&self.iss)
     }
     fn sub(&self) -> Option<&jwt::SubjectRef> {
-        None
+        Some(&self.sub)
     }
 }
 

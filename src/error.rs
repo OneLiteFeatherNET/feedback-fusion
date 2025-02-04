@@ -42,7 +42,9 @@ pub enum FeedbackFusionError {
     Forbidden(String),
     #[cfg(feature = "caching-skytable")]
     #[error(transparent)]
-    CacheError(#[from] crate::cache::SkytableCacheError)
+    CacheError(#[from] crate::cache::SkytableCacheError),
+    #[error("{0}")]
+    OIDCError(String),
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {
