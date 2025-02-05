@@ -26,7 +26,7 @@ use std::borrow::Cow;
 use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
 use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter};
+use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
 use crate::{
@@ -37,8 +37,10 @@ use crate::{
     prelude::*,
 };
 
-pub type PermissionMatrix =
-    DashMap<(Endpoint, Permission), (DashSet<Cow<'static, str>>, DashSet<Cow<'static, str>>)>;
+pub type PermissionMatrix = DashMap<
+    (Endpoint<'static>, Permission),
+    (DashSet<Cow<'static, str>>, DashSet<Cow<'static, str>>),
+>;
 
 lazy_static! {
     pub static ref CONFIG: Config = read_config().unwrap();
@@ -46,6 +48,14 @@ lazy_static! {
         read_permission_matrix(CONFIG.oidc().scopes(), CONFIG.oidc().groups());
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
         DatabaseConfiguration::extract().unwrap();
+    pub static ref ENDPOINTS: &'static [Endpoint<'static>] = &[
+        Endpoint::Target(None),
+        Endpoint::Prompt(None),
+        Endpoint::Field(None),
+        Endpoint::Export(None),
+        Endpoint::Response(None),
+        Endpoint::Authorize(None)
+    ];
 }
 
 macro_rules! config {
@@ -108,16 +118,57 @@ config!(
     )
 );
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
-pub enum Endpoint {
-    Target,
-    Prompt,
-    Field,
-    Response,
-    Export,
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr)]
+pub enum Endpoint<'a> {
+    Target(Option<Cow<'a, str>>),
+    Prompt(Option<Cow<'a, str>>),
+    Field(Option<Cow<'a, str>>),
+    Response(Option<Cow<'a, str>>),
+    Export(Option<Vec<Cow<'a, str>>>),
+    /// this is always target based
+    Authorize(Option<Box<Endpoint<'a>>>),
 }
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
+impl Endpoint<'_> {
+    pub fn to_static(&self) -> Endpoint<'static> {
+        match self {
+            Endpoint::Target(opt) => {
+                Endpoint::Target(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
+            }
+            Endpoint::Prompt(opt) => {
+                Endpoint::Prompt(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
+            }
+            Endpoint::Field(opt) => {
+                Endpoint::Field(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
+            }
+            Endpoint::Response(opt) => {
+                Endpoint::Response(opt.as_ref().map(|s| Cow::Owned(s.clone().into_owned())))
+            }
+            Endpoint::Export(opt) => Endpoint::Export(opt.as_ref().map(|vec| {
+                vec.iter()
+                    .map(|s| Cow::Owned(s.clone().into_owned()))
+                    .collect()
+            })),
+            Endpoint::Authorize(Some(inner)) => {
+                Endpoint::Authorize(Some(Box::new(inner.to_static())))
+            }
+            Endpoint::Authorize(None) => Endpoint::Authorize(None),
+        }
+    }
+
+    pub fn none(&self) -> Endpoint {
+        match self {
+            Endpoint::Target(_) => Endpoint::Target(None),
+            Endpoint::Prompt(_) => Endpoint::Prompt(None),
+            Endpoint::Field(_) => Endpoint::Field(None),
+            Endpoint::Response(_) => Endpoint::Response(None),
+            Endpoint::Export(_) => Endpoint::Export(None),
+            Endpoint::Authorize(_) => Endpoint::Authorize(None),
+        }
+    }
+}
+
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr)]
 pub enum Permission {
     Read,
     Write,
@@ -237,9 +288,10 @@ pub fn read_permission_matrix(
                 let endpoints = {
                     let endpoint = grant.endpoint.to_string();
                     let pattern = Wildcard::new(endpoint.as_bytes()).unwrap();
-                    Endpoint::iter()
+                    ENDPOINTS
+                        .iter()
                         .filter(|endpoint| pattern.is_match(endpoint.to_string().as_bytes()))
-                        .collect::<Vec<Endpoint>>()
+                        .collect::<Vec<&Endpoint>>()
                 };
 
                 for permission in grant.permissions.iter() {
@@ -394,14 +446,14 @@ mod tests {
         static ref SCOPES: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
             name: "scope1".to_string(),
             grants: vec![AuthorizationGrants {
-                endpoint: Endpoint::Target.to_string(),
+                endpoint: Endpoint::Target(None).to_string(),
                 permissions: vec![Permission::Read.to_string()],
             },],
         },];
         static ref GROUPS: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
             name: "group1".to_string(),
             grants: vec![AuthorizationGrants {
-                endpoint: Endpoint::Prompt.to_string(),
+                endpoint: Endpoint::Prompt(None).to_string(),
                 permissions: vec![Permission::Write.to_string()],
             },],
         },];
@@ -425,14 +477,18 @@ mod tests {
     fn test_read_permission_matrix() {
         let matrix = read_permission_matrix(&SCOPES, &GROUPS);
 
-        assert!(matrix.contains_key(&(Endpoint::Target, Permission::Read)));
-        assert!(matrix.contains_key(&(Endpoint::Prompt, Permission::Write)));
+        assert!(matrix.contains_key(&(Endpoint::Target(None), Permission::Read)));
+        assert!(matrix.contains_key(&(Endpoint::Prompt(None), Permission::Write)));
 
-        let entry = matrix.get(&(Endpoint::Target, Permission::Read)).unwrap();
+        let entry = matrix
+            .get(&(Endpoint::Target(None), Permission::Read))
+            .unwrap();
         assert!(entry.0.contains(&Cow::Borrowed("scope1")));
         assert!(entry.1.is_empty());
 
-        let entry = matrix.get(&(Endpoint::Prompt, Permission::Write)).unwrap();
+        let entry = matrix
+            .get(&(Endpoint::Prompt(None), Permission::Write))
+            .unwrap();
         assert!(entry.0.is_empty());
         assert!(entry.1.contains(&Cow::Borrowed("group1")));
     }
@@ -441,7 +497,7 @@ mod tests {
     fn test_read_permission_matrix_with_wildcards() {
         let matrix = read_permission_matrix(&SCOPES_WILDCARD, &[]);
 
-        for endpoint in Endpoint::iter() {
+        for endpoint in ENDPOINTS.iter() {
             for permission in Permission::iter() {
                 let entry = matrix.get(&(endpoint.clone(), permission.clone())).unwrap();
                 assert!(entry.0.contains(&Cow::Borrowed("scope2")));

@@ -97,7 +97,7 @@ async fn main() {
 
         // build the authority
         info!("Tryng to contact the OIDC Provider");
-        let authority = oidc::authority().await.unwrap();
+        let (authority, client) = oidc::authority().await.unwrap();
         authority.spawn_refresh(Duration::from_secs(60 * 60 * 6));
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
@@ -105,6 +105,7 @@ async fn main() {
 
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
+            client,
         };
         let service = tower::ServiceBuilder::new()
             .layer(authorizer.jwt_layer(authority))
@@ -165,7 +166,11 @@ pub mod prelude {
         impl_select_page_wrapper, invalidate,
         services::{oidc::*, *},
     };
+    #[cfg(feature = "caching-skytable")]
+    pub use bincode::{Decode, Encode};
+    pub use cached::IOCachedAsync;
     pub use derivative::Derivative;
+    pub use feedback_fusion_codegen::dynamic_cache;
     pub use feedback_fusion_common::PageRequest;
     pub use getset::{Getters, MutGetters, Setters};
     pub use itertools::Itertools;
