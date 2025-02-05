@@ -1,4 +1,4 @@
-//SPDX-FileCopyrightText: 2023 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2025 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
@@ -123,6 +123,8 @@ impl UserContext {
         }
     }
 
+    /// Only for internal user matrix creation, use `authorize` for UserContext based permission
+    /// checks
     #[instrument(skip_all)]
     pub fn has_grant<'a>(
         scopes: &BTreeSet<&ScopeTokenRef>,
@@ -142,27 +144,28 @@ impl UserContext {
         // verify the groups
         let group = groups.iter().find(|group| entry.1.contains(group.as_str()));
 
-        if scope.is_none() && group.is_none() {
+        let mut authorizations = {
             // find possibly matching authorizations
             let authorizations = authorizations.iter().filter(|authorization| {
                 let matches_permission = authorization.authorization_grant().eq(&permission);
                 let matches_endpoint = authorization.resource_kind().eq(&endpoint);
-                let matches_id = authorization.resource_id().as_ref().is_none_or(|pattern| {
-                    Wildcard::new(pattern.as_bytes())
-                        .unwrap()
-                        .is_match(authorization_string.as_bytes())
-                });
+                // we do not have to verify the endpoint here as this function is only called for
+                // user matrix creation
 
-                matches_permission && matches_endpoint && matches_id
+                matches_permission && matches_endpoint
             });
 
-            Ok(authorizations
+            authorizations
                 .into_iter()
                 .map(ResourceAuthorization::to_string)
-                .collect())
-        } else {
-            Ok(vec![authorization_string])
+                .collect::<Vec<_>>()
+        };
+
+        if scope.is_some() || group.is_some() {
+            authorizations.push(authorization_string);
         }
+
+        Ok(authorizations)
     }
 
     #[instrument(skip(self, connection))]
@@ -232,6 +235,7 @@ impl UserContext {
     }
 }
 
+/// Verify wether a auth key does match the given endpoint and permission
 #[instrument]
 fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool {
     let mut split = key.split("::");
@@ -263,11 +267,14 @@ fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool 
             | Endpoint::Field(Some(id))
             | Endpoint::Response(Some(id)) => vec![id],
             Endpoint::Export(Some(list)) => list.iter().collect(),
+            // we do not allow further recursion, therefore we ignore this
             _ => Vec::new(),
         },
         _ => Vec::new(),
     };
 
+    // if the list is emptry it means we have a None inside the target endpoint, therefore we have
+    // to check wether the wildcard matches everything
     if ids.is_empty() {
         second.eq("*")
     } else {
@@ -374,9 +381,24 @@ async fn get_target_id_by_field_id(connection: &DatabaseConnection, id: &str) ->
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
+    use std::{
+        borrow::Cow,
+        collections::{BTreeSet, HashMap},
+    };
 
-    use crate::{authorization::is_match, Endpoint, Permission};
+    use aliri_oauth2::scope::ScopeTokenRef;
+
+    use crate::{
+        authorization::is_match,
+        database::schema::{
+            authorization::{
+                ResourceAuthorization, ResourceAuthorizationGrant, ResourceAuthorizationType,
+                ResourceKind,
+            },
+            user::{User, UserContext},
+        },
+        Endpoint, Permission,
+    };
 
     #[test]
     fn test_is_match_empty() {
@@ -503,5 +525,153 @@ mod tests {
             endpoint,
             permission
         ));
+    }
+
+    #[test]
+    fn test_has_grant_empty() {
+        assert!(UserContext::has_grant(
+            &BTreeSet::new(),
+            &BTreeSet::new(),
+            &[],
+            Endpoint::Target(None),
+            Permission::Write
+        )
+        .is_ok_and(|list| list.is_empty()));
+    }
+
+    fn has_grant_setup<'a>() -> (
+        BTreeSet<&'a ScopeTokenRef>,
+        BTreeSet<String>,
+        BTreeSet<&'a ScopeTokenRef>,
+        BTreeSet<String>,
+        Vec<ResourceAuthorization>,
+    ) {
+        let valid_scopes: BTreeSet<&ScopeTokenRef> =
+            BTreeSet::from([ScopeTokenRef::from_static("api:feedback-fusion")]);
+        let valid_groups: BTreeSet<String> = BTreeSet::from(["admin".to_owned()]);
+
+        let invalid_scopes: BTreeSet<&ScopeTokenRef> =
+            BTreeSet::from([ScopeTokenRef::from_static("foo")]);
+        let invalid_groups: BTreeSet<String> = BTreeSet::from(["bar".to_owned()]);
+
+        let resource_authorizations = vec![
+            ResourceAuthorization::builder()
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_grant(ResourceAuthorizationGrant::Write)
+                .authorization_value("".to_owned())
+                .resource_kind(ResourceKind::Target)
+                .resource_id("".to_owned())
+                .build(),
+            ResourceAuthorization::builder()
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_grant(ResourceAuthorizationGrant::Read)
+                .authorization_value("".to_owned())
+                .resource_kind(ResourceKind::Prompt)
+                .resource_id("".to_owned())
+                .build(),
+        ];
+
+        (
+            valid_scopes,
+            valid_groups,
+            invalid_scopes,
+            invalid_groups,
+            resource_authorizations,
+        )
+    }
+
+    #[test]
+    fn test_has_grant_scopes_and_groups_only() {
+        let endpoint = Endpoint::Target(None);
+        let permission = Permission::Write;
+        let (valid_scopes, valid_groups, invalid_scopes, invalid_groups, _) = has_grant_setup();
+        let valid_groups = valid_groups.iter().collect::<BTreeSet<&String>>();
+        let invalid_groups = invalid_groups.iter().collect::<BTreeSet<&String>>();
+
+        assert!(UserContext::has_grant(
+            &valid_scopes,
+            &valid_groups,
+            &[],
+            endpoint.clone(),
+            permission.clone()
+        )
+        .is_ok_and(|list| !list.is_empty()));
+
+        assert!(UserContext::has_grant(
+            &valid_scopes,
+            &invalid_groups,
+            &[],
+            endpoint.clone(),
+            permission.clone()
+        )
+        .is_ok_and(|list| !list.is_empty()));
+
+        assert!(UserContext::has_grant(
+            &invalid_scopes,
+            &valid_groups,
+            &[],
+            endpoint.clone(),
+            permission.clone()
+        )
+        .is_ok_and(|list| !list.is_empty()));
+
+        assert!(UserContext::has_grant(
+            &invalid_scopes,
+            &invalid_groups,
+            &[],
+            endpoint.clone(),
+            permission.clone()
+        )
+        .is_ok_and(|list| list.is_empty()));
+    }
+
+    #[test]
+    fn test_has_grant_resource_authorizations_only() {
+        let (_, _, _, _, resource_authorizations) = has_grant_setup();
+
+        assert!(UserContext::has_grant(
+            &BTreeSet::new(),
+            &BTreeSet::new(),
+            resource_authorizations.as_slice(),
+            Endpoint::Target(None),
+            Permission::Write
+        )
+        .is_ok_and(|list| !list.is_empty()));
+
+        assert!(UserContext::has_grant(
+            &BTreeSet::new(),
+            &BTreeSet::new(),
+            resource_authorizations.as_slice(),
+            Endpoint::Target(None),
+            Permission::Read
+        )
+        .is_ok_and(|list| list.is_empty()));
+
+        assert!(UserContext::has_grant(
+            &BTreeSet::new(),
+            &BTreeSet::new(),
+            resource_authorizations.as_slice(),
+            Endpoint::Field(None),
+            Permission::Read
+        )
+        .is_ok_and(|list| list.is_empty()));
+
+        assert!(UserContext::has_grant(
+            &BTreeSet::new(),
+            &BTreeSet::new(),
+            resource_authorizations.as_slice(),
+            Endpoint::Prompt(None),
+            Permission::Read
+        )
+        .is_ok_and(|list| !list.is_empty()));
+
+        assert!(UserContext::has_grant(
+            &BTreeSet::new(),
+            &BTreeSet::new(),
+            resource_authorizations.as_slice(),
+            Endpoint::Prompt(None),
+            Permission::Write
+        )
+        .is_ok_and(|list| list.is_empty()));
     }
 }
