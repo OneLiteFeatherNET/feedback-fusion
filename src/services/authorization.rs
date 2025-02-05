@@ -29,6 +29,7 @@ use rbs::to_value;
 use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap},
+    ops::Deref,
 };
 use tonic::Request;
 use wildcard::Wildcard;
@@ -250,22 +251,29 @@ fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool 
         return false;
     }
 
-    let wildcard = Wildcard::new(second.as_bytes()).unwrap();
+    let ids = match endpoint {
+        Endpoint::Target(Some(id))
+        | Endpoint::Prompt(Some(id))
+        | Endpoint::Field(Some(id))
+        | Endpoint::Response(Some(id)) => vec![id],
+        Endpoint::Export(Some(list)) => list.iter().collect(),
+        Endpoint::Authorize(Some(boxed_endpoint)) => match boxed_endpoint.deref() {
+            Endpoint::Target(Some(id))
+            | Endpoint::Prompt(Some(id))
+            | Endpoint::Field(Some(id))
+            | Endpoint::Response(Some(id)) => vec![id],
+            Endpoint::Export(Some(list)) => list.iter().collect(),
+            _ => Vec::new(),
+        },
+        _ => Vec::new(),
+    };
 
-    match endpoint {
-        Endpoint::Target(Some(id)) | Endpoint::Prompt(Some(id)) | Endpoint::Field(Some(id)) => {
-            if wildcard.is_match(id.as_bytes()) {
-                debug!(
-                    "ResourceAuthorization {} does not match {:?} with {:?}",
-                    key, endpoint, permission
-                );
+    if ids.is_empty() {
+        second.eq("*")
+    } else {
+        let wildcard = Wildcard::new(second.as_bytes()).unwrap();
 
-                true
-            } else {
-                false
-            }
-        }
-        _ => false,
+        ids.iter().all(|id| wildcard.is_match(id.as_bytes()))
     }
 }
 
@@ -362,4 +370,138 @@ async fn get_target_id_by_field_id(connection: &DatabaseConnection, id: &str) ->
     )?;
 
     id.ok_or(FeedbackFusionError::Unauthorized)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::borrow::Cow;
+
+    use crate::{authorization::is_match, Endpoint, Permission};
+
+    #[test]
+    fn test_is_match_empty() {
+        assert!(!is_match(
+            &"".to_owned(),
+            &Endpoint::Target(Some(Cow::Borrowed("Foo"))),
+            &Permission::Write
+        ));
+    }
+
+    #[test]
+    fn test_is_match_invalid_format() {
+        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("Foo")));
+        let permission = &Permission::Write;
+
+        assert!(!is_match(&"Foo".to_owned(), endpoint, permission));
+        assert!(!is_match(&"Foo::Bar".to_owned(), endpoint, permission));
+        assert!(!is_match(
+            &"Foo::Bar::FooBar".to_owned(),
+            endpoint,
+            permission
+        ));
+    }
+
+    #[test]
+    fn test_is_match_endpoint_matches() {
+        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("Foo")));
+        let permission = &Permission::Write;
+
+        assert!(is_match(
+            &"Target::Foo::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+        assert!(!is_match(
+            &"Targett::Foo::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+        assert!(!is_match(
+            &"Target::Foo::Write".to_owned(),
+            &Endpoint::Prompt(None),
+            permission
+        ));
+    }
+
+    #[test]
+    fn test_is_match_permission_matches() {
+        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("Foo")));
+        let permission = &Permission::Write;
+
+        assert!(is_match(
+            &"Target::Foo::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+        assert!(!is_match(
+            &"Target::Foo::Writer".to_owned(),
+            endpoint,
+            permission
+        ));
+        assert!(!is_match(
+            &"Target::Foo::Write".to_owned(),
+            endpoint,
+            &Permission::Read
+        ));
+    }
+
+    #[test]
+    fn test_is_match_wildcard() {
+        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("FooBar")));
+        let permission = &Permission::Write;
+
+        assert!(is_match(
+            &"Target::FooBar::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+
+        assert!(!is_match(
+            &"Target::FooBa::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+
+        assert!(is_match(
+            &"Target::*::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+
+        assert!(is_match(
+            &"Target::F*r::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+
+        assert!(!is_match(
+            &"Target::f*r::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+    }
+
+    #[test]
+    fn test_is_match_full_wildcard() {
+        let endpoint = &Endpoint::Target(None);
+        let permission = &Permission::Write;
+
+        assert!(!is_match(
+            &"Target::FooBar::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+
+        assert!(is_match(
+            &"Target::*::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+
+        assert!(!is_match(
+            &"Target::F*::Write".to_owned(),
+            endpoint,
+            permission
+        ));
+    }
 }
