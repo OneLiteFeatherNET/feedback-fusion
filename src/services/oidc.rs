@@ -311,6 +311,9 @@ impl OnJwtError for OIDCErrorHandler {
 
         let handle = Handle::current();
         let authority = self.authority.clone();
+
+        // theoretically aliri does spawn a thread itself but as it requires a async runtime
+        // context we do have to spawn a new runtim thread ourselves
         handle.spawn(async move { authority.refresh().await.ok() });
 
         Status::unauthenticated("unauthenticated").into_http()

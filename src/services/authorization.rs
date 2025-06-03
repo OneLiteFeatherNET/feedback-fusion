@@ -134,8 +134,9 @@ impl UserContext {
         permission: Permission,
     ) -> Result<Vec<String>> {
         let authorization_string = Authorization(&endpoint, &permission).to_string();
+        let endpoint = endpoint.to_static();
         let entry = PERMISSION_MATRIX
-            .get(&(endpoint.to_static(), permission.clone()))
+            .get(&(endpoint, permission.clone()))
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
@@ -175,7 +176,7 @@ impl UserContext {
         endpoint: &Endpoint<'_>,
         permission: &Permission,
     ) -> Result<()> {
-        // we firrst need to verify that the user has the access to the target, therefore we get
+        // we first need to verify that the user has the access to the target, therefore we get
         // the target id. We do not have to find prompts for fields as prompts and fields are
         // public available and therefore just have to verify the target
         let target_ids = endpoint.get_target_ids(connection).await?;
@@ -381,10 +382,7 @@ async fn get_target_id_by_field_id(connection: &DatabaseConnection, id: &str) ->
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        borrow::Cow,
-        collections::{BTreeSet, HashMap},
-    };
+    use std::{borrow::Cow, collections::BTreeSet};
 
     use aliri_oauth2::scope::ScopeTokenRef;
 
@@ -395,7 +393,7 @@ mod tests {
                 ResourceAuthorization, ResourceAuthorizationGrant, ResourceAuthorizationType,
                 ResourceKind,
             },
-            user::{User, UserContext},
+            user::UserContext,
         },
         Endpoint, Permission,
     };
