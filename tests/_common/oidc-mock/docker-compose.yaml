@@ -2,8 +2,6 @@ services:
   oidc-server-mock:
     container_name: oidc-server-mock
     image: ghcr.io/soluto/oidc-server-mock:0.8.6
-    networks:
-      - feedback-fusion
     ports:
       - 5151:80
     environment:
@@ -73,7 +71,3 @@ services:
         }
     volumes:
       - .:/tmp/config:ro
-
-networks:
-  feedback-fusion:
-    external: true

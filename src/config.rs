@@ -21,12 +21,12 @@
  *
  */
 
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::Deref};
 
 use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
 use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter};
+use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
 use crate::{
@@ -37,15 +37,25 @@ use crate::{
     prelude::*,
 };
 
-pub type PermissionMatrix =
-    DashMap<(Endpoint, Permission), (DashSet<Cow<'static, str>>, DashSet<Cow<'static, str>>)>;
+pub type PermissionMatrix = DashMap<
+    (Endpoint<'static>, Permission),
+    (DashSet<Cow<'static, str>>, DashSet<Cow<'static, str>>),
+>;
 
 lazy_static! {
-    pub static ref CONFIG: Config = read_config().unwrap();
+    pub static ref CONFIG: Config<'static> = read_config().unwrap();
     pub static ref PERMISSION_MATRIX: PermissionMatrix =
         read_permission_matrix(CONFIG.oidc().scopes(), CONFIG.oidc().groups());
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
         DatabaseConfiguration::extract().unwrap();
+    pub static ref ENDPOINTS: &'static [Endpoint<'static>] = &[
+        Endpoint::Target(EndpointScopeSelector::default()),
+        Endpoint::Prompt(EndpointScopeSelector::default()),
+        Endpoint::Field(EndpointScopeSelector::default()),
+        Endpoint::Export(EndpointScopeSelector::default()),
+        Endpoint::Response(EndpointScopeSelector::default()),
+        Endpoint::Authorize(None)
+    ];
 }
 
 macro_rules! config {
@@ -64,6 +74,29 @@ macro_rules! config {
                 )*
             }
 
+            $(
+                #[inline]
+                fn [<default_ $config:lower _ $dident>]() -> $dtype {
+                    $default.to_owned()
+                }
+            )*
+
+        }
+    };
+    ($config:ident, $lifetime:lifetime, ($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
+        paste! {
+            #[derive(Deserialize, Debug, Clone, Getters)]
+            #[get = "pub"]
+            pub struct $config<$lifetime> {
+                $(
+                    $ident: $type,
+                )*
+
+                $(
+                    #[serde(default = "default_" $config:lower "_" $dident)]
+                    $dident: $dtype,
+                )*
+            }
 
             $(
                 #[inline]
@@ -77,9 +110,9 @@ macro_rules! config {
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct Config {
+pub struct Config<'a> {
     cache: Option<CacheConfiguration>,
-    oidc: OIDCConfiguration,
+    oidc: OIDCConfiguration<'a>,
     #[cfg(feature = "otlp")]
     otlp: Option<OTLPConfiguration>,
     preset: Option<PresetConfig>,
@@ -108,45 +141,111 @@ config!(
     )
 );
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
-pub enum Endpoint {
-    Target,
-    Prompt,
-    Field,
-    Response,
-    Export,
+/// This limits the access to the specified endpoint to the given scope.
+///
+/// We can use this to only allow access to the endpoint for specific element ids
+/// and similar.
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr)]
+pub enum EndpointScopeSelector<'a> {
+    /// unscoped access
+    All,
+    /// access only for a specific id
+    Specific(Cow<'a, str>),
+    /// access for multiple ids
+    Multiple(Vec<Cow<'a, str>>),
+    /// custom wildcard format
+    Wildcard(Cow<'a, str>),
 }
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display)]
+impl Default for EndpointScopeSelector<'_> {
+    fn default() -> Self {
+        Self::All
+    }
+}
+
+/// Does define a scope for the client authorization with in the given endpoint group.
+///
+/// You can limit the access to the specified endpoint by defining a `EndpointScopeSelector`.
+/// If you wish to use wildcards you should use the `Custom` variant.
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr)]
+pub enum Endpoint<'a> {
+    Target(EndpointScopeSelector<'a>),
+    Prompt(EndpointScopeSelector<'a>),
+    Field(EndpointScopeSelector<'a>),
+    Response(EndpointScopeSelector<'a>),
+    Export(EndpointScopeSelector<'a>),
+    /// this is always target based
+    Authorize(Option<Box<Endpoint<'a>>>),
+    // this can contain a wildcard definition
+    Custom(Cow<'a, str>, EndpointScopeSelector<'a>),
+}
+
+impl Endpoint<'_> {
+    pub fn to_static(self) -> Endpoint<'static> {
+        match self {
+            Endpoint::Target(opt) => Endpoint::Target(opt.to_owned().clone()),
+            // Endpoint::Prompt(opt) => Endpoint::Prompt(opt.to_owned()),
+            // Endpoint::Field(opt) => Endpoint::Field(opt.to_owned()),
+            // Endpoint::Response(opt) => Endpoint::Response(opt.to_owned()),
+            // Endpoint::Export(opt) => Endpoint::Export(opt.to_owned()),
+            Endpoint::Authorize(Some(inner)) => {
+                Endpoint::Authorize(Some(Box::new(inner.to_static())))
+            }
+            Endpoint::Authorize(None) => Endpoint::Authorize(None),
+            // Endpoint::Custom(wildcard, opt) => {
+            //     let wildcard = Cow::Owned(wildcard.clone().into_owned());
+            //     let opt = opt.to_owned();
+            //     Endpoint::Custom(wildcard, opt)
+            // }
+            _ => Endpoint::Authorize(None),
+        }
+    }
+
+    pub fn none(&self) -> Endpoint {
+        match self {
+            Endpoint::Target(_) => Endpoint::Target(EndpointScopeSelector::default()),
+            Endpoint::Prompt(_) => Endpoint::Prompt(EndpointScopeSelector::default()),
+            Endpoint::Field(_) => Endpoint::Field(EndpointScopeSelector::default()),
+            Endpoint::Response(_) => Endpoint::Response(EndpointScopeSelector::default()),
+            Endpoint::Export(_) => Endpoint::Export(EndpointScopeSelector::default()),
+            Endpoint::Authorize(_) => Endpoint::Authorize(None),
+            Endpoint::Custom(wildcard, _) => {
+                Endpoint::Custom(wildcard.clone(), EndpointScopeSelector::default())
+            }
+        }
+    }
+}
+
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr)]
 pub enum Permission {
     Read,
     Write,
     List,
+    All,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct AuthorizationGrants {
-    // should match an `Endpoint`
-    endpoint: String,
-    // should match `Permission`
-    permissions: Vec<String>,
+pub struct AuthorizationGrants<'a> {
+    endpoint: Endpoint<'a>,
+    permissions: Vec<Permission>,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct AuthorizationMapping {
+pub struct AuthorizationMapping<'a> {
     name: String,
-    grants: Vec<AuthorizationGrants>,
+    grants: Vec<AuthorizationGrants<'a>>,
 }
 
 config!(
     OIDCConfiguration,
+    'a,
     (
         issuer: Option<String>,
         provider: String,
-        scopes: Vec<AuthorizationMapping>,
-        groups: Vec<AuthorizationMapping>,
+        scopes: Vec<AuthorizationMapping<'a>>,
+        groups: Vec<AuthorizationMapping<'a>>,
     ),
 
     (
@@ -198,7 +297,7 @@ pub struct FieldConfig {
     options: FieldOptions,
 }
 
-pub fn read_config() -> Result<Config> {
+pub fn read_config() -> Result<Config<'static>> {
     // as this function can only be called when the notify watch agent got created we can use
     // unwrap here
     let config_path = std::env::var("FEEDBACK_FUSION_CONFIG").map_err(|_| {
@@ -237,9 +336,10 @@ pub fn read_permission_matrix(
                 let endpoints = {
                     let endpoint = grant.endpoint.to_string();
                     let pattern = Wildcard::new(endpoint.as_bytes()).unwrap();
-                    Endpoint::iter()
+                    ENDPOINTS
+                        .iter()
                         .filter(|endpoint| pattern.is_match(endpoint.to_string().as_bytes()))
-                        .collect::<Vec<Endpoint>>()
+                        .collect::<Vec<&Endpoint>>()
                 };
 
                 for permission in grant.permissions.iter() {
@@ -391,48 +491,54 @@ mod tests {
     use lazy_static::lazy_static;
 
     lazy_static! {
-        static ref SCOPES: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+        static ref SCOPES: Vec<AuthorizationMapping<'static>> = vec![AuthorizationMapping {
             name: "scope1".to_string(),
             grants: vec![AuthorizationGrants {
-                endpoint: Endpoint::Target.to_string(),
-                permissions: vec![Permission::Read.to_string()],
+                endpoint: Endpoint::Target(None),
+                permissions: vec![Permission::Read],
             },],
         },];
-        static ref GROUPS: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
+        static ref GROUPS: Vec<AuthorizationMapping<'static>> = vec![AuthorizationMapping {
             name: "group1".to_string(),
             grants: vec![AuthorizationGrants {
-                endpoint: Endpoint::Prompt.to_string(),
-                permissions: vec![Permission::Write.to_string()],
+                endpoint: Endpoint::Prompt(None),
+                permissions: vec![Permission::Write],
             },],
         },];
-        static ref SCOPES_WILDCARD: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
-            name: "scope2".to_string(),
-            grants: vec![AuthorizationGrants {
-                endpoint: "*".to_string(),
-                permissions: vec!["*".to_string()],
-            },],
-        },];
-        static ref SCOPES_NO_MATCH: Vec<AuthorizationMapping> = vec![AuthorizationMapping {
-            name: "scope3".to_string(),
-            grants: vec![AuthorizationGrants {
-                endpoint: "NonExistent".to_string(),
-                permissions: vec!["NonExistent".to_string()],
-            },],
-        },];
+        static ref SCOPES_WILDCARD: Vec<AuthorizationMapping<'static>> =
+            vec![AuthorizationMapping {
+                name: "scope2".to_string(),
+                grants: vec![AuthorizationGrants {
+                    endpoint: Endpoint::Custom(Cow::Borrowed("*"), None),
+                    permissions: vec![Permission::All],
+                },],
+            },];
+        static ref SCOPES_NO_MATCH: Vec<AuthorizationMapping<'static>> =
+            vec![AuthorizationMapping {
+                name: "scope3".to_string(),
+                grants: vec![AuthorizationGrants {
+                    endpoint: Endpoint::Custom(Cow::Borrowed("NoneExistent"), None),
+                    permissions: vec![Permission::All],
+                },],
+            },];
     }
 
     #[test]
     fn test_read_permission_matrix() {
         let matrix = read_permission_matrix(&SCOPES, &GROUPS);
 
-        assert!(matrix.contains_key(&(Endpoint::Target, Permission::Read)));
-        assert!(matrix.contains_key(&(Endpoint::Prompt, Permission::Write)));
+        assert!(matrix.contains_key(&(Endpoint::Target(None), Permission::Read)));
+        assert!(matrix.contains_key(&(Endpoint::Prompt(None), Permission::Write)));
 
-        let entry = matrix.get(&(Endpoint::Target, Permission::Read)).unwrap();
+        let entry = matrix
+            .get(&(Endpoint::Target(None), Permission::Read))
+            .unwrap();
         assert!(entry.0.contains(&Cow::Borrowed("scope1")));
         assert!(entry.1.is_empty());
 
-        let entry = matrix.get(&(Endpoint::Prompt, Permission::Write)).unwrap();
+        let entry = matrix
+            .get(&(Endpoint::Prompt(None), Permission::Write))
+            .unwrap();
         assert!(entry.0.is_empty());
         assert!(entry.1.contains(&Cow::Borrowed("group1")));
     }
@@ -441,7 +547,7 @@ mod tests {
     fn test_read_permission_matrix_with_wildcards() {
         let matrix = read_permission_matrix(&SCOPES_WILDCARD, &[]);
 
-        for endpoint in Endpoint::iter() {
+        for endpoint in ENDPOINTS.iter() {
             for permission in Permission::iter() {
                 let entry = matrix.get(&(endpoint.clone(), permission.clone())).unwrap();
                 assert!(entry.0.contains(&Cow::Borrowed("scope2")));

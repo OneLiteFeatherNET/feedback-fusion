@@ -24,13 +24,14 @@ use feedback_fusion_common::proto::{DataExportRequest, DataExportResponse};
 use v1::FeedbackFusionV1Context;
 
 use crate::{
-    database::schema::feedback::{Field, Prompt, Target},
+    database::schema::{feedback::{Field, Prompt, Target}, user::UserContext},
     prelude::*,
 };
 
 pub async fn export_data(
     context: &FeedbackFusionV1Context,
     request: Request<DataExportRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<DataExportResponse>> {
     let data = request.into_inner();
     let connection = context.connection();

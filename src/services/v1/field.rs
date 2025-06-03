@@ -23,7 +23,10 @@
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
     cache::fetch_prompt,
-    database::schema::feedback::{Field, FieldOptions, FieldType},
+    database::schema::{
+        feedback::{Field, FieldOptions, FieldType},
+        user::UserContext,
+    },
     prelude::*,
 };
 use feedback_fusion_common::proto::{
@@ -35,6 +38,7 @@ use feedback_fusion_common::proto::{
 pub async fn create_field(
     context: &FeedbackFusionV1Context,
     request: Request<CreateFieldRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ProtoField>> {
     let data = request.into_inner();
     data.validate()?;
@@ -100,6 +104,7 @@ pub async fn get_active_fields(
 pub async fn get_fields(
     context: &FeedbackFusionV1Context,
     request: Request<GetFieldsRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<FieldPage>> {
     let data = request.into_inner();
     let page_request = data.page_request();
@@ -131,6 +136,7 @@ pub async fn get_fields(
 pub async fn update_field(
     context: &FeedbackFusionV1Context,
     request: Request<UpdateFieldRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ProtoField>> {
     let data = request.into_inner();
     data.validate()?;
@@ -166,6 +172,7 @@ pub async fn update_field(
 pub async fn delete_field(
     context: &FeedbackFusionV1Context,
     request: Request<DeleteFieldRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<()>> {
     database_request!(
         Field::delete_by_column(context.connection(), "id", request.into_inner().id.as_str()).await,
