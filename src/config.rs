@@ -21,11 +21,10 @@
  *
  */
 
-use std::{borrow::Cow, ops::Deref};
+use std::borrow::Cow;
 
 use dashmap::{DashMap, DashSet};
 use rbatis::executor::Executor;
-use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
@@ -37,24 +36,58 @@ use crate::{
     prelude::*,
 };
 
-pub type PermissionMatrix = DashMap<
-    (Endpoint<'static>, Permission),
-    (DashSet<Cow<'static, str>>, DashSet<Cow<'static, str>>),
->;
+#[derive(Getters, PartialEq, Eq, Hash)]
+#[get = "pub"]
+pub struct PermissionMatrixKey<'a> {
+    endpoint: &'a Endpoint<'a>,
+    permission: &'a Permission,
+}
+
+impl<'a> From<(&'a Endpoint<'a>, &'a Permission)> for PermissionMatrixKey<'a> {
+    fn from(value: (&'a Endpoint<'a>, &'a Permission)) -> Self {
+        Self {
+            endpoint: value.0,
+            permission: value.1,
+        }
+    }
+}
+
+#[derive(Getters, MutGetters)]
+#[get = "pub"]
+#[get_mut = "pub"]
+pub struct PermissionMatrixValue<'a> {
+    scopes: DashSet<&'a str>,
+    groups: DashSet<&'a str>,
+}
+
+impl<'a> From<(DashSet<&'a str>, DashSet<&'a str>)> for PermissionMatrixValue<'a> {
+    fn from(value: (DashSet<&'a str>, DashSet<&'a str>)) -> Self {
+        Self {
+            scopes: value.0,
+            groups: value.1,
+        }
+    }
+}
+
+pub type PermissionMatrix<'a> = DashMap<PermissionMatrixKey<'a>, PermissionMatrixValue<'a>>;
 
 lazy_static! {
     pub static ref CONFIG: Config<'static> = read_config().unwrap();
-    pub static ref PERMISSION_MATRIX: PermissionMatrix =
-        read_permission_matrix(CONFIG.oidc().scopes(), CONFIG.oidc().groups());
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
         DatabaseConfiguration::extract().unwrap();
-    pub static ref ENDPOINTS: &'static [Endpoint<'static>] = &[
+    pub static ref ENDPOINTS: [Endpoint<'static>; 6] = [
         Endpoint::Target(EndpointScopeSelector::default()),
         Endpoint::Prompt(EndpointScopeSelector::default()),
         Endpoint::Field(EndpointScopeSelector::default()),
         Endpoint::Export(EndpointScopeSelector::default()),
         Endpoint::Response(EndpointScopeSelector::default()),
         Endpoint::Authorize(None)
+    ];
+    pub static ref PERMISSIONS: [Permission; 4] = [
+        Permission::Write,
+        Permission::Read,
+        Permission::List,
+        Permission::All
     ];
 }
 
@@ -181,26 +214,6 @@ pub enum Endpoint<'a> {
 }
 
 impl Endpoint<'_> {
-    pub fn to_static(self) -> Endpoint<'static> {
-        match self {
-            Endpoint::Target(opt) => Endpoint::Target(opt.to_owned().clone()),
-            // Endpoint::Prompt(opt) => Endpoint::Prompt(opt.to_owned()),
-            // Endpoint::Field(opt) => Endpoint::Field(opt.to_owned()),
-            // Endpoint::Response(opt) => Endpoint::Response(opt.to_owned()),
-            // Endpoint::Export(opt) => Endpoint::Export(opt.to_owned()),
-            Endpoint::Authorize(Some(inner)) => {
-                Endpoint::Authorize(Some(Box::new(inner.to_static())))
-            }
-            Endpoint::Authorize(None) => Endpoint::Authorize(None),
-            // Endpoint::Custom(wildcard, opt) => {
-            //     let wildcard = Cow::Owned(wildcard.clone().into_owned());
-            //     let opt = opt.to_owned();
-            //     Endpoint::Custom(wildcard, opt)
-            // }
-            _ => Endpoint::Authorize(None),
-        }
-    }
-
     pub fn none(&self) -> Endpoint {
         match self {
             Endpoint::Target(_) => Endpoint::Target(EndpointScopeSelector::default()),
@@ -319,52 +332,44 @@ pub fn read_config() -> Result<Config<'static>> {
 }
 
 /// This function does require CONFIG to be already initialized and performs the reverse /
-/// backwards mapping from endpoint and permission to a list of scopes and grouops instead of the
+/// backwards mapping from endpoint and permission to a list of scopes and groups instead of the
 /// other way.
-pub fn read_permission_matrix(
+pub fn read_permission_matrix<'a>(
     scopes: &'static [AuthorizationMapping],
     groups: &'static [AuthorizationMapping],
-) -> PermissionMatrix {
+) -> PermissionMatrix<'a> {
     let map: PermissionMatrix = DashMap::new();
 
     for (index, list) in [scopes, groups].iter().enumerate() {
         for mapping in list.iter() {
-            let name = Cow::Borrowed(mapping.name().as_str());
+            let name = mapping.name().as_str();
+
             for grant in mapping.grants.iter() {
-                // the grant does support wildcards for the `endpoint` field.
-                // therefore we here try to match the endpoint variatns
-                let endpoints = {
-                    let endpoint = grant.endpoint.to_string();
-                    let pattern = Wildcard::new(endpoint.as_bytes()).unwrap();
-                    ENDPOINTS
-                        .iter()
-                        .filter(|endpoint| pattern.is_match(endpoint.to_string().as_bytes()))
-                        .collect::<Vec<&Endpoint>>()
-                };
+                let endpoint_string = grant.endpoint.to_string();
+                let endpoint_pattern = Wildcard::new(endpoint_string.as_bytes()).unwrap();
 
-                for permission in grant.permissions.iter() {
-                    // the permissions field does support wildcards for the `permission` field.
-                    // therefore we here try to match the permission variatns
-                    let permissions = {
-                        let stringified = permission.to_string();
-                        let pattern = Wildcard::new(stringified.as_bytes()).unwrap();
-                        Permission::iter()
-                            .filter(|permission| {
-                                pattern.is_match(permission.to_string().as_bytes())
-                            })
-                            .collect::<Vec<Permission>>()
-                    };
+                for endpoint in ENDPOINTS
+                    .iter()
+                    .filter(|endpoint| endpoint_pattern.is_match(endpoint.to_string().as_bytes()))
+                {
+                    for permission in grant.permissions.iter() {
+                        let permission_string = permission.to_string();
+                        let permission_pattern =
+                            Wildcard::new(permission_string.as_bytes()).unwrap();
 
-                    for endpoint in endpoints.clone().into_iter() {
-                        for permission in permissions.clone().into_iter() {
-                            map.entry((endpoint.clone(), permission.clone()))
-                                .or_insert_with(|| (DashSet::new(), DashSet::new()));
+                        for permission in PERMISSIONS.iter().filter(|permission| {
+                            permission_pattern.is_match(permission.to_string().as_bytes())
+                        }) {
+                            let key = PermissionMatrixKey::from((endpoint, permission));
 
-                            let entry = map.get_mut(&(endpoint.clone(), permission)).unwrap();
+                            let mut entry = map.entry(key).or_insert_with(|| {
+                                PermissionMatrixValue::from((DashSet::new(), DashSet::new()))
+                            });
+
                             if index == 0 {
-                                entry.0.insert(name.clone());
+                                entry.scopes_mut().insert(name);
                             } else {
-                                entry.1.insert(name.clone());
+                                entry.groups_mut().insert(name);
                             }
                         }
                     }
