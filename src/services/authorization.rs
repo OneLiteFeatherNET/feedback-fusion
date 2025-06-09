@@ -455,21 +455,30 @@ mod tests {
             },
             user::UserContext,
         },
-        Endpoint, Permission,
+        Endpoint, EndpointScopeSelector, Permission, CONFIG,
     };
+
+    use super::PermissionMatrix;
+
+    lazy_static::lazy_static! {
+        static ref MATRIX: PermissionMatrix<'static> = crate::config::read_permission_matrix(CONFIG.oidc().scopes(), CONFIG.oidc().groups());
+        static ref TARGET: Endpoint<'static> = Endpoint::Target(EndpointScopeSelector::default());
+        static ref FIELD: Endpoint<'static> = Endpoint::Field(EndpointScopeSelector::default());
+        static ref PROMPT: Endpoint<'static> = Endpoint::Prompt(EndpointScopeSelector::default());
+    }
 
     #[test]
     fn test_is_match_empty() {
         assert!(!is_match(
             &"".to_owned(),
-            &Endpoint::Target(Some(Cow::Borrowed("Foo"))),
+            &Endpoint::Target(EndpointScopeSelector::Specific(Cow::Borrowed("Foo"))),
             &Permission::Write
         ));
     }
 
     #[test]
     fn test_is_match_invalid_format() {
-        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("Foo")));
+        let endpoint = &Endpoint::Target(EndpointScopeSelector::Specific(Cow::Borrowed("Foo")));
         let permission = &Permission::Write;
 
         assert!(!is_match(&"Foo".to_owned(), endpoint, permission));
@@ -483,7 +492,7 @@ mod tests {
 
     #[test]
     fn test_is_match_endpoint_matches() {
-        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("Foo")));
+        let endpoint = &Endpoint::Target(EndpointScopeSelector::Specific(Cow::Borrowed("Foo")));
         let permission = &Permission::Write;
 
         assert!(is_match(
@@ -498,14 +507,14 @@ mod tests {
         ));
         assert!(!is_match(
             &"Target::Foo::Write".to_owned(),
-            &Endpoint::Prompt(None),
+            &Endpoint::Prompt(EndpointScopeSelector::default()),
             permission
         ));
     }
 
     #[test]
     fn test_is_match_permission_matches() {
-        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("Foo")));
+        let endpoint = &Endpoint::Target(EndpointScopeSelector::Specific(Cow::Borrowed("Foo")));
         let permission = &Permission::Write;
 
         assert!(is_match(
@@ -527,7 +536,7 @@ mod tests {
 
     #[test]
     fn test_is_match_wildcard() {
-        let endpoint = &Endpoint::Target(Some(Cow::Borrowed("FooBar")));
+        let endpoint = &Endpoint::Target(EndpointScopeSelector::Specific(Cow::Borrowed("FooBar")));
         let permission = &Permission::Write;
 
         assert!(is_match(
@@ -563,7 +572,7 @@ mod tests {
 
     #[test]
     fn test_is_match_full_wildcard() {
-        let endpoint = &Endpoint::Target(None);
+        let endpoint = &Endpoint::Target(EndpointScopeSelector::default());
         let permission = &Permission::Write;
 
         assert!(!is_match(
@@ -587,12 +596,25 @@ mod tests {
 
     #[test]
     fn test_has_grant_empty() {
+        println!(
+            "{:?}",
+            UserContext::has_grant(
+                &BTreeSet::new(),
+                &BTreeSet::new(),
+                &[],
+                &TARGET,
+                &Permission::Write,
+                &MATRIX
+            )
+        );
+
         assert!(UserContext::has_grant(
             &BTreeSet::new(),
             &BTreeSet::new(),
             &[],
-            Endpoint::Target(None),
-            Permission::Write
+            &TARGET,
+            &Permission::Write,
+            &MATRIX
         )
         .is_ok_and(|list| list.is_empty()));
     }
@@ -640,8 +662,6 @@ mod tests {
 
     #[test]
     fn test_has_grant_scopes_and_groups_only() {
-        let endpoint = Endpoint::Target(None);
-        let permission = Permission::Write;
         let (valid_scopes, valid_groups, invalid_scopes, invalid_groups, _) = has_grant_setup();
         let valid_groups = valid_groups.iter().collect::<BTreeSet<&String>>();
         let invalid_groups = invalid_groups.iter().collect::<BTreeSet<&String>>();
@@ -650,8 +670,9 @@ mod tests {
             &valid_scopes,
             &valid_groups,
             &[],
-            endpoint.clone(),
-            permission.clone()
+            &TARGET,
+            &Permission::Write,
+            &MATRIX
         )
         .is_ok_and(|list| !list.is_empty()));
 
@@ -659,8 +680,9 @@ mod tests {
             &valid_scopes,
             &invalid_groups,
             &[],
-            endpoint.clone(),
-            permission.clone()
+            &TARGET,
+            &Permission::Write,
+            &MATRIX
         )
         .is_ok_and(|list| !list.is_empty()));
 
@@ -668,8 +690,9 @@ mod tests {
             &invalid_scopes,
             &valid_groups,
             &[],
-            endpoint.clone(),
-            permission.clone()
+            &TARGET,
+            &Permission::Write,
+            &MATRIX
         )
         .is_ok_and(|list| !list.is_empty()));
 
@@ -677,8 +700,9 @@ mod tests {
             &invalid_scopes,
             &invalid_groups,
             &[],
-            endpoint.clone(),
-            permission.clone()
+            &TARGET,
+            &Permission::Write,
+            &MATRIX
         )
         .is_ok_and(|list| list.is_empty()));
     }
@@ -691,8 +715,9 @@ mod tests {
             &BTreeSet::new(),
             &BTreeSet::new(),
             resource_authorizations.as_slice(),
-            Endpoint::Target(None),
-            Permission::Write
+            &TARGET,
+            &Permission::Write,
+            &MATRIX
         )
         .is_ok_and(|list| !list.is_empty()));
 
@@ -700,8 +725,9 @@ mod tests {
             &BTreeSet::new(),
             &BTreeSet::new(),
             resource_authorizations.as_slice(),
-            Endpoint::Target(None),
-            Permission::Read
+            &TARGET,
+            &Permission::Read,
+            &MATRIX
         )
         .is_ok_and(|list| list.is_empty()));
 
@@ -709,8 +735,9 @@ mod tests {
             &BTreeSet::new(),
             &BTreeSet::new(),
             resource_authorizations.as_slice(),
-            Endpoint::Field(None),
-            Permission::Read
+            &FIELD,
+            &Permission::Read,
+            &MATRIX
         )
         .is_ok_and(|list| list.is_empty()));
 
@@ -718,8 +745,9 @@ mod tests {
             &BTreeSet::new(),
             &BTreeSet::new(),
             resource_authorizations.as_slice(),
-            Endpoint::Prompt(None),
-            Permission::Read
+            &PROMPT,
+            &Permission::Read,
+            &MATRIX
         )
         .is_ok_and(|list| !list.is_empty()));
 
@@ -727,8 +755,9 @@ mod tests {
             &BTreeSet::new(),
             &BTreeSet::new(),
             resource_authorizations.as_slice(),
-            Endpoint::Prompt(None),
-            Permission::Write
+            &PROMPT,
+            &Permission::Write,
+            &MATRIX
         )
         .is_ok_and(|list| list.is_empty()));
     }

@@ -505,14 +505,14 @@ mod tests {
         static ref SCOPES: Vec<AuthorizationMapping<'static>> = vec![AuthorizationMapping {
             name: "scope1".to_string(),
             grants: vec![AuthorizationGrants {
-                endpoint: Endpoint::Target(None),
+                endpoint: Endpoint::Target(EndpointScopeSelector::default()),
                 permissions: vec![Permission::Read],
             },],
         },];
         static ref GROUPS: Vec<AuthorizationMapping<'static>> = vec![AuthorizationMapping {
             name: "group1".to_string(),
             grants: vec![AuthorizationGrants {
-                endpoint: Endpoint::Prompt(None),
+                endpoint: Endpoint::Prompt(EndpointScopeSelector::default()),
                 permissions: vec![Permission::Write],
             },],
         },];
@@ -520,7 +520,10 @@ mod tests {
             vec![AuthorizationMapping {
                 name: "scope2".to_string(),
                 grants: vec![AuthorizationGrants {
-                    endpoint: Endpoint::Custom(Cow::Borrowed("*"), None),
+                    endpoint: Endpoint::Custom(
+                        Cow::Borrowed("*"),
+                        EndpointScopeSelector::default()
+                    ),
                     permissions: vec![Permission::All],
                 },],
             },];
@@ -528,30 +531,37 @@ mod tests {
             vec![AuthorizationMapping {
                 name: "scope3".to_string(),
                 grants: vec![AuthorizationGrants {
-                    endpoint: Endpoint::Custom(Cow::Borrowed("NoneExistent"), None),
+                    endpoint: Endpoint::Custom(
+                        Cow::Borrowed("NoneExistent"),
+                        EndpointScopeSelector::default()
+                    ),
                     permissions: vec![Permission::All],
                 },],
             },];
+        static ref TARGET_ENDPOINT: Endpoint<'static> =
+            Endpoint::Target(EndpointScopeSelector::default());
+        static ref TARGET: PermissionMatrixKey<'static> =
+            PermissionMatrixKey::from((&*TARGET_ENDPOINT, &Permission::Read));
+        static ref PROMPT_ENDPOINT: Endpoint<'static> =
+            Endpoint::Prompt(EndpointScopeSelector::default());
+        static ref PROMPT: PermissionMatrixKey<'static> =
+            PermissionMatrixKey::from((&*PROMPT_ENDPOINT, &Permission::Write));
     }
 
     #[test]
     fn test_read_permission_matrix() {
         let matrix = read_permission_matrix(&SCOPES, &GROUPS);
 
-        assert!(matrix.contains_key(&(Endpoint::Target(None), Permission::Read)));
-        assert!(matrix.contains_key(&(Endpoint::Prompt(None), Permission::Write)));
+        assert!(matrix.contains_key(&TARGET));
+        assert!(matrix.contains_key(&PROMPT));
 
-        let entry = matrix
-            .get(&(Endpoint::Target(None), Permission::Read))
-            .unwrap();
-        assert!(entry.0.contains(&Cow::Borrowed("scope1")));
-        assert!(entry.1.is_empty());
+        let entry = matrix.get(&TARGET).unwrap();
+        assert!(entry.scopes().contains("scope1"));
+        assert!(entry.groups().is_empty());
 
-        let entry = matrix
-            .get(&(Endpoint::Prompt(None), Permission::Write))
-            .unwrap();
-        assert!(entry.0.is_empty());
-        assert!(entry.1.contains(&Cow::Borrowed("group1")));
+        let entry = matrix.get(&PROMPT).unwrap();
+        assert!(entry.scopes().is_empty());
+        assert!(entry.groups().contains("group1"));
     }
 
     #[test]
@@ -559,9 +569,11 @@ mod tests {
         let matrix = read_permission_matrix(&SCOPES_WILDCARD, &[]);
 
         for endpoint in ENDPOINTS.iter() {
-            for permission in Permission::iter() {
-                let entry = matrix.get(&(endpoint.clone(), permission.clone())).unwrap();
-                assert!(entry.0.contains(&Cow::Borrowed("scope2")));
+            for permission in PERMISSIONS.iter() {
+                let entry = matrix
+                    .get(&PermissionMatrixKey::from((endpoint, permission)))
+                    .unwrap();
+                assert!(entry.scopes().contains("scope2"));
             }
         }
     }
