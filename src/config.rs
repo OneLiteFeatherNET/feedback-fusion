@@ -36,7 +36,7 @@ use crate::{
     prelude::*,
 };
 
-#[derive(Getters, PartialEq, Eq, Hash)]
+#[derive(Getters, PartialEq, Eq, Hash, Debug)]
 #[get = "pub"]
 pub struct PermissionMatrixKey<'a> {
     endpoint: &'a Endpoint<'a>,
@@ -52,7 +52,7 @@ impl<'a> From<(&'a Endpoint<'a>, &'a Permission)> for PermissionMatrixKey<'a> {
     }
 }
 
-#[derive(Getters, MutGetters)]
+#[derive(Getters, MutGetters, Debug)]
 #[get = "pub"]
 #[get_mut = "pub"]
 pub struct PermissionMatrixValue<'a> {
@@ -178,7 +178,7 @@ config!(
 ///
 /// We can use this to only allow access to the endpoint for specific element ids
 /// and similar.
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr, Serialize)]
 pub enum EndpointScopeSelector<'a> {
     /// unscoped access
     All,
@@ -200,7 +200,7 @@ impl Default for EndpointScopeSelector<'_> {
 ///
 /// You can limit the access to the specified endpoint by defining a `EndpointScopeSelector`.
 /// If you wish to use wildcards you should use the `Custom` variant.
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr, Serialize)]
 pub enum Endpoint<'a> {
     Target(EndpointScopeSelector<'a>),
     Prompt(EndpointScopeSelector<'a>),
@@ -345,7 +345,10 @@ pub fn read_permission_matrix<'a>(
             let name = mapping.name().as_str();
 
             for grant in mapping.grants.iter() {
-                let endpoint_string = grant.endpoint.to_string();
+                let endpoint_string = match &grant.endpoint {
+                    Endpoint::Custom(custom, _) => custom.to_string(),
+                    _ => grant.endpoint.to_string(),
+                };
                 let endpoint_pattern = Wildcard::new(endpoint_string.as_bytes()).unwrap();
 
                 for endpoint in ENDPOINTS
@@ -357,8 +360,9 @@ pub fn read_permission_matrix<'a>(
                         let permission_pattern =
                             Wildcard::new(permission_string.as_bytes()).unwrap();
 
-                        for permission in PERMISSIONS.iter().filter(|permission| {
-                            permission_pattern.is_match(permission.to_string().as_bytes())
+                        for permission in PERMISSIONS.iter().filter(|ppermission| {
+                            permission_pattern.is_match(ppermission.to_string().as_bytes())
+                                || permission.eq(&Permission::All)
                         }) {
                             let key = PermissionMatrixKey::from((endpoint, permission));
 
@@ -377,6 +381,8 @@ pub fn read_permission_matrix<'a>(
             }
         }
     }
+
+    debug!("Read PermissionMatrix: {:?}", map);
 
     map
 }

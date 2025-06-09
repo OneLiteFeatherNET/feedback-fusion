@@ -94,7 +94,8 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
                 host = %request.uri().host().unwrap_or_default(),
                 path = %request.uri().path(),
                 headers = ?headers,
-                version = ?request.version()
+                version = ?request.version(),
+                request_id = nanoid::nanoid!()
             );
 
             // try to extract the context

@@ -25,7 +25,7 @@ use aliri_oauth2::{scope::ScopeTokenRef, HasScope};
 use async_recursion::async_recursion;
 use http::header::AUTHORIZATION;
 use openidconnect::{core::CoreClient, AccessToken};
-use rbs::to_value;
+use rbatis::rbatis_codegen::IntoSql;
 use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap},
@@ -55,12 +55,20 @@ impl Endpoint<'_> {
                 Ok(Some(vec![id.to_string()]))
             }
             Endpoint::Prompt(EndpointScopeSelector::Specific(id))
-            | Endpoint::Response(EndpointScopeSelector::Specific(id)) => {
-                Ok(Some(get_target_ids_by_prompt_ids(connection, &[id]).await?))
-            }
-            Endpoint::Field(EndpointScopeSelector::Specific(id)) => {
-                Ok(Some(get_target_ids_by_field_ids(connection, &[id]).await?))
-            }
+            | Endpoint::Response(EndpointScopeSelector::Specific(id)) => Ok(Some(
+                get_target_ids_by_prompt_ids(connection, &[id])
+                    .await?
+                    .into_iter()
+                    .map(|result| result.result)
+                    .collect(),
+            )),
+            Endpoint::Field(EndpointScopeSelector::Specific(id)) => Ok(Some(
+                get_target_ids_by_field_ids(connection, &[id])
+                    .await?
+                    .into_iter()
+                    .map(|result| result.result)
+                    .collect(),
+            )),
             Endpoint::Target(EndpointScopeSelector::Multiple(ids))
             | Endpoint::Export(EndpointScopeSelector::Multiple(ids)) => {
                 Ok(Some(ids.iter().map(|id| id.to_string()).collect()))
@@ -69,13 +77,21 @@ impl Endpoint<'_> {
             | Endpoint::Response(EndpointScopeSelector::Multiple(ids)) => {
                 let id_refs: Vec<&str> = ids.iter().map(|id| id.as_ref()).collect();
                 Ok(Some(
-                    get_target_ids_by_prompt_ids(connection, &id_refs).await?,
+                    get_target_ids_by_prompt_ids(connection, &id_refs)
+                        .await?
+                        .into_iter()
+                        .map(|result| result.result)
+                        .collect(),
                 ))
             }
             Endpoint::Field(EndpointScopeSelector::Multiple(ids)) => {
                 let id_refs: Vec<&str> = ids.iter().map(|id| id.as_ref()).collect();
                 Ok(Some(
-                    get_target_ids_by_field_ids(connection, &id_refs).await?,
+                    get_target_ids_by_field_ids(connection, &id_refs)
+                        .await?
+                        .into_iter()
+                        .map(|result| result.result)
+                        .collect(),
                 ))
             }
             Endpoint::Authorize(Some(boxed_endpoint)) => {
@@ -120,24 +136,24 @@ impl UserContext {
         match get_user_context(connection, subject.as_str(), &scopes, &groups, matrix).await {
             Ok(context) => Ok(context),
             Err(FeedbackFusionError::OIDCError(_)) => {
-                // let user = User::fetch(access_token, client, claims).await?;
+                let user = User::fetch(access_token, client, claims).await?;
 
                 // TODO: cleanup with new cache implementation for auithentication
 
                 // // due to sync problems this could occur twice at the same time, therefore we just
                 // // dont use the result error. As the cache already got invalidated by the other
                 // // process we dont need to do it in that case :)
-                // if database_request!(User::insert(connection, &user).await, "Save user").is_ok() {
-                //     invalidate!(
-                //         get_user_context,
-                //         format!(
-                //             "get-user-context-{}-{:?}-{:?}",
-                //             subject.as_str(),
-                //             &scopes,
-                //             &groups
-                //         )
-                //     );
-                // }
+                if database_request!(User::insert(connection, &user).await, "Save user").is_ok() {
+                    // invalidate!(
+                    //     get_user_context,
+                    //     format!(
+                    //         "get-user-context-{}-{:?}-{:?}",
+                    //         subject.as_str(),
+                    //         &scopes,
+                    //         &groups
+                    //     )
+                    // );
+                }
 
                 get_user_context(connection, subject.as_str(), &scopes, &groups, matrix).await
             }
@@ -396,41 +412,32 @@ async fn get_user_context<'a>(
     })
 }
 
+#[derive(Deserialize)]
+struct DatabaseResult {
+    result: String,
+}
+
+#[rbatis::py_sql("SELECT target as result FROM prompt WHERE id IN ${id.sql()}")]
 #[dynamic_cache(
     ttl = "3600",
     key = r#"format!('get-target-id-by-prompt-id-{:?}', id)"#
 )]
 #[instrument(skip_all)]
 async fn get_target_ids_by_prompt_ids(
-    connection: &DatabaseConnection,
+    rb: &dyn rbatis::executor::Executor,
     id: &[&str],
-) -> Result<Vec<String>> {
-    Ok(database_request!(
-        connection
-            .query_decode::<Vec<String>>(
-                "SELECT target FROM prompt WHERE id IN ?",
-                vec![to_value!(id)]
-            )
-            .await,
-        "Select target id by prompt id"
-    )?)
+) -> rbatis::Result<Vec<DatabaseResult>> {
+    impled!()
 }
 
+#[rbatis::py_sql("SELECT prompt.target as result FROM field field JOIN prompt prompt ON field.prompt = prompt.id WHERE field.id IN ${id.sql()}")]
 #[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-field-id-{:?}', id)"#)]
 #[instrument(skip_all)]
 async fn get_target_ids_by_field_ids(
-    connection: &DatabaseConnection,
+    rb: &dyn rbatis::executor::Executor,
     id: &[&str],
-) -> Result<Vec<String>> {
-    Ok(database_request!(
-        connection
-            .query_decode::<Vec<String>>(
-                "SELECT prompt.target FROM field field JOIN prompt prompt ON field.prompt = prompt.id WHERE field.id IN ?",
-                vec![to_value!(id)]
-            )
-            .await,
-        "Select target id by field id"
-    )?)
+) -> rbatis::Result<Vec<DatabaseResult>> {
+    impled!()
 }
 
 #[cfg(test)]

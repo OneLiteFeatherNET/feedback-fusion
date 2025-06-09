@@ -10,12 +10,18 @@ oidc:
   scopes:
     - name: "api:feedback-fusion"
       grants:
-        - endpoint: "*"
+        - endpoint:
+            !Custom
+              - "*"
+              - All 
           permissions:
-            - "*"
+            - All
   groups:
     - name: "admin"
       grants:
-        - endpoint: "*"
+        - endpoint:
+            !Custom
+              - "*"
+              - All
           permissions:
-            - "*"
+            - All
