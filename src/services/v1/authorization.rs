@@ -36,7 +36,7 @@ use feedback_fusion_common::proto::CreateResourceAuthorizationRequest;
 use v1::FeedbackFusionV1Context;
 
 pub async fn create_resource_authorization(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<CreateResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ResourceAuthorizationList>> {
@@ -105,7 +105,7 @@ pub async fn create_resource_authorization(
 }
 
 pub async fn get_resoruce_authorization(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<GetResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ProtoResourceAuthorization>> {
@@ -125,7 +125,7 @@ pub async fn get_resoruce_authorization(
 }
 
 pub async fn get_resource_authorizations(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<GetResourceAuthorizationsRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ResourceAuthorizationPage>> {
@@ -136,7 +136,7 @@ pub async fn get_resource_authorizations(
 }
 
 pub async fn update_resource_authorization(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdateResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ProtoResourceAuthorization>> {
@@ -173,7 +173,7 @@ pub async fn update_resource_authorization(
 }
 
 pub async fn delete_resoruce_authorization(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<DeleteResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<()>> {

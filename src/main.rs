@@ -106,6 +106,10 @@ async fn main() {
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
             client,
+            permission_matrix: config::read_permission_matrix(
+                CONFIG.oidc().scopes(),
+                CONFIG.oidc().groups(),
+            ),
         };
         let service = tower::ServiceBuilder::new()
             .layer(authorizer.jwt_layer(authority))
@@ -168,7 +172,7 @@ pub mod prelude {
     };
     #[cfg(feature = "caching-skytable")]
     pub use bincode::{Decode, Encode};
-    pub use cached::IOCachedAsync;
+    pub use cached::{proc_macro::*, IOCachedAsync};
     pub use derivative::Derivative;
     pub use feedback_fusion_codegen::dynamic_cache;
     pub use feedback_fusion_common::PageRequest;

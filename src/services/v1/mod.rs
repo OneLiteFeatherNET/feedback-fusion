@@ -46,14 +46,15 @@ pub mod response;
 pub mod target;
 pub mod user;
 
-#[derive(Clone, Getters)]
+#[derive(Getters)]
 #[get = "pub"]
-pub struct FeedbackFusionV1Context {
+pub struct FeedbackFusionV1Context<'a> {
     pub connection: DatabaseConnection,
     pub client: CoreClient,
+    pub permission_matrix: PermissionMatrix<'a>,
 }
 
-#[derive(Clone, Getters)]
+#[derive(Getters)]
 #[get = "pub"]
 pub struct PublicFeedbackFusionV1Context {
     pub connection: DatabaseConnection,
@@ -62,10 +63,10 @@ pub struct PublicFeedbackFusionV1Context {
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
     ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {
-        handler!($handler, $self, $request, $endpoint { None }, $permission)
+        handler!($handler, $self, $request, $endpoint { EndpointScopeSelector::All }, $permission)
     };
     ($handler:path, $self:ident, $request:ident, $endpoint:path $inner:block, $permission:path) => {{
-        match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection).await {
+        match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection, &$self.permission_matrix).await {
             Ok(context) => {
                 if let Err(error) = context
                     .authorize(&$self.connection, &$endpoint(async $inner.await), &$permission)
@@ -96,7 +97,7 @@ macro_rules! handler {
 // may consider to divide the service into its parts, but as of now this wouldn't be a real
 // enhacement
 #[async_trait::async_trait]
-impl FeedbackFusionV1 for FeedbackFusionV1Context {
+impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
     #[instrument(skip_all)]
     async fn create_target(
         &self,
@@ -120,7 +121,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::get_target,
             self,
             request,
-            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().id.as_str()) )},
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str()) )},
             Permission::Write
         )
     }
@@ -148,7 +149,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::update_target,
             self,
             request,
-            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -162,7 +163,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::delete_target,
             self,
             request,
-            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -176,7 +177,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::create_prompt,
             self,
             request,
-            Endpoint::Target { Some(Cow::Borrowed(request.get_ref().target.as_str())) },
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().target.as_str())) },
             Permission::Write
         )
     }
@@ -204,7 +205,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::update_prompt,
             self,
             request,
-            Endpoint::Prompt { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
+            Endpoint::Prompt { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -218,7 +219,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::delete_prompt,
             self,
             request,
-            Endpoint::Prompt { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
+            Endpoint::Prompt { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -232,7 +233,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::create_field,
             self,
             request,
-            Endpoint::Prompt { Some(Cow::Borrowed(request.get_ref().prompt.as_str())) },
+            Endpoint::Prompt { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().prompt.as_str())) },
             Permission::Write
         )
     }
@@ -260,7 +261,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::update_field,
             self,
             request,
-            Endpoint::Field { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
+            Endpoint::Field { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -274,7 +275,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::delete_field,
             self,
             request,
-            Endpoint::Field { Some(Cow::Borrowed(request.get_ref().id.as_str())) },
+            Endpoint::Field { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -288,7 +289,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             response::get_responses,
             self,
             request,
-            Endpoint::Response { Some(Cow::Borrowed(request.get_ref().prompt.as_str())) },
+            Endpoint::Response { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().prompt.as_str())) },
             Permission::List
         )
     }
@@ -298,7 +299,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<()>,
     ) -> std::result::Result<Response<UserInfoResponse>, Status> {
-        match UserContext::get_otherwise_fetch(&request, &self.client, &self.connection).await {
+        match UserContext::get_otherwise_fetch(&request, &self.client, &self.connection, self.permission_matrix()).await {
             Ok(context) => match user::get_user_info(self, request, context).await {
                 Ok(response) => Ok(response),
                 Err(error) => Err(error.into()),
@@ -316,7 +317,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             export::export_data,
             self,
             request,
-            Endpoint::Export { Some(request.get_ref().targets.iter().map(|target| Cow::Borrowed(target.as_str())).collect()) },
+            Endpoint::Export { EndpointScopeSelector::Multiple(request.get_ref().targets.iter().map(|target| Cow::Borrowed(target.as_str())).collect()) },
             Permission::Read
         )
     }
@@ -330,7 +331,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             authorization::create_resource_authorization,
             self,
             request,
-            Endpoint::Authorize,
+            Endpoint::Authorize { None },
             Permission::Write
         )
     }

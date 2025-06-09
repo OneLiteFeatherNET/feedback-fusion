@@ -26,7 +26,7 @@ use v1::FeedbackFusionV1Context;
 use crate::{database::schema::user::UserContext, prelude::*};
 
 pub async fn get_user_info(
-    _context: &FeedbackFusionV1Context,
+    _context: &FeedbackFusionV1Context<'_>,
     _request: Request<()>,
     user_context: UserContext,
 ) -> Result<Response<UserInfoResponse>> {

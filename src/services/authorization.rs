@@ -50,18 +50,37 @@ impl Endpoint<'_> {
         connection: &DatabaseConnection,
     ) -> Result<Option<Vec<String>>> {
         match self {
-            Endpoint::Target(Some(id)) => Ok(Some(vec![id.to_string()])),
-            Endpoint::Prompt(Some(id)) => Ok(Some(vec![
-                get_target_id_by_prompt_id(connection, id).await?,
-            ])),
-            Endpoint::Field(Some(id)) => {
-                Ok(Some(vec![get_target_id_by_field_id(connection, id).await?]))
+            Endpoint::Target(EndpointScopeSelector::Specific(id))
+            | Endpoint::Export(EndpointScopeSelector::Specific(id)) => {
+                Ok(Some(vec![id.to_string()]))
             }
-            Endpoint::Response(Some(id)) => Ok(Some(vec![
-                get_target_id_by_prompt_id(connection, id).await?,
-            ])),
-            Endpoint::Export(Some(ids)) => Ok(Some(ids.iter().map(|id| id.to_string()).collect())),
-            Endpoint::Authorize(Some(inner)) => inner.as_ref().get_target_ids(connection).await,
+            Endpoint::Prompt(EndpointScopeSelector::Specific(id))
+            | Endpoint::Response(EndpointScopeSelector::Specific(id)) => {
+                Ok(Some(get_target_ids_by_prompt_ids(connection, &[id]).await?))
+            }
+            Endpoint::Field(EndpointScopeSelector::Specific(id)) => {
+                Ok(Some(get_target_ids_by_field_ids(connection, &[id]).await?))
+            }
+            Endpoint::Target(EndpointScopeSelector::Multiple(ids))
+            | Endpoint::Export(EndpointScopeSelector::Multiple(ids)) => {
+                Ok(Some(ids.iter().map(|id| id.to_string()).collect()))
+            }
+            Endpoint::Prompt(EndpointScopeSelector::Multiple(ids))
+            | Endpoint::Response(EndpointScopeSelector::Multiple(ids)) => {
+                let id_refs: Vec<&str> = ids.iter().map(|id| id.as_ref()).collect();
+                Ok(Some(
+                    get_target_ids_by_prompt_ids(connection, &id_refs).await?,
+                ))
+            }
+            Endpoint::Field(EndpointScopeSelector::Multiple(ids)) => {
+                let id_refs: Vec<&str> = ids.iter().map(|id| id.as_ref()).collect();
+                Ok(Some(
+                    get_target_ids_by_field_ids(connection, &id_refs).await?,
+                ))
+            }
+            Endpoint::Authorize(Some(boxed_endpoint)) => {
+                boxed_endpoint.get_target_ids(connection).await
+            }
             _ => Ok(None),
         }
     }
@@ -69,10 +88,11 @@ impl Endpoint<'_> {
 
 impl UserContext {
     #[instrument(skip_all)]
-    pub async fn get_otherwise_fetch<T>(
+    pub async fn get_otherwise_fetch<'a, T>(
         request: &Request<T>,
         client: &CoreClient,
         connection: &DatabaseConnection,
+        matrix: &PermissionMatrix<'a>,
     ) -> Result<Self> {
         let claims = request
             .extensions()
@@ -97,27 +117,29 @@ impl UserContext {
         let scopes = claims.scope().iter().collect();
         let groups = claims.groups().iter().collect();
 
-        match get_user_context(connection, subject.as_str(), &scopes, &groups).await {
+        match get_user_context(connection, subject.as_str(), &scopes, &groups, matrix).await {
             Ok(context) => Ok(context),
             Err(FeedbackFusionError::OIDCError(_)) => {
-                let user = User::fetch(access_token, client, claims).await?;
+                // let user = User::fetch(access_token, client, claims).await?;
 
-                // due to sync problems this could occur twice at the same time, therefore we just
-                // dont use the result error. As the cache already got invalidated by the other
-                // process we dont need to do it in that case :)
-                if database_request!(User::insert(connection, &user).await, "Save user").is_ok() {
-                    invalidate!(
-                        get_user_context,
-                        format!(
-                            "get-user-context-{}-{:?}-{:?}",
-                            subject.as_str(),
-                            &scopes,
-                            &groups
-                        )
-                    );
-                }
+                // TODO: cleanup with new cache implementation for auithentication
 
-                get_user_context(connection, subject.as_str(), &scopes, &groups).await
+                // // due to sync problems this could occur twice at the same time, therefore we just
+                // // dont use the result error. As the cache already got invalidated by the other
+                // // process we dont need to do it in that case :)
+                // if database_request!(User::insert(connection, &user).await, "Save user").is_ok() {
+                //     invalidate!(
+                //         get_user_context,
+                //         format!(
+                //             "get-user-context-{}-{:?}-{:?}",
+                //             subject.as_str(),
+                //             &scopes,
+                //             &groups
+                //         )
+                //     );
+                // }
+
+                get_user_context(connection, subject.as_str(), &scopes, &groups, matrix).await
             }
             error => error,
         }
@@ -130,26 +152,30 @@ impl UserContext {
         scopes: &BTreeSet<&ScopeTokenRef>,
         groups: &BTreeSet<&String>,
         authorizations: &[ResourceAuthorization],
-        endpoint: Endpoint<'a>,
-        permission: Permission,
+        endpoint: &'a Endpoint<'a>,
+        permission: &'a Permission,
+        matrix: &PermissionMatrix<'a>,
     ) -> Result<Vec<String>> {
-        let authorization_string = Authorization(&endpoint, &permission).to_string();
-        let endpoint = endpoint.to_static();
-        let entry = PERMISSION_MATRIX
-            .get(&(endpoint, permission.clone()))
+        let authorization_string = Authorization(endpoint, permission).to_string();
+        let entry = matrix
+            .get(&PermissionMatrixKey::from((endpoint, permission)))
             .ok_or(FeedbackFusionError::Unauthorized)?;
 
         // verify the scopes
-        let scope = scopes.iter().find(|scope| entry.0.contains(scope.as_str()));
+        let scope = scopes
+            .iter()
+            .any(|scope| entry.scopes().contains(scope.as_str()));
 
         // verify the groups
-        let group = groups.iter().find(|group| entry.1.contains(group.as_str()));
+        let group = groups
+            .iter()
+            .any(|group| entry.groups().contains(group.as_str()));
 
         let mut authorizations = {
             // find possibly matching authorizations
             let authorizations = authorizations.iter().filter(|authorization| {
-                let matches_permission = authorization.authorization_grant().eq(&permission);
-                let matches_endpoint = authorization.resource_kind().eq(&endpoint);
+                let matches_permission = authorization.authorization_grant().eq(permission);
+                let matches_endpoint = authorization.resource_kind().eq(endpoint);
                 // we do not have to verify the endpoint here as this function is only called for
                 // user matrix creation
 
@@ -162,7 +188,7 @@ impl UserContext {
                 .collect::<Vec<_>>()
         };
 
-        if scope.is_some() || group.is_some() {
+        if scope || group {
             authorizations.push(authorization_string);
         }
 
@@ -186,9 +212,14 @@ impl UserContext {
             if !target_ids.into_iter().all(|target_id| {
                 debug!("Detected {:?} belongs to target {}", endpoint, target_id);
 
-                let authorization =
-                    Authorization(&Endpoint::Target(None), &Permission::Write).to_string();
-                let endpoint = Endpoint::Target(Some(Cow::Borrowed(target_id.as_str())));
+                let authorization = Authorization(
+                    &Endpoint::Target(EndpointScopeSelector::default()),
+                    &Permission::Write,
+                )
+                .to_string();
+                let endpoint = Endpoint::Target(EndpointScopeSelector::Specific(Cow::Borrowed(
+                    target_id.as_str(),
+                )));
 
                 if self
                     .authorizations
@@ -256,18 +287,27 @@ fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool 
         return false;
     }
 
+    // TODO: generate via macro
     let ids = match endpoint {
-        Endpoint::Target(Some(id))
-        | Endpoint::Prompt(Some(id))
-        | Endpoint::Field(Some(id))
-        | Endpoint::Response(Some(id)) => vec![id],
-        Endpoint::Export(Some(list)) => list.iter().collect(),
+        Endpoint::Target(EndpointScopeSelector::Specific(id))
+        | Endpoint::Prompt(EndpointScopeSelector::Specific(id))
+        | Endpoint::Field(EndpointScopeSelector::Specific(id))
+        | Endpoint::Export(EndpointScopeSelector::Specific(id))
+        | Endpoint::Response(EndpointScopeSelector::Specific(id)) => vec![id],
+        Endpoint::Target(EndpointScopeSelector::Multiple(list))
+        | Endpoint::Prompt(EndpointScopeSelector::Multiple(list))
+        | Endpoint::Field(EndpointScopeSelector::Multiple(list))
+        | Endpoint::Export(EndpointScopeSelector::Multiple(list)) => list.iter().collect(),
         Endpoint::Authorize(Some(boxed_endpoint)) => match boxed_endpoint.deref() {
-            Endpoint::Target(Some(id))
-            | Endpoint::Prompt(Some(id))
-            | Endpoint::Field(Some(id))
-            | Endpoint::Response(Some(id)) => vec![id],
-            Endpoint::Export(Some(list)) => list.iter().collect(),
+            Endpoint::Target(EndpointScopeSelector::Specific(id))
+            | Endpoint::Prompt(EndpointScopeSelector::Specific(id))
+            | Endpoint::Field(EndpointScopeSelector::Specific(id))
+            | Endpoint::Export(EndpointScopeSelector::Specific(id))
+            | Endpoint::Response(EndpointScopeSelector::Specific(id)) => vec![id],
+            Endpoint::Target(EndpointScopeSelector::Multiple(list))
+            | Endpoint::Prompt(EndpointScopeSelector::Multiple(list))
+            | Endpoint::Field(EndpointScopeSelector::Multiple(list))
+            | Endpoint::Export(EndpointScopeSelector::Multiple(list)) => list.iter().collect(),
             // we do not allow further recursion, therefore we ignore this
             _ => Vec::new(),
         },
@@ -285,16 +325,17 @@ fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool 
     }
 }
 
-#[dynamic_cache(
-    ttl = "300",
-    key = r#"format!('get-user-matrix-{:?}-{:?}-{:?}', scopes, groups, subject)"#
-)]
+// #[dynamic_cache(
+//     ttl = "300",
+//     key = r#"format!('get-user-matrix-{:?}-{:?}-{:?}', scopes, groups, subject)"#
+// )]
 #[instrument(skip_all)]
-async fn get_user_matrix(
+async fn get_user_matrix<'a>(
     connection: &DatabaseConnection,
     scopes: &BTreeSet<&ScopeTokenRef>,
     groups: &BTreeSet<&String>,
     subject: &str,
+    matrix: &PermissionMatrix<'a>,
 ) -> Result<HashMap<String, bool>> {
     // fetch all matching resource authorizations
     let authorizations: Vec<ResourceAuthorization> = database_request!(
@@ -302,16 +343,22 @@ async fn get_user_matrix(
         "Select resource authorizations"
     )?;
 
-    Ok(PERMISSION_MATRIX
-        .clone()
-        .into_iter()
+    Ok(matrix
+        .iter()
         .flat_map(|entry| {
-            let (endpoint, permission) = entry.0;
-            let fallback = Authorization(&endpoint, &permission).to_string();
+            let endpoint = entry.key().endpoint();
+            let permission = entry.key().permission();
 
-            if let Ok(keys) =
-                UserContext::has_grant(scopes, groups, &authorizations, endpoint, permission)
-            {
+            let fallback = Authorization(endpoint, permission).to_string();
+
+            if let Ok(keys) = UserContext::has_grant(
+                scopes,
+                groups,
+                &authorizations,
+                endpoint,
+                permission,
+                matrix,
+            ) {
                 keys.into_iter()
                     .map(|identifier| (identifier, true))
                     .collect()
@@ -322,16 +369,17 @@ async fn get_user_matrix(
         .collect::<HashMap<String, bool>>())
 }
 
-#[dynamic_cache(
-    ttl = "300",
-    key = r#"format!('get-user-context-{}-{:?}-{:?}', subject, scopes, groups)"#
-)]
+// #[dynamic_cache(
+//     ttl = "300",
+//     key = r#"format!('get-user-context-{}-{:?}-{:?}', subject, scopes, groups)"#
+// )]
 #[instrument(skip_all)]
-async fn get_user_context(
+async fn get_user_context<'a>(
     connection: &DatabaseConnection,
     subject: &str,
     scopes: &BTreeSet<&ScopeTokenRef>,
     groups: &BTreeSet<&String>,
+    matrix: &PermissionMatrix<'a>,
 ) -> Result<UserContext> {
     let user = database_request!(
         User::select_by_id(connection, subject).await,
@@ -344,40 +392,45 @@ async fn get_user_context(
 
     Ok(UserContext {
         user,
-        authorizations: get_user_matrix(connection, scopes, groups, subject).await?,
+        authorizations: get_user_matrix(connection, scopes, groups, subject, matrix).await?,
     })
 }
 
-#[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-prompt-id-{}', id)"#)]
+#[dynamic_cache(
+    ttl = "3600",
+    key = r#"format!('get-target-id-by-prompt-id-{:?}', id)"#
+)]
 #[instrument(skip_all)]
-async fn get_target_id_by_prompt_id(connection: &DatabaseConnection, id: &str) -> Result<String> {
-    let id: Option<String> = database_request!(
+async fn get_target_ids_by_prompt_ids(
+    connection: &DatabaseConnection,
+    id: &[&str],
+) -> Result<Vec<String>> {
+    Ok(database_request!(
         connection
-            .query_decode(
-                "SELECT target FROM prompt WHERE id = ?",
+            .query_decode::<Vec<String>>(
+                "SELECT target FROM prompt WHERE id IN ?",
                 vec![to_value!(id)]
             )
             .await,
         "Select target id by prompt id"
-    )?;
-
-    id.ok_or(FeedbackFusionError::Unauthorized)
+    )?)
 }
 
-#[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-field-id-{}', id)"#)]
+#[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-field-id-{:?}', id)"#)]
 #[instrument(skip_all)]
-async fn get_target_id_by_field_id(connection: &DatabaseConnection, id: &str) -> Result<String> {
-    let id: Option<String> = database_request!(
+async fn get_target_ids_by_field_ids(
+    connection: &DatabaseConnection,
+    id: &[&str],
+) -> Result<Vec<String>> {
+    Ok(database_request!(
         connection
-            .query_decode(
-                "SELECT prompt.target FROM field field JOIN prompt prompt ON field.prompt = prompt.id WHERE field.id = ?",
+            .query_decode::<Vec<String>>(
+                "SELECT prompt.target FROM field field JOIN prompt prompt ON field.prompt = prompt.id WHERE field.id IN ?",
                 vec![to_value!(id)]
             )
             .await,
         "Select target id by field id"
-    )?;
-
-    id.ok_or(FeedbackFusionError::Unauthorized)
+    )?)
 }
 
 #[cfg(test)]

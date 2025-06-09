@@ -228,9 +228,9 @@ pub struct Authorization<'a>(pub &'a Endpoint<'a>, pub &'a Permission);
 
 impl std::fmt::Display for Authorization<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Endpoint::Target(Some(inner))
-        | Endpoint::Prompt(Some(inner))
-        | Endpoint::Field(Some(inner)) = &self.0
+        if let Endpoint::Target(EndpointScopeSelector::Specific(inner))
+        | Endpoint::Prompt(EndpointScopeSelector::Specific(inner))
+        | Endpoint::Field(EndpointScopeSelector::Specific(inner)) = &self.0
         {
             write!(f, "{}::{}::{}", self.0, inner, self.1)
         } else {

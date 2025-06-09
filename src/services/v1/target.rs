@@ -33,7 +33,7 @@ use crate::{
 use super::FeedbackFusionV1Context;
 
 pub async fn create_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<CreateTargetRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
@@ -53,7 +53,7 @@ pub async fn create_target(
 }
 
 pub async fn get_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<GetTargetRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
@@ -73,7 +73,7 @@ pub async fn get_target(
 }
 
 pub async fn get_targets(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<GetTargetsRequest>,
     _user_context: UserContext,
 ) -> Result<Response<TargetPage>> {
@@ -101,7 +101,7 @@ pub async fn get_targets(
 }
 
 pub async fn update_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdateTargetRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
@@ -125,7 +125,7 @@ pub async fn update_target(
 }
 
 pub async fn delete_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<DeleteTargetRequest>,
     _user_context: UserContext,
 ) -> Result<Response<()>> {
