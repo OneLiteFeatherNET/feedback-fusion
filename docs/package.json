@@ -12,11 +12,11 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "vitepress": "^1.2.3"
+    "vitepress": "^1.6.3"
   },
   "dependencies": {
-    "@protobuf-ts/runtime": "^2.9.4",
-    "msw": "^2.3.1",
-    "vue": "^3.4.31"
+    "@protobuf-ts/runtime": "^2.11.0",
+    "msw": "^2.10.2",
+    "vue": "^3.5.16"
   }
 }
