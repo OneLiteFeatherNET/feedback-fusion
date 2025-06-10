@@ -947,6 +947,7 @@ dependencies = [
  "lock_api",
  "once_cell",
  "parking_lot_core",
+ "rayon",
 ]
 
 [[package]]
@@ -1253,6 +1254,7 @@ dependencies = [
  "paste",
  "prost-types",
  "rand",
+ "rayon",
  "rbatis",
  "rbdc-mssql",
  "rbdc-mysql",

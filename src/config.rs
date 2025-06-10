@@ -240,15 +240,15 @@ pub enum Permission {
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct AuthorizationGrants<'a> {
-    endpoint: Endpoint<'a>,
-    permissions: Vec<Permission>,
+    pub endpoint: Endpoint<'a>,
+    pub permissions: Vec<Permission>,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct AuthorizationMapping<'a> {
-    name: String,
-    grants: Vec<AuthorizationGrants<'a>>,
+    pub name: String,
+    pub grants: Vec<AuthorizationGrants<'a>>,
 }
 
 config!(

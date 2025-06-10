@@ -180,6 +180,7 @@ pub mod prelude {
     pub use itertools::Itertools;
     pub use lazy_static::lazy_static;
     pub use paste::paste;
+    pub use rayon::prelude::*;
     pub use rbatis::{
         crud, impl_insert, impl_select, impl_select_page, impled, plugin::page::Page, py_sql,
         rbdc::JsonV, IPageRequest,

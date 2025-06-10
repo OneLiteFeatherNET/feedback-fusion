@@ -34,6 +34,7 @@ service FeedbackFusionV1 {
   rpc GetResourceAuthorization(GetResourceAuthorizationRequest) returns (ResourceAuthorization);
   rpc UpdateResourceAuthorization(UpdateResourceAuthorizationRequest) returns (ResourceAuthorization);
   rpc DeleteResourceAuthorization(DeleteResourceAuthorizationRequest) returns (google.protobuf.Empty);
+  rpc ExportResourceAuthorizations(ExportResourceAuthorizationsRequest) returns (ResourceAuthorizationExportResponse);
 }
 
 // does not use oidc authentication
@@ -325,6 +326,8 @@ enum ResourceKind {
 enum AuthorizationGrant {
   WRITE = 0;
   READ = 1;
+  List = 2;
+  All = 3;
 }
 
 enum AuthorizationType {
@@ -390,4 +393,12 @@ message GetResourceAuthorizationRequest {
 
 message DeleteResourceAuthorizationRequest {
   string id = 1;
+}
+
+message ExportResourceAuthorizationsRequest {
+  repeated string ids = 1;
+}
+
+message ResourceAuthorizationExportResponse {
+  string export = 1;
 }

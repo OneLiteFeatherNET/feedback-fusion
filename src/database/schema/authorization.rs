@@ -29,7 +29,7 @@ use rbatis::rbdc::DateTime;
 
 use super::date_time_to_timestamp;
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display, Hash, Eq)]
 pub enum ResourceKind {
     Target,
     Prompt,
@@ -93,7 +93,7 @@ impl From<ResourceKind> for i32 {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Hash, Eq)]
 pub enum ResourceAuthorizationType {
     Scope,
     Group,
@@ -126,10 +126,12 @@ impl From<ResourceAuthorizationType> for i32 {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display, Hash, Eq)]
 pub enum ResourceAuthorizationGrant {
     Read,
     Write,
+    List,
+    All,
 }
 
 impl From<&feedback_fusion_common::proto::AuthorizationGrant> for ResourceAuthorizationGrant {
@@ -137,6 +139,8 @@ impl From<&feedback_fusion_common::proto::AuthorizationGrant> for ResourceAuthor
         match value {
             feedback_fusion_common::proto::AuthorizationGrant::Read => Self::Read,
             feedback_fusion_common::proto::AuthorizationGrant::Write => Self::Write,
+            feedback_fusion_common::proto::AuthorizationGrant::List => Self::List,
+            feedback_fusion_common::proto::AuthorizationGrant::All => Self::All,
         }
     }
 }
@@ -146,6 +150,8 @@ impl PartialEq<Permission> for ResourceAuthorizationGrant {
         match *self {
             Self::Write => matches!(other, Permission::Write),
             Self::Read => matches!(other, Permission::Read),
+            Self::List => matches!(other, Permission::List),
+            Self::All => matches!(other, Permission::All),
         }
     }
 }
@@ -158,6 +164,12 @@ impl From<ResourceAuthorizationGrant> for i32 {
             }
             ResourceAuthorizationGrant::Write => {
                 feedback_fusion_common::proto::AuthorizationGrant::Write.into()
+            }
+            ResourceAuthorizationGrant::List => {
+                feedback_fusion_common::proto::AuthorizationGrant::List.into()
+            }
+            ResourceAuthorizationGrant::All => {
+                feedback_fusion_common::proto::AuthorizationGrant::All.into()
             }
         }
     }
@@ -223,6 +235,8 @@ impl std::fmt::Display for ResourceAuthorization {
 crud!(ResourceAuthorization {});
 impl_select!(ResourceAuthorization {select_matching(scopes: &BTreeSet<&ScopeTokenRef>, groups: &BTreeSet<&String>, subject: &str) => "`WHERE (authorization_type = 'Scope' AND authorization_value IN ${scopes.sql()}) OR (authorization_type = 'Group' AND authorization_value IN ${groups.sql()}) OR (authorization_type = 'Subject' AND authorization_value = #{subject})`"});
 impl_select!(ResourceAuthorization {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
+impl_select!(ResourceAuthorization {select_by_ids(ids: &[String]) => "`WHERE id IN ${id.sql()}`"});
+impl_select_page_wrapper!(ResourceAuthorization {select_page() => "``"});
 
 pub struct Authorization<'a>(pub &'a Endpoint<'a>, pub &'a Permission);
 

@@ -27,12 +27,14 @@ use feedback_fusion_common::proto::{
     CreatePromptRequest, CreateResourceAuthorizationRequest, CreateResponsesRequest,
     CreateTargetRequest, DataExportRequest, DataExportResponse, DeleteFieldRequest,
     DeletePromptRequest, DeleteResourceAuthorizationRequest, DeleteTargetRequest,
-    Field as ProtoField, FieldPage, GetFieldsRequest, GetPromptRequest, GetPromptsRequest,
-    GetResourceAuthorizationRequest, GetResourceAuthorizationsRequest, GetResponsesRequest,
-    GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage, PromptResponse,
-    ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationList,
-    ResourceAuthorizationPage, ResponsePage, Target as ProtoTarget, TargetPage, UpdateFieldRequest,
-    UpdatePromptRequest, UpdateResourceAuthorizationRequest, UpdateTargetRequest, UserInfoResponse,
+    ExportResourceAuthorizationsRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
+    GetPromptRequest, GetPromptsRequest, GetResourceAuthorizationRequest,
+    GetResourceAuthorizationsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
+    Prompt as ProtoPrompt, PromptPage, PromptResponse,
+    ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationExportResponse,
+    ResourceAuthorizationList, ResourceAuthorizationPage, ResponsePage, Target as ProtoTarget,
+    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateResourceAuthorizationRequest,
+    UpdateTargetRequest, UserInfoResponse,
 };
 use openidconnect::core::CoreClient;
 use std::borrow::Cow;
@@ -299,7 +301,14 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
         &self,
         request: Request<()>,
     ) -> std::result::Result<Response<UserInfoResponse>, Status> {
-        match UserContext::get_otherwise_fetch(&request, &self.client, &self.connection, self.permission_matrix()).await {
+        match UserContext::get_otherwise_fetch(
+            &request,
+            &self.client,
+            &self.connection,
+            self.permission_matrix(),
+        )
+        .await
+        {
             Ok(context) => match user::get_user_info(self, request, context).await {
                 Ok(response) => Ok(response),
                 Err(error) => Err(error.into()),
@@ -339,33 +348,71 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
     #[instrument(skip_all)]
     async fn get_resource_authorization(
         &self,
-        _request: Request<GetResourceAuthorizationRequest>,
+        request: Request<GetResourceAuthorizationRequest>,
     ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
-        todo!()
+        handler!(
+            authorization::get_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::Read
+        )
     }
 
     #[instrument(skip_all)]
     async fn get_resource_authorizations(
         &self,
-        _request: Request<GetResourceAuthorizationsRequest>,
+        request: Request<GetResourceAuthorizationsRequest>,
     ) -> std::result::Result<Response<ResourceAuthorizationPage>, Status> {
-        todo!()
+        handler!(
+            authorization::get_resource_authorizations,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::List
+        )
     }
 
     #[instrument(skip_all)]
     async fn update_resource_authorization(
         &self,
-        _request: Request<UpdateResourceAuthorizationRequest>,
+        request: Request<UpdateResourceAuthorizationRequest>,
     ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
-        todo!()
+        handler!(
+            authorization::update_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::Write
+        )
     }
 
     #[instrument(skip_all)]
     async fn delete_resource_authorization(
         &self,
-        _request: Request<DeleteResourceAuthorizationRequest>,
+        request: Request<DeleteResourceAuthorizationRequest>,
     ) -> std::result::Result<Response<()>, Status> {
-        todo!()
+        handler!(
+            authorization::delete_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::Write
+        )
+    }
+
+    #[instrument(skip_all)]
+    async fn export_resource_authorizations(
+        &self,
+        request: Request<ExportResourceAuthorizationsRequest>,
+    ) -> std::result::Result<Response<ResourceAuthorizationExportResponse>, Status> {
+        handler!(
+            authorization::export_resource_authorizations,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::List
+        )
     }
 }
 
