@@ -109,7 +109,7 @@ unittest:
 integration:
   OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo llvm-cov --no-report --no-fail-fast --test integration_test || (cat ./target/feedback-fusion.log; just stop-backend; cargo llvm-cov report; exit 1)
 
-test TYPE=DEFAULT_TEST: oidc-server-mock
+test TYPE=DEFAULT_TEST: cleanup oidc-server-mock
   just {{TYPE}}
   @if [ "{{TYPE}}" = "mariadb" ]; then just backend mysql; else just backend {{TYPE}}; fi
 
