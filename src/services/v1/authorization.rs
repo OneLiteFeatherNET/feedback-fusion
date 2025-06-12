@@ -350,35 +350,28 @@ pub fn authorizations_to_endpoints(
                                 ResourceKind::Authorize => Endpoint::Authorize(None),
                             };
 
-                            // Merge permissions for the same endpoint.
-                            // If multiple grants result in the same endpoint, combine their permissions.
-                            endpoint_to_permissions
-                                .entry(endpoint)
-                                .or_default()
-                                .insert(permission);
+                            // Insert permission into the set for this endpoint.
+                            // As soon as all three basic permissions (Read, Write, List) are present,
+                            // immediately collapse to Permission::All for efficiency.
+                            let perms = endpoint_to_permissions.entry(endpoint).or_default();
+                            perms.insert(permission);
+                            if perms.contains(&Permission::Read)
+                                && perms.contains(&Permission::Write)
+                                && perms.contains(&Permission::List)
+                            {
+                                perms.clear();
+                                perms.insert(Permission::All);
+                            }
                         }
                     }
 
                     // Now we have a mapping of endpoints to their permission sets.
-                    // Next, we check if all three basic permissions (Read, Write, List) are present for an endpoint.
-                    // If so, we collapse them into the All permission for a cleaner export.
+                    // No need for a separate collapsing step; the set is already minimal.
                     let grants = endpoint_to_permissions
                         .into_iter()
-                        .map(|(endpoint, mut permissions_set)| {
-                            // If all three basic permissions are present, replace with All
-                            let has_read = permissions_set.contains(&Permission::Read);
-                            let has_write = permissions_set.contains(&Permission::Write);
-                            let has_list = permissions_set.contains(&Permission::List);
-                            if has_read && has_write && has_list {
-                                permissions_set.remove(&Permission::Read);
-                                permissions_set.remove(&Permission::Write);
-                                permissions_set.remove(&Permission::List);
-                                permissions_set.insert(Permission::All);
-                            }
-                            AuthorizationGrants {
-                                endpoint,
-                                permissions: permissions_set.into_iter().collect(),
-                            }
+                        .map(|(endpoint, permissions_set)| AuthorizationGrants {
+                            endpoint,
+                            permissions: permissions_set.into_iter().collect(),
                         })
                         .collect();
 
