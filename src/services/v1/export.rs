@@ -65,7 +65,7 @@ pub async fn export_data(
     };
 
     Ok(Response::new(DataExportResponse {
-        export: serde_yaml::to_string(&serde_json::json!({
+        export: hcl::to_string(&serde_json::json!({
             "preset": serde_json::json!({ "targets": targets
             .into_iter()
             .map(|target| serde_json::json!({

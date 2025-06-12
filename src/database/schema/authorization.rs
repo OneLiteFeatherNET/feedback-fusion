@@ -29,7 +29,7 @@ use rbatis::rbdc::DateTime;
 
 use super::date_time_to_timestamp;
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display, Hash, Eq)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display, Hash, Eq, PartialOrd, Ord)]
 pub enum ResourceKind {
     Target,
     Prompt,
@@ -93,7 +93,7 @@ impl From<ResourceKind> for i32 {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Hash, Eq, Ord, PartialOrd)]
 pub enum ResourceAuthorizationType {
     Scope,
     Group,
@@ -126,15 +126,7 @@ impl From<ResourceAuthorizationType> for i32 {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display, Hash, Eq)]
-pub enum ResourceAuthorizationGrant {
-    Read,
-    Write,
-    List,
-    All,
-}
-
-impl From<&feedback_fusion_common::proto::AuthorizationGrant> for ResourceAuthorizationGrant {
+impl From<&feedback_fusion_common::proto::AuthorizationGrant> for Permission {
     fn from(value: &feedback_fusion_common::proto::AuthorizationGrant) -> Self {
         match value {
             feedback_fusion_common::proto::AuthorizationGrant::Read => Self::Read,
@@ -145,30 +137,19 @@ impl From<&feedback_fusion_common::proto::AuthorizationGrant> for ResourceAuthor
     }
 }
 
-impl PartialEq<Permission> for ResourceAuthorizationGrant {
-    fn eq(&self, other: &Permission) -> bool {
-        match *self {
-            Self::Write => matches!(other, Permission::Write),
-            Self::Read => matches!(other, Permission::Read),
-            Self::List => matches!(other, Permission::List),
-            Self::All => matches!(other, Permission::All),
-        }
-    }
-}
-
-impl From<ResourceAuthorizationGrant> for i32 {
-    fn from(value: ResourceAuthorizationGrant) -> Self {
+impl From<Permission> for i32 {
+    fn from(value: Permission) -> Self {
         match value {
-            ResourceAuthorizationGrant::Read => {
+            Permission::Read => {
                 feedback_fusion_common::proto::AuthorizationGrant::Read.into()
             }
-            ResourceAuthorizationGrant::Write => {
+            Permission::Write => {
                 feedback_fusion_common::proto::AuthorizationGrant::Write.into()
             }
-            ResourceAuthorizationGrant::List => {
+            Permission::List => {
                 feedback_fusion_common::proto::AuthorizationGrant::List.into()
             }
-            ResourceAuthorizationGrant::All => {
+            Permission::All => {
                 feedback_fusion_common::proto::AuthorizationGrant::All.into()
             }
         }
@@ -186,7 +167,7 @@ pub struct ResourceAuthorization {
     resource_kind: ResourceKind,
     resource_id: Option<String>,
     authorization_type: ResourceAuthorizationType,
-    authorization_grant: ResourceAuthorizationGrant,
+    authorization_grant: Permission,
     authorization_value: String,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]

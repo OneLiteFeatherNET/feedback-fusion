@@ -18,6 +18,7 @@
     - [DeletePromptRequest](#feedback_fusion_v1-DeletePromptRequest)
     - [DeleteResourceAuthorizationRequest](#feedback_fusion_v1-DeleteResourceAuthorizationRequest)
     - [DeleteTargetRequest](#feedback_fusion_v1-DeleteTargetRequest)
+    - [ExportResourceAuthorizationsRequest](#feedback_fusion_v1-ExportResourceAuthorizationsRequest)
     - [Field](#feedback_fusion_v1-Field)
     - [FieldOptions](#feedback_fusion_v1-FieldOptions)
     - [FieldPage](#feedback_fusion_v1-FieldPage)
@@ -42,6 +43,7 @@
     - [RatingResponse](#feedback_fusion_v1-RatingResponse)
     - [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization)
     - [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData)
+    - [ResourceAuthorizationExportResponse](#feedback_fusion_v1-ResourceAuthorizationExportResponse)
     - [ResourceAuthorizationList](#feedback_fusion_v1-ResourceAuthorizationList)
     - [ResourceAuthorizationPage](#feedback_fusion_v1-ResourceAuthorizationPage)
     - [ResponseData](#feedback_fusion_v1-ResponseData)
@@ -297,6 +299,21 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | id | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ExportResourceAuthorizationsRequest"></a>
+
+### ExportResourceAuthorizationsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ids | [string](#string) | repeated |  |
 
 
 
@@ -718,6 +735,21 @@
 
 
 
+<a name="feedback_fusion_v1-ResourceAuthorizationExportResponse"></a>
+
+### ResourceAuthorizationExportResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| export | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="feedback_fusion_v1-ResourceAuthorizationList"></a>
 
 ### ResourceAuthorizationList
@@ -1022,6 +1054,8 @@
 | ---- | ------ | ----------- |
 | WRITE | 0 |  |
 | READ | 1 |  |
+| List | 2 |  |
+| All | 3 |  |
 
 
 
@@ -1114,6 +1148,7 @@ uses oidc authentication
 | GetResourceAuthorization | [GetResourceAuthorizationRequest](#feedback_fusion_v1-GetResourceAuthorizationRequest) | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) |  |
 | UpdateResourceAuthorization | [UpdateResourceAuthorizationRequest](#feedback_fusion_v1-UpdateResourceAuthorizationRequest) | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) |  |
 | DeleteResourceAuthorization | [DeleteResourceAuthorizationRequest](#feedback_fusion_v1-DeleteResourceAuthorizationRequest) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
+| ExportResourceAuthorizations | [ExportResourceAuthorizationsRequest](#feedback_fusion_v1-ExportResourceAuthorizationsRequest) | [ResourceAuthorizationExportResponse](#feedback_fusion_v1-ResourceAuthorizationExportResponse) |  |
 
 
 <a name="feedback_fusion_v1-PublicFeedbackFusionV1"></a>

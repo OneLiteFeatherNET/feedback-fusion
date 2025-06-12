@@ -45,7 +45,7 @@ build-all DOCKERFILE="./Dockerfile":
 #
 
 backend TYPE=DEFAULT_TEST:
-  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.yaml" RUST_LOG=DEBUG cargo llvm-cov run --no-report > ./target/feedback-fusion.log 2>&1 &
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --no-report > ./target/feedback-fusion.log 2>&1 &
 
   while ! nc -z localhost 8000; do \
     sleep 1; \
@@ -104,7 +104,7 @@ protoc-docs:
   -docker network rm {{DOCKER_NETWORK}} > /dev/null 2>&1
 
 unittest:
-  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/postgres.yaml" cargo llvm-cov --bin feedback-fusion --no-report
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/postgres.hcl" cargo llvm-cov --bin feedback-fusion --no-report -- --nocapture
 
 integration:
   OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo llvm-cov --no-report --no-fail-fast --test integration_test || (cat ./target/feedback-fusion.log; just stop-backend; cargo llvm-cov report; exit 1)

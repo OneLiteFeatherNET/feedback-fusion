@@ -449,10 +449,7 @@ mod tests {
     use crate::{
         authorization::is_match,
         database::schema::{
-            authorization::{
-                ResourceAuthorization, ResourceAuthorizationGrant, ResourceAuthorizationType,
-                ResourceKind,
-            },
+            authorization::{ResourceAuthorization, ResourceAuthorizationType, ResourceKind},
             user::UserContext,
         },
         Endpoint, EndpointScopeSelector, Permission, CONFIG,
@@ -596,18 +593,6 @@ mod tests {
 
     #[test]
     fn test_has_grant_empty() {
-        println!(
-            "{:?}",
-            UserContext::has_grant(
-                &BTreeSet::new(),
-                &BTreeSet::new(),
-                &[],
-                &TARGET,
-                &Permission::Write,
-                &MATRIX
-            )
-        );
-
         assert!(UserContext::has_grant(
             &BTreeSet::new(),
             &BTreeSet::new(),
@@ -637,14 +622,14 @@ mod tests {
         let resource_authorizations = vec![
             ResourceAuthorization::builder()
                 .authorization_type(ResourceAuthorizationType::Scope)
-                .authorization_grant(ResourceAuthorizationGrant::Write)
+                .authorization_grant(Permission::Write)
                 .authorization_value("".to_owned())
                 .resource_kind(ResourceKind::Target)
                 .resource_id("".to_owned())
                 .build(),
             ResourceAuthorization::builder()
                 .authorization_type(ResourceAuthorizationType::Scope)
-                .authorization_grant(ResourceAuthorizationGrant::Read)
+                .authorization_grant(Permission::Read)
                 .authorization_value("".to_owned())
                 .resource_kind(ResourceKind::Prompt)
                 .resource_id("".to_owned())

@@ -178,7 +178,7 @@ config!(
 ///
 /// We can use this to only allow access to the endpoint for specific element ids
 /// and similar.
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr, Serialize)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr, Serialize, Ord, PartialOrd)]
 pub enum EndpointScopeSelector<'a> {
     /// unscoped access
     All,
@@ -229,7 +229,7 @@ impl Endpoint<'_> {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr)]
+#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr, Serialize, Copy)]
 pub enum Permission {
     Read,
     Write,
@@ -237,14 +237,14 @@ pub enum Permission {
     All,
 }
 
-#[derive(Deserialize, Debug, Clone, Getters)]
+#[derive(Deserialize, Debug, Clone, Getters, Serialize, PartialEq, Eq)]
 #[get = "pub"]
 pub struct AuthorizationGrants<'a> {
     pub endpoint: Endpoint<'a>,
     pub permissions: Vec<Permission>,
 }
 
-#[derive(Deserialize, Debug, Clone, Getters)]
+#[derive(Deserialize, Debug, Clone, Getters, Serialize)]
 #[get = "pub"]
 pub struct AuthorizationMapping<'a> {
     pub name: String,
@@ -323,7 +323,7 @@ pub fn read_config() -> Result<Config<'static>> {
     })?;
 
     // parse the config
-    let config: Config = serde_yaml::from_str(content.as_str()).map_err(|error| {
+    let config: Config = hcl::from_str(content.as_str()).map_err(|error| {
         FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
     })?;
     info!("Sucessfully parsed config");

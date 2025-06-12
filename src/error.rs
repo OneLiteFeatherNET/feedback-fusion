@@ -45,6 +45,8 @@ pub enum FeedbackFusionError {
     CacheError(#[from] crate::cache::SkytableCacheError),
     #[error("{0}")]
     OIDCError(String),
+    #[error(transparent)]
+    HCLError(#[from] hcl::Error)
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {

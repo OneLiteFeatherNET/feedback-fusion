@@ -20,17 +20,15 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use std::borrow::Cow;
+
 use crate::{
     database::schema::{
-        authorization::{
-            ResourceAuthorization, ResourceAuthorizationGrant, ResourceAuthorizationType,
-            ResourceKind,
-        },
+        authorization::{ResourceAuthorization, ResourceAuthorizationType, ResourceKind},
         user::UserContext,
     },
     prelude::*,
 };
-use dashmap::{DashMap, DashSet};
 use feedback_fusion_common::proto::{
     AuthorizationGrant as ProtoAuthorizationGrant, AuthorizationType as ProtoAuthorizationType,
     DeleteResourceAuthorizationRequest, ExportResourceAuthorizationsRequest,
@@ -39,6 +37,7 @@ use feedback_fusion_common::proto::{
     ResourceAuthorizationList, ResourceAuthorizationPage, ResourceKind as ProtoResourceKind,
     UpdateResourceAuthorizationRequest,
 };
+use gxhash::{HashMap as GxHashMap, HashSet as GxHashSet};
 
 use feedback_fusion_common::proto::CreateResourceAuthorizationRequest;
 use v1::FeedbackFusionV1Context;
@@ -209,181 +208,166 @@ pub async fn delete_resource_authorization(
     Ok(Response::new(()))
 }
 
-#[instrument]
-fn try_minify_grants<'a>(
-    x: &'a DashSet<&'a ResourceAuthorizationGrant>,
-    y: &DashSet<&ResourceAuthorizationGrant>,
-) -> Result<DashSet<&'a ResourceAuthorizationGrant>> {
-    // try to match all grants
-    if x.iter().all(|x| {
-        y.iter()
-            .any(|y| x.key().eq(y.key()) || y.key().eq(&&ResourceAuthorizationGrant::All))
-    }) && y.iter().all(|y| {
-        x.iter()
-            .any(|x| y.key().eq(x.key()) || x.key().eq(&&ResourceAuthorizationGrant::All))
-    }) {
-        // now we have a confirmed match and can minify the grants / at least try to do it
-        // If x already contains `All` we delete everything besides `All`, otherwise we check
-        // wether we have all 3 `ResourceAuthorizationGrant` and convert them to all. Otherwise we
-        // do nothing
-        if x.contains(&ResourceAuthorizationGrant::All) || x.len() == PERMISSIONS.len() - 1 {
-            let result = DashSet::new();
-            result.insert(&ResourceAuthorizationGrant::All);
+pub fn authorizations_to_endpoints(
+    resource_authorizations: &[ResourceAuthorization],
+) -> Export<'_> {
+    let mut authorizations_grouped_by_type_and_value: GxHashMap<
+        (&ResourceAuthorizationType, &str),
+        Vec<&ResourceAuthorization>,
+    > = GxHashMap::default();
 
-            Ok(result)
-        } else {
-            // TODO: get rid of the clone
-            Ok(x.clone())
+    for resource_authorization in resource_authorizations {
+        if let ResourceAuthorizationType::Subject = resource_authorization.authorization_type() {
+            unimplemented!("Not supported yet");
         }
-    } else {
-        Err(FeedbackFusionError::Unauthorized)
+        let group_key = (
+            resource_authorization.authorization_type(),
+            resource_authorization.authorization_value().as_str(),
+        );
+        authorizations_grouped_by_type_and_value
+            .entry(group_key)
+            .or_default()
+            .push(resource_authorization);
+    }
+
+    let (scope_mappings, group_mappings): (Vec<_>, Vec<_>) =
+        authorizations_grouped_by_type_and_value
+            .into_par_iter()
+            .map(
+                |((authorization_type, mapping_name), resource_authorizations_in_group)| {
+                    let mut kind_to_permission_and_id_patterns: GxHashMap<
+                        &ResourceKind,
+                        Vec<(&Permission, Option<&str>)>,
+                    > = GxHashMap::default();
+
+                    for resource_authorization in &resource_authorizations_in_group {
+                        kind_to_permission_and_id_patterns
+                            .entry(resource_authorization.resource_kind())
+                            .or_default()
+                            .push((
+                                resource_authorization.authorization_grant(),
+                                resource_authorization.resource_id().as_deref(),
+                            ));
+                    }
+
+                    let mut endpoint_to_permissions: GxHashMap<
+                        Endpoint<'_>,
+                        GxHashSet<Permission>,
+                    > = GxHashMap::default();
+
+                    for (resource_kind, permissions_and_id_patterns) in
+                        kind_to_permission_and_id_patterns
+                    {
+                        let mut permission_to_specific_and_wildcard_ids: GxHashMap<
+                            Permission,
+                            (GxHashSet<&str>, Vec<&str>, bool),
+                        > = GxHashMap::default();
+
+                        for (permission, resource_id_option) in permissions_and_id_patterns {
+                            let entry = permission_to_specific_and_wildcard_ids
+                                .entry(*permission)
+                                .or_insert_with(|| (GxHashSet::default(), Vec::new(), false));
+                            match resource_id_option {
+                                None => entry.2 = true,
+                                Some(resource_id)
+                                    if resource_id.contains('*') || resource_id.contains('?') =>
+                                {
+                                    entry.1.push(resource_id)
+                                }
+                                Some(resource_id) => {
+                                    entry.0.insert(resource_id);
+                                }
+                            }
+                        }
+
+                        for (permission, (mut specific_ids, wildcard_patterns, is_all)) in
+                            permission_to_specific_and_wildcard_ids
+                        {
+                            if !wildcard_patterns.is_empty() && !specific_ids.is_empty() {
+                                let mut specific_ids_covered_by_wildcard = GxHashSet::default();
+                                for wildcard_pattern in &wildcard_patterns {
+                                    let wildcard_matcher =
+                                        Wildcard::new(wildcard_pattern.as_bytes()).unwrap();
+                                    for &specific_id in &specific_ids {
+                                        if wildcard_matcher.is_match(specific_id.as_bytes()) {
+                                            specific_ids_covered_by_wildcard.insert(specific_id);
+                                        }
+                                    }
+                                }
+                                specific_ids.retain(|specific_id| {
+                                    !specific_ids_covered_by_wildcard.contains(specific_id)
+                                });
+                            }
+
+                            let endpoint_scope_selector = if is_all {
+                                EndpointScopeSelector::All
+                            } else if !wildcard_patterns.is_empty() || !specific_ids.is_empty() {
+                                let mut all_ids: Vec<Cow<'_, str>> = Vec::new();
+                                for wildcard_pattern in &wildcard_patterns {
+                                    all_ids.push(Cow::Borrowed(*wildcard_pattern));
+                                }
+                                for specific_id in &specific_ids {
+                                    all_ids.push(Cow::Borrowed(*specific_id));
+                                }
+                                if all_ids.len() == 1 {
+                                    EndpointScopeSelector::Specific(all_ids.pop().unwrap())
+                                } else {
+                                    EndpointScopeSelector::Multiple(all_ids)
+                                }
+                            } else {
+                                EndpointScopeSelector::All
+                            };
+
+                            let endpoint = match resource_kind {
+                                ResourceKind::Target => Endpoint::Target(endpoint_scope_selector),
+                                ResourceKind::Prompt => Endpoint::Prompt(endpoint_scope_selector),
+                                ResourceKind::Field => Endpoint::Field(endpoint_scope_selector),
+                                ResourceKind::Response => {
+                                    Endpoint::Response(endpoint_scope_selector)
+                                }
+                                ResourceKind::Export => Endpoint::Export(endpoint_scope_selector),
+                                ResourceKind::Authorize => Endpoint::Authorize(None),
+                            };
+
+                            endpoint_to_permissions
+                                .entry(endpoint)
+                                .or_default()
+                                .insert(permission);
+                        }
+                    }
+
+                    let grants = endpoint_to_permissions
+                        .into_iter()
+                        .map(|(endpoint, permissions_set)| AuthorizationGrants {
+                            endpoint,
+                            permissions: permissions_set.into_iter().collect(),
+                        })
+                        .collect();
+
+                    let authorization_mapping = AuthorizationMapping {
+                        name: mapping_name.to_string(),
+                        grants,
+                    };
+
+                    match authorization_type {
+                        ResourceAuthorizationType::Scope => (Some(authorization_mapping), None),
+                        ResourceAuthorizationType::Group => (None, Some(authorization_mapping)),
+                        ResourceAuthorizationType::Subject => unreachable!(),
+                    }
+                },
+            )
+            .unzip();
+
+    Export {
+        scopes: scope_mappings.into_iter().flatten().collect(),
+        groups: group_mappings.into_iter().flatten().collect(),
     }
 }
 
-#[instrument(skip_all)]
-fn authorizations_to_endpoints<'a>(
-    authorizations: &[ResourceAuthorization],
-) -> (Vec<AuthorizationMapping<'a>>, Vec<AuthorizationMapping<'a>>) {
-    // We do not want to just output garbage little endpoints we can easily generate from the input
-    // slice instead we want to minify and therefore optimize the output combinations as much as we
-    // can.
-    //
-    // In order to do that we have to "sort" our input in different recursive categories (here
-    // maps):
-    // - Get map which matches the combination of the input authentication credentials
-    // - Get the submap which does match the referenced `ResourceKind`
-    // - Get the set which contains all grants for the given `resource_id`
-
-    let map: DashMap<
-        (&ResourceAuthorizationType, &str),
-        DashMap<&ResourceKind, DashMap<Option<Vec<&String>>, DashSet<&ResourceAuthorizationGrant>>>,
-    > = DashMap::new();
-
-    authorizations.into_par_iter().for_each(|authorization| {
-        map.entry((
-            authorization.authorization_type(),
-            authorization.authorization_value().as_str(),
-        ))
-        .or_default()
-        .entry(authorization.resource_kind())
-        .or_default()
-        .entry(
-            authorization
-                .resource_id()
-                .as_ref()
-                .and_then(|id| Some(vec![id])),
-        )
-        .or_default()
-        .insert(authorization.authorization_grant());
-    });
-
-    // Now we've done the first step of the optimization and can now continue with the minification
-    // of the output structure.
-    //
-    // Therefore we can now eliminate all `resource_id` if we can construct them by another one
-    // (via Wildcard) and the permissions match. In this case we cant just compare the grants
-    // directly as we have to take care of `All` as an grant value.
-    //
-    // After we've done this we can eliminate
-
-    map.par_iter().for_each(|authorization_entry| {
-        let resource_kind_map = authorization_entry.value();
-
-        resource_kind_map
-            .par_iter()
-            .for_each(|resource_kind_entry| {
-                let resource_id_map = resource_kind_entry.value();
-
-                resource_id_map.par_iter().for_each(|resource_id_entry| {
-                    // check wether this entry can be constructed by one of the other keys
-                    let can_be_constructed = !resource_id_entry.key().is_none()
-                        && resource_id_map.par_iter_mut().any(|mut entry| {
-                            let key = entry.key();
-
-                            if key.eq(resource_id_entry.key())
-                                || key
-                                    .as_ref()
-                                    .is_some_and(|inner| inner.iter().any(|key| key.contains("*")))
-                            {
-                                false
-                            } else {
-                                key.is_none()
-                                    || key.as_ref().is_some_and(|key| {
-                                        key.iter().any(|key| {
-                                            let could_be_match = {
-                                                // TODO: we could theoretically also calculate overlapping
-                                                // wildcards which can not be constructed out of each other
-                                                let wildcard =
-                                                    Wildcard::new(key.as_bytes()).unwrap();
-
-                                                resource_id_entry
-                                                    .key()
-                                                    .as_ref()
-                                                    .unwrap()
-                                                    .iter()
-                                                    .any(|k| wildcard.is_match(k.as_bytes()))
-                                            };
-
-                                            // now as this is a pattern match we have to verify that the
-                                            // permissions also do match
-                                            //
-                                            // This does automatically minify the entry permissions
-                                            if could_be_match {
-                                                if let Ok(result) = try_minify_grants(
-                                                    entry.value(),
-                                                    resource_id_entry.value(),
-                                                ) {
-                                                    let mut grants = entry.value_mut();
-                                                    *grants = result;
-                                                    true
-                                                } else {
-                                                    false
-                                                }
-                                            } else {
-                                                false
-                                            }
-                                        })
-                                    })
-                            }
-                        });
-
-                    if can_be_constructed {
-                        // as this can be constructed we now can safely remove it
-                        resource_id_map.remove(resource_id_entry.key());
-                    }
-                });
-            });
-    });
-
-    let mut scopes = Vec::new();
-    let mut groups = Vec::new();
-
-    // we can now iterate another time after the changes were done to get the final output
-    map.into_par_iter().for_each(|authorization_entry| {
-        let authorization = authorization_entry.0;
-        let resource_kind_map = authorization_entry.1;
-
-        let mut authorization_mapping = AuthorizationMapping {
-            name: authorization.1.to_string(),
-            grants: Vec::new(),
-        };
-
-        resource_kind_map
-            .into_par_iter()
-            .for_each(|resource_kind_entry| {
-                let resource_id_map = resource_kind_entry.1;
-
-                resource_id_map
-                    .into_par_iter()
-                    .for_each(|resource_id_entry| {
-                        // authorization_mapping.grants.push(AuthorizationGrants {
-                        //     endpoint:
-                        // });
-                    });
-            });
-    });
-
-    (scopes, groups)
+#[derive(Serialize)]
+pub struct Export<'a> {
+    scopes: Vec<AuthorizationMapping<'a>>,
+    groups: Vec<AuthorizationMapping<'a>>,
 }
 
 pub async fn export_resource_authorizations(
@@ -400,7 +384,222 @@ pub async fn export_resource_authorizations(
     )?;
 
     // convert the authorizations to endpoints with permissions
-    let converted = authorizations_to_endpoints(authorizations.as_slice());
+    let export = authorizations_to_endpoints(authorizations.as_slice());
 
-    todo!()
+    Ok(Response::new(ResourceAuthorizationExportResponse {
+        export: hcl::to_string(&export)?,
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        database::schema::authorization::{
+            ResourceAuthorization, ResourceAuthorizationType, ResourceKind,
+        },
+        Permission,
+    };
+
+    use super::{authorizations_to_endpoints, Endpoint, EndpointScopeSelector};
+
+    #[test]
+    fn export_authorizations() {
+        let authorizations = &[
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::All)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::All)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Group)
+                .authorization_value("group")
+                .authorization_grant(Permission::All)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Group)
+                .authorization_value("groups")
+                .authorization_grant(Permission::All)
+                .build(),
+        ];
+
+        let export = authorizations_to_endpoints(authorizations);
+
+        let scopes = export.scopes;
+        let groups = export.groups;
+
+        assert_eq!(scopes.len(), 1);
+        assert_eq!(groups.len(), 2);
+
+        let mut scopes = scopes.iter();
+        assert!(scopes
+            .next()
+            .is_some_and(|scope| scope.name().as_str().eq("scope")));
+
+        let mut groups = groups.iter();
+        assert!(groups.all(|group| ["group", "groups"].contains(&group.name().as_str())));
+    }
+
+    #[test]
+    fn export_endpoints() {
+        let authorizations = &[
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::All)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Field)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::All)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Prompt)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::All)
+                .build(),
+        ];
+
+        let export = authorizations_to_endpoints(authorizations);
+        let scope = export.scopes.first().unwrap();
+
+        assert_eq!(scope.grants().len(), 3);
+    }
+
+    #[test]
+    fn export_multiple_specifics_are_grouped() {
+        let authorizations = &[
+            ResourceAuthorization::builder()
+                .resource_id(Some("id1".to_owned()))
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Read)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(Some("id2".to_owned()))
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Read)
+                .build(),
+        ];
+
+        let export = authorizations_to_endpoints(authorizations);
+        let scope = export.scopes.first().unwrap();
+        let grant = scope.grants().first().unwrap();
+
+        match grant.endpoint() {
+            Endpoint::Target(EndpointScopeSelector::Multiple(ids)) => {
+                assert!(ids.contains(&"id1".into()));
+                assert!(ids.contains(&"id2".into()));
+            }
+            _ => panic!("Expected Multiple selector"),
+        }
+    }
+
+    #[test]
+    fn export_specific_and_wildcard_merges() {
+        let authorizations = &[
+            ResourceAuthorization::builder()
+                .resource_id(Some("foo*".to_owned()))
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Read)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(Some("foo123".to_owned()))
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Read)
+                .build(),
+        ];
+
+        let export = authorizations_to_endpoints(authorizations);
+        let scope = export.scopes.first().unwrap();
+        let grant = scope.grants().first().unwrap();
+
+        match grant.endpoint() {
+            Endpoint::Target(EndpointScopeSelector::Specific(wild)) => {
+                assert_eq!(wild, "foo*");
+            }
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn export_different_permissions_same_id() {
+        let authorizations = &[
+            ResourceAuthorization::builder()
+                .resource_id(Some("id1".to_owned()))
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Read)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(Some("id1".to_owned()))
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Write)
+                .build(),
+        ];
+
+        let export = authorizations_to_endpoints(authorizations);
+        let scope = export.scopes.first().unwrap();
+        let grant = scope.grants().first().unwrap();
+
+        assert!(grant.permissions().contains(&Permission::Read));
+        assert!(grant.permissions().contains(&Permission::Write));
+    }
+
+    #[test]
+    fn export_all_and_specific() {
+        let authorizations = &[
+            ResourceAuthorization::builder()
+                .resource_id(None)
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Read)
+                .build(),
+            ResourceAuthorization::builder()
+                .resource_id(Some("id1".to_owned()))
+                .resource_kind(ResourceKind::Target)
+                .authorization_type(ResourceAuthorizationType::Scope)
+                .authorization_value("scope")
+                .authorization_grant(Permission::Read)
+                .build(),
+        ];
+
+        let export = authorizations_to_endpoints(authorizations);
+        let scope = export.scopes.first().unwrap();
+        let grant = scope.grants().first().unwrap();
+
+        match grant.endpoint() {
+            Endpoint::Target(EndpointScopeSelector::All) => {}
+            _ => assert!(false),
+        }
+    }
 }
