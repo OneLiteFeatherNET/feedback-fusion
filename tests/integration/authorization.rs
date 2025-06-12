@@ -26,8 +26,10 @@ use feedback_fusion_common::{
     connect,
     proto::{
         AuthorizationGrant, AuthorizationType, CreateResourceAuthorizationRequest,
-        CreateTargetRequest, DeleteResourceAuthorizationRequest, GetResourceAuthorizationRequest,
-        GetTargetRequest, ResourceAuthorizationData, ResourceKind,
+        CreateTargetRequest, DeleteResourceAuthorizationRequest,
+        ExportResourceAuthorizationsRequest, GetResourceAuthorizationRequest,
+        GetResourceAuthorizationsRequest, GetTargetRequest, ResourceAuthorizationData,
+        ResourceKind,
     },
 };
 
@@ -86,6 +88,41 @@ async fn test_get() {
         .await;
     assert!(response.is_ok());
     assert_eq!(&response.unwrap().into_inner(), authorization);
+}
+
+#[test(tokio::test)]
+async fn test_get_list() {
+    let (mut client, _) = connect!();
+
+    let request = create_authorization("foo");
+    let response = client.create_resource_authorization(request).await;
+    assert!(response.is_ok());
+
+    let response = client
+        .get_resource_authorizations(GetResourceAuthorizationsRequest::default())
+        .await;
+    assert!(response.is_ok());
+    assert!(!response.unwrap().into_inner().authorizations.is_empty());
+}
+
+#[test(tokio::test)]
+async fn test_export() {
+    let (mut client, _) = connect!();
+
+    let request = create_authorization("foo");
+    let response = client.create_resource_authorization(request).await;
+    assert!(response.is_ok());
+    let response = response.unwrap().into_inner();
+    let authorization = response.authorizations.first().unwrap();
+
+    let response = client
+        .export_resource_authorizations(ExportResourceAuthorizationsRequest {
+            ids: vec![authorization.id.clone()],
+        })
+        .await;
+    assert!(response.is_ok());
+    let export = response.unwrap().into_inner().export;
+    assert_eq!(export, include_str!("export.hcl"));
 }
 
 #[test(tokio::test)]

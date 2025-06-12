@@ -216,7 +216,7 @@ impl std::fmt::Display for ResourceAuthorization {
 crud!(ResourceAuthorization {});
 impl_select!(ResourceAuthorization {select_matching(scopes: &BTreeSet<&ScopeTokenRef>, groups: &BTreeSet<&String>, subject: &str) => "`WHERE (authorization_type = 'Scope' AND authorization_value IN ${scopes.sql()}) OR (authorization_type = 'Group' AND authorization_value IN ${groups.sql()}) OR (authorization_type = 'Subject' AND authorization_value = #{subject})`"});
 impl_select!(ResourceAuthorization {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
-impl_select!(ResourceAuthorization {select_by_ids(ids: &[String]) => "`WHERE id IN ${id.sql()}`"});
+impl_select!(ResourceAuthorization {select_by_ids(ids: &[String]) => "`WHERE id IN ${ids.sql()}`"});
 impl_select_page_wrapper!(ResourceAuthorization {select_page() => "``"});
 
 pub struct Authorization<'a>(pub &'a Endpoint<'a>, pub &'a Permission);
