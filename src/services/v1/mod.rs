@@ -124,7 +124,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
             self,
             request,
             Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str()) )},
-            Permission::Write
+            Permission::Read
         )
     }
 

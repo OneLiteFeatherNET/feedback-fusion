@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS field (
   prompt      VARCHAR(32) REFERENCES prompt(id) NOT NULL,
   field_type  VARCHAR(32) NOT NULL,
   options     TEXT NOT NULL,
-  updated_at  TIMESTAMP,
-  created_at  TIMESTAMP
+  updated_at  timestamp,
+  created_at  timestamp
 );
 
 CREATE TABLE IF NOT EXISTS prompt_response (
@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS resource_authorization (
   resource_kind       VARCHAR(255) NOT NULL,
   resource_id         VARCHAR(32) NOT NULL,
   authorization_type  VARCHAR(32) NOT NULL,
-  authoriztion_grant  VARCHAR(32) NOT NULL,
-  authorization_value VARCHAR(32) NOT NULL
+  authorization_grant  VARCHAR(32) NOT NULL,
+  authorization_value VARCHAR(32) NOT NULL,
+  updated_at  TIMESTAMP(3),
+  created_at  TIMESTAMP(3)
 );

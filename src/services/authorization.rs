@@ -131,7 +131,13 @@ impl UserContext {
         let access_token = AccessToken::new(bearer.split(" ").last().unwrap().to_string());
 
         let scopes = claims.scope().iter().collect();
-        let groups = claims.groups().iter().collect();
+        let mut groups: BTreeSet<&String> = claims.groups().iter().collect();
+
+        // This handelns api machine calls from client_credentials peers without groups but scopes
+        let empty = "".to_owned();
+        if groups.is_empty() {
+            groups.insert(&empty);
+        };
 
         match get_user_context(connection, subject.as_str(), &scopes, &groups, matrix).await {
             Ok(context) => Ok(context),
@@ -299,7 +305,8 @@ fn is_match(key: &String, endpoint: &Endpoint, permission: &Permission) -> bool 
     }
 
     // verify it is the same permission
-    if !third.eq(Into::<&str>::into(permission)) {
+    let permissions: &[&str] = &[permission.into(), Permission::All.into()];
+    if !permissions.contains(&third) {
         return false;
     }
 
