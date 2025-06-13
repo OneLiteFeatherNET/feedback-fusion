@@ -76,7 +76,7 @@ export default defineNuxtConfig({
     },
   },
   shiki: {
-    bundledLangs: ["html", "yaml"],
+    bundledLangs: ["html", "hcl"],
     bundledThemes: ["github-dark", "github-light"],
   },
 });
