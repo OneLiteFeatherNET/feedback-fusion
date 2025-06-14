@@ -167,8 +167,9 @@ dashboard: lib
 
   pnpm run -C dashboard build
 
-dashboard-dev: oidc-server-mock postgres && cleanup
+dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
   just backend postgres
+  just generate dashboard
   NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
     FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
     FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL="http://localhost:5151/connect/token" \

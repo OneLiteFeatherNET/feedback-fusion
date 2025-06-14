@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h2>{{ $t("dashboard.targets") }}</h2>
+    <h2>{{ $t("iam.title") }}</h2>
 
-    <v-list class="mt-4">
+    <v-list v-if="authorizations && authorizations.total > 1" class="mt-4">
       <v-list-item
         v-for="target in targets?.targets"
         :key="target.id"
@@ -25,36 +25,36 @@
     </v-list>
 
     <v-pagination
-      v-if="targets && targets.total > targets.pageSize"
-      v-model="targets.pageToken"
-      :length="Math.ceil(targets.total / targets.pageSize)"
+      v-if="authorizations && authorizations.total > authorizations.pageSize"
+      v-model="authorizations.pageToken"
+      :length="Math.ceil(authorizations.total / authorizations.pageSize)"
     />
 
     <FormEdit
-      v-if="authorization.hasPermission('Target', 'Write')"
+      v-if="authorization.hasPermission('Authorize', 'Write')"
       v-model="creation"
       :fields="creationFields"
       :action="create"
-      :title="$t('target.create')"
+      :title="$t('iam.create')"
     >
       <template #default="{ props }">
         <v-btn class="mt-4" block color="success" v-bind="props">
-          {{ $t("target.create") }}
+          {{ $t("iam.create") }}
         </v-btn>
       </template>
     </FormEdit>
 
     <v-btn
       v-if="
-        authorization.hasPermission('Export', 'Read') && selected.length > 0
+        authorization.hasPermission('Authorize', 'Read') && selected.length > 0
       "
       class="float-right mt-4"
       variant="text"
       color="success"
       @click="
         router.push({
-          path: localePath('/export'),
-          query: { targets: selected },
+          path: localePath('/iam/export'),
+          query: { ids: selected },
         })
       "
     >
@@ -82,32 +82,52 @@ const { t } = useI18n();
 const authorization = useAuthorizationStore();
 const router = useRouter();
 
-const targets = ref(undefined);
+const authorizations = ref(undefined);
 const creation = ref({});
 const selected = ref([]);
 
 const creationFields = ref([
   {
-    name: "name",
-    label: t("target.name"),
-    type: "text",
+    name: "resource_kind",
+    label: t("iam.authorization.resource_kind.label"),
+    type: "select",
     required: true,
+    items: Array.from({ length: 6 }, (_, i) => ({
+      title: t(`iam.authorization.resource_kind.${i}`),
+      value: i,
+    })),
   },
   {
-    name: "description",
-    label: t("target.description"),
-    type: "textarea",
+    name: "authorization_data.type",
+    label: t("iam.authorization.authorization_data.type.label"),
+    type: "select",
+    required: true,
+    items: Array.from({ length: 3 }, (_, i) => ({
+      title: t(`iam.authorization.authorization_data.type.${i}`),
+      value: i,
+    })),
+  },
+  {
+    name: "authorization_data.grant",
+    label: t("iam.authorization.authorization_data.grant.label"),
+    type: "select",
+    required: true,
+    items: Array.from({ length: 4 }, (_, i) => ({
+      title: t(`iam.authorization.authorization_data.grant.${i}`),
+      value: i,
+    })),
+    multiple: true
   },
 ]);
 
 const fetchPage = async (pageToken: number) => {
-  targets.value = await $feedbackFusion
-    .getTargets({ pageToken, pageSize: 10 }, useRpcOptions())
+  authorizations.value = await $feedbackFusion
+    .getResourceAuthorizations({ pageToken, pageSize: 10 }, useRpcOptions())
     .then((value) => value.response);
 };
 
 watch(
-  () => targets.value?.pageToken,
+  () => authorizations.value?.pageToken,
   async (pageToken: number) => {
     await fetchPage(pageToken);
   },
@@ -119,7 +139,7 @@ onMounted(async () => {
 
 const create = async () => {
   await $feedbackFusion
-    .createTarget(creation.value, useRpcOptions())
+    .createResourceAuthorization(creation.value, useRpcOptions())
     .then((value) => value.response);
 
   await fetchPage(1);
