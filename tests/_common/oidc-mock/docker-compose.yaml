@@ -2,8 +2,6 @@ services:
   oidc-server-mock:
     container_name: oidc-server-mock
     image: ghcr.io/soluto/oidc-server-mock:0.8.6
-    networks:
-      - feedback-fusion
     ports:
       - 5151:80
     environment:
@@ -36,9 +34,12 @@ services:
         - Name: api:feedback-fusion
         - Name: feedback-fusion:write 
         - Name: feedback-fusion:read
+        - Name: dynamic
       API_RESOURCES_INLINE: |
         - Name: feedback-fusion 
-          Scopes: ["api:feedback-fusion", "feedback-fusion:write", "feedback-fusion:read"]
+          Scopes: ["api:feedback-fusion", "feedback-fusion:write", "feedback-fusion:read", "dynamic"]
+        - Name: dynamic 
+          Scopes: ["dynamic"]
       USERS_CONFIGURATION_INLINE: |
         [
           {
@@ -73,7 +74,3 @@ services:
         }
     volumes:
       - .:/tmp/config:ro
-
-networks:
-  feedback-fusion:
-    external: true

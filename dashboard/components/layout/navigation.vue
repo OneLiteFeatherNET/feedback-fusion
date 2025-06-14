@@ -10,6 +10,9 @@
 
         <v-spacer />
 
+        <v-btn :to="localePath('/iam')" class="mr-4" v-if="authorization.hasPermission('Authorize', 'Read')">
+          {{ $t("navigation.iam") }}
+        </v-btn>
         <LayoutTheme class="mr-4" />
         <LayoutProfile v-if="loggedIn" />
       </v-row>
@@ -18,7 +21,10 @@
 </template>
 
 <script setup lang="ts">
-import { useOidcAuth } from "#imports";
+import { useOidcAuth, useLocalePath } from "#imports";
+import { useAuthorizationStore } from "~/composables/authorization";
 
+const localePath = useLocalePath();
 const { loggedIn } = useOidcAuth();
+const authorization = useAuthorizationStore();
 </script>

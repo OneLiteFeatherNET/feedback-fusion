@@ -6,7 +6,7 @@
 
     <v-card-text v-if="exported">
       <Shiki
-        lang="yaml"
+        lang="hcl"
         :code="exported"
         :highlightOptions="highlightOptions"
       />

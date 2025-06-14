@@ -4,7 +4,8 @@
     "oidc": "Login with oidc"
   },
   "navigation": {
-    "logout": "Logout"
+    "logout": "Logout",
+    "iam": "IAM"
   },
   "dashboard": {
     "targets": "Targets",
@@ -18,6 +19,36 @@
     "save": "Save",
     "required": "required",
     "copy": "Copy"
+  },
+  "iam": {
+    "title": "Authorizations",
+    "create": "Create authorization",
+    "authorization": {
+      "authorization_data": {
+        "grant": {
+          "label": "Authorization grant",
+          "0": "Read",
+          "1": "Write",
+          "2": "List",
+          "3": "All"
+        },
+        "type": {
+          "label": "Authorization source",
+          "0": "Scope",
+          "1": "Group",
+          "2": "Subject"
+        }
+      },
+      "resource_kind": {
+        "label": "Resource kind",
+        "0": "Target",
+        "1": "Prompt",
+        "2": "Field",
+        "3": "Export",
+        "4": "Authorize",
+        "5": "Response"
+      }
+    }
   },
   "prompt": {
     "list": "Prompts",

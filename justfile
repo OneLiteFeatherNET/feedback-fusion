@@ -3,12 +3,18 @@ LOCAL_DOCKER_IMAGE := "feedback-fusion"
 LOCAL_PLATFORM := "linux/" + replace(replace(arch(), "x86_64", "amd64"), "aarch64", "arm64") 
 DEFAULT_TEST := "postgres"
 
-test-all:
+test-all: cleanup
+  cargo llvm-cov clean --workspace
+
+  just unittest
   just test postgres
   just test mariadb
   just test mysql
   just test mssql
   just test skytable
+
+  cargo llvm-cov report
+  cargo llvm-cov report --lcov --output-path coverage.info
 
 init:
   pre-commit install
@@ -28,7 +34,7 @@ clippy:
 #
 
 build PLATFORM=LOCAL_PLATFORM DOCKERFILE="./Dockerfile":
-  @echo "Building for {{PLATFORM}}"
+  @echo "building for {{PLATFORM}}"
   docker buildx build -t {{LOCAL_DOCKER_IMAGE}} --platform {{PLATFORM}} -f {{DOCKERFILE}} --load .
 
 build-all DOCKERFILE="./Dockerfile":
@@ -39,11 +45,19 @@ build-all DOCKERFILE="./Dockerfile":
 #
 
 backend TYPE=DEFAULT_TEST:
-  just build
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --no-report > ./target/feedback-fusion.log 2>&1 &
 
-  docker run --name {{LOCAL_DOCKER_IMAGE}} -d -e FEEDBACK_FUSION_CONFIG="/etc/feedback-fusion/config.yaml" -v ./tests/_common/configs/{{TYPE}}.yaml:/etc/feedback-fusion/config.yaml -e RUST_LOG=DEBUG --network {{DOCKER_NETWORK}} -p 8000:8000 {{LOCAL_DOCKER_IMAGE}}
+  while ! nc -z localhost 8000; do \
+    sleep 1; \
+  done
+  @echo "Application ready"
 
-bench: docker oidc-server-mock postgres && cleanup
+stop-backend:
+  @PID=$(lsof -t -i:8000) && if [ -n "$PID" ]; then \
+    kill -2 $PID; \
+  fi
+
+bench: oidc-server-mock postgres && cleanup
   just backend postgres
   GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
 
@@ -54,32 +68,29 @@ protoc-docs:
 # Testing requirements
 #
 
-@docker: cleanup
-  docker network create {{DOCKER_NETWORK}} > /dev/null
-
 @oidc-server-mock:
   docker compose -f tests/_common/oidc-mock/docker-compose.yaml up -d 
-  sleep 5
+  @sleep 5
   curl -s -o /dev/null http://localhost:5151/.well-known/openid-configuration
 
 @postgres:
-  docker run --name database -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres --network {{DOCKER_NETWORK}} -d postgres
+  docker run --name database -e POSTGRES_PASSWORD=password -e POSTGRES_USERNAME=postgres -p 5150:5432 -d postgres
   sleep 5
 
 @mysql:
-  docker run --name database -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_USER=username -e MYSQL_DATABASE=database --network {{DOCKER_NETWORK}} -d mysql
+  docker run --name database -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_USER=username -e MYSQL_DATABASE=database -p 5150:3306 -d mysql
   sleep 30
 
 @mariadb:
-  docker run --name database -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_USER=username -e MYSQL_DATABASE=database --network {{DOCKER_NETWORK}} -d mariadb
+  docker run --name database -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_USER=username -e MYSQL_DATABASE=database -p 5150:3306 -d mariadb
   sleep 10
 
 @mssql:
-  docker run --name database -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=Password1 --network {{DOCKER_NETWORK}} -d mcr.microsoft.com/mssql/server:2022-latest
+  docker run --name database -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=Password1 -p 5150:1433 -d mcr.microsoft.com/mssql/server:2022-latest
   sleep 10
 
 @skytable: postgres
-  docker run -p 2003:2003 --entrypoint skyd --rm --name skytable --network {{DOCKER_NETWORK}} -d skytable/skytable --auth-root-password=passwordpassword --endpoint=tcp@0.0.0.0:2003
+  docker run -p 2003:2003 --entrypoint skyd --rm --name skytable -d skytable/skytable --auth-root-password=passwordpassword --endpoint=tcp@0.0.0.0:2003
 
 # 
 # Testing
@@ -88,24 +99,24 @@ protoc-docs:
 @cleanup:
   -docker rm -f database > /dev/null 2>&1
   -docker rm -f oidc-server-mock > /dev/null 2>&1
-  -docker rm -f feedback-fusion > /dev/null 2>&1
+  -just stop-backend
   -docker rm -f skytable > /dev/null 2>&1
   -docker network rm {{DOCKER_NETWORK}} > /dev/null 2>&1
 
 unittest:
-  cargo test --bin feedback-fusion
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/postgres.hcl" cargo llvm-cov --bin feedback-fusion --no-report -- --nocapture
 
 integration:
-  OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo test --no-fail-fast --test integration_test || (docker logs feedback-fusion; exit 1)
+  OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo llvm-cov --no-report --no-fail-fast --test integration_test || (cat ./target/feedback-fusion.log; just stop-backend; cargo llvm-cov report; exit 1)
 
-test TYPE=DEFAULT_TEST: docker oidc-server-mock
+test TYPE=DEFAULT_TEST: cleanup oidc-server-mock
   just {{TYPE}}
-  if [ "{{TYPE}}" = "mariadb" ]; then just backend mysql; else just backend {{TYPE}}; fi
-  sleep 1
+  @if [ "{{TYPE}}" = "mariadb" ]; then just backend mysql; else just backend {{TYPE}}; fi
+
   just integration
 
+  just stop-backend
   -docker rm -f database > /dev/null 2>&1
-  -docker rm -f feedback-fusion > /dev/null 2>&1
 
 fuzz:
   OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo fuzz run fuzz_create_and_export
@@ -156,8 +167,9 @@ dashboard: lib
 
   pnpm run -C dashboard build
 
-dashboard-dev: docker oidc-server-mock postgres && cleanup
+dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
   just backend postgres
+  just generate dashboard
   NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
     FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
     FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL="http://localhost:5151/connect/token" \

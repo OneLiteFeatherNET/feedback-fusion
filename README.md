@@ -52,7 +52,8 @@ FeedbackFusion is licensed under the MIT License.
 - helm
 - cargo
 - docker
-- cargo-release
+- cargo-llvm-cov
+- cargo-release (only for releases)
 
 ### Setup
 
@@ -74,7 +75,7 @@ The integration tests are executed for each database backend on its own therefor
 just test postgres # possible values: postgres, mariadb, mysql, mssql, skytable (this uses postgres and skytable caching)
 ```
 
-or you can executed all of them:
+or you can executed all of them, which automatically generates a coverage report based on cargo-llvm-cov:
 
 ```sh
 just # or `just test-all`

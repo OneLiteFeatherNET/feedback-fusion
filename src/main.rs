@@ -97,7 +97,7 @@ async fn main() {
 
         // build the authority
         info!("Tryng to contact the OIDC Provider");
-        let authority = oidc::authority().await.unwrap();
+        let (authority, client) = oidc::authority().await.unwrap();
         authority.spawn_refresh(Duration::from_secs(60 * 60 * 6));
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
@@ -105,6 +105,11 @@ async fn main() {
 
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
+            client,
+            permission_matrix: config::read_permission_matrix(
+                CONFIG.oidc().scopes(),
+                CONFIG.oidc().groups(),
+            ),
         };
         let service = tower::ServiceBuilder::new()
             .layer(authorizer.jwt_layer(authority))
@@ -165,12 +170,17 @@ pub mod prelude {
         impl_select_page_wrapper, invalidate,
         services::{oidc::*, *},
     };
+    #[cfg(feature = "caching-skytable")]
+    pub use bincode::{Decode, Encode};
+    pub use cached::{proc_macro::*, IOCachedAsync};
     pub use derivative::Derivative;
+    pub use feedback_fusion_codegen::dynamic_cache;
     pub use feedback_fusion_common::PageRequest;
     pub use getset::{Getters, MutGetters, Setters};
     pub use itertools::Itertools;
     pub use lazy_static::lazy_static;
     pub use paste::paste;
+    pub use rayon::prelude::*;
     pub use rbatis::{
         crud, impl_insert, impl_select, impl_select_page, impled, plugin::page::Page, py_sql,
         rbdc::JsonV, IPageRequest,

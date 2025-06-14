@@ -55,3 +55,28 @@ BEGIN
         data         NVARCHAR(MAX)  NOT NULL
     );
 END;
+
+
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'oidc_user')
+BEGIN
+    CREATE TABLE oidc_user (
+        id          VARCHAR(32)    NOT NULL PRIMARY KEY,
+        username    VARCHAR(255)   NOT NULL,
+        updated_at  DATETIME,
+        created_at  DATETIME
+    );
+END;
+
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'resource_authorization')
+BEGIN
+    CREATE TABLE resource_authorization (
+        id                  VARCHAR(32)    NOT NULL PRIMARY KEY,
+        resource_kind       VARCHAR(255)   NOT NULL,
+        resource_id         VARCHAR(32)    NOT NULL,
+        authorization_type  VARCHAR(32)    NOT NULL,
+        authorization_grant  VARCHAR(32)    NOT NULL,
+        authorization_value VARCHAR(32)    NOT NULL,
+        updated_at   DATETIME,
+        created_at   DATETIME
+    );
+END;

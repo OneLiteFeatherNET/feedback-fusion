@@ -21,7 +21,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use feedback_fusion_common::proto::{
-    CreateTargetRequest, DeleteTargetRequest, GetTargetsRequest, UpdateTargetRequest,
+    CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest,
+    UpdateTargetRequest,
 };
 use test_log::test;
 
@@ -53,14 +54,11 @@ async fn test_get() {
         .unwrap()
         .into_inner();
 
-    let request = GetTargetsRequest::default();
-    let response = client.get_targets(request).await;
-    assert!(response.is_ok_and(|response| response
-        .into_inner()
-        .targets
-        .iter()
-        .find(|t| t.eq(&&target))
-        .is_some()));
+    let request = GetTargetRequest {
+        id: target.id.clone(),
+    };
+    let response = client.get_target(request).await;
+    assert!(response.is_ok_and(|response| response.into_inner().eq(&target)));
 }
 
 #[test(tokio::test)]
@@ -141,12 +139,15 @@ async fn test_delete() {
     let response = client.delete_target(request).await;
     assert!(response.is_ok());
 
-    let request = GetTargetsRequest::default();
-    let response = client.get_targets(request).await;
-    assert!(response.is_ok_and(|response| {
-        let inner = response.into_inner();
+    let request = GetTargetRequest {
+        id: target.id.clone(),
+    };
+    let response = client.get_target(request).await;
+    assert!(response.is_err());
 
-        inner.targets.iter().find(|t| t.eq(&&target2)).is_some()
-            && inner.targets.iter().find(|t| t.eq(&&target)).is_none()
-    }));
+    let request = GetTargetRequest {
+        id: target2.id.clone(),
+    };
+    let response = client.get_target(request).await;
+    assert!(response.is_ok_and(|response| response.into_inner().eq(&target2)));
 }

@@ -35,22 +35,20 @@ lazy_static! {
 }
 
 #[allow(unused)]
-pub async fn authenticate() -> String {
+pub async fn authenticate(scope: &str, client_id: &str, client_secret: &str) -> String {
     let issuer = IssuerUrl::new(std::env::var("OIDC_PROVIDER").unwrap()).unwrap();
     let metadata = CoreProviderMetadata::discover_async(issuer, async_http_client)
         .await
         .unwrap();
     let client = CoreClient::from_provider_metadata(
         metadata,
-        ClientId::new(std::env::var("OIDC_CLIENT_ID").unwrap()),
-        Some(ClientSecret::new(
-            std::env::var("OIDC_CLIENT_SECRET").unwrap(),
-        )),
+        ClientId::new(client_id.to_string()),
+        Some(ClientSecret::new(client_secret.to_string())),
     );
 
     let token_response = client
         .exchange_client_credentials()
-        .add_scope(Scope::new("api:feedback-fusion".to_owned()))
+        .add_scope(Scope::new(scope.to_string()))
         .request_async(async_http_client)
         .await
         .unwrap();
@@ -65,10 +63,12 @@ macro_rules! connect {
             .connect()
             .await
             .unwrap();
-        let token: tonic::metadata::MetadataValue<_> =
-            format!("Bearer {}", $crate::tests::authenticate().await)
-                .parse()
-                .unwrap();
+        let token: tonic::metadata::MetadataValue<_> = format!(
+            "Bearer {}",
+            $crate::tests::authenticate("api:feedback-fusion", "client", "secret").await
+        )
+        .parse()
+        .unwrap();
 
         let client =
             $crate::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(
@@ -90,6 +90,36 @@ macro_rules! connect {
             .unwrap();
 
         (client, public_client)
+    }};
+    ($scope:ident) => {{
+        let (client, public_client) = connect!();
+
+        let channel = tonic::transport::Channel::from_static(&$crate::tests::GRPC_ENDPOINT)
+            .connect()
+            .await
+            .unwrap();
+        let token: tonic::metadata::MetadataValue<_> = format!(
+            "Bearer {}",
+            $crate::tests::authenticate(stringify!($scope), "dynamic", "secret").await
+        )
+        .parse()
+        .unwrap();
+
+        println!("{:?}", token);
+
+        let scope_client =
+            $crate::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(
+                channel,
+                move |mut request: tonic::Request<()>| {
+                    request
+                        .metadata_mut()
+                        .insert("authorization", token.clone());
+
+                    Ok(request)
+                },
+            );
+
+        (client, public_client, scope_client)
     }};
 }
 
