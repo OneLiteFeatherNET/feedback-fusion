@@ -253,7 +253,7 @@ where
     E: Debug,
 {
     fn from(value: bb8::RunError<E>) -> Self {
-        Self::PoolError(format!("{:?}", value))
+        Self::PoolError(format!("{value:?}"))
     }
 }
 

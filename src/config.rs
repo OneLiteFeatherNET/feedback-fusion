@@ -21,17 +21,16 @@
  *
  */
 
-use std::borrow::Cow;
-
 use dashmap::{DashMap, DashSet};
+use educe::Educe;
 use rbatis::executor::Executor;
 use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
 use crate::{
     database::{
-        schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
         DatabseConfigurationScheme,
+        schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
     },
     prelude::*,
 };
@@ -91,56 +90,6 @@ lazy_static! {
     ];
 }
 
-macro_rules! config {
-    ($config:ident, ($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
-        paste! {
-            #[derive(Deserialize, Debug, Clone, Getters)]
-            #[get = "pub"]
-            pub struct $config {
-                $(
-                    $ident: $type,
-                )*
-
-                $(
-                    #[serde(default = "default_" $config:lower "_" $dident)]
-                    $dident: $dtype,
-                )*
-            }
-
-            $(
-                #[inline]
-                fn [<default_ $config:lower _ $dident>]() -> $dtype {
-                    $default.to_owned()
-                }
-            )*
-
-        }
-    };
-    ($config:ident, $lifetime:lifetime, ($($ident:ident: $type:ty $(,)? )*),  ($($dident:ident: $dtype:ty = $default:expr $(,)?)*)) => {
-        paste! {
-            #[derive(Deserialize, Debug, Clone, Getters)]
-            #[get = "pub"]
-            pub struct $config<$lifetime> {
-                $(
-                    $ident: $type,
-                )*
-
-                $(
-                    #[serde(default = "default_" $config:lower "_" $dident)]
-                    $dident: $dtype,
-                )*
-            }
-
-            $(
-                #[inline]
-                fn [<default_ $config:lower _ $dident>]() -> $dtype {
-                    $default.to_owned()
-                }
-            )*
-        }
-    };
-}
-
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct Config<'a> {
@@ -158,78 +107,34 @@ pub struct CacheConfiguration {
     skytable: Option<SkytableConfiguration>,
 }
 
-config!(
-    SkytableConfiguration,
-    (
-        host: String,
-        port: u16,
-        certificate: Option<String>,
-        username: String,
-        password: String
-    ),
-
-    (
-        space: String = "cache",
-        model: String = "feedbackfusion",
-    )
-);
-
-/// This limits the access to the specified endpoint to the given scope.
-///
-/// We can use this to only allow access to the endpoint for specific element ids
-/// and similar.
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr, Serialize, Ord, PartialOrd)]
-pub enum EndpointScopeSelector<'a> {
-    /// unscoped access
-    All,
-    /// access only for a specific id
-    Specific(Cow<'a, str>),
-    /// access for multiple ids
-    Multiple(Vec<Cow<'a, str>>),
-    /// custom wildcard format
-    Wildcard(Cow<'a, str>),
+#[derive(Deserialize, Debug, Clone, Getters, Educe)]
+#[educe(Default)]
+#[get = "pub"]
+pub struct SkytableConfiguration {
+    host: String,
+    port: u16,
+    certificate: Option<String>,
+    username: String,
+    password: String,
+    #[educe(Default = "cache")]
+    space: String,
+    #[educe(Default = "feedbackfusion")]
+    model: String,
 }
 
-impl Default for EndpointScopeSelector<'_> {
-    fn default() -> Self {
-        Self::All
-    }
-}
-
-/// Does define a scope for the client authorization with in the given endpoint group.
-///
-/// You can limit the access to the specified endpoint by defining a `EndpointScopeSelector`.
-/// If you wish to use wildcards you should use the `Custom` variant.
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, Display, IntoStaticStr, Serialize)]
-pub enum Endpoint<'a> {
-    Target(EndpointScopeSelector<'a>),
-    Prompt(EndpointScopeSelector<'a>),
-    Field(EndpointScopeSelector<'a>),
-    Response(EndpointScopeSelector<'a>),
-    Export(EndpointScopeSelector<'a>),
-    /// this is always target based
-    Authorize(Option<Box<Endpoint<'a>>>),
-    // this can contain a wildcard definition
-    Custom(Cow<'a, str>, EndpointScopeSelector<'a>),
-}
-
-impl Endpoint<'_> {
-    pub fn none(&self) -> Endpoint {
-        match self {
-            Endpoint::Target(_) => Endpoint::Target(EndpointScopeSelector::default()),
-            Endpoint::Prompt(_) => Endpoint::Prompt(EndpointScopeSelector::default()),
-            Endpoint::Field(_) => Endpoint::Field(EndpointScopeSelector::default()),
-            Endpoint::Response(_) => Endpoint::Response(EndpointScopeSelector::default()),
-            Endpoint::Export(_) => Endpoint::Export(EndpointScopeSelector::default()),
-            Endpoint::Authorize(_) => Endpoint::Authorize(None),
-            Endpoint::Custom(wildcard, _) => {
-                Endpoint::Custom(wildcard.clone(), EndpointScopeSelector::default())
-            }
-        }
-    }
-}
-
-#[derive(Hash, PartialEq, Eq, Deserialize, Debug, Clone, EnumIter, Display, IntoStaticStr, Serialize, Copy)]
+#[derive(
+    Hash,
+    PartialEq,
+    Eq,
+    Deserialize,
+    Debug,
+    Clone,
+    EnumIter,
+    Display,
+    IntoStaticStr,
+    Serialize,
+    Copy,
+)]
 pub enum Permission {
     Read,
     Write,
@@ -251,32 +156,28 @@ pub struct AuthorizationMapping<'a> {
     pub grants: Vec<AuthorizationGrants<'a>>,
 }
 
-config!(
-    OIDCConfiguration,
-    'a,
-    (
-        issuer: Option<String>,
-        provider: String,
-        scopes: Vec<AuthorizationMapping<'a>>,
-        groups: Vec<AuthorizationMapping<'a>>,
-    ),
+#[derive(Deserialize, Debug, Clone, Getters, Educe)]
+#[educe(Default)]
+#[get = "pub"]
+pub struct OIDCConfiguration<'a> {
+    issuer: Option<String>,
+    provider: String,
+    scopes: Vec<AuthorizationMapping<'a>>,
+    groups: Vec<AuthorizationMapping<'a>>,
+    #[educe(Default = "feedback-fusion")]
+    audience: String,
+    #[educe(Default = "groups")]
+    group_claim: String,
+}
 
-    (
-        audience: String = "feedback-fusion",
-        group_claim: String = "groups"
-    )
-);
-
-config!(
-    OTLPConfiguration,
-    (
-        endpoint: String,
-    ),
-
-    (
-        service_name: String = "feedback-fusion"
-    )
-);
+#[derive(Deserialize, Debug, Clone, Getters, Educe)]
+#[educe(Default)]
+#[get = "pub"]
+pub struct OTLPConfiguration {
+    endpoint: String,
+    #[educe(Default = "feedback-fusion")]
+    service_name: String
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct PresetConfig {
@@ -319,12 +220,12 @@ pub fn read_config() -> Result<Config<'static>> {
         )
     })?;
     let content = std::fs::read_to_string(config_path).map_err(|error| {
-        FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
+        FeedbackFusionError::ConfigurationError(format!("Error while reading config: {error}"))
     })?;
 
     // parse the config
     let config: Config = hcl::from_str(content.as_str()).map_err(|error| {
-        FeedbackFusionError::ConfigurationError(format!("Error while reading config: {}", error))
+        FeedbackFusionError::ConfigurationError(format!("Error while reading config: {error}"))
     })?;
     info!("Sucessfully parsed config");
 

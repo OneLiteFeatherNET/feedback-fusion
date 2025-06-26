@@ -24,6 +24,7 @@
 use std::time::Duration;
 
 use crate::{
+    authorization::oidc::layer::{AuthorizedService, OIDCErrorHandler},
     prelude::*,
     services::v1::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context},
 };
@@ -41,12 +42,12 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+pub mod authorization;
 pub mod cache;
 pub mod config;
 pub mod database;
 pub mod error;
-#[cfg(feature = "otlp")]
-pub mod otlp;
+pub mod observability;
 pub mod services;
 
 const ADDRESS: &str = "0.0.0.0:8000";
@@ -65,7 +66,7 @@ async fn main() {
     }
 
     #[cfg(feature = "otlp")]
-    otlp::init_tracing();
+    observability::otlp::init_tracing();
 
     debug!("Reading DatabaseConfig");
     lazy_static::initialize(&DATABASE_CONFIG);
@@ -97,7 +98,7 @@ async fn main() {
 
         // build the authority
         info!("Tryng to contact the OIDC Provider");
-        let (authority, client) = oidc::authority().await.unwrap();
+        let (authority, client) = crate::authorization::oidc::authority().await.unwrap();
         authority.spawn_refresh(Duration::from_secs(60 * 60 * 6));
         let authorizer = Oauth2Authorizer::new()
             .with_claims::<OIDCClaims>()
@@ -123,7 +124,7 @@ async fn main() {
         #[cfg(not(feature = "otlp"))]
         let trace_layer = TraceLayer::new_for_grpc();
         #[cfg(feature = "otlp")]
-        let trace_layer = otlp::trace_layer();
+        let trace_layer = observability::otlp::trace_layer();
 
         Server::builder()
             .layer(trace_layer)
@@ -162,17 +163,18 @@ async fn main() {
 
 pub mod prelude {
     pub use crate::{
+        authorization::{endpoint::*, oidc::claims::*},
         cache::*,
         config::*,
         database::{DatabaseConfiguration, DatabaseConnection},
         database_request,
         error::*,
         impl_select_page_wrapper, invalidate,
-        services::{oidc::*, *},
+        services::*,
     };
     #[cfg(feature = "caching-skytable")]
     pub use bincode::{Decode, Encode};
-    pub use cached::{proc_macro::*, IOCachedAsync};
+    pub use cached::{IOCachedAsync, proc_macro::*};
     pub use derivative::Derivative;
     pub use feedback_fusion_codegen::dynamic_cache;
     pub use feedback_fusion_common::PageRequest;
@@ -182,12 +184,12 @@ pub mod prelude {
     pub use paste::paste;
     pub use rayon::prelude::*;
     pub use rbatis::{
-        crud, impl_insert, impl_select, impl_select_page, impled, plugin::page::Page, py_sql,
-        rbdc::JsonV, IPageRequest,
+        IPageRequest, crud, impl_insert, impl_select, impl_select_page, impled, plugin::page::Page,
+        py_sql, rbdc::JsonV,
     };
     pub use serde::{Deserialize, Serialize};
     pub use tonic::{Request, Response};
-    pub use tracing::{debug, error, info, info_span, instrument, warn, Instrument};
+    pub use tracing::{Instrument, debug, error, info, info_span, instrument, warn};
     pub use typed_builder::TypedBuilder;
     pub use validator::Validate;
 }

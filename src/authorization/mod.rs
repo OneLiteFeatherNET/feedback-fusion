@@ -20,11 +20,13 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+pub mod endpoint;
+pub mod oidc;
+
 use aliri::jwt::CoreClaims;
-use aliri_oauth2::{scope::ScopeTokenRef, HasScope};
-use async_recursion::async_recursion;
+use aliri_oauth2::{HasScope, scope::ScopeTokenRef};
 use http::header::AUTHORIZATION;
-use openidconnect::{core::CoreClient, AccessToken};
+use openidconnect::{AccessToken, core::CoreClient};
 use rbatis::rbatis_codegen::IntoSql;
 use std::{
     borrow::Cow,
@@ -41,66 +43,6 @@ use crate::{
     },
     prelude::*,
 };
-
-impl Endpoint<'_> {
-    #[instrument(skip_all)]
-    #[async_recursion]
-    pub async fn get_target_ids(
-        &self,
-        connection: &DatabaseConnection,
-    ) -> Result<Option<Vec<String>>> {
-        match self {
-            Endpoint::Target(EndpointScopeSelector::Specific(id))
-            | Endpoint::Export(EndpointScopeSelector::Specific(id)) => {
-                Ok(Some(vec![id.to_string()]))
-            }
-            Endpoint::Prompt(EndpointScopeSelector::Specific(id))
-            | Endpoint::Response(EndpointScopeSelector::Specific(id)) => Ok(Some(
-                get_target_ids_by_prompt_ids(connection, &[id])
-                    .await?
-                    .into_iter()
-                    .map(|result| result.result)
-                    .collect(),
-            )),
-            Endpoint::Field(EndpointScopeSelector::Specific(id)) => Ok(Some(
-                get_target_ids_by_field_ids(connection, &[id])
-                    .await?
-                    .into_iter()
-                    .map(|result| result.result)
-                    .collect(),
-            )),
-            Endpoint::Target(EndpointScopeSelector::Multiple(ids))
-            | Endpoint::Export(EndpointScopeSelector::Multiple(ids)) => {
-                Ok(Some(ids.iter().map(|id| id.to_string()).collect()))
-            }
-            Endpoint::Prompt(EndpointScopeSelector::Multiple(ids))
-            | Endpoint::Response(EndpointScopeSelector::Multiple(ids)) => {
-                let id_refs: Vec<&str> = ids.iter().map(|id| id.as_ref()).collect();
-                Ok(Some(
-                    get_target_ids_by_prompt_ids(connection, &id_refs)
-                        .await?
-                        .into_iter()
-                        .map(|result| result.result)
-                        .collect(),
-                ))
-            }
-            Endpoint::Field(EndpointScopeSelector::Multiple(ids)) => {
-                let id_refs: Vec<&str> = ids.iter().map(|id| id.as_ref()).collect();
-                Ok(Some(
-                    get_target_ids_by_field_ids(connection, &id_refs)
-                        .await?
-                        .into_iter()
-                        .map(|result| result.result)
-                        .collect(),
-                ))
-            }
-            Endpoint::Authorize(Some(boxed_endpoint)) => {
-                boxed_endpoint.get_target_ids(connection).await
-            }
-            _ => Ok(None),
-        }
-    }
-}
 
 impl UserContext {
     #[instrument(skip_all)]
@@ -230,8 +172,8 @@ impl UserContext {
         let target_ids = endpoint.get_target_ids(connection).await?;
 
         // check wether we can access this target if its `Some`
-        if let Some(target_ids) = target_ids {
-            if !target_ids.into_iter().all(|target_id| {
+        if let Some(target_ids) = target_ids
+            && !target_ids.into_iter().all(|target_id| {
                 debug!("Detected {:?} belongs to target {}", endpoint, target_id);
 
                 let authorization = Authorization(
@@ -261,9 +203,9 @@ impl UserContext {
                 } else {
                     true
                 }
-            }) {
-                return Err(FeedbackFusionError::Unauthorized);
-            }
+            })
+        {
+            return Err(FeedbackFusionError::Unauthorized);
         }
 
         // now we made sure the user can access the target and we now verify if he can access the
@@ -409,8 +351,7 @@ async fn get_user_context<'a>(
         "Fetch user by subject"
     )?
     .ok_or(FeedbackFusionError::OIDCError(format!(
-        "User {} does not exist yet",
-        subject
+        "User {subject} does not exist yet"
     )))?;
 
     Ok(UserContext {
@@ -420,8 +361,8 @@ async fn get_user_context<'a>(
 }
 
 #[derive(Deserialize)]
-struct DatabaseResult {
-    result: String,
+pub struct DatabaseResult {
+    pub result: String,
 }
 
 #[rbatis::py_sql("SELECT target as result FROM prompt WHERE id IN ${id.sql()}")]
@@ -437,7 +378,9 @@ async fn get_target_ids_by_prompt_ids(
     impled!()
 }
 
-#[rbatis::py_sql("SELECT prompt.target as result FROM field field JOIN prompt prompt ON field.prompt = prompt.id WHERE field.id IN ${id.sql()}")]
+#[rbatis::py_sql(
+    "SELECT prompt.target as result FROM field field JOIN prompt prompt ON field.prompt = prompt.id WHERE field.id IN ${id.sql()}"
+)]
 #[dynamic_cache(ttl = "3600", key = r#"format!('get-target-id-by-field-id-{:?}', id)"#)]
 #[instrument(skip_all)]
 async fn get_target_ids_by_field_ids(
@@ -454,12 +397,12 @@ mod tests {
     use aliri_oauth2::scope::ScopeTokenRef;
 
     use crate::{
+        CONFIG, Endpoint, EndpointScopeSelector, Permission,
         authorization::is_match,
         database::schema::{
             authorization::{ResourceAuthorization, ResourceAuthorizationType, ResourceKind},
             user::UserContext,
         },
-        Endpoint, EndpointScopeSelector, Permission, CONFIG,
     };
 
     use super::PermissionMatrix;
@@ -600,15 +543,17 @@ mod tests {
 
     #[test]
     fn test_has_grant_empty() {
-        assert!(UserContext::has_grant(
-            &BTreeSet::new(),
-            &BTreeSet::new(),
-            &[],
-            &TARGET,
-            &Permission::Write,
-            &MATRIX
-        )
-        .is_ok_and(|list| list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &BTreeSet::new(),
+                &BTreeSet::new(),
+                &[],
+                &TARGET,
+                &Permission::Write,
+                &MATRIX
+            )
+            .is_ok_and(|list| list.is_empty())
+        );
     }
 
     fn has_grant_setup<'a>() -> (
@@ -658,99 +603,117 @@ mod tests {
         let valid_groups = valid_groups.iter().collect::<BTreeSet<&String>>();
         let invalid_groups = invalid_groups.iter().collect::<BTreeSet<&String>>();
 
-        assert!(UserContext::has_grant(
-            &valid_scopes,
-            &valid_groups,
-            &[],
-            &TARGET,
-            &Permission::Write,
-            &MATRIX
-        )
-        .is_ok_and(|list| !list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &valid_scopes,
+                &valid_groups,
+                &[],
+                &TARGET,
+                &Permission::Write,
+                &MATRIX
+            )
+            .is_ok_and(|list| !list.is_empty())
+        );
 
-        assert!(UserContext::has_grant(
-            &valid_scopes,
-            &invalid_groups,
-            &[],
-            &TARGET,
-            &Permission::Write,
-            &MATRIX
-        )
-        .is_ok_and(|list| !list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &valid_scopes,
+                &invalid_groups,
+                &[],
+                &TARGET,
+                &Permission::Write,
+                &MATRIX
+            )
+            .is_ok_and(|list| !list.is_empty())
+        );
 
-        assert!(UserContext::has_grant(
-            &invalid_scopes,
-            &valid_groups,
-            &[],
-            &TARGET,
-            &Permission::Write,
-            &MATRIX
-        )
-        .is_ok_and(|list| !list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &invalid_scopes,
+                &valid_groups,
+                &[],
+                &TARGET,
+                &Permission::Write,
+                &MATRIX
+            )
+            .is_ok_and(|list| !list.is_empty())
+        );
 
-        assert!(UserContext::has_grant(
-            &invalid_scopes,
-            &invalid_groups,
-            &[],
-            &TARGET,
-            &Permission::Write,
-            &MATRIX
-        )
-        .is_ok_and(|list| list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &invalid_scopes,
+                &invalid_groups,
+                &[],
+                &TARGET,
+                &Permission::Write,
+                &MATRIX
+            )
+            .is_ok_and(|list| list.is_empty())
+        );
     }
 
     #[test]
     fn test_has_grant_resource_authorizations_only() {
         let (_, _, _, _, resource_authorizations) = has_grant_setup();
 
-        assert!(UserContext::has_grant(
-            &BTreeSet::new(),
-            &BTreeSet::new(),
-            resource_authorizations.as_slice(),
-            &TARGET,
-            &Permission::Write,
-            &MATRIX
-        )
-        .is_ok_and(|list| !list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &BTreeSet::new(),
+                &BTreeSet::new(),
+                resource_authorizations.as_slice(),
+                &TARGET,
+                &Permission::Write,
+                &MATRIX
+            )
+            .is_ok_and(|list| !list.is_empty())
+        );
 
-        assert!(UserContext::has_grant(
-            &BTreeSet::new(),
-            &BTreeSet::new(),
-            resource_authorizations.as_slice(),
-            &TARGET,
-            &Permission::Read,
-            &MATRIX
-        )
-        .is_ok_and(|list| list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &BTreeSet::new(),
+                &BTreeSet::new(),
+                resource_authorizations.as_slice(),
+                &TARGET,
+                &Permission::Read,
+                &MATRIX
+            )
+            .is_ok_and(|list| list.is_empty())
+        );
 
-        assert!(UserContext::has_grant(
-            &BTreeSet::new(),
-            &BTreeSet::new(),
-            resource_authorizations.as_slice(),
-            &FIELD,
-            &Permission::Read,
-            &MATRIX
-        )
-        .is_ok_and(|list| list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &BTreeSet::new(),
+                &BTreeSet::new(),
+                resource_authorizations.as_slice(),
+                &FIELD,
+                &Permission::Read,
+                &MATRIX
+            )
+            .is_ok_and(|list| list.is_empty())
+        );
 
-        assert!(UserContext::has_grant(
-            &BTreeSet::new(),
-            &BTreeSet::new(),
-            resource_authorizations.as_slice(),
-            &PROMPT,
-            &Permission::Read,
-            &MATRIX
-        )
-        .is_ok_and(|list| !list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &BTreeSet::new(),
+                &BTreeSet::new(),
+                resource_authorizations.as_slice(),
+                &PROMPT,
+                &Permission::Read,
+                &MATRIX
+            )
+            .is_ok_and(|list| !list.is_empty())
+        );
 
-        assert!(UserContext::has_grant(
-            &BTreeSet::new(),
-            &BTreeSet::new(),
-            resource_authorizations.as_slice(),
-            &PROMPT,
-            &Permission::Write,
-            &MATRIX
-        )
-        .is_ok_and(|list| list.is_empty()));
+        assert!(
+            UserContext::has_grant(
+                &BTreeSet::new(),
+                &BTreeSet::new(),
+                resource_authorizations.as_slice(),
+                &PROMPT,
+                &Permission::Write,
+                &MATRIX
+            )
+            .is_ok_and(|list| list.is_empty())
+        );
     }
 }

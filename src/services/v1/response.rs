@@ -23,7 +23,10 @@
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
 use crate::{
     cache::fields_by_prompt,
-    database::schema::{feedback::{FieldData, FieldResponse, PromptResponse}, user::UserContext},
+    database::schema::{
+        feedback::{FieldData, FieldResponse, PromptResponse},
+        user::UserContext,
+    },
     prelude::*,
 };
 use feedback_fusion_common::proto::{
@@ -81,8 +84,7 @@ pub async fn create_responses(
                     .build())
             } else {
                 Err(FeedbackFusionError::BadRequest(format!(
-                    "Invalid field '{}'",
-                    key
+                    "Invalid field '{key}'"
                 )))
             }
         })
