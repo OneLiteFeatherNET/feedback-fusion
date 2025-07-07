@@ -401,6 +401,7 @@ pub async fn sync_field(
 mod tests {
     use super::*;
     use lazy_static::lazy_static;
+    use std::borrow::Cow;
 
     lazy_static! {
         static ref SCOPES: Vec<AuthorizationMapping<'static>> = vec![AuthorizationMapping {
