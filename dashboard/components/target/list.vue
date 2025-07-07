@@ -13,6 +13,7 @@
       >
         <template #append>
           <v-checkbox
+            class="d-flex justify-center align-center align-items-center"
             color="primary"
             v-model="selected"
             :value="target.id"

@@ -12,9 +12,10 @@ As of now we only support gRPC OTLP trace collection endpoints (:4317)
 
 To configure FeedbackFusion to use Jaeger for distributed tracing, you need to set the endpoint to Jaeger's default OTLP port:
 
-```yaml
-otlp:
-  endpoint: http://jaeger:4317
+```hcl
+otlp = {
+  endpoint = "http://jaeger:4317"
+}
 ```
 
 ## Example visualization in Grafana

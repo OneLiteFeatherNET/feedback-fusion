@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time, save_as_json};
+use crate::{database::schema::date_time_to_timestamp, prelude::*, save_as_json, to_date_time};
 use rbatis::rbdc::DateTime;
 
 use super::FieldOptions;
@@ -32,6 +32,7 @@ use super::FieldOptions;
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct Prompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -43,11 +44,13 @@ pub struct Prompt {
     #[builder(default = true)]
     #[serde(deserialize_with = "serde_this_or_that::as_bool")]
     active: bool,
-    #[derivative(PartialEq = "ignore")] 
+    #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
+    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
+    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
     created_at: DateTime,
 }
 
@@ -85,6 +88,7 @@ impl_select_page_wrapper!(Prompt {select_page_by_target(target: &str) => "`WHERE
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub enum FieldType {
     Text,
     Rating,
@@ -158,6 +162,7 @@ save_as_json!(FieldOptions, options);
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
+#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct Field {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -167,13 +172,18 @@ pub struct Field {
     description: Option<String>,
     prompt: String,
     field_type: FieldType,
-    #[serde(serialize_with = "serialize_options", deserialize_with = "deserialize_options")]
+    #[serde(
+        serialize_with = "serialize_options",
+        deserialize_with = "deserialize_options"
+    )]
     options: FieldOptions,
     #[builder(default_code = r#"DateTime::utc()"#)]
     #[derivative(PartialEq = "ignore")]
+    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
+    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
     created_at: DateTime,
 }
 

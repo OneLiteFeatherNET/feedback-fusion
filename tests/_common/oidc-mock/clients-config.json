@@ -23,7 +23,35 @@
       "profile",
       "test"
     ],
-    "RedirectUris": ["http://localhost:3000/auth/oidc/callback"],
+    "RedirectUris": [
+      "http://localhost:3000/auth/oidc/callback"
+    ],
+    "RequirePkce": false
+  },
+  {
+    "ClientId": "dynamic",
+    "ClientSecrets": [
+      "secret"
+    ],
+    "Description": "mock client",
+    "ClientClaimsPrefix": "",
+    "Claims": [
+      {
+        "Type": "groups",
+        "Value": "[]",
+        "ValueType": "json"
+      }
+    ],
+    "AllowedGrantTypes": [
+      "client_credentials",
+      "authorization_code"
+    ],
+    "AllowedScopes": [
+      "dynamic"
+    ],
+    "RedirectUris": [
+      "http://localhost:3000/auth/oidc/callback"
+    ],
     "RequirePkce": false
   }
 ]

@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
-use crate::{database::schema::feedback::Prompt, prelude::*};
+use crate::{database::schema::{feedback::Prompt, user::UserContext}, prelude::*};
 use feedback_fusion_common::proto::{
     CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest,
     Prompt as ProtoPrompt, PromptPage, UpdatePromptRequest,
@@ -29,8 +29,9 @@ use validator::Validate;
 
 #[instrument(skip_all)]
 pub async fn create_prompt(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<CreatePromptRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ProtoPrompt>> {
     let data = request.into_inner();
     data.validate()?;
@@ -68,8 +69,9 @@ pub async fn get_prompt(
 
 #[instrument(skip_all)]
 pub async fn get_prompts(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<GetPromptsRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<PromptPage>> {
     let data = request.into_inner();
     let page_request = data.page_request();
@@ -96,8 +98,9 @@ pub async fn get_prompts(
 
 #[instrument(skip_all)]
 pub async fn update_prompt(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdatePromptRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ProtoPrompt>> {
     let data = request.into_inner();
     data.validate()?;
@@ -125,8 +128,9 @@ pub async fn update_prompt(
 
 #[instrument(skip_all)]
 pub async fn delete_prompt(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<DeletePromptRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<()>> {
     database_request!(
         Prompt::delete_by_column(context.connection(), "id", request.into_inner().id.as_str())

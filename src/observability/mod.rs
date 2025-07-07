@@ -1,4 +1,4 @@
-//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2025 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
@@ -20,17 +20,5 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use feedback_fusion_common::proto::UserInfoResponse;
-use v1::FeedbackFusionV1Context;
-
-use crate::{database::schema::user::UserContext, prelude::*};
-
-pub async fn get_user_info(
-    _context: &FeedbackFusionV1Context<'_>,
-    _request: Request<()>,
-    user_context: UserContext,
-) -> Result<Response<UserInfoResponse>> {
-    Ok(Response::new(UserInfoResponse {
-        permissions: user_context.authorizations.into_iter().collect(),
-    }))
-}
+#[cfg(feature = "otlp")]
+pub mod otlp;

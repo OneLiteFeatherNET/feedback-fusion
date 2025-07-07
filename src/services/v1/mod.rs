@@ -20,20 +20,26 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::prelude::*;
-use aliri_oauth2::HasScope;
+use crate::{database::schema::user::UserContext, prelude::*};
 use feedback_fusion_common::proto::{
-    feedback_fusion_v1_server::FeedbackFusionV1,
-    public_feedback_fusion_v1_server::PublicFeedbackFusionV1, CreateFieldRequest,
-    CreatePromptRequest, CreateResponsesRequest, CreateTargetRequest, DataExportRequest,
-    DataExportResponse, DeleteFieldRequest, DeletePromptRequest, DeleteTargetRequest,
-    Field as ProtoField, FieldPage, GetFieldsRequest, GetPromptRequest, GetPromptsRequest,
-    GetResponsesRequest, GetTargetRequest, GetTargetsRequest, Prompt as ProtoPrompt, PromptPage,
-    PromptResponse, ResponsePage, Target as ProtoTarget, TargetPage, UpdateFieldRequest,
-    UpdatePromptRequest, UpdateTargetRequest, UserInfoResponse,
+    CreateFieldRequest, CreatePromptRequest, CreateResourceAuthorizationRequest,
+    CreateResponsesRequest, CreateTargetRequest, DataExportRequest, DataExportResponse,
+    DeleteFieldRequest, DeletePromptRequest, DeleteResourceAuthorizationRequest,
+    DeleteTargetRequest, ExportResourceAuthorizationsRequest, Field as ProtoField, FieldPage,
+    GetFieldsRequest, GetPromptRequest, GetPromptsRequest, GetResourceAuthorizationRequest,
+    GetResourceAuthorizationsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
+    Prompt as ProtoPrompt, PromptPage, PromptResponse,
+    ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationExportResponse,
+    ResourceAuthorizationList, ResourceAuthorizationPage, ResponsePage, Target as ProtoTarget,
+    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateResourceAuthorizationRequest,
+    UpdateTargetRequest, UserInfoResponse, feedback_fusion_v1_server::FeedbackFusionV1,
+    public_feedback_fusion_v1_server::PublicFeedbackFusionV1,
 };
+use openidconnect::core::CoreClient;
+use std::borrow::Cow;
 use tonic::{Response, Status};
 
+pub mod authorization;
 pub mod export;
 pub mod field;
 pub mod prompt;
@@ -41,13 +47,15 @@ pub mod response;
 pub mod target;
 pub mod user;
 
-#[derive(Clone, Getters)]
+#[derive(Getters)]
 #[get = "pub"]
-pub struct FeedbackFusionV1Context {
+pub struct FeedbackFusionV1Context<'a> {
     pub connection: DatabaseConnection,
+    pub client: CoreClient,
+    pub permission_matrix: PermissionMatrix<'a>,
 }
 
-#[derive(Clone, Getters)]
+#[derive(Getters)]
 #[get = "pub"]
 pub struct PublicFeedbackFusionV1Context {
     pub connection: DatabaseConnection,
@@ -55,12 +63,29 @@ pub struct PublicFeedbackFusionV1Context {
 
 // https://github.com/neoeinstein/aliri/blob/main/aliri_tower/examples/.tonic.rs#L35
 macro_rules! handler {
-    ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {{
-        if let Err(error) = FeedbackFusionV1Context::authorize(&$request, $endpoint, $permission) {
-            return Err(error.into());
+    ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {
+        handler!($handler, $self, $request, $endpoint { EndpointScopeSelector::All }, $permission)
+    };
+    ($handler:path, $self:ident, $request:ident, $endpoint:path $inner:block, $permission:path) => {{
+        match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection, &$self.permission_matrix).await {
+            Ok(context) => {
+                if let Err(error) = context
+                    .authorize(&$self.connection, &$endpoint(async $inner.await), &$permission)
+                    .await
+                {
+                    Err(error.into())
+                } else {
+                    handler!($handler, $self, $request, context)
+                }
+            }
+            Err(error) => Err(error.into()),
         }
-
-        handler!($handler, $self, $request)
+    }};
+    ($handler:path, $self:ident, $request:ident, $context:ident) => {{
+        match $handler($self, $request, $context).await {
+            Ok(response) => Ok(response),
+            Err(error) => Err(error.into()),
+        }
     }};
     ($handler:path, $self:ident, $request:ident) => {{
         match $handler($self, $request).await {
@@ -70,47 +95,10 @@ macro_rules! handler {
     }};
 }
 
-impl FeedbackFusionV1Context {
-    #[instrument(skip_all)]
-    pub fn authorize<T>(
-        request: &Request<T>,
-        endpoint: Endpoint,
-        permission: Permission,
-    ) -> Result<()> {
-        // extract the claims from the request
-        let claims = request
-            .extensions()
-            .get::<OIDCClaims>()
-            .ok_or(FeedbackFusionError::Unauthorized)?;
-        // get the matrix entry
-        let entry = PERMISSION_MATRIX
-            .get(&(endpoint, permission))
-            .ok_or(FeedbackFusionError::Unauthorized)?;
-
-        // verify the scopes
-        let scope = claims
-            .scope()
-            .iter()
-            .find(|scope| entry.0.contains(scope.as_str()));
-
-        // verify the groups
-        let group = claims
-            .groups()
-            .iter()
-            .find(|group| entry.1.contains(group.as_str()));
-
-        return if scope.is_none() && group.is_none() {
-            Err(FeedbackFusionError::Unauthorized)
-        } else {
-            Ok(())
-        };
-    }
-}
-
 // may consider to divide the service into its parts, but as of now this wouldn't be a real
 // enhacement
 #[async_trait::async_trait]
-impl FeedbackFusionV1 for FeedbackFusionV1Context {
+impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
     #[instrument(skip_all)]
     async fn create_target(
         &self,
@@ -134,8 +122,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::get_target,
             self,
             request,
-            Endpoint::Target,
-            Permission::Write
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str()) )},
+            Permission::Read
         )
     }
 
@@ -162,7 +150,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::update_target,
             self,
             request,
-            Endpoint::Target,
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -176,7 +164,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             target::delete_target,
             self,
             request,
-            Endpoint::Target,
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -190,7 +178,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::create_prompt,
             self,
             request,
-            Endpoint::Prompt,
+            Endpoint::Target { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().target.as_str())) },
             Permission::Write
         )
     }
@@ -218,7 +206,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::update_prompt,
             self,
             request,
-            Endpoint::Prompt,
+            Endpoint::Prompt { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -232,7 +220,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             prompt::delete_prompt,
             self,
             request,
-            Endpoint::Prompt,
+            Endpoint::Prompt { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -246,7 +234,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::create_field,
             self,
             request,
-            Endpoint::Field,
+            Endpoint::Prompt { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().prompt.as_str())) },
             Permission::Write
         )
     }
@@ -274,7 +262,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::update_field,
             self,
             request,
-            Endpoint::Field,
+            Endpoint::Field { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -288,7 +276,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             field::delete_field,
             self,
             request,
-            Endpoint::Field,
+            Endpoint::Field { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().id.as_str())) },
             Permission::Write
         )
     }
@@ -302,7 +290,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
             response::get_responses,
             self,
             request,
-            Endpoint::Response,
+            Endpoint::Response { EndpointScopeSelector::Specific(Cow::Borrowed(request.get_ref().prompt.as_str())) },
             Permission::List
         )
     }
@@ -312,7 +300,20 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<()>,
     ) -> std::result::Result<Response<UserInfoResponse>, Status> {
-        handler!(user::get_user_info, self, request)
+        match UserContext::get_otherwise_fetch(
+            &request,
+            &self.client,
+            &self.connection,
+            self.permission_matrix(),
+        )
+        .await
+        {
+            Ok(context) => match user::get_user_info(self, request, context).await {
+                Ok(response) => Ok(response),
+                Err(error) => Err(error.into()),
+            },
+            Err(error) => Err(error.into()),
+        }
     }
 
     #[instrument(skip_all)]
@@ -320,7 +321,97 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context {
         &self,
         request: Request<DataExportRequest>,
     ) -> std::result::Result<Response<DataExportResponse>, Status> {
-        handler!(export::export_data, self, request, Endpoint::Export, Permission::Read)
+        handler!(
+            export::export_data,
+            self,
+            request,
+            Endpoint::Export { EndpointScopeSelector::Multiple(request.get_ref().targets.iter().map(|target| Cow::Borrowed(target.as_str())).collect()) },
+            Permission::Read
+        )
+    }
+
+    #[instrument(skip_all)]
+    async fn create_resource_authorization(
+        &self,
+        request: Request<CreateResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<ResourceAuthorizationList>, Status> {
+        handler!(
+            authorization::create_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::Write
+        )
+    }
+
+    #[instrument(skip_all)]
+    async fn get_resource_authorization(
+        &self,
+        request: Request<GetResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
+        handler!(
+            authorization::get_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::Read
+        )
+    }
+
+    #[instrument(skip_all)]
+    async fn get_resource_authorizations(
+        &self,
+        request: Request<GetResourceAuthorizationsRequest>,
+    ) -> std::result::Result<Response<ResourceAuthorizationPage>, Status> {
+        handler!(
+            authorization::get_resource_authorizations,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::List
+        )
+    }
+
+    #[instrument(skip_all)]
+    async fn update_resource_authorization(
+        &self,
+        request: Request<UpdateResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<ProtoResourceAuthorization>, Status> {
+        handler!(
+            authorization::update_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::Write
+        )
+    }
+
+    #[instrument(skip_all)]
+    async fn delete_resource_authorization(
+        &self,
+        request: Request<DeleteResourceAuthorizationRequest>,
+    ) -> std::result::Result<Response<()>, Status> {
+        handler!(
+            authorization::delete_resource_authorization,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::Write
+        )
+    }
+
+    #[instrument(skip_all)]
+    async fn export_resource_authorizations(
+        &self,
+        request: Request<ExportResourceAuthorizationsRequest>,
+    ) -> std::result::Result<Response<ResourceAuthorizationExportResponse>, Status> {
+        handler!(
+            authorization::export_resource_authorizations,
+            self,
+            request,
+            Endpoint::Authorize { None },
+            Permission::List
+        )
     }
 }
 

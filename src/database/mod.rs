@@ -119,15 +119,18 @@ macro_rules! database_configuration {
                             Self::$ident(config) => {
                                 let url = config.to_url($scheme);
 
-                                let retry_strategy = FibonacciBackoff::from_millis(500)
+                                let retry_strategy = FibonacciBackoff::from_millis(5000)
                                     .map(jitter)
                                     .take(5);
 
-                                Retry::spawn(retry_strategy.clone(), || async {
+                                Retry::spawn(retry_strategy, || async {
                                     match connection.init($driver {}, url.as_str()) {
-                                        Ok(result) => Ok(result),
+                                        Ok(_) => {
+                                            // check wether the connection actually works
+                                            connection.query("SELECT 1", vec![]).await
+                                        },
                                         Err(error) => {
-                                            error!("Failed to establish DatabaseConnection, retrying in {}s", retry_strategy.clone().next().unwrap().as_secs());
+                                            error!("Failed to establish DatabaseConnection");
                                             error!("{}", error);
 
                                             Err(error)
@@ -194,12 +197,8 @@ database_configuration!(
 macro_rules! database_request {
     ($expr: expr, $title: expr) => {{
         let span = info_span!(concat!("Database request: ", $title));
-        
-        async  {
-            $expr
-        }
-        .instrument(span)
-        .await
+
+        async { $expr }.instrument(span).await
     }};
 }
 

@@ -4,7 +4,6 @@ package feedback_fusion_v1;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/struct.proto";
 
 // uses oidc authentication
 service FeedbackFusionV1 {
@@ -29,6 +28,13 @@ service FeedbackFusionV1 {
   rpc GetUserInfo(google.protobuf.Empty) returns (UserInfoResponse);
 
   rpc ExportData(DataExportRequest) returns (DataExportResponse);
+
+  rpc CreateResourceAuthorization(CreateResourceAuthorizationRequest) returns (ResourceAuthorizationList);
+  rpc GetResourceAuthorizations(GetResourceAuthorizationsRequest) returns (ResourceAuthorizationPage);
+  rpc GetResourceAuthorization(GetResourceAuthorizationRequest) returns (ResourceAuthorization);
+  rpc UpdateResourceAuthorization(UpdateResourceAuthorizationRequest) returns (ResourceAuthorization);
+  rpc DeleteResourceAuthorization(DeleteResourceAuthorizationRequest) returns (google.protobuf.Empty);
+  rpc ExportResourceAuthorizations(ExportResourceAuthorizationsRequest) returns (ResourceAuthorizationExportResponse);
 }
 
 // does not use oidc authentication
@@ -305,5 +311,94 @@ message DataExportRequest {
 }
 
 message DataExportResponse {
+  string export = 1;
+}
+
+enum ResourceKind {
+  RESOURCE_TARGET = 0;
+  RESOURCE_PROMPT = 1;
+  RESOURCE_FIELD = 2;
+  RESOURCE_EXPORT = 3;
+  RESOURCE_AUTHORIZE = 4;
+  RESOURCE_RESPONSE = 5;
+}
+
+enum AuthorizationGrant {
+  WRITE = 0;
+  READ = 1;
+  List = 2;
+  All = 3;
+}
+
+enum AuthorizationType {
+  TYPE_SCOPE = 0;
+  TYPE_GROUP = 1;
+  TYPE_SUBJECT = 2;
+}
+
+message ResourceAuthorizationData {
+  AuthorizationType type = 1;
+  repeated AuthorizationGrant grant = 2;
+  repeated string values = 3;
+}
+
+message CreateResourceAuthorizationRequest {
+  ResourceKind resource_kind = 2;
+  repeated string resource_id = 3;
+  ResourceAuthorizationData authorization_data = 4;
+}
+
+message GetResourceAuthorizationsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  optional string value = 3;
+  optional AuthorizationType authorization_type = 4;
+}
+
+message ResourceAuthorization {
+  string id = 1;
+  ResourceKind resource_kind = 2;
+  optional string resource_id = 3;
+  AuthorizationType authorization_type = 4;
+  AuthorizationGrant authorization_grant = 5;
+  string value = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message ResourceAuthorizationList {
+  repeated ResourceAuthorization authorizations = 1;
+}
+
+message ResourceAuthorizationPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated ResourceAuthorization authorizations = 5;
+}
+
+message UpdateResourceAuthorizationRequest {
+  string id = 1;
+  optional string resource_id = 2;
+  optional AuthorizationType authorization_type = 3;
+  optional AuthorizationGrant authorization_grant = 4;
+  optional string value = 5;
+}
+
+message GetResourceAuthorizationRequest {
+  string id = 1;
+}
+
+message DeleteResourceAuthorizationRequest {
+  string id = 1;
+}
+
+message ExportResourceAuthorizationsRequest {
+  repeated string ids = 1;
+}
+
+message ResourceAuthorizationExportResponse {
   string export = 1;
 }

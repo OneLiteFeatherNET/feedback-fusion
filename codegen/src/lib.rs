@@ -190,13 +190,12 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
                 .set_certificate(config.certificate().as_ref().unwrap().as_str())
                 .set_space(config.space())
                 .set_model(config.model())
-                .set_refresh({})
-                .set_lifetime(std::time::Duration::from_secs({}))
+                .set_refresh({refresh})
+                .set_lifetime(std::time::Duration::from_secs({ttl}))
                 .build()
                 .await
                 .unwrap()
-            }}\"",
-            refresh, ttl
+            }}\""
         )
         .as_str(),
     )
@@ -222,13 +221,12 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
                 )
                 .set_space(config.space())
                 .set_model(config.model())
-                .set_refresh({})
-                .set_lifetime(std::time::Duration::from_secs({}))
+                .set_refresh({refresh})
+                .set_lifetime(std::time::Duration::from_secs({ttl}))
                 .build()
                 .await
                 .unwrap()
-            }}\"",
-            refresh, ttl
+            }}\""
         )
         .as_str(),
     )

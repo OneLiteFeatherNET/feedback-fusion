@@ -8,6 +8,7 @@
     - [CheckboxResponse](#feedback_fusion_v1-CheckboxResponse)
     - [CreateFieldRequest](#feedback_fusion_v1-CreateFieldRequest)
     - [CreatePromptRequest](#feedback_fusion_v1-CreatePromptRequest)
+    - [CreateResourceAuthorizationRequest](#feedback_fusion_v1-CreateResourceAuthorizationRequest)
     - [CreateResponsesRequest](#feedback_fusion_v1-CreateResponsesRequest)
     - [CreateResponsesRequest.DataEntry](#feedback_fusion_v1-CreateResponsesRequest-DataEntry)
     - [CreateTargetRequest](#feedback_fusion_v1-CreateTargetRequest)
@@ -15,7 +16,9 @@
     - [DataExportResponse](#feedback_fusion_v1-DataExportResponse)
     - [DeleteFieldRequest](#feedback_fusion_v1-DeleteFieldRequest)
     - [DeletePromptRequest](#feedback_fusion_v1-DeletePromptRequest)
+    - [DeleteResourceAuthorizationRequest](#feedback_fusion_v1-DeleteResourceAuthorizationRequest)
     - [DeleteTargetRequest](#feedback_fusion_v1-DeleteTargetRequest)
+    - [ExportResourceAuthorizationsRequest](#feedback_fusion_v1-ExportResourceAuthorizationsRequest)
     - [Field](#feedback_fusion_v1-Field)
     - [FieldOptions](#feedback_fusion_v1-FieldOptions)
     - [FieldPage](#feedback_fusion_v1-FieldPage)
@@ -24,6 +27,8 @@
     - [GetFieldsRequest](#feedback_fusion_v1-GetFieldsRequest)
     - [GetPromptRequest](#feedback_fusion_v1-GetPromptRequest)
     - [GetPromptsRequest](#feedback_fusion_v1-GetPromptsRequest)
+    - [GetResourceAuthorizationRequest](#feedback_fusion_v1-GetResourceAuthorizationRequest)
+    - [GetResourceAuthorizationsRequest](#feedback_fusion_v1-GetResourceAuthorizationsRequest)
     - [GetResponsesRequest](#feedback_fusion_v1-GetResponsesRequest)
     - [GetTargetRequest](#feedback_fusion_v1-GetTargetRequest)
     - [GetTargetsRequest](#feedback_fusion_v1-GetTargetsRequest)
@@ -36,6 +41,11 @@
     - [RangeResponse](#feedback_fusion_v1-RangeResponse)
     - [RatingOptions](#feedback_fusion_v1-RatingOptions)
     - [RatingResponse](#feedback_fusion_v1-RatingResponse)
+    - [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization)
+    - [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData)
+    - [ResourceAuthorizationExportResponse](#feedback_fusion_v1-ResourceAuthorizationExportResponse)
+    - [ResourceAuthorizationList](#feedback_fusion_v1-ResourceAuthorizationList)
+    - [ResourceAuthorizationPage](#feedback_fusion_v1-ResourceAuthorizationPage)
     - [ResponseData](#feedback_fusion_v1-ResponseData)
     - [ResponsePage](#feedback_fusion_v1-ResponsePage)
     - [ResponsePage.DataEntry](#feedback_fusion_v1-ResponsePage-DataEntry)
@@ -47,12 +57,16 @@
     - [TextResponse](#feedback_fusion_v1-TextResponse)
     - [UpdateFieldRequest](#feedback_fusion_v1-UpdateFieldRequest)
     - [UpdatePromptRequest](#feedback_fusion_v1-UpdatePromptRequest)
+    - [UpdateResourceAuthorizationRequest](#feedback_fusion_v1-UpdateResourceAuthorizationRequest)
     - [UpdateTargetRequest](#feedback_fusion_v1-UpdateTargetRequest)
     - [UserInfoResponse](#feedback_fusion_v1-UserInfoResponse)
     - [UserInfoResponse.PermissionsEntry](#feedback_fusion_v1-UserInfoResponse-PermissionsEntry)
   
+    - [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant)
+    - [AuthorizationType](#feedback_fusion_v1-AuthorizationType)
     - [CheckboxStyle](#feedback_fusion_v1-CheckboxStyle)
     - [FieldType](#feedback_fusion_v1-FieldType)
+    - [ResourceKind](#feedback_fusion_v1-ResourceKind)
   
     - [FeedbackFusionV1](#feedback_fusion_v1-FeedbackFusionV1)
     - [PublicFeedbackFusionV1](#feedback_fusion_v1-PublicFeedbackFusionV1)
@@ -130,6 +144,23 @@
 | title | [string](#string) |  |  |
 | description | [string](#string) |  |  |
 | active | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-CreateResourceAuthorizationRequest"></a>
+
+### CreateResourceAuthorizationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| resource_kind | [ResourceKind](#feedback_fusion_v1-ResourceKind) |  |  |
+| resource_id | [string](#string) | repeated |  |
+| authorization_data | [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData) |  |  |
 
 
 
@@ -244,6 +275,21 @@
 
 
 
+<a name="feedback_fusion_v1-DeleteResourceAuthorizationRequest"></a>
+
+### DeleteResourceAuthorizationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="feedback_fusion_v1-DeleteTargetRequest"></a>
 
 ### DeleteTargetRequest
@@ -253,6 +299,21 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | id | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ExportResourceAuthorizationsRequest"></a>
+
+### ExportResourceAuthorizationsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ids | [string](#string) | repeated |  |
 
 
 
@@ -396,6 +457,39 @@
 | page_token | [int32](#int32) |  |  |
 | page_size | [int32](#int32) |  |  |
 | target | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-GetResourceAuthorizationRequest"></a>
+
+### GetResourceAuthorizationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-GetResourceAuthorizationsRequest"></a>
+
+### GetResourceAuthorizationsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| value | [string](#string) | optional |  |
+| authorization_type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) | optional |  |
 
 
 
@@ -602,6 +696,94 @@
 
 
 
+<a name="feedback_fusion_v1-ResourceAuthorization"></a>
+
+### ResourceAuthorization
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| resource_kind | [ResourceKind](#feedback_fusion_v1-ResourceKind) |  |  |
+| resource_id | [string](#string) | optional |  |
+| authorization_type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) |  |  |
+| authorization_grant | [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant) |  |  |
+| value | [string](#string) |  |  |
+| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationData"></a>
+
+### ResourceAuthorizationData
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) |  |  |
+| grant | [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant) | repeated |  |
+| values | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationExportResponse"></a>
+
+### ResourceAuthorizationExportResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| export | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationList"></a>
+
+### ResourceAuthorizationList
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| authorizations | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationPage"></a>
+
+### ResourceAuthorizationPage
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| next_page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| total | [int32](#int32) |  |  |
+| authorizations | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) | repeated |  |
+
+
+
+
+
+
 <a name="feedback_fusion_v1-ResponseData"></a>
 
 ### ResponseData
@@ -794,6 +976,25 @@
 
 
 
+<a name="feedback_fusion_v1-UpdateResourceAuthorizationRequest"></a>
+
+### UpdateResourceAuthorizationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| resource_id | [string](#string) | optional |  |
+| authorization_type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) | optional |  |
+| authorization_grant | [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant) | optional |  |
+| value | [string](#string) | optional |  |
+
+
+
+
+
+
 <a name="feedback_fusion_v1-UpdateTargetRequest"></a>
 
 ### UpdateTargetRequest
@@ -844,6 +1045,33 @@
  
 
 
+<a name="feedback_fusion_v1-AuthorizationGrant"></a>
+
+### AuthorizationGrant
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| WRITE | 0 |  |
+| READ | 1 |  |
+| List | 2 |  |
+| All | 3 |  |
+
+
+
+<a name="feedback_fusion_v1-AuthorizationType"></a>
+
+### AuthorizationType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TYPE_SCOPE | 0 |  |
+| TYPE_GROUP | 1 |  |
+| TYPE_SUBJECT | 2 |  |
+
+
+
 <a name="feedback_fusion_v1-CheckboxStyle"></a>
 
 ### CheckboxStyle
@@ -869,6 +1097,22 @@
 | SELECTION | 3 |  |
 | RANGE | 4 |  |
 | NUMBER | 5 |  |
+
+
+
+<a name="feedback_fusion_v1-ResourceKind"></a>
+
+### ResourceKind
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| RESOURCE_TARGET | 0 |  |
+| RESOURCE_PROMPT | 1 |  |
+| RESOURCE_FIELD | 2 |  |
+| RESOURCE_EXPORT | 3 |  |
+| RESOURCE_AUTHORIZE | 4 |  |
+| RESOURCE_RESPONSE | 5 |  |
 
 
  
@@ -899,6 +1143,12 @@ uses oidc authentication
 | GetResponses | [GetResponsesRequest](#feedback_fusion_v1-GetResponsesRequest) | [ResponsePage](#feedback_fusion_v1-ResponsePage) |  |
 | GetUserInfo | [.google.protobuf.Empty](#google-protobuf-Empty) | [UserInfoResponse](#feedback_fusion_v1-UserInfoResponse) |  |
 | ExportData | [DataExportRequest](#feedback_fusion_v1-DataExportRequest) | [DataExportResponse](#feedback_fusion_v1-DataExportResponse) |  |
+| CreateResourceAuthorization | [CreateResourceAuthorizationRequest](#feedback_fusion_v1-CreateResourceAuthorizationRequest) | [ResourceAuthorizationList](#feedback_fusion_v1-ResourceAuthorizationList) |  |
+| GetResourceAuthorizations | [GetResourceAuthorizationsRequest](#feedback_fusion_v1-GetResourceAuthorizationsRequest) | [ResourceAuthorizationPage](#feedback_fusion_v1-ResourceAuthorizationPage) |  |
+| GetResourceAuthorization | [GetResourceAuthorizationRequest](#feedback_fusion_v1-GetResourceAuthorizationRequest) | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) |  |
+| UpdateResourceAuthorization | [UpdateResourceAuthorizationRequest](#feedback_fusion_v1-UpdateResourceAuthorizationRequest) | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) |  |
+| DeleteResourceAuthorization | [DeleteResourceAuthorizationRequest](#feedback_fusion_v1-DeleteResourceAuthorizationRequest) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
+| ExportResourceAuthorizations | [ExportResourceAuthorizationsRequest](#feedback_fusion_v1-ExportResourceAuthorizationsRequest) | [ResourceAuthorizationExportResponse](#feedback_fusion_v1-ResourceAuthorizationExportResponse) |  |
 
 
 <a name="feedback_fusion_v1-PublicFeedbackFusionV1"></a>

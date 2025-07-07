@@ -21,10 +21,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use opentelemetry::{global, trace::TracerProvider, KeyValue};
+use opentelemetry::{KeyValue, global, trace::TracerProvider};
 use opentelemetry_http::{HeaderExtractor, Request};
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
+use opentelemetry_sdk::{Resource, propagation::TraceContextPropagator};
 use opentelemetry_semantic_conventions::resource::SERVICE_NAME;
 use tower_http::{
     classify::{GrpcErrorsAsFailures, SharedClassifier},
@@ -35,7 +35,8 @@ use tracing_opentelemetry::{OpenTelemetryLayer, OpenTelemetrySpanExt};
 use tracing_subscriber::layer::SubscriberExt;
 
 lazy_static! {
-    static ref HEADERS_TO_KEEP: Vec<&'static str> = vec!["traceparent", "x-request-id", "user-agent"];
+    static ref HEADERS_TO_KEEP: Vec<&'static str> =
+        vec!["traceparent", "x-request-id", "user-agent"];
 }
 
 pub fn init_tracing() {
@@ -78,15 +79,13 @@ pub struct MakeFeedbackFusionSpan;
 
 impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
     fn make_span(&mut self, request: &Request<B>) -> Span {
-        let span = if request.uri().path().contains("grpc.health.v1.Health/Check") {
+        if request.uri().path().contains("grpc.health.v1.Health/Check") {
             tracing::debug_span!("HealthCheck")
         } else {
             let headers = request
                 .headers()
                 .iter()
-                .filter(|(key, _)| {
-                    HEADERS_TO_KEEP.contains(&key.as_str()) 
-                })
+                .filter(|(key, _)| HEADERS_TO_KEEP.contains(&key.as_str()))
                 .collect_vec();
 
             let span = tracing::info_span!(
@@ -94,7 +93,8 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
                 host = %request.uri().host().unwrap_or_default(),
                 path = %request.uri().path(),
                 headers = ?headers,
-                version = ?request.version()
+                version = ?request.version(),
+                request_id = nanoid::nanoid!()
             );
 
             // try to extract the context
@@ -104,9 +104,7 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
             span.set_parent(context);
 
             span
-        };
-
-        span
+        }
     }
 }
 

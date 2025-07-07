@@ -29,19 +29,23 @@ If you use the default provided image it is automatically enabled.
 
 #### Values
 
-```yaml
-cache:
-  skytable:
-    host: "skytable.example.com"
-    port: 2003
-    certificate: |
-      -----BEGIN CERTIFICATE-----
-      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
-      -----END CERTIFICATE-----
-    username: "skytable_user"
-    password: "skytable_password"
-    space: "cache"
-    model: "feedbackfusion"
+```hcl
+cache = {
+  skytable = {
+    host        = "skytable.example.com"
+    port        = 2003
+    certificate = <<-EOT
+-----BEGIN CERTIFICATE-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END CERTIFICATE-----
+EOT
+    username    = "skytable_user"
+    password    = "skytable_password"
+    space       = "cache"
+    model       = "feedbackfusion"
+  }
+}
+
 ```
 
 ##### Reference

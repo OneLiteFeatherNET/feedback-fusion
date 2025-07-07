@@ -45,3 +45,20 @@ CREATE TABLE IF NOT EXISTS field_response (
   FOREIGN KEY (field) REFERENCES field(id)
 );
 
+CREATE TABLE IF NOT EXISTS oidc_user (
+  id          VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
+  username    VARCHAR(255) NOT NULL,
+  updated_at  TIMESTAMP(3),
+  created_at  TIMESTAMP(3)
+);
+
+CREATE TABLE IF NOT EXISTS resource_authorization (
+  id                  VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
+  resource_kind       VARCHAR(255) NOT NULL,
+  resource_id         VARCHAR(32) NOT NULL,
+  authorization_type  VARCHAR(32) NOT NULL,
+  authorization_grant  VARCHAR(32) NOT NULL,
+  authorization_value VARCHAR(32) NOT NULL,
+  updated_at  TIMESTAMP(3),
+  created_at  TIMESTAMP(3)
+);

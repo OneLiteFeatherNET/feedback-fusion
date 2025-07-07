@@ -33,7 +33,7 @@ use chrono::Utc;
 use feedback_fusion_codegen::dynamic_cache;
 
 #[cfg(feature = "caching-skytable")]
-use serde::{de::DeserializeOwned, Serialize};
+use gxhash::GxHasher;
 #[cfg(feature = "caching-skytable")]
 use skytable::{
     aio::TcpConnection,
@@ -41,6 +41,8 @@ use skytable::{
     query, ClientResult, Pipeline, Query, Response,
 };
 
+#[cfg(feature = "caching-skytable")]
+use std::hash::{Hash, Hasher};
 #[cfg(feature = "caching-skytable")]
 use std::{
     fmt::{Debug, Display},
@@ -54,6 +56,15 @@ use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncWrite};
 #[cfg(feature = "caching-skytable")]
 use tracing::{instrument, Instrument};
+
+#[cfg(feature = "caching-skytable")]
+#[instrument(skip_all)]
+pub fn derive_cache_key<K: Hash>(k: &K) -> String {
+    let mut hasher = GxHasher::default();
+    k.hash(&mut hasher);
+
+    hasher.finish().to_string()
+}
 
 // may publish this as crate or submit as pr for cached
 #[cfg(feature = "caching-skytable")]
@@ -73,7 +84,7 @@ pub struct SkytableCacheBuilder<'a, K, V> {
 impl<'a, K, V> SkytableCacheBuilder<'a, K, V>
 where
     K: Display,
-    V: Serialize + DeserializeOwned,
+    V: Encode + Decode,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -152,8 +163,8 @@ pub struct SkytableTlsCacheBuilder<'a, K, V> {
 #[cfg(feature = "caching-skytable")]
 impl<'a, K, V> SkytableTlsCacheBuilder<'a, K, V>
 where
-    K: Display,
-    V: Serialize + DeserializeOwned,
+    K: Hash,
+    V: Encode + Decode,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -229,7 +240,9 @@ pub enum SkytableCacheError {
     #[error(transparent)]
     SkytableError(#[from] skytable::error::Error),
     #[error(transparent)]
-    BincodeError(#[from] bincode::Error),
+    EncodeError(#[from] bincode::error::EncodeError),
+    #[error(transparent)]
+    DecodeError(#[from] bincode::error::DecodeError),
     #[error("{0}")]
     PoolError(String),
 }
@@ -240,7 +253,7 @@ where
     E: Debug,
 {
     fn from(value: bb8::RunError<E>) -> Self {
-        Self::PoolError(format!("{:?}", value))
+        Self::PoolError(format!("{value:?}"))
     }
 }
 
@@ -289,7 +302,7 @@ where
                 self.space
             )))
             .add(&query!(format!(
-                "CREATE MODEL IF NOT EXISTS {}.{}(ckey: string, cvalue: binary, ttl: sint64)",
+                "CREATE MODEL IF NOT EXISTS {}.{}(primary ckey: string, cvalue: binary, ttl: sint64)",
                 self.space, self.model
             )));
         connection.execute_pipeline(&pipeline).await.unwrap();
@@ -303,19 +316,20 @@ where
     S: AsyncRead + AsyncWrite + Send + Sync + Unpin,
     I: DerefMut<Target = TcpConnection<S>> + Send + Sync,
     C: ManageConnection<Connection = I> + Send + Sync,
-    K: Display + Send + Sync,
-    V: Serialize + DeserializeOwned + Send + Sync,
+    K: Hash + std::fmt::Debug + Send + Sync,
+    V: Encode + Decode + Send + Sync,
 {
     type Error = SkytableCacheError;
 
-    #[instrument(skip_all)]
+    #[instrument(skip(self))]
     async fn cache_get(&self, k: &K) -> std::result::Result<Option<V>, Self::Error> {
         let mut connection = self.pool.get().await?;
+
+        let query = format!("select * from {} where ckey = ?", self.build_model());
+        debug!("Skytable Query: {}", &query);
+
         let response: ClientResult<CachedSkytableValue> = connection
-            .query_parse(&query!(
-                format!("select * from {} where ckey = ?", self.build_model()).as_str(),
-                k.to_string()
-            ))
+            .query_parse(&query!(query.as_str(), derive_cache_key(k)))
             .await;
 
         match response {
@@ -325,17 +339,22 @@ where
                 } else {
                     if self.refresh {
                         let new_ttl = Utc::now().timestamp() + self.seconds as i64;
+                        let query =
+                            format!("update {} set ttl = ? where ckey = ?", self.build_model());
+                        debug!("Skytable Query: {}", &query);
+
                         connection
-                            .query(&query!(
-                                format!("update {} set ttl = ? where ckey = ?", self.build_model())
-                                    .as_str(),
-                                new_ttl,
-                                k.to_string()
-                            ))
+                            .query(&query!(query.as_str(), new_ttl, derive_cache_key(k)))
                             .await?;
                     }
 
-                    Ok(bincode::deserialize(response.cvalue.as_slice())?)
+                    Ok(Some(
+                        bincode::decode_from_slice(
+                            response.cvalue.as_slice(),
+                            bincode::config::standard(),
+                        )?
+                        .0,
+                    ))
                 }
             }
             Err(error) => match error {
@@ -345,43 +364,47 @@ where
         }
     }
 
-    #[instrument(skip_all)]
+    #[instrument(skip(self, v))]
     async fn cache_set(&self, k: K, v: V) -> std::result::Result<Option<V>, Self::Error> {
-        let encoded = bincode::serialize(&v)?;
+        let encoded = bincode::encode_to_vec(&v, bincode::config::standard())?;
         let ttl = Utc::now().timestamp() + self.seconds as i64;
-        let value = CachedSkytableValue::new(k.to_string(), encoded, ttl);
+        let value = CachedSkytableValue::new(derive_cache_key(&k), encoded, ttl);
+
+        let query = format!("insert into {}(?, ?, ?)", self.build_model());
+        debug!("Skytable Query: {}", &query);
 
         self.pool
             .get()
             .await?
-            .query(&query!(
-                format!("insert into {}(?, ?, ?)", self.build_model()).as_str(),
-                value
-            ))
+            .query(&query!(query.as_str(), value))
             .await?;
 
         Ok(Some(v))
     }
 
+    #[instrument(skip(self))]
     async fn cache_remove(&self, k: &K) -> std::result::Result<Option<V>, Self::Error> {
         let mut connection = self.pool.get().await?;
+        let key = derive_cache_key(&k);
 
-        let response: ClientResult<CachedSkytableValue> = connection
-            .query_parse(&query!(
-                format!("select * from {} where key = ?", self.build_model()).as_str(),
-                k.to_string()
-            ))
-            .await;
+        let query = format!("select * from {} where key = ?", self.build_model());
 
-        connection
-            .query(&query!(
-                format!("delete from {} where key = ?", self.build_model()).as_str(),
-                k.to_string()
-            ))
-            .await?;
+        debug!("Skytable Query: {}", &query);
+
+        let response: ClientResult<CachedSkytableValue> =
+            connection.query_parse(&query!(query.as_str(), &key)).await;
+
+        let query = format!("delete from {} where key = ?", self.build_model());
+        debug!("Skytable Query: {}", &query);
+
+        connection.query(&query!(query.as_str(), key)).await?;
 
         match response {
-            Ok(response) => Ok(bincode::deserialize(response.cvalue.as_slice())?),
+            Ok(response) => Ok(bincode::decode_from_slice(
+                response.cvalue.as_slice(),
+                bincode::config::standard(),
+            )?
+            .0),
             Err(error) => match error {
                 // 111 = NotFound https://docs.skytable.io/protocol/errors
                 skytable::error::Error::ServerError(111) => Ok(None),
@@ -401,13 +424,14 @@ where
 macro_rules! invalidate {
     ($cache: ident, $key: expr) => {
         paste! {{
-            let key = async { $key }.await;    
+                let key = async { $key }.await;
 
-            tokio::spawn(async move {
-                [<invalidate_ $cache>](key).await.unwrap();
-            });
+                tokio::spawn(async move {
+                    [<invalidate_ $cache>](key).await.unwrap();
+                });
+            }
         }
-    }};
+    };
 }
 
 #[dynamic_cache(ttl = "300", key = r#"format!('prompt-{}', id)"#)]

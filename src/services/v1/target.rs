@@ -25,13 +25,17 @@ use feedback_fusion_common::proto::{
     Target as ProtoTarget, TargetPage, UpdateTargetRequest,
 };
 
-use crate::{database::schema::feedback::Target, prelude::*};
+use crate::{
+    database::schema::{feedback::Target, user::UserContext},
+    prelude::*,
+};
 
 use super::FeedbackFusionV1Context;
 
 pub async fn create_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<CreateTargetRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
@@ -49,8 +53,9 @@ pub async fn create_target(
 }
 
 pub async fn get_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<GetTargetRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     let connection = context.connection();
@@ -68,8 +73,9 @@ pub async fn get_target(
 }
 
 pub async fn get_targets(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<GetTargetsRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<TargetPage>> {
     let data = request.into_inner();
     let page_request = data.page_request();
@@ -95,8 +101,9 @@ pub async fn get_targets(
 }
 
 pub async fn update_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdateTargetRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
@@ -110,17 +117,24 @@ pub async fn update_target(
     target.set_name(data.name.unwrap_or(target.name().clone()));
     target.set_description(data.description.or(target.description().clone()));
 
-    database_request!(Target::update_by_column(connection, &target, "id").await, "Update target")?;
+    database_request!(
+        Target::update_by_column(connection, &target, "id").await,
+        "Update target"
+    )?;
     Ok(Response::new(target.into()))
 }
 
 pub async fn delete_target(
-    context: &FeedbackFusionV1Context,
+    context: &FeedbackFusionV1Context<'_>,
     request: Request<DeleteTargetRequest>,
+    _user_context: UserContext,
 ) -> Result<Response<()>> {
     let data = request.into_inner();
     let connection = context.connection();
 
-    database_request!(Target::delete_by_column(connection, "id", data.id.as_str()).await, "Delete target by id")?;
+    database_request!(
+        Target::delete_by_column(connection, "id", data.id.as_str()).await,
+        "Delete target by id"
+    )?;
     Ok(Response::new(()))
 }

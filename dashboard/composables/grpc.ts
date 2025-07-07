@@ -12,7 +12,7 @@ export const useRpcOptions = (): RpcOptions => {
             options.meta = {};
           }
 
-          options.meta["Authorization"] = `Bearer ${user.value!.accessToken!}`;
+          options.meta["Authorization"] = `Bearer ${user.value!.accessToken}`;
           return next(method, input, options);
         },
       },
