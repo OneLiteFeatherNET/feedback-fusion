@@ -2,30 +2,87 @@
 
 ## OIDC Configuration
 
-```yaml
-oidc:
-  provider: "https://example.com/oidc"
-  audience: "feedback-fusion"
-  issuer: "https://issuer.example.com"
-  group_claim: "groups"
-  scopes:
-    - name: "ApiAccess"
-      grants:
-        - endpoint: "*"
-          permissions:
-            - "*"
-    - name: "ReadAccess"
-      grants:
-        - endpoint: "*"
-          permissions:
-            - "Read"
-            - "List"
-  groups:
-    - name: "admin"
-      grants: 
-        - endpoint: "*"
-          permissions:
-            - "*"
+```hcl
+oidc = {
+  provider      = "https://example.com/oidc"
+  audience      = "feedback-fusion"
+  issuer        = "https://issuer.example.com"
+  group_claim   = "groups"
+  scopes = [
+    {
+      # thats the name of the scope
+      name = "ApiAccess"
+      grants = [
+        {
+          endpoint = {
+            # the first element here defines which ID's of resources to target, the second one defined the endpoints
+            Custom = ["*", "All"]
+          }
+          permissions = ["All"]
+        }
+      ]
+    },
+    {
+      name = "ReadAccess"
+      grants = [
+        {
+          endpoint = {
+            # the first element here defines which ID's of resources to target, the second one defined the endpoints
+            Custom = ["*", "All"]
+          }
+          permissions = ["Read", "List"]
+        }
+      ]
+    }
+  ]
+  groups = [
+    {
+      # thats the name of the group
+      name = "admin"
+      grants = [
+        {
+          endpoint = {
+            # the first element here defines which ID's of resources to target, the second one defined the endpoints
+            Custom = ["*", "All"]
+          }
+          permissions = ["All"]
+        }
+      ]
+    },
+    {
+      name = "examples"
+      grants = [
+        {
+          endpoint = {
+            Target = {
+              # affects targets with the exact id 'Some-id'
+              Specific = "Some-id"
+            }
+          }
+          permissions = ["All"]
+        },
+        {
+          endpoint = {
+            Target = {
+              # Affects targets that match the wildcard 'Some*id' e.g 'Somefooid' or 'Someid'
+              Wildcard = "Some*id"
+            }
+          }
+          permissions = ["All"]
+        },
+        {
+          endpoint = {
+            Target = {
+              # affects the listed ids
+              Multiple = ["foo", "bar"]
+            }
+          }
+          permissions = ["All"]
+        },
+      ]
+    }
+  ]
+}
 ```
 
 ### OIDC Configuration Reference
@@ -41,15 +98,16 @@ oidc:
 
 ### Available Endpoints and Permissions
 
-- **Endpoints**: "Target", "Prompt", "Field", "Response", "Export"
-- **Permissions**: "Read", "Write", "List"
+- **Endpoints**: "Target", "Prompt", "Field", "Response", "Export", "Authorize"
+- **Permissions**: "Read", "Write", "List", "All"
 
 ## OTLP Configuration
 
-```yaml
-otlp:
-  endpoint: "https://otlp.example.com"
-  service_name: "feedback-fusion"
+```hcl
+otlp = {
+  endpoint     = "https://otlp.example.com"
+  service_name = "feedback-fusion"
+}
 ```
 
 ### OTLP Configuration Reference
@@ -63,13 +121,15 @@ otlp:
 
 ### PostgreSQL
 
-```yaml
-database:
-  postgres:
-    endpoint: "localhost:5432"
-    username: "postgres_user"
-    password: "postgres_password"
-    database: "postgres_db"
+```hcl
+database = {
+  postgres = {
+    endpoint = "localhost:5432"
+    username = "postgres_user"
+    password = "postgres_password"
+    database = "postgres_db"
+  }
+}
 ```
 
 #### PostgreSQL Configuration Reference
@@ -83,13 +143,15 @@ database:
 
 ### MySQL / MariaDB
 
-```yaml
-database:
-  mysql:
-    endpoint: "localhost:3306"
-    username: "mysql_user"
-    password: "mysql_password"
-    database: "mysql_db"
+```hcl
+database = {
+  mysql = {
+    endpoint = "localhost:3306"
+    username = "mysql_user"
+    password = "mysql_password"
+    database = "mysql_db"
+  }
+}
 ```
 
 #### MySQL / MariaDB Configuration Reference
@@ -103,15 +165,17 @@ database:
 
 ### MSSQL
 
-```yaml
-database:
-  mssql:
-    endpoint: "localhost:1433"
-    username: "mssql_user"
-    password: "mssql_password"
-    database: "mssql_db"
-    encrypt: true
-    trust_server_certificate: true
+```hcl
+database = {
+  mssql = {
+    endpoint                 = "localhost:1433"
+    username                 = "mssql_user"
+    password                 = "mssql_password"
+    database                 = "mssql_db"
+    encrypt                  = true
+    trust_server_certificate = true
+  }
+}
 ```
 
 #### MSSQL Configuration Reference
@@ -128,23 +192,34 @@ database:
 ## Presets 
 
 Example: 
-```yaml 
-preset:
-  targets:
-  - id: target 
-    name: TestTarget 
-    description: A nice Target 
-    prompts:
-      - id: prompt 
-        title: Testprompt 
-        description: A nice Prompt 
-        active: true
-        fields:
-          - id: field1 
-            title: TextField
-            field_type: text 
-            options:
-              type: text
-              lines: 1 
-              placeholder: test
+```hcl
+preset = {
+  targets = [
+    {
+      id          = "target"
+      name        = "TestTarget"
+      description = "A nice Target"
+      prompts = [
+        {
+          id          = "prompt"
+          title       = "Testprompt"
+          description = "A nice Prompt"
+          active      = true
+          fields = [
+            {
+              id         = "field1"
+              title      = "TextField"
+              field_type = "text"
+              options = {
+                type        = "text"
+                lines       = 1
+                placeholder = "test"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
 ```
