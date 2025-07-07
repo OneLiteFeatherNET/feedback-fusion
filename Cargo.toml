@@ -21,7 +21,6 @@ cached = { version = "0.53.0", features = ["async", "proc_macro"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 dashmap = { version = "6.1.0", features = ["rayon"] }
 derivative = "2.2.0"
-educe = "0.6.0"
 envy = "0.4.2"
 futures = "0.3.30"
 getset = "0.1.2"
@@ -51,6 +50,7 @@ rbdc-mysql = { version = "4.5.17", optional = true }
 rbdc-mssql = { version = "4.5.7", optional = true }
 rbs = "4.5.13"
 serde = { version = "1.0.197", features = ["derive"] }
+serde-inline-default = "0.2.3"
 serde_json = "1.0.115"
 serde-this-or-that = { git = "https://github.com/Randoooom/serde-this-or-that.git", branch = "feature/bool-signed" }
 skytable = { version = "0.8.10", optional = true }

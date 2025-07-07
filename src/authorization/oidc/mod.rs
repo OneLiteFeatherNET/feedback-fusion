@@ -28,8 +28,8 @@ use aliri::{
 };
 use aliri_oauth2::Authority;
 use openidconnect::{
-    core::{CoreClient, CoreJwsSigningAlgorithm, CoreProviderMetadata},
     ClientId, IssuerUrl,
+    core::{CoreClient, CoreJwsSigningAlgorithm, CoreProviderMetadata},
 };
 
 use crate::prelude::*;

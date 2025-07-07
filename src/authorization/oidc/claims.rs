@@ -27,8 +27,8 @@ use aliri_clock::UnixTime;
 use aliri_oauth2::{HasScope, Scope};
 
 use serde::{
-    de::{MapAccess, Visitor},
     Deserializer,
+    de::{MapAccess, Visitor},
 };
 
 // we do not know the group claim names during the compile time, therefore we do have to use this
@@ -126,8 +126,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
         let aud = aud.unwrap_or(jwt::Audiences::default());
         let exp = exp.ok_or_else(|| serde::de::Error::missing_field("exp"))?;
         let scope = scope.unwrap_or(Scope::empty());
-        let groups = groups
-            .ok_or_else(|| serde::de::Error::missing_field(CONFIG.oidc().group_claim().as_str()))?;
+        let groups = groups.unwrap_or_default();
 
         Ok(OIDCClaims {
             is_application,

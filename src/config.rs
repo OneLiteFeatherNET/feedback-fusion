@@ -22,8 +22,8 @@
  */
 
 use dashmap::{DashMap, DashSet};
-use educe::Educe;
 use rbatis::executor::Executor;
+use serde_inline_default::serde_inline_default;
 use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
@@ -107,8 +107,8 @@ pub struct CacheConfiguration {
     skytable: Option<SkytableConfiguration>,
 }
 
-#[derive(Deserialize, Debug, Clone, Getters, Educe)]
-#[educe(Default)]
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct SkytableConfiguration {
     host: String,
@@ -116,9 +116,9 @@ pub struct SkytableConfiguration {
     certificate: Option<String>,
     username: String,
     password: String,
-    #[educe(Default = "cache")]
+    #[serde_inline_default("cache".to_owned())]
     space: String,
-    #[educe(Default = "feedbackfusion")]
+    #[serde_inline_default("feedbackfusion".to_owned())]
     model: String,
 }
 
@@ -156,27 +156,27 @@ pub struct AuthorizationMapping<'a> {
     pub grants: Vec<AuthorizationGrants<'a>>,
 }
 
-#[derive(Deserialize, Debug, Clone, Getters, Educe)]
-#[educe(Default)]
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct OIDCConfiguration<'a> {
     issuer: Option<String>,
     provider: String,
     scopes: Vec<AuthorizationMapping<'a>>,
     groups: Vec<AuthorizationMapping<'a>>,
-    #[educe(Default = "feedback-fusion")]
+    #[serde_inline_default("feedback-fusion".to_owned())]
     audience: String,
-    #[educe(Default = "groups")]
+    #[serde_inline_default("groups".to_owned())]
     group_claim: String,
 }
 
-#[derive(Deserialize, Debug, Clone, Getters, Educe)]
-#[educe(Default)]
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct OTLPConfiguration {
     endpoint: String,
-    #[educe(Default = "feedback-fusion")]
-    service_name: String
+    #[serde_inline_default("feedback-fusion".to_owned())]
+    service_name: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
