@@ -22,6 +22,7 @@
  */
 
 use dashmap::{DashMap, DashSet};
+use fluvio::FluvioConfig;
 use rbatis::executor::Executor;
 use serde_inline_default::serde_inline_default;
 use strum_macros::{Display, EnumIter, IntoStaticStr};
@@ -99,6 +100,7 @@ pub struct Config<'a> {
     otlp: Option<OTLPConfiguration>,
     preset: Option<PresetConfig>,
     database: DatabseConfigurationScheme,
+    broker: BrokerConfiguration,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
@@ -177,6 +179,24 @@ pub struct OTLPConfiguration {
     endpoint: String,
     #[serde_inline_default("feedback-fusion".to_owned())]
     service_name: String,
+}
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct GRPCBrokerDriverConfiguration {
+    endpoint: String,
+}
+
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct BrokerConfiguration {
+    fluvio: Option<FluvioConfig>,
+    grpc: Option<GRPCBrokerDriverConfiguration>,
+    #[serde_inline_default(10)]
+    max_batch_size: u8,
+    #[serde_inline_default(1000)]
+    batch_interval: u32,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

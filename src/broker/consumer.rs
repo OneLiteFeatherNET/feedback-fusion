@@ -1,9 +1,9 @@
-//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2025 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
 
-// Copyright (c) 2024 OneLiteFeatherNet
+// Copyright (c) 2025 OneLiteFeatherNet
 
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 //associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,21 +19,3 @@
 //NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-#[cfg(feature = "arbitrary")]
-pub mod tests;
-
-pub mod proto {
-    use validator::Validate;
-    tonic::include_proto!("feedback_fusion_v1");
-    pub const FILE_DESCRIPTOR_SET: &[u8] =
-        tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
-}
-
-pub mod event {
-    tonic::include_proto!("feedback_fusion_event_v1");
-}
-
-pub trait PageRequest {
-    fn page_request(&self) -> rbatis::plugin::page::PageRequest;
-}

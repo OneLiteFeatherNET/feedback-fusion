@@ -22,6 +22,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 dashmap = { version = "6.1.0", features = ["rayon"] }
 derivative = "2.2.0"
 envy = "0.4.2"
+fluvio = "0.50.1"
 futures = "0.3.30"
 getset = "0.1.2"
 gxhash = "3.4.1"
@@ -104,4 +105,4 @@ name = "grpc"
 harness = false
 
 [workspace]
-members = [".", "fuzz", "common", "codegen"]
+members = [".", "fuzz", "common", "codegen", "indexer"]

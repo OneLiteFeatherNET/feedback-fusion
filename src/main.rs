@@ -43,6 +43,7 @@ use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod authorization;
+pub mod broker;
 pub mod cache;
 pub mod config;
 pub mod database;
