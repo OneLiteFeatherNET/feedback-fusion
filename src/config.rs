@@ -22,7 +22,7 @@
  */
 
 use dashmap::{DashMap, DashSet};
-use fluvio::FluvioConfig;
+use fluvio::FluvioClusterConfig;
 use rbatis::executor::Executor;
 use serde_inline_default::serde_inline_default;
 use strum_macros::{Display, EnumIter, IntoStaticStr};
@@ -185,13 +185,22 @@ pub struct OTLPConfiguration {
 #[get = "pub"]
 pub struct GRPCBrokerDriverConfiguration {
     endpoint: String,
+    tls: GRPCBrokerDriverTLSConfiguration,
+}
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct GRPCBrokerDriverTLSConfiguration {
+    key: String,
+    certificate: String,
+    certificate_authority: String,
 }
 
 #[serde_inline_default]
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
 pub struct BrokerConfiguration {
-    fluvio: Option<FluvioConfig>,
+    fluvio: Option<FluvioClusterConfig>,
     grpc: Option<GRPCBrokerDriverConfiguration>,
     #[serde_inline_default(10)]
     max_batch_size: u8,

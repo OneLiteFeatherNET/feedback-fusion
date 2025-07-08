@@ -3,6 +3,16 @@
 
 ## Table of Contents
 
+- [feedback-fusion-event-v1.proto](#feedback-fusion-event-v1-proto)
+    - [Event](#feedback_fusion_event_v1-Event)
+    - [EventBatch](#feedback_fusion_event_v1-EventBatch)
+    - [ResourceModifiedEvent](#feedback_fusion_event_v1-ResourceModifiedEvent)
+  
+    - [ResourceKind](#feedback_fusion_event_v1-ResourceKind)
+    - [ResourceModificationOperation](#feedback_fusion_event_v1-ResourceModificationOperation)
+  
+    - [FeedbackFusionIndexerV1](#feedback_fusion_event_v1-FeedbackFusionIndexerV1)
+  
 - [feedback-fusion-v1.proto](#feedback-fusion-v1-proto)
     - [CheckboxOptions](#feedback_fusion_v1-CheckboxOptions)
     - [CheckboxResponse](#feedback_fusion_v1-CheckboxResponse)
@@ -72,6 +82,107 @@
     - [PublicFeedbackFusionV1](#feedback_fusion_v1-PublicFeedbackFusionV1)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="feedback-fusion-event-v1-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-event-v1.proto
+
+
+
+<a name="feedback_fusion_event_v1-Event"></a>
+
+### Event
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| resource_modified_event | [ResourceModifiedEvent](#feedback_fusion_event_v1-ResourceModifiedEvent) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_event_v1-EventBatch"></a>
+
+### EventBatch
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| events | [Event](#feedback_fusion_event_v1-Event) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_event_v1-ResourceModifiedEvent"></a>
+
+### ResourceModifiedEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| operation | [ResourceModificationOperation](#feedback_fusion_event_v1-ResourceModificationOperation) |  |  |
+| id | [string](#string) |  |  |
+| data | [bytes](#bytes) |  |  |
+
+
+
+
+
+ 
+
+
+<a name="feedback_fusion_event_v1-ResourceKind"></a>
+
+### ResourceKind
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TARGET | 0 |  |
+| PROMPT | 1 |  |
+| FIELD | 2 |  |
+| AUTHORIZATION | 3 |  |
+
+
+
+<a name="feedback_fusion_event_v1-ResourceModificationOperation"></a>
+
+### ResourceModificationOperation
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| CREATE | 0 |  |
+| UPDATE | 1 |  |
+| DELETE | 2 |  |
+
+
+ 
+
+ 
+
+
+<a name="feedback_fusion_event_v1-FeedbackFusionIndexerV1"></a>
+
+### FeedbackFusionIndexerV1
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| SendBatch | [EventBatch](#feedback_fusion_event_v1-EventBatch) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
+
+ 
 
 
 

@@ -20,8 +20,11 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use fluvio::FluvioConfig;
-use tonic::transport::Channel;
+use std::path::Path;
+
+use feedback_fusion_common::event::feedback_fusion_indexer_v1_client::FeedbackFusionIndexerV1Client;
+use fluvio::{Fluvio, FluvioClusterConfig};
+use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tonic_health::pb::{HealthCheckRequest, health_client::HealthClient};
 
 use crate::{config::BrokerConfiguration, prelude::*};
@@ -35,13 +38,15 @@ trait FeedbackFusionBrokerDriver {
     where
         Self: Sized;
 
-    async fn connect(&self) -> Result<()>;
+    async fn connect(&mut self) -> Result<()>;
 }
 
 pub struct FluvioBroker {
-    config: FluvioConfig,
+    config: FluvioClusterConfig,
+    fluvio: Option<Fluvio>,
 }
 
+#[async_trait::async_trait]
 impl FeedbackFusionBrokerDriver for FluvioBroker {
     fn try_from_configuration(config: BrokerConfiguration) -> Result<Self>
     where
@@ -50,6 +55,7 @@ impl FeedbackFusionBrokerDriver for FluvioBroker {
         if let Some(config) = config.fluvio() {
             Ok(Self {
                 config: config.clone(),
+                fluvio: None,
             })
         } else {
             Err(FeedbackFusionError::ConfigurationError(
@@ -57,10 +63,21 @@ impl FeedbackFusionBrokerDriver for FluvioBroker {
             ))
         }
     }
+
+    async fn connect(&mut self) -> Result<()> {
+        let fluvio = Fluvio::connect_with_config(&self.config)
+            .await
+            .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?;
+
+        self.fluvio = Some(fluvio);
+
+        Ok(())
+    }
 }
 
 pub struct GRPCBroker {
     config: GRPCBrokerDriverConfiguration,
+    client: Option<FeedbackFusionIndexerV1Client<Channel>>,
 }
 
 #[async_trait::async_trait]
@@ -70,9 +87,20 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
         Self: Sized,
     {
         if let Some(config) = config.grpc() {
-            Ok(Self {
-                config: config.clone(),
-            })
+            // parse the given paths to the certificate files and verify they exist
+            if Path::new(config.tls().certificate()).is_file()
+                && Path::new(config.tls().key()).is_file()
+                && Path::new(config.tls().certificate_authority()).is_file()
+            {
+                Ok(Self {
+                    config: config.clone(),
+                    client: None,
+                })
+            } else {
+                Err(FeedbackFusionError::ConfigurationError(
+                    "Client certificate does not exist".to_owned(),
+                ))
+            }
         } else {
             Err(FeedbackFusionError::ConfigurationError(
                 "Required grpc broker configuraton missing".to_owned(),
@@ -80,15 +108,35 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
         }
     }
 
-    async fn connect(&self) -> Result<()> {
+    async fn connect(&mut self) -> Result<()> {
+        // parse the given paths to the certificate files and read them
+        let certificate = tokio::fs::read_to_string(self.config.tls().certificate()).await?;
+        let key = tokio::fs::read_to_string(self.config.tls().key()).await?;
+        let certificate_authority =
+            tokio::fs::read_to_string(self.config.tls().certificate_authority()).await?;
+
+        // build the client identity
+        let identity = Identity::from_pem(certificate, key);
+        let certificate = Certificate::from_pem(certificate_authority);
+        let tls_config = ClientTlsConfig::new()
+            .identity(identity)
+            .ca_certificate(certificate);
+
         // try to connect to the health server
         let channel = Channel::from_shared(self.config.endpoint().clone())
+            .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?
+            .tls_config(tls_config)
             .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?
             .connect()
             .await
             .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?;
         let mut health_client = HealthClient::new(channel.clone());
 
+        // check wether the service is reachable
+        info!(
+            "Sending HealthCheckRequest to the gRPC indexer on {}",
+            self.config.endpoint()
+        );
         if health_client
             .check(HealthCheckRequest {
                 service: "FeedbackFusionIndexerV1".to_owned(),
@@ -96,6 +144,10 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
             .await
             .is_ok()
         {
+            let client = FeedbackFusionIndexerV1Client::new(channel);
+            self.client = Some(client);
+            info!("Connected to gRPC indexer");
+
             Ok(())
         } else {
             Err(FeedbackFusionError::ConfigurationError(

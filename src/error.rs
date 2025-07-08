@@ -46,7 +46,9 @@ pub enum FeedbackFusionError {
     #[error("{0}")]
     OIDCError(String),
     #[error(transparent)]
-    HCLError(#[from] hcl::Error)
+    HCLError(#[from] hcl::Error),
+    #[error(transparent)]
+    IoError(#[from] tokio::io::Error),
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {

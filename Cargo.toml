@@ -58,7 +58,7 @@ skytable = { version = "0.8.10", optional = true }
 strum = "0.26.3"
 strum_macros = "0.26.4"
 thiserror = "2.0.0"
-tonic = "0.12.0"
+tonic = { version = "0.12.0", features = ["tls-native-roots"] }
 tonic-health = "0.12.0"
 tonic-reflection = "0.12.0"
 tonic-web = "0.12.0"
