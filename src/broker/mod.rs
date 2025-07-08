@@ -22,8 +22,16 @@
 
 use std::path::Path;
 
-use feedback_fusion_common::event::feedback_fusion_indexer_v1_client::FeedbackFusionIndexerV1Client;
-use fluvio::{Fluvio, FluvioClusterConfig};
+use feedback_fusion_common::event::{
+    Event, EventBatch, feedback_fusion_indexer_v1_client::FeedbackFusionIndexerV1Client,
+};
+use fluvio::{
+    Fluvio, Offset, TopicProducerConfigBuilder, TopicProducerPool,
+    consumer::ConsumerConfigExtBuilder,
+};
+use futures::StreamExt;
+use kanal::AsyncSender;
+use prost::Message;
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tonic_health::pb::{HealthCheckRequest, health_client::HealthClient};
 
@@ -33,17 +41,20 @@ mod consumer;
 mod producer;
 
 #[async_trait::async_trait]
-trait FeedbackFusionBrokerDriver {
+trait FeedbackFusionBrokerDriver: Send + Sync {
     fn try_from_configuration(config: BrokerConfiguration) -> Result<Self>
     where
         Self: Sized;
 
     async fn connect(&mut self) -> Result<()>;
+
+    async fn start_receiver(&mut self, database: DatabaseConnection) -> Result<()>;
 }
 
 pub struct FluvioBroker {
-    config: FluvioClusterConfig,
+    config: FluvioBrokerDriverConfiguration,
     fluvio: Option<Fluvio>,
+    producer: Option<TopicProducerPool>,
 }
 
 #[async_trait::async_trait]
@@ -56,6 +67,7 @@ impl FeedbackFusionBrokerDriver for FluvioBroker {
             Ok(Self {
                 config: config.clone(),
                 fluvio: None,
+                producer: None,
             })
         } else {
             Err(FeedbackFusionError::ConfigurationError(
@@ -65,11 +77,54 @@ impl FeedbackFusionBrokerDriver for FluvioBroker {
     }
 
     async fn connect(&mut self) -> Result<()> {
-        let fluvio = Fluvio::connect_with_config(&self.config)
+        let fluvio = Fluvio::connect_with_config(self.config.fluvio())
             .await
             .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?;
 
+        let producer = fluvio
+            .topic_producer_with_config(
+                self.config.topic(),
+                TopicProducerConfigBuilder::default().build().unwrap(),
+            )
+            .await?;
+
+        self.producer = Some(producer);
         self.fluvio = Some(fluvio);
+
+        Ok(())
+    }
+
+    async fn start_receiver(&mut self, database: DatabaseConnection) -> Result<()> {
+        let mut consumer = self
+            .fluvio
+            .as_ref()
+            .unwrap()
+            .consumer_with_config(
+                ConsumerConfigExtBuilder::default()
+                    .topic(self.config.topic())
+                    .partition(0)
+                    .offset_start(Offset::end())
+                    .build()
+                    .unwrap(),
+            )
+            .await?;
+
+        tokio::spawn(async move {
+            loop {
+                if let Some(event) = consumer.next().await {
+                    match event {
+                        Ok(record) => match EventBatch::decode(record.value()) {
+                            Ok(batch) => consumer::handle_batch(batch, &database).await?,
+                            Err(error) => error!("Error while decoding batch: {error}"),
+                        },
+                        Err(error) => error!("Error while consuming fluvio topic: {error}"),
+                    }
+                }
+            };
+
+            #[allow(unreachable_code)]
+            Ok::<(), FeedbackFusionError>(())
+        });
 
         Ok(())
     }
@@ -155,6 +210,11 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
             ))
         }
     }
+
+    // we don't receive anything with this driver so just exit
+    async fn start_receiver(&mut self, _: DatabaseConnection) -> Result<()> {
+        Ok(())
+    }
 }
 
 pub struct FeedbackFusionBroker {
@@ -183,5 +243,21 @@ impl FeedbackFusionBroker {
         Ok(Self {
             driver: broker_driver,
         })
+    }
+
+    pub async fn start_loop(mut self, database: DatabaseConnection) -> Result<AsyncSender<Event>> {
+        // connect the driver to the srver
+        self.driver.connect().await?;
+
+        // start the receiver
+        self.driver.start_receiver(database).await?;
+
+        // create a new channel so we can send events to the producer
+        let (sender, receiver) = kanal::unbounded_async();
+
+        // start the new dedicated thread for the producer
+        tokio::spawn(async move { producer::start_loop(self, receiver).await });
+
+        Ok(sender)
     }
 }

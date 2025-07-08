@@ -199,8 +199,17 @@ pub struct GRPCBrokerDriverTLSConfiguration {
 #[serde_inline_default]
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
+pub struct FluvioBrokerDriverConfiguration {
+    fluvio: FluvioClusterConfig,
+    #[serde_inline_default("feedback-fusion".to_owned())]
+    topic: String,
+}
+
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
 pub struct BrokerConfiguration {
-    fluvio: Option<FluvioClusterConfig>,
+    fluvio: Option<FluvioBrokerDriverConfiguration>,
     grpc: Option<GRPCBrokerDriverConfiguration>,
     #[serde_inline_default(10)]
     max_batch_size: u8,

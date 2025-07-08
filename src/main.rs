@@ -80,8 +80,7 @@ async fn main() {
 
     // sync the presets
     config::sync_preset(&connection).await.unwrap();
-
-    let (sender, receiver) = kanal::oneshot_async::<()>();
+    let (sender, receiver) = kanal::unbounded_async::<()>();
     tokio::spawn(async move {
         debug!("Constructing health reporter");
         let (mut health_reporter, health_service) = tonic_health::server::health_reporter();

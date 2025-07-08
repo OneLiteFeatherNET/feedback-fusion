@@ -19,3 +19,13 @@
 //NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+use crate::prelude::*;
+use feedback_fusion_common::event::Event;
+use kanal::AsyncReceiver;
+
+use crate::broker::FeedbackFusionBroker;
+
+pub async fn start_loop(broker: FeedbackFusionBroker, receiver: AsyncReceiver<Event>) {
+    loop {}
+}

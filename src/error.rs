@@ -49,6 +49,10 @@ pub enum FeedbackFusionError {
     HCLError(#[from] hcl::Error),
     #[error(transparent)]
     IoError(#[from] tokio::io::Error),
+    #[error(transparent)]
+    FluvioErrorCode(#[from] fluvio::dataplane::link::ErrorCode),
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error)
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {
