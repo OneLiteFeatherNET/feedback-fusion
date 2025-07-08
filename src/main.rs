@@ -25,6 +25,7 @@ use std::time::Duration;
 
 use crate::{
     authorization::oidc::layer::{AuthorizedService, OIDCErrorHandler},
+    broker::FeedbackFusionBroker,
     prelude::*,
     services::v1::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context},
 };
@@ -78,6 +79,10 @@ async fn main() {
     let connection = DatabaseConnection::from(connection);
     info!("Connection to the Database established");
 
+    // start the broker driver
+    let broker = FeedbackFusionBroker::initialize().await.unwrap();
+    let broker_event_sender = broker.start_loop(connection.clone()).await.unwrap();
+
     // sync the presets
     config::sync_preset(&connection).await.unwrap();
     let (sender, receiver) = kanal::unbounded_async::<()>();
@@ -111,6 +116,7 @@ async fn main() {
                 CONFIG.oidc().scopes(),
                 CONFIG.oidc().groups(),
             ),
+            broker_event_sender,
         };
         let service = tower::ServiceBuilder::new()
             .layer(authorizer.jwt_layer(authority))

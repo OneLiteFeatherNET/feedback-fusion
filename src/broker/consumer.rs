@@ -25,6 +25,8 @@ use feedback_fusion_common::event::EventBatch;
 
 use crate::prelude::DatabaseConnection;
 
-pub async fn handle_batch(batch: EventBatch, database: &DatabaseConnection) -> Result<()> {
-    Ok(())
+pub async fn handle_batch(_batch: EventBatch, _database: &DatabaseConnection) -> Result<()> {
+    // TODO: use this to clear the L1 Cache
+
+    todo!()
 }

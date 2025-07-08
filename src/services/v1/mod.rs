@@ -21,20 +21,24 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{database::schema::user::UserContext, prelude::*};
-use feedback_fusion_common::proto::{
-    CreateFieldRequest, CreatePromptRequest, CreateResourceAuthorizationRequest,
-    CreateResponsesRequest, CreateTargetRequest, DataExportRequest, DataExportResponse,
-    DeleteFieldRequest, DeletePromptRequest, DeleteResourceAuthorizationRequest,
-    DeleteTargetRequest, ExportResourceAuthorizationsRequest, Field as ProtoField, FieldPage,
-    GetFieldsRequest, GetPromptRequest, GetPromptsRequest, GetResourceAuthorizationRequest,
-    GetResourceAuthorizationsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
-    Prompt as ProtoPrompt, PromptPage, PromptResponse,
-    ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationExportResponse,
-    ResourceAuthorizationList, ResourceAuthorizationPage, ResponsePage, Target as ProtoTarget,
-    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateResourceAuthorizationRequest,
-    UpdateTargetRequest, UserInfoResponse, feedback_fusion_v1_server::FeedbackFusionV1,
-    public_feedback_fusion_v1_server::PublicFeedbackFusionV1,
+use feedback_fusion_common::{
+    event::Event,
+    proto::{
+        CreateFieldRequest, CreatePromptRequest, CreateResourceAuthorizationRequest,
+        CreateResponsesRequest, CreateTargetRequest, DataExportRequest, DataExportResponse,
+        DeleteFieldRequest, DeletePromptRequest, DeleteResourceAuthorizationRequest,
+        DeleteTargetRequest, ExportResourceAuthorizationsRequest, Field as ProtoField, FieldPage,
+        GetFieldsRequest, GetPromptRequest, GetPromptsRequest, GetResourceAuthorizationRequest,
+        GetResourceAuthorizationsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
+        Prompt as ProtoPrompt, PromptPage, PromptResponse,
+        ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationExportResponse,
+        ResourceAuthorizationList, ResourceAuthorizationPage, ResponsePage, Target as ProtoTarget,
+        TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateResourceAuthorizationRequest,
+        UpdateTargetRequest, UserInfoResponse, feedback_fusion_v1_server::FeedbackFusionV1,
+        public_feedback_fusion_v1_server::PublicFeedbackFusionV1,
+    },
 };
+use kanal::AsyncSender;
 use openidconnect::core::CoreClient;
 use std::borrow::Cow;
 use tonic::{Response, Status};
@@ -53,6 +57,7 @@ pub struct FeedbackFusionV1Context<'a> {
     pub connection: DatabaseConnection,
     pub client: CoreClient,
     pub permission_matrix: PermissionMatrix<'a>,
+    pub broker_event_sender: AsyncSender<Event>,
 }
 
 #[derive(Getters)]

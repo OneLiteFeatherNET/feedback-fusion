@@ -30,6 +30,7 @@ pub mod proto {
         tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
 }
 
+#[allow(clippy::module_inception)]
 pub mod event {
     tonic::include_proto!("feedback_fusion_event_v1");
 }

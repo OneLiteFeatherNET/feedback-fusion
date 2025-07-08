@@ -26,7 +26,7 @@ use feedback_fusion_common::event::{
     Event, EventBatch, feedback_fusion_indexer_v1_client::FeedbackFusionIndexerV1Client,
 };
 use fluvio::{
-    Fluvio, Offset, TopicProducerConfigBuilder, TopicProducerPool,
+    Fluvio, Offset, RecordKey, TopicProducerConfigBuilder, TopicProducerPool,
     consumer::ConsumerConfigExtBuilder,
 };
 use futures::StreamExt;
@@ -49,6 +49,8 @@ trait FeedbackFusionBrokerDriver: Send + Sync {
     async fn connect(&mut self) -> Result<()>;
 
     async fn start_receiver(&mut self, database: DatabaseConnection) -> Result<()>;
+
+    async fn send_batch(&mut self, batch: EventBatch) -> Result<()>;
 }
 
 pub struct FluvioBroker {
@@ -120,13 +122,28 @@ impl FeedbackFusionBrokerDriver for FluvioBroker {
                         Err(error) => error!("Error while consuming fluvio topic: {error}"),
                     }
                 }
-            };
+            }
 
             #[allow(unreachable_code)]
             Ok::<(), FeedbackFusionError>(())
         });
 
         Ok(())
+    }
+
+    async fn send_batch(&mut self, batch: EventBatch) -> Result<()> {
+        if let Some(producer) = self.producer.as_ref() {
+            match producer.send(RecordKey::NULL, batch.encode_to_vec()).await {
+                Ok(_) => Ok(()),
+                Err(error) => {
+                    error!("Error occurred while sending batch: {}", error);
+
+                    Err(error.into())
+                }
+            }
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -215,6 +232,21 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
     async fn start_receiver(&mut self, _: DatabaseConnection) -> Result<()> {
         Ok(())
     }
+
+    async fn send_batch(&mut self, batch: EventBatch) -> Result<()> {
+        if let Some(client) = self.client.as_mut() {
+            match client.send_batch(batch).await {
+                Ok(_) => Ok(()),
+                Err(error) => {
+                    error!("Error occurred while sending batch: {}", error);
+
+                    Err(FeedbackFusionError::Anyhow(anyhow::Error::new(error)))
+                }
+            }
+        } else {
+            Ok(())
+        }
+    }
 }
 
 pub struct FeedbackFusionBroker {
@@ -229,15 +261,13 @@ impl FeedbackFusionBroker {
 
         if let Ok(driver) = FluvioBroker::try_from_configuration(config.clone()) {
             broker_driver = Box::new(driver);
+        } else if let Ok(driver) = GRPCBroker::try_from_configuration(config.clone()) {
+            broker_driver = Box::new(driver);
         } else {
-            if let Ok(driver) = GRPCBroker::try_from_configuration(config.clone()) {
-                broker_driver = Box::new(driver);
-            } else {
-                let error = "Either fluvio or grpc broker driver has to be configured";
+            let error = "Either fluvio or grpc broker driver has to be configured";
 
-                error!("{error}");
-                return Err(FeedbackFusionError::ConfigurationError(error.to_owned()));
-            }
+            error!("{error}");
+            return Err(FeedbackFusionError::ConfigurationError(error.to_owned()));
         }
 
         Ok(Self {
