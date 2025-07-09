@@ -6,9 +6,11 @@ edition = "2024"
 [dependencies]
 feedback_fusion_common = { path = "../common" }
 
+anyhow = "1.0.98"
 async-trait = "0.1.88"
 chrono = { version = "0.4.38", features = ["serde"] }
 fluvio = "0.50.1"
+futures = "0.3.31"
 hcl-rs = "0.19.0"
 kanal = "0.1.1"
 prost = "0.13.5"
@@ -20,5 +22,7 @@ tracing-opentelemetry = { version = "0.25.0", optional = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tokio = { features = ["full"], version = "1.46.1" }
 tokio-retry = "0.3.0"
-tonic = "0.13.1"
+tonic = { version = "0.12.0", features = ["tls-native-roots"] }
+tonic-health = "0.12.0"
+tonic-reflection = "0.12.0"
 prost-types = "0.14.1"

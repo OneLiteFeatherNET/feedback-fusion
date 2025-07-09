@@ -42,17 +42,28 @@ pub struct Config {
     broker: BrokerConfiguration,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-pub enum BrokerMode {
-    GRPC,
-    Fluvio,
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct BrokerConfiguration {
+    grpc: Option<GRPCBrokerConfiguration>,
+    fluvio: Option<FluvioBrokerConfiguration>,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct BrokerConfiguration {
-    mode: BrokerMode,
-    fluvio: Option<FluvioClusterConfig>,
+pub struct GRPCBrokerConfiguration {
+    key: String,
+    certificate: String,
+    certificate_authority: String,
+}
+
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct FluvioBrokerConfiguration {
+    #[serde_inline_default("feedback-fusion".to_owned())]
+    topic: String,
+    fluvio: FluvioClusterConfig,
 }
 
 pub fn read_config() -> Result<Config> {

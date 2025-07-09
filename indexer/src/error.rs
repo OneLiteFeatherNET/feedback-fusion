@@ -32,6 +32,10 @@ pub enum FeedbackFusionError {
     DatabaseError(#[from] rbatis::Error),
     #[error(transparent)]
     HCLError(#[from] hcl::Error),
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    IoError(#[from] tokio::io::Error)
 }
 
 pub type Result<T> = std::result::Result<T, FeedbackFusionError>;

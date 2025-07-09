@@ -181,13 +181,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#[validate(length(min = 1, max = 32), non_control_character)]",
         )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
-        .compile_protos(
-            &[
-                "../proto/feedback-fusion-v1.proto",
-                "../proto/feedback-fusion-event-v1.proto",
-            ],
-            &["../proto"],
-        )
+        .compile_protos(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
+        .unwrap();
+
+    tonic_build::configure()
+        .file_descriptor_set_path(out_dir.join("feedback-fusion-event-v1-descriptor.bin"))
+        .compile_protos(&["../proto/feedback-fusion-event-v1.proto"], &["../proto"])
         .unwrap();
 
     Ok(())

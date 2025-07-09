@@ -20,19 +20,24 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{broker::FeedbackFusionIndexerBroker, config::BrokerConfiguration, prelude::*};
+use crate::{
+    broker::FeedbackFusionIndexerBrokerDriver,
+    config::{BrokerConfiguration, FluvioBrokerConfiguration},
+    prelude::*,
+};
 use feedback_fusion_common::event::EventBatch;
-use fluvio::{consumer::ConsumerConfigExtBuilder, Fluvio, FluvioClusterConfig, Offset};
-use kanal::AsyncSender;
+use fluvio::{Fluvio, Offset, consumer::ConsumerConfigExtBuilder};
+use futures::StreamExt;
+use kanal::{AsyncReceiver, AsyncSender};
 use prost::Message;
 
 pub struct FluvioBroker {
-    config: FluvioClusterConfig,
+    config: FluvioBrokerConfiguration,
     fluvio: Option<Fluvio>,
 }
 
 #[async_trait]
-impl FeedbackFusionIndexerBroker for FluvioBroker {
+impl FeedbackFusionIndexerBrokerDriver for FluvioBroker {
     fn try_from_config(config: BrokerConfiguration) -> Result<Self>
     where
         Self: Sized,
@@ -44,16 +49,24 @@ impl FeedbackFusionIndexerBroker for FluvioBroker {
             })
         } else {
             Err(FeedbackFusionError::ConfigurationError(
-                "Required grpc broker configuraton missing".to_owned(),
+                "Required fluvio broker configuraton missing".to_owned(),
             ))
         }
     }
 
-    async fn start_listener(&self, sender: AsyncSender<EventBatch>) -> Result<()> {
-        let mut consumer = self
-            .fluvio
-            .as_ref()
-            .unwrap()
+    async fn start_listener(
+        &mut self,
+        sender: AsyncSender<EventBatch>,
+        _: AsyncSender<()>,
+        shutdown_receiver: AsyncReceiver<()>,
+    ) -> Result<()> {
+        info!("Starting fluvio broker");
+
+        let fluvio = Fluvio::connect_with_config(self.config.fluvio())
+            .await
+            .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?;
+
+        let mut consumer = fluvio
             .consumer_with_config(
                 ConsumerConfigExtBuilder::default()
                     .topic(self.config.topic())
@@ -66,6 +79,12 @@ impl FeedbackFusionIndexerBroker for FluvioBroker {
 
         tokio::spawn(async move {
             loop {
+                // listen to the shutdown signal
+                if let Ok(Some(())) = shutdown_receiver.try_recv() {
+                    info!("Got shotdown signal, gracefully stopping fluvio consumer");
+                    break;
+                }
+
                 if let Some(event) = consumer.next().await {
                     match event {
                         Ok(record) => match EventBatch::decode(record.value()) {

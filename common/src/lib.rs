@@ -35,6 +35,8 @@ pub mod proto {
 #[allow(clippy::module_inception)]
 pub mod event {
     tonic::include_proto!("feedback_fusion_event_v1");
+    pub const FILE_DESCRIPTOR_SET: &[u8] =
+        tonic::include_file_descriptor_set!("feedback-fusion-event-v1-descriptor");
 }
 
 pub trait PageRequest {
