@@ -24,10 +24,10 @@ init:
 #
 
 check:
-  cargo check --all-features
+  cargo check --all-features --workspace
 
 clippy:
-  cargo clippy --all-features -- -D warnings
+  cargo clippy --all-features --workspace -- -D warnings
 
 #
 # Docker

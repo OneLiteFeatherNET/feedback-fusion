@@ -4,7 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+feedback_fusion_common = { path = "../common" }
+
+async-trait = "0.1.88"
 chrono = { version = "0.4.38", features = ["serde"] }
+fluvio = "0.50.1"
+hcl-rs = "0.19.0"
+kanal = "0.1.1"
+prost = "0.13.5"
+rbatis = "=4.5.33"
 serde = { features = ["derive"], version = "1.0.219" }
 thiserror = "2.0.12"
 tracing = "0.1.39"

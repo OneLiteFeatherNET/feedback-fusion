@@ -20,16 +20,18 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-mod broker;
-mod config;
-mod error;
+use crate::{config::BrokerConfiguration, prelude::*};
+use feedback_fusion_common::event::EventBatch;
+use kanal::AsyncSender;
 
-fn main() {
-    println!("Hello, world!");
-}
+pub mod fluvio;
+pub mod grpc;
 
-pub mod prelude {
-    pub use crate::error::*;
-    pub use async_trait::async_trait;
-    pub use feedback_fusion_common::prelude::*;
+#[async_trait]
+pub trait FeedbackFusionIndexerBroker: Send + Sync {
+    fn try_from_config(config: BrokerConfiguration) -> Result<Self>
+    where
+        Self: Sized;
+
+    async fn start_listener(&self, sender: AsyncSender<EventBatch>) -> Result<()>;
 }

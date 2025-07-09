@@ -45,6 +45,7 @@ pub mod prelude {
     pub use anyhow::anyhow;
     pub use getset::{Getters, Setters};
     pub use itertools::Itertools;
+    pub use lazy_static::lazy_static;
     pub use paste::paste;
     pub use serde::{Deserialize, Serialize};
     pub use serde_inline_default::serde_inline_default;

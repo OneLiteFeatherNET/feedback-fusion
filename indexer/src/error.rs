@@ -20,16 +20,18 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-mod broker;
-mod config;
-mod error;
+use thiserror::Error;
 
-fn main() {
-    println!("Hello, world!");
+#[derive(Error, Debug)]
+pub enum FeedbackFusionError {
+    #[error("{0}")]
+    BadRequest(String),
+    #[error("{0}")]
+    ConfigurationError(String),
+    #[error(transparent)]
+    DatabaseError(#[from] rbatis::Error),
+    #[error(transparent)]
+    HCLError(#[from] hcl::Error),
 }
 
-pub mod prelude {
-    pub use crate::error::*;
-    pub use async_trait::async_trait;
-    pub use feedback_fusion_common::prelude::*;
-}
+pub type Result<T> = std::result::Result<T, FeedbackFusionError>;

@@ -180,7 +180,7 @@ macro_rules! database_request {
 /// rbatis doesnt convert the LIMIT statements for postgres and mssql therefore we need a wrapper
 /// REF: https://rbatis.github.io/rbatis.io/#/v4/?id=macros-select-page
 #[macro_export]
-                  #[allow(clippy::crate_in_macro_def)]
+#[allow(clippy::crate_in_macro_def)]
 macro_rules! impl_select_page_wrapper {
     ($table:path {}) => {
         impl_select_page_wrapper!($table{select_page() => ""});
