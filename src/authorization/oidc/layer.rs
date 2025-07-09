@@ -25,8 +25,9 @@ use crate::prelude::*;
 use aliri_oauth2::Authority;
 use aliri_tower::OnJwtError;
 
+use http::Response;
 use tokio::runtime::Handle;
-use tonic::{body::BoxBody, Status};
+use tonic::{Status, body::BoxBody};
 
 #[derive(Clone, Copy, Debug)]
 pub struct AuthorizedService<S>(pub S);
@@ -75,14 +76,11 @@ impl From<Authority> for OIDCErrorHandler {
 impl OnJwtError for OIDCErrorHandler {
     type Body = BoxBody;
 
-    fn on_jwt_invalid(
-        &self,
-        _error: aliri::error::JwtVerifyError,
-    ) -> opentelemetry_http::Response<Self::Body> {
+    fn on_jwt_invalid(&self, _error: aliri::error::JwtVerifyError) -> Response<Self::Body> {
         Status::unauthenticated("unauthenticated").into_http()
     }
 
-    fn on_no_matching_jwk(&self) -> opentelemetry_http::Response<Self::Body> {
+    fn on_no_matching_jwk(&self) -> Response<Self::Body> {
         warn!("No matching jwk for request found, refreshing jwks...");
 
         let handle = Handle::current();
@@ -95,7 +93,7 @@ impl OnJwtError for OIDCErrorHandler {
         Status::unauthenticated("unauthenticated").into_http()
     }
 
-    fn on_missing_or_malformed(&self) -> opentelemetry_http::Response<Self::Body> {
+    fn on_missing_or_malformed(&self) -> Response<Self::Body> {
         Status::unauthenticated("unauthenticated").into_http()
     }
 }

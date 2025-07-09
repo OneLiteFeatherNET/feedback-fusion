@@ -6,11 +6,33 @@ edition = "2021"
 [dependencies]
 feedback_fusion_codegen = { path = "../codegen" }
 
+anyhow = "1.0.98"
 arbitrary = { version = "1.4.1", features = ["derive"], optional = true }
-lazy_static = { version = "1.5.0", optional = true }
-rbatis = "4.5.21"
+getset = "0.1.6"
+itertools = "0.13.0"
+lazy_static = { version = "1.5.0" }
+log = "0.4.27"
+nanoid = "0.4.0"
+rbatis = "=4.5.33"
+rbdc-pg = { version = "4.5.17" }
+rbdc-mysql = { version = "4.5.17" }
+rbdc-mssql = { version = "4.5.7" }
+rbs = "4.5.13"
+tracing = "0.1.41"
+tracing-opentelemetry = { version = "0.25.0" }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tokio-retry = "0.3.0"
 tonic = "0.12.0"
+tower-http = { version = "0.5.2", features = ["trace", "validate-request"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde-inline-default = "0.2.3"
 openidconnect = { version = "3.5.0", optional = true }
+opentelemetry = { version = "0.24.0" }
+opentelemetry_sdk = { version = "0.24.0", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.17.0" }
+opentelemetry-semantic-conventions = { version = "0.16.0" }
+opentelemetry-http = { version = "0.13.0" }
+paste = "1.0.15"
 prost = "0.13.0"
 prost-types = "0.13.0"
 validator = { version = "0.18.1", features = ["derive", "unic"] }
@@ -19,4 +41,4 @@ validator = { version = "0.18.1", features = ["derive", "unic"] }
 tonic-build = "0.12.0"
 
 [features]
-arbitrary = ["dep:arbitrary", "dep:lazy_static", "dep:openidconnect"]
+arbitrary = ["dep:arbitrary", "dep:openidconnect"]

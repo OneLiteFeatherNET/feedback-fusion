@@ -22,6 +22,7 @@
  */
 
 use dashmap::{DashMap, DashSet};
+use feedback_fusion_common::observability::OTLPConfiguration;
 use fluvio::FluvioClusterConfig;
 use rbatis::executor::Executor;
 use serde_inline_default::serde_inline_default;
@@ -29,10 +30,7 @@ use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
 use crate::{
-    database::{
-        DatabseConfigurationScheme,
-        schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
-    },
+    database::schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
     prelude::*,
 };
 
@@ -74,7 +72,7 @@ pub type PermissionMatrix<'a> = DashMap<PermissionMatrixKey<'a>, PermissionMatri
 lazy_static! {
     pub static ref CONFIG: Config<'static> = read_config().unwrap();
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
-        DatabaseConfiguration::extract().unwrap();
+        DatabaseConfiguration::extract(CONFIG.database()).unwrap();
     pub static ref ENDPOINTS: [Endpoint<'static>; 6] = [
         Endpoint::Target(EndpointScopeSelector::default()),
         Endpoint::Prompt(EndpointScopeSelector::default()),
@@ -96,10 +94,9 @@ lazy_static! {
 pub struct Config<'a> {
     cache: Option<CacheConfiguration>,
     oidc: OIDCConfiguration<'a>,
-    #[cfg(feature = "otlp")]
     otlp: Option<OTLPConfiguration>,
     preset: Option<PresetConfig>,
-    database: DatabseConfigurationScheme,
+    database: DatabaseConfigurationScheme,
     broker: BrokerConfiguration,
 }
 
@@ -170,15 +167,6 @@ pub struct OIDCConfiguration<'a> {
     audience: String,
     #[serde_inline_default("groups".to_owned())]
     group_claim: String,
-}
-
-#[serde_inline_default]
-#[derive(Deserialize, Debug, Clone, Getters)]
-#[get = "pub"]
-pub struct OTLPConfiguration {
-    endpoint: String,
-    #[serde_inline_default("feedback-fusion".to_owned())]
-    service_name: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]

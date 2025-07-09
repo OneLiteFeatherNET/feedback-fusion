@@ -26,13 +26,22 @@ use rbatis::rbdc::DateTime;
 use super::FieldOptions;
 
 #[derive(
-    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+    Deserialize,
+    Serialize,
+    Clone,
+    Derivative,
+    Debug,
+    Getters,
+    Setters,
+    TypedBuilder,
+    Validate,
+    Encode,
+    Decode,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct Prompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -46,11 +55,11 @@ pub struct Prompt {
     active: bool,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     created_at: DateTime,
 }
 
@@ -86,9 +95,8 @@ crud!(Prompt {});
 impl_select!(Prompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
 impl_select_page_wrapper!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Encode, Decode)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub enum FieldType {
     Text,
     Rating,
@@ -156,13 +164,22 @@ impl From<feedback_fusion_common::proto::FieldType> for FieldType {
 save_as_json!(FieldOptions, options);
 
 #[derive(
-    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+    Deserialize,
+    Serialize,
+    Clone,
+    Derivative,
+    Debug,
+    Getters,
+    Setters,
+    TypedBuilder,
+    Validate,
+    Encode,
+    Decode,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct Field {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -179,11 +196,11 @@ pub struct Field {
     options: FieldOptions,
     #[builder(default_code = r#"DateTime::utc()"#)]
     #[derivative(PartialEq = "ignore")]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     created_at: DateTime,
 }
 

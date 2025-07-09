@@ -16,8 +16,8 @@ aliri_tower = "0.6.0"
 aliri_traits = "0.1.1"
 async-recursion = "1.1.1"
 async-trait = "0.1.80"
-bincode = { version = "2.0.0-rc.3", features = ["serde"], optional = true }
-bb8 = { version = "0.8.5", optional = true }
+bincode = { version = "2.0.0-rc.3", features = ["serde"] }
+bb8 = { version = "0.8.5" }
 cached = { version = "0.53.0", features = ["async", "proc_macro"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 dashmap = { version = "6.1.0", features = ["rayon"] }
@@ -36,27 +36,20 @@ log = "0.4.22"
 nanoid = "0.4.0"
 openidconnect = "3.5.0"
 openssl = { version = "0.10.68", features = ["vendored"] }
-opentelemetry = { version = "0.24.0", optional = true }
-opentelemetry_sdk = { version = "0.24.0", optional = true, features = [
-  "rt-tokio",
-] }
-opentelemetry-otlp = { version = "0.17.0", optional = true }
-opentelemetry-semantic-conventions = { version = "0.16.0", optional = true }
-opentelemetry-http = { version = "0.13.0", optional = true }
 paste = "1.0.14"
 prost = "0.13.0"
 prost-types = "0.13.0"
 rbatis = "=4.5.33"
 rayon = "1.10.0"
-rbdc-pg = { version = "4.5.17", optional = true }
-rbdc-mysql = { version = "4.5.17", optional = true }
-rbdc-mssql = { version = "4.5.7", optional = true }
+rbdc-pg = { version = "4.5.17" }
+rbdc-mysql = { version = "4.5.17" }
+rbdc-mssql = { version = "4.5.7" }
 rbs = "4.5.13"
 serde = { version = "1.0.197", features = ["derive"] }
 serde-inline-default = "0.2.3"
 serde_json = "1.0.115"
 serde-this-or-that = { git = "https://github.com/Randoooom/serde-this-or-that.git", branch = "feature/bool-signed" }
-skytable = { version = "0.8.10", optional = true }
+skytable = { version = "0.8.10" }
 strum = "0.26.3"
 strum_macros = "0.26.4"
 thiserror = "2.0.0"
@@ -69,7 +62,7 @@ tower = "0.5.0"
 tokio-retry = "0.3"
 tower-http = { version = "0.5.2", features = ["trace", "validate-request"] }
 tracing = "0.1.39"
-tracing-opentelemetry = { version = "0.25.0", optional = true }
+tracing-opentelemetry = { version = "0.25.0" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 typed-builder = "0.20.0"
 validator = { version = "0.18", features = ["derive"] }
@@ -84,23 +77,6 @@ rand = "0.8.5"
 reqwest = { version = "0.12.3", features = ["json"] }
 test-log = "0.2.15"
 feedback_fusion_common = { path = "./common", features = ["arbitrary"] }
-
-[features]
-default = ["all-databases", "otlp", "caching-skytable"]
-
-caching-skytable = ["skytable", "bb8", "bincode"]
-otlp = [
-  "opentelemetry",
-  "opentelemetry-otlp",
-  "opentelemetry-semantic-conventions",
-  "opentelemetry_sdk",
-  "opentelemetry-http",
-  "tracing-opentelemetry",
-]
-all-databases = ["postgres", "mysql", "mssql"]
-postgres = ["rbdc-pg"]
-mysql = ["rbdc-mysql"]
-mssql = ["rbdc-mssql"]
 
 [[bench]]
 name = "grpc"

@@ -1,9 +1,9 @@
-//SPDX-FileCopyrightText: 2023 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2025 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
 
-// Copyright (c) 2023 OneLiteFeatherNet
+// Copyright (c) 2025 OneLiteFeatherNet
 
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 //associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -20,23 +20,15 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use rbatis::rbdc::DateTime;
 use crate::prelude::*;
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct Migration {
-    pub version: String,
-    pub created_at: DateTime,
-}
+pub mod otlp;
 
-impl From<String> for Migration {
-    fn from(value: String) -> Self {
-        Migration {
-            version: value,
-            created_at: DateTime::now(),
-        }
-    }
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct OTLPConfiguration {
+    endpoint: String,
+    #[serde_inline_default("feedback-fusion".to_owned())]
+    service_name: String,
 }
-
-impl_select!(Migration {select_latest() -> Option => "`ORDER BY created_at DESC`"});
-impl_insert!(Migration {});

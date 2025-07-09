@@ -20,11 +20,11 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::prelude::*;
-use opentelemetry::{KeyValue, global, trace::TracerProvider};
+use crate::{observability::OTLPConfiguration, prelude::*};
+use opentelemetry::{global::{self, shutdown_tracer_provider}, trace::TracerProvider, KeyValue};
 use opentelemetry_http::{HeaderExtractor, Request};
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::{Resource, propagation::TraceContextPropagator};
+use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
 use opentelemetry_semantic_conventions::resource::SERVICE_NAME;
 use tower_http::{
     classify::{GrpcErrorsAsFailures, SharedClassifier},
@@ -32,15 +32,15 @@ use tower_http::{
 };
 use tracing::Span;
 use tracing_opentelemetry::{OpenTelemetryLayer, OpenTelemetrySpanExt};
-use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref HEADERS_TO_KEEP: Vec<&'static str> =
         vec!["traceparent", "x-request-id", "user-agent"];
 }
 
-pub fn init_tracing() {
-    if let Some(config) = CONFIG.otlp() {
+pub fn init_tracing(config: &Option<OTLPConfiguration>) {
+    if let Some(config) = config {
         let endpoint = config.endpoint();
 
         let subscriber = tracing_subscriber::registry()
@@ -71,6 +71,11 @@ pub fn init_tracing() {
         tracing::subscriber::set_global_default(subscriber).ok();
 
         info!("Initiating tracing with collector {}", endpoint);
+    } else {
+        tracing_subscriber::registry()
+            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(tracing_subscriber::fmt::layer())
+            .init();
     }
 }
 
@@ -110,4 +115,8 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
 
 pub fn trace_layer() -> TraceLayer<SharedClassifier<GrpcErrorsAsFailures>, MakeFeedbackFusionSpan> {
     TraceLayer::new_for_grpc().make_span_with(MakeFeedbackFusionSpan)
+}
+
+pub fn shutdown_tracing() {
+    shutdown_tracer_provider();
 }

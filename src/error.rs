@@ -40,7 +40,6 @@ pub enum FeedbackFusionError {
     Unauthorized,
     #[error("{0}")]
     Forbidden(String),
-    #[cfg(feature = "caching-skytable")]
     #[error(transparent)]
     CacheError(#[from] crate::cache::SkytableCacheError),
     #[error("{0}")]
@@ -57,12 +56,6 @@ pub enum FeedbackFusionError {
 
 impl From<ValidationErrors> for FeedbackFusionError {
     fn from(value: ValidationErrors) -> Self {
-        Self::BadRequest(value.to_string())
-    }
-}
-
-impl From<serde_json::Error> for FeedbackFusionError {
-    fn from(value: serde_json::Error) -> Self {
         Self::BadRequest(value.to_string())
     }
 }
