@@ -83,7 +83,7 @@ pub async fn get_targets(
 
     // TODO: write translation macro
     let page = database_request!(
-        Target::select_page_wrapper(connection, &page_request, data.query.as_str()).await,
+        Target::select_page_wrapper(&DATABASE_CONFIG, connection, &page_request, data.query.as_str()).await,
         "Select targets by query"
     )?;
 

@@ -190,13 +190,11 @@ macro_rules! impl_select_page_wrapper {
             impl_select_page!($table {$ident($($arg: $ty,)* limit_sql: &str) => $expr});
 
             impl $table {
-                pub async fn [<$ident _wrapper>](executor: &dyn rbatis::executor::Executor, page_request: &dyn rbatis::IPageRequest, $($arg: $ty,)*) -> std::result::Result<rbatis::plugin::page::Page<$table>, rbatis::rbdc::Error> {
-
-                  use std::ops::Deref;
+                pub async fn [<$ident _wrapper>](config: &$crate::database::DatabaseConfiguration, executor: &dyn rbatis::executor::Executor, page_request: &dyn rbatis::IPageRequest, $($arg: $ty,)*) -> std::result::Result<rbatis::plugin::page::Page<$table>, rbatis::rbdc::Error> {
                   let limit = page_request.page_size();
                   let offset = page_request.offset();
 
-                  match crate::config::DATABASE_CONFIG.deref() {
+                  match config {
                      $crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {} OFFSET {} ", limit, offset).as_str()).await,
                      $crate::database::DatabaseConfiguration::MSSQL(_) => Self::$ident(executor, page_request, $($arg,)* format!(" ORDER BY id OFFSET {} ROWS FETCH NEXT {} ROWS ONLY", offset, limit).as_str()).await,
                     #[allow(unreachable_patterns)]

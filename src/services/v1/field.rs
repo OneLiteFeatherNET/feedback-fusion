@@ -83,7 +83,7 @@ pub async fn get_active_fields(
 
     // may consider caching this as well
     let page = database_request!(
-        Field::select_page_by_prompt_wrapper(connection, &page_request, prompt.id().as_str()).await,
+        Field::select_page_by_prompt_wrapper(&DATABASE_CONFIG, connection, &page_request, prompt.id().as_str()).await,
         "Select fields by prompt"
     )?;
 
@@ -111,6 +111,7 @@ pub async fn get_fields(
 
     let page = database_request!(
         Field::select_page_by_prompt_wrapper(
+            &DATABASE_CONFIG,
             context.connection(),
             &page_request,
             data.prompt.as_str()

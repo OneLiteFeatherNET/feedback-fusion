@@ -27,7 +27,7 @@ use aliri_tower::OnJwtError;
 
 use http::Response;
 use tokio::runtime::Handle;
-use tonic::{Status, body::BoxBody};
+use tonic::{Status, body::Body};
 
 #[derive(Clone, Copy, Debug)]
 pub struct AuthorizedService<S>(pub S);
@@ -74,7 +74,7 @@ impl From<Authority> for OIDCErrorHandler {
 }
 
 impl OnJwtError for OIDCErrorHandler {
-    type Body = BoxBody;
+    type Body = Body;
 
     fn on_jwt_invalid(&self, _error: aliri::error::JwtVerifyError) -> Response<Self::Body> {
         Status::unauthenticated("unauthenticated").into_http()

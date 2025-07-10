@@ -71,7 +71,7 @@ pub struct SkytableCacheBuilder<'a, K, V> {
 impl<'a, K, V> SkytableCacheBuilder<'a, K, V>
 where
     K: Display,
-    V: Encode + Decode,
+    V: Encode + Decode<V>,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -149,7 +149,7 @@ pub struct SkytableTlsCacheBuilder<'a, K, V> {
 impl<'a, K, V> SkytableTlsCacheBuilder<'a, K, V>
 where
     K: Hash,
-    V: Encode + Decode,
+    V: Encode + Decode<()>,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -295,7 +295,7 @@ where
     I: DerefMut<Target = TcpConnection<S>> + Send + Sync,
     C: ManageConnection<Connection = I> + Send + Sync,
     K: Hash + std::fmt::Debug + Send + Sync,
-    V: Encode + Decode + Send + Sync,
+    V: Encode + Decode<()> + Send + Sync,
 {
     type Error = SkytableCacheError;
 

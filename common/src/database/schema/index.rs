@@ -23,53 +23,31 @@
 use crate::{impl_select_page_wrapper, prelude::*};
 use rbatis::rbdc::DateTime;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
-pub enum AuditResource {
+pub enum IndexComponent {
     Target,
     Prompt,
     Field,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
-#[serde(tag = "type")]
-#[serde(rename_all = "lowercase")]
-pub enum AuditAction {
-    Create,
-    Update,
-    Delete,
-}
-
-#[derive(
-    Deserialize,
-    Serialize,
-    Clone,
-    Derivative,
-    Debug,
-    Getters,
-    Setters,
-    TypedBuilder,
-    Eq,
-    Ord,
-    PartialOrd,
-)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-pub struct AuditVersion {
+pub struct IndexEntry {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
-    resource_id: String,
-    resource_type: AuditResource,
-    action: AuditAction,
-    data: Vec<u8>,
-    version: u32,
+    key: String,
+    key_type: IndexComponent,
+    value: String,
+    value_type: IndexComponent,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
     created_at: DateTime,
 }
 
-crud!(AuditVersion {});
-impl_select_page_wrapper!(AuditVersion { select_page_by_resource_id(id: &str) => "`WHERE resource_id = #{id}`" });
+crud!(IndexEntry {});
+impl_select_page_wrapper!(IndexComponent { select_page() => "``" });

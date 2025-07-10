@@ -20,12 +20,63 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#![allow(clippy::too_many_arguments)]
+
+use crate::{
+    broker::FeedbackFusionIndexerBroker,
+    config::{CONFIG, DATABASE_CONFIG},
+    prelude::*,
+    processor::FeedbackFusionIndexerProcessor,
+};
+use feedback_fusion_common::database::DatabaseConnection;
+
 mod broker;
 mod config;
 mod error;
+mod processor;
 
-fn main() {
-    println!("Hello, world!");
+#[tokio::main]
+async fn main() {
+    rustls::crypto::aws_lc_rs::default_provider().install_default().unwrap();
+    lazy_static::initialize(&CONFIG);
+
+    feedback_fusion_common::observability::otlp::init_tracing(CONFIG.otlp());
+
+    // initialize the shutdown channel
+    let (shutdown_sender, shutdown_receiver) = kanal::unbounded_async::<()>();
+
+    // start the broker driver
+    let mut broker = FeedbackFusionIndexerBroker::initialize().await.unwrap();
+    let broker_event_batch_receiver = broker
+        .start_loop(shutdown_sender.clone(), shutdown_receiver.clone())
+        .await
+        .unwrap();
+
+    // connect to the database
+    debug!("Connecting to the Database");
+    let connection = DATABASE_CONFIG.connect().await.unwrap();
+    let connection = DatabaseConnection::from(connection);
+    info!("Connection to the Database established");
+
+    // start the processor worker
+    let processor =
+        FeedbackFusionIndexerProcessor::initialize(connection, broker_event_batch_receiver);
+    processor
+        .start_worker(shutdown_sender.clone(), shutdown_receiver)
+        .await;
+
+    debug!("Trying to listen for graceful shutdown");
+    match tokio::signal::ctrl_c().await {
+        Ok(()) => {}
+        Err(error) => {
+            error!("Unable to listen for the shutdown signal: {}", error);
+        }
+    }
+
+    info!("Received shutdown signal... shutting down...");
+    shutdown_sender.send(()).await.unwrap();
+
+    feedback_fusion_common::observability::otlp::shutdown_tracing();
 }
 
 pub mod prelude {

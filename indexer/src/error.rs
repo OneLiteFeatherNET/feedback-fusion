@@ -35,7 +35,9 @@ pub enum FeedbackFusionError {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
     #[error(transparent)]
-    IoError(#[from] tokio::io::Error)
+    IoError(#[from] tokio::io::Error),
+    #[error(transparent)]
+    TonicError(#[from] tonic::transport::Error)
 }
 
 pub type Result<T> = std::result::Result<T, FeedbackFusionError>;

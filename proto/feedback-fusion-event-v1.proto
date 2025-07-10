@@ -13,11 +13,17 @@ message EventBatch {
   repeated Event events = 1;
 }
 
+enum EventType {
+  UNKNOWN = 0;
+  RESOURCE_MODIFIED = 1;
+}
+
 message Event {
   google.protobuf.Timestamp created_at = 1;
+  EventType event_type = 2;
 
   oneof event {
-    ResourceModifiedEvent resource_modified_event = 2;
+    ResourceModifiedEvent resource_modified_event = 3;
   }
 }
 
@@ -31,11 +37,11 @@ enum ResourceKind {
   TARGET = 0;
   PROMPT = 1;
   FIELD = 2;
-  AUTHORIZATION = 3;
 }
 
 message ResourceModifiedEvent {
   ResourceModificationOperation operation = 1;
   string id = 2;
-  bytes data = 3;
+  ResourceKind resource_kind = 3;
+  bytes data = 4;
 }

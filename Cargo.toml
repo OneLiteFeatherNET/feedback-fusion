@@ -16,7 +16,7 @@ aliri_tower = "0.6.0"
 aliri_traits = "0.1.1"
 async-recursion = "1.1.1"
 async-trait = "0.1.80"
-bincode = { version = "2.0.0-rc.3", features = ["serde"] }
+bincode = { version = "2.0.1", features = ["serde"] }
 bb8 = { version = "0.8.5" }
 cached = { version = "0.53.0", features = ["async", "proc_macro"] }
 chrono = { version = "0.4.38", features = ["serde"] }
@@ -35,32 +35,34 @@ lazy_static = "1.4.0"
 log = "0.4.22"
 nanoid = "0.4.0"
 openidconnect = "3.5.0"
-openssl = { version = "0.10.68", features = ["vendored"] }
 paste = "1.0.14"
 prost = "0.13.0"
 prost-types = "0.13.0"
+rustls = "0.23.29"
 rbatis = "=4.5.33"
 rayon = "1.10.0"
-rbdc-pg = { version = "4.5.17" }
-rbdc-mysql = { version = "4.5.17" }
-rbdc-mssql = { version = "4.5.7" }
+rbdc = "=4.5.45"
+rbdc-pool-fast = "=4.5.11"
+rbdc-pg = { version = "=4.5.17" }
+rbdc-mysql = { version = "=4.5.17" }
+rbdc-mssql = { version = "=4.5.7" }
 rbs = "4.5.13"
 serde = { version = "1.0.197", features = ["derive"] }
 serde-inline-default = "0.2.3"
 serde_json = "1.0.115"
 serde-this-or-that = { git = "https://github.com/Randoooom/serde-this-or-that.git", branch = "feature/bool-signed" }
-skytable = { version = "0.8.10" }
+skytable = { version = "=0.8.10" }
 strum = "0.26.3"
 strum_macros = "0.26.4"
 thiserror = "2.0.0"
-tonic = { version = "0.12.0", features = ["tls-native-roots"] }
-tonic-health = "0.12.0"
-tonic-reflection = "0.12.0"
-tonic-web = "0.12.0"
+tonic = { version = "0.13.0", features = ["tls-aws-lc"] }
+tonic-health = "0.13.0"
+tonic-reflection = "0.13.0"
+tonic-web = "0.13.0"
 tokio = { version = "1.37.0", features = ["full"] }
 tower = "0.5.0"
 tokio-retry = "0.3"
-tower-http = { version = "0.5.2", features = ["trace", "validate-request"] }
+tower-http = { version = "0.5.2", features = ["trace", "validate-request", "cors"] }
 tracing = "0.1.39"
 tracing-opentelemetry = { version = "0.25.0" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
@@ -77,6 +79,10 @@ rand = "0.8.5"
 reqwest = { version = "0.12.3", features = ["json"] }
 test-log = "0.2.15"
 feedback_fusion_common = { path = "./common", features = ["arbitrary"] }
+
+[[bin]]
+name = "indexer"
+path = "./indexer/src/main.rs"
 
 [[bench]]
 name = "grpc"

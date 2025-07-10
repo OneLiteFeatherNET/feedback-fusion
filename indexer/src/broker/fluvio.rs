@@ -33,7 +33,6 @@ use prost::Message;
 
 pub struct FluvioBroker {
     config: FluvioBrokerConfiguration,
-    fluvio: Option<Fluvio>,
 }
 
 #[async_trait]
@@ -45,7 +44,6 @@ impl FeedbackFusionIndexerBrokerDriver for FluvioBroker {
         if let Some(config) = config.fluvio() {
             Ok(Self {
                 config: config.clone(),
-                fluvio: None,
             })
         } else {
             Err(FeedbackFusionError::ConfigurationError(

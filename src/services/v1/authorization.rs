@@ -142,7 +142,7 @@ pub async fn get_resource_authorizations(
     let page_request = data.page_request();
 
     let authorizations = database_request!(
-        ResourceAuthorization::select_page_wrapper(connection, &page_request).await,
+        ResourceAuthorization::select_page_wrapper(&DATABASE_CONFIG, connection, &page_request).await,
         "Select authorizations page"
     )?;
 

@@ -38,7 +38,7 @@ use crate::{
     prelude::*,
 };
 
-const ADDRESS: &str = "0.0.0.0:8000";
+const ADDRESS: &str = "0.0.0.0:7000";
 
 #[derive(Clone)]
 pub struct GRPCBroker {
@@ -111,7 +111,7 @@ impl FeedbackFusionIndexerBrokerDriver for GRPCBroker {
             .identity(identity)
             .client_ca_root(certificate);
 
-        let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+        let (health_reporter, health_service) = tonic_health::server::health_reporter();
         health_reporter
             .set_serving::<FeedbackFusionIndexerV1Server<GRPCBroker>>()
             .await;
@@ -129,20 +129,24 @@ impl FeedbackFusionIndexerBrokerDriver for GRPCBroker {
 
         let clone = self.clone();
         tokio::spawn(async move {
-            if let Err(error) = Server::builder()
-                .tls_config(tls_config)
-                .unwrap()
-                .layer(trace_layer)
-                .accept_http1(true)
-                .add_service(health_service)
-                .add_service(reflection_service)
-                .add_service(FeedbackFusionIndexerV1Server::new(clone))
-                .serve_with_shutdown(ADDRESS.parse().unwrap(), async move {
-                    shutdown_receiver.recv().await.ok();
+            if let Err(error) = async {
+                Server::builder()
+                    .tls_config(tls_config)?
+                    .layer(trace_layer)
+                    .accept_http1(true)
+                    .add_service(health_service)
+                    .add_service(reflection_service)
+                    .add_service(FeedbackFusionIndexerV1Server::new(clone))
+                    .serve_with_shutdown(ADDRESS.parse().unwrap(), async move {
+                        shutdown_receiver.recv().await.ok();
 
-                    info!("Got shotdown signal, gracefully stopping gRPC server");
-                })
-                .await
+                        info!("Got shotdown signal, gracefully stopping gRPC server");
+                    })
+                    .await?;
+
+                Ok::<(), FeedbackFusionError>(())
+            }
+            .await
             {
                 error!("Error while starting gRPC server: {error}");
 

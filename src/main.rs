@@ -74,7 +74,7 @@ async fn main() {
     let (sender, receiver) = kanal::unbounded_async::<()>();
     tokio::spawn(async move {
         debug!("Constructing health reporter");
-        let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+        let (health_reporter, health_service) = tonic_health::server::health_reporter();
         health_reporter
             .set_serving::<PublicFeedbackFusionV1Server<PublicFeedbackFusionV1Context>>()
             .await;
@@ -172,7 +172,6 @@ pub mod prelude {
         py_sql, rbdc::JsonV,
     };
     pub use tonic::{Request, Response};
-    pub use tracing::{Instrument, debug, error, info, info_span, instrument, warn};
     pub use typed_builder::TypedBuilder;
     pub use validator::Validate;
 }

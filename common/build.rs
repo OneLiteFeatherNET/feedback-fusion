@@ -185,6 +185,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     tonic_build::configure()
+        .type_attribute("Event", "#[derive(Eq, Hash)]")
+        .type_attribute("Event.event", "#[derive(Eq, Hash)]")
+        .type_attribute("ResourceModifiedEvent", "#[derive(Eq, Hash)]")
         .file_descriptor_set_path(out_dir.join("feedback-fusion-event-v1-descriptor.bin"))
         .compile_protos(&["../proto/feedback-fusion-event-v1.proto"], &["../proto"])
         .unwrap();

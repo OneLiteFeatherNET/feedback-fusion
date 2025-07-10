@@ -45,7 +45,14 @@ build-all DOCKERFILE="./Dockerfile":
 #
 
 backend TYPE=DEFAULT_TEST:
-  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --no-report > ./target/feedback-fusion.log 2>&1 &
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/indexer/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin indexer --no-report > ./target/feedback-fusion-indexer.log 2>&1 &
+
+  while ! nc -z localhost 7000; do \
+    sleep 1; \
+  done
+  @echo "Application ready"
+
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin feedback-fusion --no-report > ./target/feedback-fusion.log 2>&1 &
 
   while ! nc -z localhost 8000; do \
     sleep 1; \
@@ -53,7 +60,11 @@ backend TYPE=DEFAULT_TEST:
   @echo "Application ready"
 
 stop-backend:
-  @PID=$(lsof -t -i:8000) && if [ -n "$PID" ]; then \
+  -@PID=$(lsof -t -i:8000) && if [ -n "$PID" ]; then \
+    kill -2 $PID; \
+  fi
+
+  -@PID=$(lsof -t -i:7000) && if [ -n "$PID" ]; then \
     kill -2 $PID; \
   fi
 

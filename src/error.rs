@@ -51,7 +51,11 @@ pub enum FeedbackFusionError {
     #[error(transparent)]
     FluvioErrorCode(#[from] fluvio::dataplane::link::ErrorCode),
     #[error(transparent)]
-    Anyhow(#[from] anyhow::Error)
+    Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    TransportError(#[from] tonic::transport::Error),
+    #[error(transparent)]
+    UriError(#[from] http::uri::InvalidUri)
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {

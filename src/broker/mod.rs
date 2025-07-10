@@ -195,13 +195,10 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
             .ca_certificate(certificate);
 
         // try to connect to the health server
-        let channel = Channel::from_shared(self.config.endpoint().clone())
-            .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?
-            .tls_config(tls_config)
-            .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?
+        let channel = Channel::from_shared(self.config.endpoint().clone())?
+            .tls_config(tls_config)?
             .connect()
-            .await
-            .map_err(|error| FeedbackFusionError::ConfigurationError(error.to_string()))?;
+            .await?;
         let mut health_client = HealthClient::new(channel.clone());
 
         // check wether the service is reachable
@@ -211,7 +208,7 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
         );
         if health_client
             .check(HealthCheckRequest {
-                service: "FeedbackFusionIndexerV1".to_owned(),
+                service: "".to_owned(),
             })
             .await
             .is_ok()

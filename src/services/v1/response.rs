@@ -128,6 +128,7 @@ pub async fn get_responses(
     // select a page of responses
     let responses = database_request!(
         PromptResponse::select_page_by_prompt_wrapper(
+            &DATABASE_CONFIG,
             connection,
             &page_request,
             data.prompt.as_str()
