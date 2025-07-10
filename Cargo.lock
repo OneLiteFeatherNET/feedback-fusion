@@ -710,7 +710,7 @@ version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
 dependencies = [
- "generic-array 0.14.7",
+ "generic-array",
 ]
 
 [[package]]
@@ -1140,7 +1140,7 @@ version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0dc92fb57ca44df6db8059111ab3af99a63d5d0f8375d9972e319a379c6bab76"
 dependencies = [
- "generic-array 0.14.7",
+ "generic-array",
  "rand_core 0.6.4",
  "subtle",
  "zeroize",
@@ -1152,7 +1152,7 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1bfb12502f3fc46cca1bb51ac28df9d618d813cdc3d2f25b9fe775a34af26bb3"
 dependencies = [
- "generic-array 0.14.7",
+ "generic-array",
  "typenum",
 ]
 
@@ -1462,7 +1462,7 @@ dependencies = [
  "crypto-bigint",
  "digest",
  "ff",
- "generic-array 0.14.7",
+ "generic-array",
  "group",
  "hkdf",
  "pem-rfc7468",
@@ -1601,14 +1601,13 @@ dependencies = [
 
 [[package]]
 name = "fast_pool"
-version = "0.2.2"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4b7c3c0827e6c5360bdf6cc3977c57de17797e5d936b6222bb4b649cac5949b"
+checksum = "60e5e31750b1cab303073d061a99a88c02fb28b6aaf4d07037c3a0c8fb6cb300"
 dependencies = [
  "async-trait",
  "flume",
  "futures-core",
- "num_cpus",
  "tokio",
 ]
 
@@ -1670,11 +1669,9 @@ dependencies = [
  "rand 0.8.5",
  "rayon",
  "rbatis",
- "rbdc",
  "rbdc-mssql",
  "rbdc-mysql",
  "rbdc-pg",
- "rbdc-pool-fast",
  "rbs",
  "reqwest 0.12.22",
  "rustls 0.23.29",
@@ -1734,8 +1731,6 @@ dependencies = [
  "prost 0.13.5",
  "prost-types 0.14.1",
  "rbatis",
- "rbdc",
- "rbdc-pool-fast",
  "rbs",
  "rustls 0.23.29",
  "serde",
@@ -1784,11 +1779,9 @@ dependencies = [
  "prost 0.13.5",
  "prost-types 0.13.5",
  "rbatis",
- "rbdc",
  "rbdc-mssql",
  "rbdc-mysql",
  "rbdc-pg",
- "rbdc-pool-fast",
  "rbs",
  "serde",
  "serde-inline-default",
@@ -2325,15 +2318,6 @@ dependencies = [
  "typenum",
  "version_check",
  "zeroize",
-]
-
-[[package]]
-name = "generic-array"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8c8444bc9d71b935156cc0ccab7f622180808af7867b1daae6547d773591703"
-dependencies = [
- "typenum",
 ]
 
 [[package]]
@@ -3270,9 +3254,9 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
 name = "lru"
-version = "0.12.5"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
+checksum = "9f8cc7106155f10bdf99a6f379688f543ad6596a415375b36a59a054ceda1198"
 dependencies = [
  "hashbrown 0.15.4",
 ]
@@ -3486,16 +3470,6 @@ checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
  "libm",
-]
-
-[[package]]
-name = "num_cpus"
-version = "1.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91df4bbde75afed763b708b7eee1e8e7651e02d97f6d5dd763e89367e957b23b"
-dependencies = [
- "hermit-abi",
- "libc",
 ]
 
 [[package]]
@@ -4392,9 +4366,9 @@ dependencies = [
 
 [[package]]
 name = "rbatis"
-version = "4.5.33"
+version = "4.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7d7d3437c2e146237e1b4f592e152f6f8c9e47180fcb4e83ec7f6ed3b6cfc6d"
+checksum = "e029bd9847e588da0d91c897762940ae443d2c9f3923b4c3b318ca61907fbaea"
 dependencies = [
  "async-trait",
  "dark-std",
@@ -4403,7 +4377,7 @@ dependencies = [
  "hex",
  "log",
  "parking_lot 0.12.4",
- "rand 0.8.5",
+ "rand 0.9.1",
  "rbatis-codegen",
  "rbatis-macro-driver",
  "rbdc",
@@ -4442,9 +4416,9 @@ dependencies = [
 
 [[package]]
 name = "rbdc"
-version = "4.5.45"
+version = "4.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dae66bab36d8040f4fc5a3335f8dc40c9e10c95e228d024d3435f6a2cf4914aa"
+checksum = "601c00493dd6f0ee5d7b7bfb5f07fc15b720a2e5bb34958c24f02c8075d1300d"
 dependencies = [
  "async-trait",
  "bigdecimal 0.4.8",
@@ -4471,31 +4445,27 @@ dependencies = [
 
 [[package]]
 name = "rbdc-mssql"
-version = "4.5.7"
+version = "4.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2820425207b90cdbe4431bee6fdc2ea52030cf83387e79cf444e80ec643df44b"
+checksum = "9b29a7976c3cea82659e3493faa3e5fcbf9cd1f51b01e6c72655c14f1fee4eb9"
 dependencies = [
- "byteorder",
  "chrono",
  "fastdate",
  "futures-core",
- "futures-io",
- "futures-util",
- "log",
+ "percent-encoding",
  "rbdc",
  "rbs",
- "rust_decimal",
  "tiberius",
  "tokio",
  "tokio-util",
- "uuid",
+ "url",
 ]
 
 [[package]]
 name = "rbdc-mysql"
-version = "4.5.17"
+version = "4.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51504ca28021d52f8c125564050bc27e563712e3ee25aa48555366c884bdfe5e"
+checksum = "66a48e2268c95311a04c3b90e6ffa132c0188eccb123d3ebfcfff1ffc9c88a4b"
 dependencies = [
  "bitflags 2.9.1",
  "byteorder",
@@ -4505,9 +4475,7 @@ dependencies = [
  "fastdate",
  "futures-core",
  "futures-util",
- "generic-array 1.2.0",
  "hex",
- "log",
  "percent-encoding",
  "rand 0.8.5",
  "rbdc",
@@ -4517,15 +4485,14 @@ dependencies = [
  "serde_json",
  "sha-1",
  "sha2",
- "smallvec",
  "url",
 ]
 
 [[package]]
 name = "rbdc-pg"
-version = "4.5.17"
+version = "4.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb147dae9177410dff8d5186b237dd23a3862d830dd5a8ec56c3fddbd9c59e76"
+checksum = "0c58033858f947061b42450d0a4271667734752de540c2d12c47bc639a84c0a1"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -4538,6 +4505,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
+ "hex",
  "hmac",
  "itoa",
  "log",
@@ -4560,9 +4528,9 @@ dependencies = [
 
 [[package]]
 name = "rbdc-pool-fast"
-version = "4.5.11"
+version = "4.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02b249a49f28703a3139083e1fab38ba0890e5331f8a68fdf3bab36775ceff91"
+checksum = "0a3bd10f8ee36e5714b97b752ee3ebbc38093af0af4fb1cb463b45d9ca29fd14"
 dependencies = [
  "async-trait",
  "dark-std",
@@ -5119,7 +5087,7 @@ checksum = "d3e97a565f76233a6003f9f5c54be1d9c5bdfa3eccfb189469f11ec4901c47dc"
 dependencies = [
  "base16ct",
  "der",
- "generic-array 0.14.7",
+ "generic-array",
  "pkcs8",
  "subtle",
  "zeroize",

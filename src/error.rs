@@ -55,7 +55,11 @@ pub enum FeedbackFusionError {
     #[error(transparent)]
     TransportError(#[from] tonic::transport::Error),
     #[error(transparent)]
-    UriError(#[from] http::uri::InvalidUri)
+    UriError(#[from] http::uri::InvalidUri),
+    #[error(transparent)]
+    BincodeEncodeError(#[from] bincode::error::EncodeError),
+    #[error(transparent)]
+    KanalSendError(#[from] kanal::SendError)
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {

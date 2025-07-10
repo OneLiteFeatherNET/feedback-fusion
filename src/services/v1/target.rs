@@ -20,9 +20,15 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use feedback_fusion_common::proto::{
-    CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest,
-    Target as ProtoTarget, TargetPage, UpdateTargetRequest,
+use feedback_fusion_common::{
+    event::{
+        Event, EventType, ResourceKind, ResourceModificationOperation, ResourceModifiedEvent,
+        event::EventContent,
+    },
+    proto::{
+        CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest,
+        Target as ProtoTarget, TargetPage, UpdateTargetRequest,
+    },
 };
 
 use crate::{
@@ -49,7 +55,28 @@ pub async fn create_target(
     // create the target
     database_request!(Target::insert(connection, &target).await, "Insert target")?;
 
-    Ok(Response::new(target.into()))
+    let proto_target = ProtoTarget::from(target);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Create)
+                            .id(proto_target.id.clone())
+                            .resource_kind(ResourceKind::Target)
+                            .data(&proto_target)
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(proto_target))
 }
 
 pub async fn get_target(
@@ -83,7 +110,13 @@ pub async fn get_targets(
 
     // TODO: write translation macro
     let page = database_request!(
-        Target::select_page_wrapper(&DATABASE_CONFIG, connection, &page_request, data.query.as_str()).await,
+        Target::select_page_wrapper(
+            &DATABASE_CONFIG,
+            connection,
+            &page_request,
+            data.query.as_str()
+        )
+        .await,
         "Select targets by query"
     )?;
 
@@ -118,10 +151,32 @@ pub async fn update_target(
     target.set_description(data.description.or(target.description().clone()));
 
     database_request!(
-        Target::update_by_column(connection, &target, "id").await,
+        Target::update_by_map(connection, &target, value! {"id": target.id()}).await,
         "Update target"
     )?;
-    Ok(Response::new(target.into()))
+
+    let proto_target = ProtoTarget::from(target);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Update)
+                            .id(proto_target.id.clone())
+                            .resource_kind(ResourceKind::Target)
+                            .data(&proto_target)
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(proto_target))
 }
 
 pub async fn delete_target(
@@ -133,8 +188,29 @@ pub async fn delete_target(
     let connection = context.connection();
 
     database_request!(
-        Target::delete_by_column(connection, "id", data.id.as_str()).await,
+        Target::delete_by_map(connection, value! {"id": &data.id}).await,
         "Delete target by id"
     )?;
+
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Delete)
+                            .id(data.id)
+                            .resource_kind(ResourceKind::Target)
+                            .data(&())
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
     Ok(Response::new(()))
 }

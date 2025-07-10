@@ -425,7 +425,7 @@ pub async fn fetch_prompt(connection: &DatabaseConnection, id: &str) -> Result<O
 #[dynamic_cache(ttl = "300", key = r#"format!('fields-{}', prompt)"#)]
 pub async fn fields_by_prompt(connection: &DatabaseConnection, prompt: &str) -> Result<Vec<Field>> {
     let result = database_request!(
-        Field::select_by_column(connection, "prompt", prompt).await,
+        Field::select_by_map(connection, value!{"prompt": prompt}).await,
         "Select fields by prompt"
     )?;
 

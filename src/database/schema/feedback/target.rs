@@ -24,7 +24,7 @@ use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
 use rbatis::rbdc::DateTime;
 
 #[derive(
-    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate, Encode, Decode
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
@@ -39,9 +39,11 @@ pub struct Target {
     description: Option<String>,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
+    #[bincode(with_serde)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
+    #[bincode(with_serde)]
     created_at: DateTime,
 }
 

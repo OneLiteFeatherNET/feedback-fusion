@@ -8,6 +8,7 @@
     - [EventBatch](#feedback_fusion_event_v1-EventBatch)
     - [ResourceModifiedEvent](#feedback_fusion_event_v1-ResourceModifiedEvent)
   
+    - [EventType](#feedback_fusion_event_v1-EventType)
     - [ResourceKind](#feedback_fusion_event_v1-ResourceKind)
     - [ResourceModificationOperation](#feedback_fusion_event_v1-ResourceModificationOperation)
   
@@ -101,6 +102,7 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| event_type | [EventType](#feedback_fusion_event_v1-EventType) |  |  |
 | resource_modified_event | [ResourceModifiedEvent](#feedback_fusion_event_v1-ResourceModifiedEvent) |  |  |
 
 
@@ -133,6 +135,7 @@
 | ----- | ---- | ----- | ----------- |
 | operation | [ResourceModificationOperation](#feedback_fusion_event_v1-ResourceModificationOperation) |  |  |
 | id | [string](#string) |  |  |
+| resource_kind | [ResourceKind](#feedback_fusion_event_v1-ResourceKind) |  |  |
 | data | [bytes](#bytes) |  |  |
 
 
@@ -140,6 +143,18 @@
 
 
  
+
+
+<a name="feedback_fusion_event_v1-EventType"></a>
+
+### EventType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| UNKNOWN | 0 |  |
+| RESOURCE_MODIFIED | 1 |  |
+
 
 
 <a name="feedback_fusion_event_v1-ResourceKind"></a>
@@ -152,7 +167,6 @@
 | TARGET | 0 |  |
 | PROMPT | 1 |  |
 | FIELD | 2 |  |
-| AUTHORIZATION | 3 |  |
 
 
 

@@ -39,14 +39,12 @@ paste = "1.0.14"
 prost = "0.13.0"
 prost-types = "0.13.0"
 rustls = "0.23.29"
-rbatis = "=4.5.33"
+rbatis = "4.6.8"
 rayon = "1.10.0"
-rbdc = "=4.5.45"
-rbdc-pool-fast = "=4.5.11"
-rbdc-pg = { version = "=4.5.17" }
-rbdc-mysql = { version = "=4.5.17" }
-rbdc-mssql = { version = "=4.5.7" }
-rbs = "4.5.13"
+rbdc-pg = "4.6.1"
+rbdc-mysql = "4.6.0"
+rbdc-mssql = "4.6.1"
+rbs = "4.5.2"
 serde = { version = "1.0.197", features = ["derive"] }
 serde-inline-default = "0.2.3"
 serde_json = "1.0.115"
@@ -62,7 +60,11 @@ tonic-web = "0.13.0"
 tokio = { version = "1.37.0", features = ["full"] }
 tower = "0.5.0"
 tokio-retry = "0.3"
-tower-http = { version = "0.5.2", features = ["trace", "validate-request", "cors"] }
+tower-http = { version = "0.5.2", features = [
+  "trace",
+  "validate-request",
+  "cors",
+] }
 tracing = "0.1.39"
 tracing-opentelemetry = { version = "0.25.0" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

@@ -21,6 +21,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::derive_ord_xor_partial_ord)]
 
 pub mod database;
 pub mod observability;
@@ -45,6 +46,15 @@ pub trait PageRequest {
     fn page_request(&self) -> rbatis::plugin::page::PageRequest;
 }
 
+#[macro_export]
+macro_rules! emit {
+    ($expr: expr, $title: expr) => {{
+        let span = info_span!(concat!("Emit event: ", $title));
+
+        async { $expr }.instrument(span).await
+    }};
+}
+
 pub mod prelude {
     pub use anyhow::anyhow;
     pub use derivative::Derivative;
@@ -56,6 +66,7 @@ pub mod prelude {
         crud, impl_insert, impl_select, impl_select_page, impled, plugin::page::Page, py_sql,
         rbdc::JsonV, IPageRequest,
     };
+    pub use rbs::value;
     pub use serde::{Deserialize, Serialize};
     pub use serde_inline_default::serde_inline_default;
     pub use tracing::{debug, error, info, info_span, instrument, warn, Instrument};

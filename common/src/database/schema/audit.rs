@@ -21,10 +21,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{impl_select_page_wrapper, prelude::*};
-use rbatis::rbdc::DateTime;
+use rbatis::rbdc::{Bytes, DateTime};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
-#[serde(tag = "type")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum AuditResource {
     Target,
@@ -32,8 +31,7 @@ pub enum AuditResource {
     Field,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
-#[serde(tag = "type")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum AuditAction {
     Create,
@@ -42,19 +40,9 @@ pub enum AuditAction {
 }
 
 #[derive(
-    Deserialize,
-    Serialize,
-    Clone,
-    Derivative,
-    Debug,
-    Getters,
-    Setters,
-    TypedBuilder,
-    Eq,
-    Ord,
-    PartialOrd,
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Eq, PartialOrd, Hash
 )]
-#[derivative(PartialEq)]
+#[derivative(PartialEq, Ord)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
@@ -64,7 +52,8 @@ pub struct AuditVersion {
     resource_id: String,
     resource_type: AuditResource,
     action: AuditAction,
-    data: Vec<u8>,
+    #[derivative(Ord = "ignore")]
+    data: Bytes,
     version: u32,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]

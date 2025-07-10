@@ -14,13 +14,11 @@ itertools = "0.13.0"
 lazy_static = { version = "1.5.0" }
 log = "0.4.27"
 nanoid = "0.4.0"
-rbatis = "=4.5.33"
-rbdc = "=4.5.45"
-rbdc-pool-fast = "=4.5.11"
-rbdc-pg = { version = "=4.5.17" }
-rbdc-mysql = { version = "=4.5.17" }
-rbdc-mssql = { version = "=4.5.7" }
-rbs = "4.5.13"
+rbatis = "4.6.8"
+rbdc-pg = "4.6.1" 
+rbdc-mysql = "4.6.0"
+rbdc-mssql ="4.6.1"
+rbs = "4.6.2"
 tracing = "0.1.41"
 tracing-opentelemetry = { version = "0.25.0" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

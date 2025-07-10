@@ -185,9 +185,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     tonic_build::configure()
-        .type_attribute("Event", "#[derive(Eq, Hash)]")
-        .type_attribute("Event.event", "#[derive(Eq, Hash)]")
-        .type_attribute("ResourceModifiedEvent", "#[derive(Eq, Hash)]")
+        .type_attribute("Event", "#[derive(Eq, Hash, typed_builder::TypedBuilder)]")
+        .type_attribute("Event", "#[builder(field_defaults(setter(into)))]")
+        .field_attribute("Event.created_at", "#[builder(default_code = r#\"Some(prost_types::Timestamp::from(std::time::SystemTime::now()))\"#)]")
+        .field_attribute("Event.event_type", "#[builder(setter(transform = |event_type: EventType| event_type as i32))]")
+        .type_attribute("Event.event_content", "#[derive(Eq, Hash)]")
+        .type_attribute("ResourceModifiedEvent", "#[derive(Eq, Hash, typed_builder::TypedBuilder)]")
+        .field_attribute("ResourceModifiedEvent.operation", "#[builder(setter(transform = |operation: ResourceModificationOperation| operation as i32))]")
+        .field_attribute("ResourceModifiedEvent.resource_kind", "#[builder(setter(transform = |kind: ResourceKind| kind as i32))]")
+        .field_attribute("ResourceModifiedEvent.data", "#[builder(setter(transform = |message: &impl prost::Message| {let mut buffer = Vec::new();message.encode(&mut buffer).unwrap();buffer}))]")
         .file_descriptor_set_path(out_dir.join("feedback-fusion-event-v1-descriptor.bin"))
         .compile_protos(&["../proto/feedback-fusion-event-v1.proto"], &["../proto"])
         .unwrap();

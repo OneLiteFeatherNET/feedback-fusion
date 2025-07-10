@@ -67,7 +67,9 @@ impl FeedbackFusionIndexerProcessor {
                     event = self.receiver.recv() => {
                         match event {
                             Ok(batch) => {
-                                self.process(batch).await?;
+                                if let Err(error) = self.process(batch).await {
+                                    error!("Error occurred while processing batch: {error}");
+                                };
                             }
                             Err(error) => {
                                 error!("Got an error while listening for event batches on processor worker: {error}");

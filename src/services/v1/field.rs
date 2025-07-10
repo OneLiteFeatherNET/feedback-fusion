@@ -29,9 +29,15 @@ use crate::{
     },
     prelude::*,
 };
-use feedback_fusion_common::proto::{
-    CreateFieldRequest, DeleteFieldRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
-    UpdateFieldRequest,
+use feedback_fusion_common::{
+    event::{
+        Event, EventType, ResourceKind, ResourceModificationOperation, ResourceModifiedEvent,
+        event::EventContent,
+    },
+    proto::{
+        CreateFieldRequest, DeleteFieldRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
+        UpdateFieldRequest,
+    },
 };
 
 #[instrument(skip_all)]
@@ -55,10 +61,30 @@ pub async fn create_field(
         .prompt(data.prompt)
         .build();
     database_request!(Field::insert(connection, &field).await, "Insert field")?;
-
     invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
 
-    Ok(Response::new(field.into()))
+    let proto_field = ProtoField::from(field);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Create)
+                            .id(proto_field.id.clone())
+                            .resource_kind(ResourceKind::Field)
+                            .data(&proto_field)
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(proto_field))
 }
 
 #[instrument(skip_all)]
@@ -83,7 +109,13 @@ pub async fn get_active_fields(
 
     // may consider caching this as well
     let page = database_request!(
-        Field::select_page_by_prompt_wrapper(&DATABASE_CONFIG, connection, &page_request, prompt.id().as_str()).await,
+        Field::select_page_by_prompt_wrapper(
+            &DATABASE_CONFIG,
+            connection,
+            &page_request,
+            prompt.id().as_str()
+        )
+        .await,
         "Select fields by prompt"
     )?;
 
@@ -160,13 +192,33 @@ pub async fn update_field(
     };
 
     database_request!(
-        Field::update_by_column(connection, &field, "id").await,
+        Field::update_by_map(connection, &field, value! {"id": field.id()}).await,
         "Update field by id"
     )?;
-
     invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
 
-    Ok(Response::new(field.into()))
+    let proto_field = ProtoField::from(field);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Update)
+                            .id(proto_field.id.clone())
+                            .resource_kind(ResourceKind::Field)
+                            .data(&proto_field)
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(proto_field))
 }
 
 #[instrument(skip_all)]
@@ -175,9 +227,31 @@ pub async fn delete_field(
     request: Request<DeleteFieldRequest>,
     _user_context: UserContext,
 ) -> Result<Response<()>> {
+    let data = request.into_inner();
+
     database_request!(
-        Field::delete_by_column(context.connection(), "id", request.into_inner().id.as_str()).await,
+        Field::delete_by_map(context.connection(), value! {"id": &data.id}).await,
         "Delete field by id"
+    )?;
+
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Delete)
+                            .id(data.id)
+                            .resource_kind(ResourceKind::Field)
+                            .data(&())
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
     )?;
 
     Ok(Response::new(()))

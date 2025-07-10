@@ -317,8 +317,8 @@ pub fn read_permission_matrix<'a>(
 pub async fn sync_preset(connection: &DatabaseConnection) -> Result<()> {
     if let Some(preset) = CONFIG.preset() {
         let transaction = connection.acquire_begin().await?;
-        let mut transaction = transaction.defer_async(|mut tx| async move {
-            if !tx.done {
+        let transaction = transaction.defer_async(|tx| async move {
+            if !tx.done() {
                 let _ = tx.rollback().await;
             }
         });
@@ -343,7 +343,7 @@ macro_rules! update_otherwise_create {
                     data.[<set_ $field>]($data.$field);
                 )*
 
-                $path::update_by_column($transaction, &data, "id").await?;
+                $path::update_by_map($transaction, &data, value!{"id": data.id()}).await?;
             } else {
                 $path::insert(
                     $transaction,
@@ -367,7 +367,7 @@ macro_rules! update_otherwise_create {
                     data.[<set_ $field>]($data.$field);
                 )*
 
-                $path::update_by_column($transaction, &data, "id").await?;
+                $path::update_by_map($transaction, &data, value!{"id": data.id()}).await?;
             } else {
                 $path::insert(
                     $transaction,

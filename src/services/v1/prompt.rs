@@ -20,10 +20,19 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use super::{FeedbackFusionV1Context, PublicFeedbackFusionV1Context};
-use crate::{database::schema::{feedback::Prompt, user::UserContext}, prelude::*};
-use feedback_fusion_common::proto::{
-    CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest,
-    Prompt as ProtoPrompt, PromptPage, UpdatePromptRequest,
+use crate::{
+    database::schema::{feedback::Prompt, user::UserContext},
+    prelude::*,
+};
+use feedback_fusion_common::{
+    event::{
+        Event, EventType, ResourceKind, ResourceModificationOperation, ResourceModifiedEvent,
+        event::EventContent,
+    },
+    proto::{
+        CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest,
+        Prompt as ProtoPrompt, PromptPage, UpdatePromptRequest,
+    },
 };
 use validator::Validate;
 
@@ -46,7 +55,28 @@ pub async fn create_prompt(
         .build();
     database_request!(Prompt::insert(connection, &prompt).await, "Insert prompt")?;
 
-    Ok(Response::new(prompt.into()))
+    let proto_prompt = ProtoPrompt::from(prompt);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Create)
+                            .id(proto_prompt.id.clone())
+                            .resource_kind(ResourceKind::Prompt)
+                            .data(&proto_prompt)
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(proto_prompt))
 }
 
 #[instrument(skip_all)]
@@ -78,8 +108,13 @@ pub async fn get_prompts(
     let connection = context.connection();
 
     let prompts = database_request!(
-        Prompt::select_page_by_target_wrapper(&DATABASE_CONFIG, connection, &page_request, data.target.as_str())
-            .await,
+        Prompt::select_page_by_target_wrapper(
+            &DATABASE_CONFIG,
+            connection,
+            &page_request,
+            data.target.as_str()
+        )
+        .await,
         "Select prompts by target"
     )?;
 
@@ -117,13 +152,33 @@ pub async fn update_prompt(
     prompt.set_active(data.active.unwrap_or(*prompt.active()));
 
     database_request!(
-        Prompt::update_by_column(connection, &prompt, "id").await,
+        Prompt::update_by_map(connection, &prompt, value! {"id": prompt.id()}).await,
         "Update prompt"
     )?;
-
     invalidate!(fetch_prompt, format!("prompt-{}", prompt.id()));
 
-    Ok(Response::new(prompt.into()))
+    let proto_prompt = ProtoPrompt::from(prompt);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Update)
+                            .id(proto_prompt.id.clone())
+                            .resource_kind(ResourceKind::Prompt)
+                            .data(&proto_prompt)
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(proto_prompt))
 }
 
 #[instrument(skip_all)]
@@ -132,10 +187,31 @@ pub async fn delete_prompt(
     request: Request<DeletePromptRequest>,
     _user_context: UserContext,
 ) -> Result<Response<()>> {
+    let data = request.into_inner();
+
     database_request!(
-        Prompt::delete_by_column(context.connection(), "id", request.into_inner().id.as_str())
-            .await,
+        Prompt::delete_by_map(context.connection(), value! {"id": &data.id}).await,
         "Delete prompt by id"
+    )?;
+
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                Event::builder()
+                    .event_type(EventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ResourceModifiedEvent::builder()
+                            .operation(ResourceModificationOperation::Delete)
+                            .id(data.id)
+                            .resource_kind(ResourceKind::Prompt)
+                            .data(&())
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
     )?;
 
     Ok(Response::new(()))

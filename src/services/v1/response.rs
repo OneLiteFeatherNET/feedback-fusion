@@ -44,8 +44,8 @@ pub async fn create_responses(
     let data = request.into_inner();
     // start transaction
     let transaction = context.connection().acquire_begin().await?;
-    let mut transaction = transaction.defer_async(|mut tx| async move {
-        if !tx.done {
+    let transaction = transaction.defer_async(|tx| async move {
+        if !tx.done() {
             let _ = tx.rollback().await;
         }
     });

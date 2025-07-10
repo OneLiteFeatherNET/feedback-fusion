@@ -208,7 +208,7 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
         );
         if health_client
             .check(HealthCheckRequest {
-                service: "".to_owned(),
+                service: "feedback_fusion_event_v1.FeedbackFusionIndexerV1".to_owned(),
             })
             .await
             .is_ok()

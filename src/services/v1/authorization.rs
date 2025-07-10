@@ -185,7 +185,7 @@ pub async fn update_resource_authorization(
     }
 
     database_request!(
-        ResourceAuthorization::update_by_column(connection, &authorization, "id").await,
+        ResourceAuthorization::update_by_map(connection, &authorization, value!{"id": authorization.id()}).await,
         "Update Resourceauthorization"
     )?;
 
@@ -201,7 +201,7 @@ pub async fn delete_resource_authorization(
     let data = request.into_inner();
 
     database_request!(
-        ResourceAuthorization::delete_by_column(connection, "id", data.id.as_str()).await,
+        ResourceAuthorization::delete_by_map(connection, value!{"id": data.id}).await,
         "Delete ResourceAuthorization by id"
     )?;
 
