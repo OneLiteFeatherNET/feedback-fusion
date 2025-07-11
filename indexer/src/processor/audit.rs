@@ -83,7 +83,7 @@ pub async fn create_audit_versions(
                 .action(action)
                 .resource_type(resource_type)
                 .resource_id(inner_event.id.clone())
-                .data(inner_event.data.clone())
+                .data(inner_event.data.as_slice())
                 .created_at(created_at.clone())
                 .build();
 
@@ -122,8 +122,7 @@ pub async fn create_audit_versions(
     // parse the arguments, so all (resource_type, resource_id)
     let arguments = grouped_by_key
         .iter()
-        .map(|(k, _)| vec![value!(k.0.clone()), value!(k.1.clone())])
-        .flatten()
+        .flat_map(|(k, _)| vec![value!(k.0.clone()), value!(k.1.clone())])
         .collect_vec();
 
     let query = format!(
@@ -201,8 +200,7 @@ pub async fn create_audit_versions(
 
     let audit_versions = grouped_by_key
         .into_iter()
-        .map(|(_, v)| v)
-        .flatten()
+        .flat_map(|(_, v)| v)
         .collect_vec();
 
     // persist result

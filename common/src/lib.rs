@@ -22,6 +22,7 @@
 
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::derive_ord_xor_partial_ord)]
+#![allow(clippy::derived_hash_with_manual_eq)]
 
 pub mod database;
 pub mod observability;
