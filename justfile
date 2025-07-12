@@ -13,9 +13,6 @@ test-all: cleanup
   just test mssql
   just test skytable
 
-  # a short sleep to process events
-  sleep 2
-
   cargo llvm-cov report
   cargo llvm-cov report --lcov --output-path coverage.info
 
@@ -129,6 +126,9 @@ test TYPE=DEFAULT_TEST: cleanup oidc-server-mock
   @if [ "{{TYPE}}" = "mariadb" ]; then just backend mysql; else just backend {{TYPE}}; fi
 
   just integration
+
+  # a short sleep to process events
+  sleep 2
 
   just stop-backend
   -docker rm -f database > /dev/null 2>&1
