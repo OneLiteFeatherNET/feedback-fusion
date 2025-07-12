@@ -23,7 +23,6 @@
 import { localized, updateWhenLocaleChanges } from "@lit/localize";
 import { css, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { FieldType } from "../feedback-fusion-v1";
 import { html, unsafeStatic } from "lit/static-html.js";
 import "./Text.js";
 import "./Number.js";
@@ -31,6 +30,7 @@ import "./Rating.js";
 import "./Checkbox.js";
 import "./Selection.js";
 import "./Range.js";
+import { ProtoFieldType } from "../feedback-fusion-v1/field.js";
 
 @customElement("feedback-fusion-field")
 @localized()
@@ -73,7 +73,7 @@ export class FeedbackFusionField extends LitElement {
   fieldTitle?: string;
 
   @property({ type: String })
-  fieldType?: FieldType;
+  fieldType?: ProtoFieldType;
 
   // TODO: create an interface for the options
   @property({ type: Object })
@@ -95,7 +95,7 @@ export class FeedbackFusionField extends LitElement {
   }
 
   fieldTypeString() {
-    return Object.keys(FieldType).find(key => FieldType[key] === this.fieldType)!.toLowerCase();
+    return Object.keys(ProtoFieldType).find(key => ProtoFieldType[key] === this.fieldType)!.toLowerCase();
   }
 
   render() {

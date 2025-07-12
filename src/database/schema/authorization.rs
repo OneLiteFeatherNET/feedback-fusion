@@ -20,6 +20,10 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use feedback_fusion_common::{
+    common::ProtoResourceKind,
+    proto::{ProtoAuthorizationGrant, ProtoAuthorizationType, ProtoResourceAuthorization},
+};
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::BTreeSet;
 
@@ -27,9 +31,18 @@ use crate::prelude::*;
 use aliri_oauth2::scope::ScopeTokenRef;
 use rbatis::rbdc::DateTime;
 
-use super::date_time_to_timestamp;
-
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, strum_macros::Display, Hash, Eq, PartialOrd, Ord)]
+#[derive(
+    Deserialize,
+    Serialize,
+    Clone,
+    Debug,
+    PartialEq,
+    strum_macros::Display,
+    Hash,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 pub enum ResourceKind {
     Target,
     Prompt,
@@ -55,15 +68,16 @@ impl PartialEq<Endpoint<'_>> for ResourceKind {
     }
 }
 
-impl From<&feedback_fusion_common::proto::ResourceKind> for ResourceKind {
-    fn from(value: &feedback_fusion_common::proto::ResourceKind) -> Self {
+impl From<&ProtoResourceKind> for ResourceKind {
+    fn from(value: &ProtoResourceKind) -> Self {
         match value {
-            feedback_fusion_common::proto::ResourceKind::ResourceTarget => Self::Target,
-            feedback_fusion_common::proto::ResourceKind::ResourcePrompt => Self::Prompt,
-            feedback_fusion_common::proto::ResourceKind::ResourceField => Self::Field,
-            feedback_fusion_common::proto::ResourceKind::ResourceExport => Self::Export,
-            feedback_fusion_common::proto::ResourceKind::ResourceAuthorize => Self::Authorize,
-            feedback_fusion_common::proto::ResourceKind::ResourceResponse => Self::Response,
+            ProtoResourceKind::Target => Self::Target,
+            ProtoResourceKind::Prompt => Self::Prompt,
+            ProtoResourceKind::Field => Self::Field,
+            ProtoResourceKind::Export => Self::Export,
+            ProtoResourceKind::Authorize => Self::Authorize,
+            ProtoResourceKind::Response => Self::Response,
+            ProtoResourceKind::Unknown => unimplemented!(""),
         }
     }
 }
@@ -71,24 +85,12 @@ impl From<&feedback_fusion_common::proto::ResourceKind> for ResourceKind {
 impl From<ResourceKind> for i32 {
     fn from(value: ResourceKind) -> Self {
         match value {
-            ResourceKind::Target => {
-                feedback_fusion_common::proto::ResourceKind::ResourceTarget.into()
-            }
-            ResourceKind::Prompt => {
-                feedback_fusion_common::proto::ResourceKind::ResourcePrompt.into()
-            }
-            ResourceKind::Field => {
-                feedback_fusion_common::proto::ResourceKind::ResourceField.into()
-            }
-            ResourceKind::Export => {
-                feedback_fusion_common::proto::ResourceKind::ResourceExport.into()
-            }
-            ResourceKind::Authorize => {
-                feedback_fusion_common::proto::ResourceKind::ResourceAuthorize.into()
-            }
-            ResourceKind::Response => {
-                feedback_fusion_common::proto::ResourceKind::ResourceResponse.into()
-            }
+            ResourceKind::Target => ProtoResourceKind::Target.into(),
+            ResourceKind::Prompt => ProtoResourceKind::Prompt.into(),
+            ResourceKind::Field => ProtoResourceKind::Field.into(),
+            ResourceKind::Export => ProtoResourceKind::Export.into(),
+            ResourceKind::Authorize => ProtoResourceKind::Authorize.into(),
+            ResourceKind::Response => ProtoResourceKind::Response.into(),
         }
     }
 }
@@ -100,12 +102,12 @@ pub enum ResourceAuthorizationType {
     Subject,
 }
 
-impl From<&feedback_fusion_common::proto::AuthorizationType> for ResourceAuthorizationType {
-    fn from(value: &feedback_fusion_common::proto::AuthorizationType) -> Self {
+impl From<&ProtoAuthorizationType> for ResourceAuthorizationType {
+    fn from(value: &ProtoAuthorizationType) -> Self {
         match value {
-            feedback_fusion_common::proto::AuthorizationType::TypeSubject => Self::Subject,
-            feedback_fusion_common::proto::AuthorizationType::TypeScope => Self::Scope,
-            feedback_fusion_common::proto::AuthorizationType::TypeGroup => Self::Group,
+            ProtoAuthorizationType::TypeSubject => Self::Subject,
+            ProtoAuthorizationType::TypeScope => Self::Scope,
+            ProtoAuthorizationType::TypeGroup => Self::Group,
         }
     }
 }
@@ -113,26 +115,20 @@ impl From<&feedback_fusion_common::proto::AuthorizationType> for ResourceAuthori
 impl From<ResourceAuthorizationType> for i32 {
     fn from(value: ResourceAuthorizationType) -> Self {
         match value {
-            ResourceAuthorizationType::Scope => {
-                feedback_fusion_common::proto::AuthorizationType::TypeScope.into()
-            }
-            ResourceAuthorizationType::Group => {
-                feedback_fusion_common::proto::AuthorizationType::TypeGroup.into()
-            }
-            ResourceAuthorizationType::Subject => {
-                feedback_fusion_common::proto::AuthorizationType::TypeSubject.into()
-            }
+            ResourceAuthorizationType::Scope => ProtoAuthorizationType::TypeScope.into(),
+            ResourceAuthorizationType::Group => ProtoAuthorizationType::TypeGroup.into(),
+            ResourceAuthorizationType::Subject => ProtoAuthorizationType::TypeSubject.into(),
         }
     }
 }
 
-impl From<&feedback_fusion_common::proto::AuthorizationGrant> for Permission {
-    fn from(value: &feedback_fusion_common::proto::AuthorizationGrant) -> Self {
+impl From<&ProtoAuthorizationGrant> for Permission {
+    fn from(value: &ProtoAuthorizationGrant) -> Self {
         match value {
-            feedback_fusion_common::proto::AuthorizationGrant::Read => Self::Read,
-            feedback_fusion_common::proto::AuthorizationGrant::Write => Self::Write,
-            feedback_fusion_common::proto::AuthorizationGrant::List => Self::List,
-            feedback_fusion_common::proto::AuthorizationGrant::All => Self::All,
+            ProtoAuthorizationGrant::Read => Self::Read,
+            ProtoAuthorizationGrant::Write => Self::Write,
+            ProtoAuthorizationGrant::List => Self::List,
+            ProtoAuthorizationGrant::All => Self::All,
         }
     }
 }
@@ -140,18 +136,10 @@ impl From<&feedback_fusion_common::proto::AuthorizationGrant> for Permission {
 impl From<Permission> for i32 {
     fn from(value: Permission) -> Self {
         match value {
-            Permission::Read => {
-                feedback_fusion_common::proto::AuthorizationGrant::Read.into()
-            }
-            Permission::Write => {
-                feedback_fusion_common::proto::AuthorizationGrant::Write.into()
-            }
-            Permission::List => {
-                feedback_fusion_common::proto::AuthorizationGrant::List.into()
-            }
-            Permission::All => {
-                feedback_fusion_common::proto::AuthorizationGrant::All.into()
-            }
+            Permission::Read => ProtoAuthorizationGrant::Read.into(),
+            Permission::Write => ProtoAuthorizationGrant::Write.into(),
+            Permission::List => ProtoAuthorizationGrant::List.into(),
+            Permission::All => ProtoAuthorizationGrant::All.into(),
         }
     }
 }
@@ -177,9 +165,9 @@ pub struct ResourceAuthorization {
     created_at: DateTime,
 }
 
-impl From<ResourceAuthorization> for feedback_fusion_common::proto::ResourceAuthorization {
+impl From<ResourceAuthorization> for ProtoResourceAuthorization {
     fn from(value: ResourceAuthorization) -> Self {
-        feedback_fusion_common::proto::ResourceAuthorization {
+        ProtoResourceAuthorization {
             id: value.id,
             resource_kind: value.resource_kind.into(),
             resource_id: value.resource_id,
@@ -217,7 +205,7 @@ crud!(ResourceAuthorization {});
 impl_select!(ResourceAuthorization {select_matching(scopes: &BTreeSet<&ScopeTokenRef>, groups: &BTreeSet<&String>, subject: &str) => "`WHERE (authorization_type = 'Scope' AND authorization_value IN ${scopes.sql()}) OR (authorization_type = 'Group' AND authorization_value IN ${groups.sql()}) OR (authorization_type = 'Subject' AND authorization_value = #{subject})`"});
 impl_select!(ResourceAuthorization {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
 impl_select!(ResourceAuthorization {select_by_ids(ids: &[String]) => "`WHERE id IN ${ids.sql()}`"});
-impl_select_page_wrapper!(ResourceAuthorization {select_page() => "``"});
+impl_select_page!(ResourceAuthorization {select_page() => "``"});
 
 pub struct Authorization<'a>(pub &'a Endpoint<'a>, pub &'a Permission);
 

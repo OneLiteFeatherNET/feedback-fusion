@@ -29,14 +29,13 @@ use crate::{
     },
     prelude::*,
 };
-use feedback_fusion_common::proto::{
-    AuthorizationGrant as ProtoAuthorizationGrant, AuthorizationType as ProtoAuthorizationType,
+use feedback_fusion_common::{common::ProtoResourceKind, proto::{
     DeleteResourceAuthorizationRequest, ExportResourceAuthorizationsRequest,
-    GetResourceAuthorizationRequest, GetResourceAuthorizationsRequest,
-    ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationExportResponse,
-    ResourceAuthorizationList, ResourceAuthorizationPage, ResourceKind as ProtoResourceKind,
+    GetResourceAuthorizationRequest, GetResourceAuthorizationsRequest, ProtoAuthorizationGrant,
+    ProtoAuthorizationType, ProtoResourceAuthorization,
+    ResourceAuthorizationExportResponse, ResourceAuthorizationList, ResourceAuthorizationPage,
     UpdateResourceAuthorizationRequest,
-};
+}};
 use gxhash::{HashMap as GxHashMap, HashSet as GxHashSet};
 
 use feedback_fusion_common::proto::CreateResourceAuthorizationRequest;
@@ -142,7 +141,8 @@ pub async fn get_resource_authorizations(
     let page_request = data.page_request();
 
     let authorizations = database_request!(
-        ResourceAuthorization::select_page_wrapper(connection, &page_request).await,
+        ResourceAuthorization::select_page(connection, &page_request)
+            .await,
         "Select authorizations page"
     )?;
 
@@ -185,7 +185,12 @@ pub async fn update_resource_authorization(
     }
 
     database_request!(
-        ResourceAuthorization::update_by_column(connection, &authorization, "id").await,
+        ResourceAuthorization::update_by_map(
+            connection,
+            &authorization,
+            value! {"id": authorization.id()}
+        )
+        .await,
         "Update Resourceauthorization"
     )?;
 
@@ -201,7 +206,7 @@ pub async fn delete_resource_authorization(
     let data = request.into_inner();
 
     database_request!(
-        ResourceAuthorization::delete_by_column(connection, "id", data.id.as_str()).await,
+        ResourceAuthorization::delete_by_map(connection, value! {"id": data.id}).await,
         "Delete ResourceAuthorization by id"
     )?;
 
@@ -427,13 +432,13 @@ pub async fn export_resource_authorizations(
 #[cfg(test)]
 mod tests {
     use crate::{
+        Permission,
         database::schema::authorization::{
             ResourceAuthorization, ResourceAuthorizationType, ResourceKind,
         },
-        Permission,
     };
 
-    use super::{authorizations_to_endpoints, Endpoint, EndpointScopeSelector};
+    use super::{Endpoint, EndpointScopeSelector, authorizations_to_endpoints};
 
     #[test]
     fn export_authorizations() {
@@ -477,9 +482,11 @@ mod tests {
         assert_eq!(groups.len(), 2);
 
         let mut scopes = scopes.iter();
-        assert!(scopes
-            .next()
-            .is_some_and(|scope| scope.name().as_str().eq("scope")));
+        assert!(
+            scopes
+                .next()
+                .is_some_and(|scope| scope.name().as_str().eq("scope"))
+        );
 
         let mut groups = groups.iter();
         assert!(groups.all(|group| ["group", "groups"].contains(&group.name().as_str())));

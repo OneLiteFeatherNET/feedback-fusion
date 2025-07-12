@@ -40,23 +40,32 @@ pub enum FeedbackFusionError {
     Unauthorized,
     #[error("{0}")]
     Forbidden(String),
-    #[cfg(feature = "caching-skytable")]
     #[error(transparent)]
     CacheError(#[from] crate::cache::SkytableCacheError),
     #[error("{0}")]
     OIDCError(String),
     #[error(transparent)]
-    HCLError(#[from] hcl::Error)
+    HCLError(#[from] hcl::Error),
+    #[error(transparent)]
+    IoError(#[from] tokio::io::Error),
+    #[error(transparent)]
+    FluvioErrorCode(#[from] fluvio::dataplane::link::ErrorCode),
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    TransportError(#[from] tonic::transport::Error),
+    #[error(transparent)]
+    UriError(#[from] http::uri::InvalidUri),
+    #[error(transparent)]
+    BincodeEncodeError(#[from] bincode::error::EncodeError),
+    #[error(transparent)]
+    KanalSendError(#[from] kanal::SendError),
+    #[error(transparent)]
+    ProstDecodeError(#[from] prost::DecodeError)
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {
     fn from(value: ValidationErrors) -> Self {
-        Self::BadRequest(value.to_string())
-    }
-}
-
-impl From<serde_json::Error> for FeedbackFusionError {
-    fn from(value: serde_json::Error) -> Self {
         Self::BadRequest(value.to_string())
     }
 }

@@ -26,6 +26,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     tonic_build::configure()
+        .compile_protos(&["../proto/common/resource.proto"], &["../proto"])
+        .unwrap();
+
+    tonic_build::configure()
         .type_attribute(
             "CreateTargetRequest",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
@@ -35,43 +39,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "FieldOptions.options",
+            "ProtoFieldOptions.options",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "FieldOptions",
+            "ProtoFieldOptions",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "FieldType",
+            "ProtoFieldType",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "TextOptions",
+            "ProtoTextOptions",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "RatingOptions",
+            "ProtoRatingOptions",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "CheckboxOptions",
+            "ProtoCheckboxOptions",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "SelectionOptions",
+            "ProtoSelectionOptions",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "RangeOptions",
+            "ProtoRangeOptions",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "NumberOptions",
+            "ProtoNumberOptions",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute(
-            "CheckboxStyle",
+            "protoCheckboxStyle",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
         )
         .type_attribute("CreateTargetRequest", "#[derive(validator::Validate)]")
@@ -145,11 +149,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "#[derive(feedback_fusion_codegen::PageRequest)]",
         )
         .type_attribute(
-            "ResourceAuthorizationData",
+            "ProtoResourceAuthorizationData",
             "#[derive(validator::Validate)]",
         )
         .field_attribute(
-            "ResourceAuthorizationData.values",
+            "ProtoResourceAuthorizationData.values",
             "#[validate(length(min = 1))]",
         )
         .type_attribute(
@@ -180,8 +184,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "UpdateResourceAuthorizationRequest.id",
             "#[validate(length(min = 1, max = 32), non_control_character)]",
         )
+        .type_attribute(
+            "GetAuditVersionsRequest",
+            "#[derive(feedback_fusion_codegen::PageRequest)]",
+        )
         .file_descriptor_set_path(out_dir.join("feedback-fusion-v1-descriptor.bin"))
-        .compile_protos(&["../proto/feedback-fusion-v1.proto"], &["../proto"])
+        .compile_protos(
+            &["../proto/feedback-fusion-v1/service.proto"],
+            &["../proto"],
+        )
         .unwrap();
+
+    tonic_build::configure()
+        .type_attribute("ProtoEvent", "#[derive(Eq, Hash, typed_builder::TypedBuilder)]")
+        .type_attribute("ProtoEvent", "#[builder(field_defaults(setter(into)))]")
+        .field_attribute("ProtoEvent.created_at", "#[builder(default_code = r#\"Some(prost_types::Timestamp::from(std::time::SystemTime::now()))\"#)]")
+        .field_attribute("ProtoEvent.event_type", "#[builder(setter(transform = |event_type: ProtoEventType| event_type as i32))]")
+        .type_attribute("ProtoEvent.event_content", "#[derive(Eq, Hash)]")
+        .type_attribute("ProtoResourceModifiedEvent", "#[derive(Eq, Hash, typed_builder::TypedBuilder)]")
+        .field_attribute("ProtoResourceModifiedEvent.operation", "#[builder(setter(transform = |operation: ProtoResourceModificationOperation| operation as i32))]")
+        .field_attribute("ProtoResourceModifiedEvent.resource_kind", "#[builder(setter(transform = |kind: crate::common::ProtoResourceKind| kind as i32))]")
+        .field_attribute("ProtoResourceModifiedEvent.data", "#[builder(setter(transform = |message: &impl prost::Message| {let mut buffer = Vec::new();message.encode(&mut buffer).unwrap();buffer}))]")
+        .file_descriptor_set_path(out_dir.join("feedback-fusion-event-v1-descriptor.bin"))
+        .compile_protos(&["../proto/feedback-fusion-event-v1/service.proto"], &["../proto"])
+        .unwrap();
+
     Ok(())
 }

@@ -26,11 +26,10 @@ use crate::prelude::*;
 use aliri::jwt::CoreClaims;
 use openidconnect::{core::CoreUserInfoClaims, AccessToken};
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Encode, Decode)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 #[builder(field_defaults(setter(into)))]
 pub struct User {
     id: String,
@@ -81,9 +80,8 @@ impl User {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, Getters, PartialEq)]
+#[derive(Deserialize, Serialize, Clone, Debug, Getters, PartialEq, Encode, Decode)]
 #[get = "pub"]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct UserContext {
     pub user: User,
     pub authorizations: HashMap<String, bool>,

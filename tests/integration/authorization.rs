@@ -23,23 +23,22 @@
 use test_log::test;
 
 use feedback_fusion_common::{
-    connect,
-    proto::{
-        AuthorizationGrant, AuthorizationType, CreateResourceAuthorizationRequest,
-        CreateTargetRequest, DeleteResourceAuthorizationRequest,
-        ExportResourceAuthorizationsRequest, GetResourceAuthorizationRequest,
-        GetResourceAuthorizationsRequest, GetTargetRequest, ResourceAuthorizationData,
-        ResourceKind, UpdateResourceAuthorizationRequest,
-    },
+    common::ProtoResourceKind, connect, proto::{
+        CreateResourceAuthorizationRequest, CreateTargetRequest,
+        DeleteResourceAuthorizationRequest, ExportResourceAuthorizationsRequest,
+        GetResourceAuthorizationRequest, GetResourceAuthorizationsRequest, GetTargetRequest,
+        ProtoAuthorizationGrant, ProtoAuthorizationType, ProtoResourceAuthorizationData,
+        UpdateResourceAuthorizationRequest,
+    }
 };
 
 fn create_authorization(id: &str) -> CreateResourceAuthorizationRequest {
     CreateResourceAuthorizationRequest {
         resource_id: vec![id.to_string()],
-        resource_kind: ResourceKind::ResourceTarget.into(),
-        authorization_data: Some(ResourceAuthorizationData {
-            r#type: AuthorizationType::TypeScope.into(),
-            grant: vec![AuthorizationGrant::All.into()],
+        resource_kind: ProtoResourceKind::Target.into(),
+        authorization_data: Some(ProtoResourceAuthorizationData {
+            r#type: ProtoAuthorizationType::TypeScope.into(),
+            grant: vec![ProtoAuthorizationGrant::All.into()],
             values: vec!["dynamic".to_owned()],
         }),
     }
@@ -57,15 +56,15 @@ async fn test_create() {
     assert_eq!(response.authorizations.len(), 1);
 
     let authorization = response.authorizations.first().unwrap();
-    assert_eq!(authorization.resource_kind, 0);
+    assert_eq!(authorization.resource_kind, 1);
     assert_eq!(authorization.resource_id(), "foo");
     assert_eq!(
         authorization.authorization_type(),
-        AuthorizationType::TypeScope
+        ProtoAuthorizationType::TypeScope
     );
     assert_eq!(
         authorization.authorization_grant(),
-        AuthorizationGrant::All.into()
+        ProtoAuthorizationGrant::All.into()
     );
     assert_eq!(authorization.value, "dynamic");
 }

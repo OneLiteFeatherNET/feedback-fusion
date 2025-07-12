@@ -39,3 +39,17 @@ oidc = {
     }
   ]
 }
+
+broker = {
+  grpc = {
+    endpoint = "https://localhost:7000"
+
+    tls = {
+      key = "./tests/_common/configs/indexer/key.pem"
+      certificate = "./tests/_common/configs/indexer/certificate.crt"
+      certificate_authority = "./tests/_common/configs/indexer/certificate_authority.crt"
+    } 
+  }
+
+  batch_interval = 0
+}

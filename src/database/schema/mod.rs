@@ -21,51 +21,6 @@
  *
  */
 
-use prost_types::Timestamp;
-use rbatis::rbdc::DateTime;
-
 pub mod authorization;
 pub mod feedback;
 pub mod user;
-
-pub fn date_time_to_timestamp(date_time: DateTime) -> Timestamp {
-    Timestamp::date_time(
-        date_time.year().into(),
-        date_time.mon(),
-        date_time.day(),
-        date_time.hour(),
-        date_time.minute(),
-        date_time.sec(),
-    )
-    .unwrap()
-}
-
-#[macro_export]
-macro_rules! to_date_time {
-    ($ident:expr) => {{
-        DateTime::from_timestamp($ident.unwrap().seconds)
-    }};
-}
-
-#[macro_export()]
-macro_rules! save_as_json {
-    ($struct:path, $ident:ident) => {
-        paste! {
-            fn [<serialize_ $ident>]<S>(sub: &$struct, serializer: S) -> std::result::Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                let json_string = serde_json::to_string(sub).map_err(|error| serde::ser::Error::custom(format!("failed to serialize {} as json: {}", stringify!($struct), error)))?;
-                serializer.serialize_str(&json_string)
-            }
-
-            fn [<deserialize_ $ident>]<'de, D>(deserializer: D) -> std::result::Result<$struct, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                let json_string = String::deserialize(deserializer)?;
-                serde_json::from_str(&json_string).map_err(|error| serde::de::Error::custom(format!("failed to deserialize {} from json: {}", stringify!($struct), error)))
-            }
-        }
-    };
-}

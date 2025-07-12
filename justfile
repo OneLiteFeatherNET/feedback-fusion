@@ -24,10 +24,10 @@ init:
 #
 
 check:
-  cargo check --all-features
+  cargo check --all-features --workspace --tests
 
 clippy:
-  cargo clippy --all-features -- -D warnings
+  cargo clippy --all-features --workspace -- -D warnings
 
 #
 # Docker
@@ -45,7 +45,14 @@ build-all DOCKERFILE="./Dockerfile":
 #
 
 backend TYPE=DEFAULT_TEST:
-  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --no-report > ./target/feedback-fusion.log 2>&1 &
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/indexer/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin indexer --no-report > ./target/feedback-fusion-indexer.log 2>&1 &
+
+  while ! nc -z localhost 7000; do \
+    sleep 1; \
+  done
+  @echo "Application ready"
+
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin feedback-fusion --no-report > ./target/feedback-fusion.log 2>&1 &
 
   while ! nc -z localhost 8000; do \
     sleep 1; \
@@ -53,7 +60,11 @@ backend TYPE=DEFAULT_TEST:
   @echo "Application ready"
 
 stop-backend:
-  @PID=$(lsof -t -i:8000) && if [ -n "$PID" ]; then \
+  -@PID=$(lsof -t -i:8000) && if [ -n "$PID" ]; then \
+    kill -2 $PID; \
+  fi
+
+  -@PID=$(lsof -t -i:7000) && if [ -n "$PID" ]; then \
     kill -2 $PID; \
   fi
 
@@ -62,7 +73,8 @@ bench: oidc-server-mock postgres && cleanup
   GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
 
 protoc-docs:
-  docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos  pseudomuto/protoc-gen-doc --doc_opt=markdown,api.md
+	docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos pseudomuto/protoc-gen-doc --proto_path=/protos --doc_opt=markdown,api.md $(find ./proto -name "*.proto" | sed 's|^\./proto/||')
+
 
 #
 # Testing requirements
@@ -114,6 +126,9 @@ test TYPE=DEFAULT_TEST: cleanup oidc-server-mock
   @if [ "{{TYPE}}" = "mariadb" ]; then just backend mysql; else just backend {{TYPE}}; fi
 
   just integration
+
+  # a short sleep to process events
+  sleep 2
 
   just stop-backend
   -docker rm -f database > /dev/null 2>&1
