@@ -1,18 +1,18 @@
-import { FieldType } from "./feedback-fusion-v1";
+import { ProtoFieldType } from "./feedback-fusion-v1/field.ts";
 
 export const numberToKind = (value: number) => {
   switch (value) {
-    case FieldType.TEXT:
+    case ProtoFieldType.TEXT:
       return "text";
-    case FieldType.NUMBER:
+    case ProtoFieldType.NUMBER:
       return "number";
-    case FieldType.SELECTION:
+    case ProtoFieldType.SELECTION:
       return "selection";
-    case FieldType.RANGE:
+    case ProtoFieldType.RANGE:
       return "range";
-    case FieldType.CHECKBOX:
+    case ProtoFieldType.CHECKBOX:
       return "checkbox";
-    case FieldType.RATING:
+    case ProtoFieldType.RATING:
       return "rating";
     default:
       return undefined;
