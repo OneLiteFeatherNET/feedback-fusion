@@ -25,13 +25,11 @@ use crate::{
     prelude::*,
 };
 use feedback_fusion_common::{
-    event::{
-        Event, EventType, ResourceKind, ResourceModificationOperation, ResourceModifiedEvent,
-        event::EventContent,
-    },
+    common::ProtoResourceKind,
     proto::{
-        CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest,
-        Prompt as ProtoPrompt, PromptPage, UpdatePromptRequest,
+        CreatePromptRequest, DeletePromptRequest, GetPromptRequest, GetPromptsRequest, PromptPage,
+        ProtoEvent, ProtoEventType, ProtoPrompt, ProtoResource, ProtoResourceModificationOperation,
+        ProtoResourceModifiedEvent, UpdatePromptRequest, proto_event::EventContent,
     },
 };
 use validator::Validate;
@@ -40,7 +38,7 @@ use validator::Validate;
 pub async fn create_prompt(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<CreatePromptRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoPrompt>> {
     let data = request.into_inner();
     data.validate()?;
@@ -56,18 +54,21 @@ pub async fn create_prompt(
     database_request!(Prompt::insert(connection, &prompt).await, "Insert prompt")?;
 
     let proto_prompt = ProtoPrompt::from(prompt);
+    let id = proto_prompt.id.clone();
+    let resource = ProtoResource::from(proto_prompt);
     emit!(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Create)
-                            .id(proto_prompt.id.clone())
-                            .resource_kind(ResourceKind::Prompt)
-                            .data(&proto_prompt)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Prompt)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),
@@ -76,7 +77,7 @@ pub async fn create_prompt(
         "ResourceModifiedEvent"
     )?;
 
-    Ok(Response::new(proto_prompt))
+    Ok(Response::new(resource.try_into()?))
 }
 
 #[instrument(skip_all)]
@@ -108,8 +109,7 @@ pub async fn get_prompts(
     let connection = context.connection();
 
     let prompts = database_request!(
-        Prompt::select_page_by_target_wrapper(
-            &DATABASE_CONFIG,
+        Prompt::select_page_by_target(
             connection,
             &page_request,
             data.target.as_str()
@@ -135,7 +135,7 @@ pub async fn get_prompts(
 pub async fn update_prompt(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdatePromptRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoPrompt>> {
     let data = request.into_inner();
     data.validate()?;
@@ -158,18 +158,21 @@ pub async fn update_prompt(
     invalidate!(fetch_prompt, format!("prompt-{}", prompt.id()));
 
     let proto_prompt = ProtoPrompt::from(prompt);
+    let id = proto_prompt.id.clone();
+    let resource = ProtoResource::from(proto_prompt);
     emit!(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Update)
-                            .id(proto_prompt.id.clone())
-                            .resource_kind(ResourceKind::Prompt)
-                            .data(&proto_prompt)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Prompt)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),
@@ -178,14 +181,14 @@ pub async fn update_prompt(
         "ResourceModifiedEvent"
     )?;
 
-    Ok(Response::new(proto_prompt))
+    Ok(Response::new(resource.try_into()?))
 }
 
 #[instrument(skip_all)]
 pub async fn delete_prompt(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<DeletePromptRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<()>> {
     let data = request.into_inner();
 
@@ -198,14 +201,15 @@ pub async fn delete_prompt(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Delete)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
                             .id(data.id)
-                            .resource_kind(ResourceKind::Prompt)
-                            .data(&())
+                            .resource_kind(ProtoResourceKind::Prompt)
+                            .data(&ProtoResource::empty())
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),

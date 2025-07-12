@@ -30,13 +30,9 @@ use crate::{
     prelude::*,
 };
 use feedback_fusion_common::{
-    event::{
-        Event, EventType, ResourceKind, ResourceModificationOperation, ResourceModifiedEvent,
-        event::EventContent,
-    },
+    common::ProtoResourceKind,
     proto::{
-        CreateFieldRequest, DeleteFieldRequest, Field as ProtoField, FieldPage, GetFieldsRequest,
-        UpdateFieldRequest,
+        proto_event::EventContent, CreateFieldRequest, DeleteFieldRequest, FieldPage, GetFieldsRequest, ProtoEvent, ProtoEventType, ProtoField, ProtoResource, ProtoResourceModificationOperation, ProtoResourceModifiedEvent, UpdateFieldRequest
     },
 };
 
@@ -44,7 +40,7 @@ use feedback_fusion_common::{
 pub async fn create_field(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<CreateFieldRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoField>> {
     let data = request.into_inner();
     data.validate()?;
@@ -64,18 +60,21 @@ pub async fn create_field(
     invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
 
     let proto_field = ProtoField::from(field);
+    let id = proto_field.id.clone();
+    let resource = ProtoResource::from(proto_field);
     emit!(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Create)
-                            .id(proto_field.id.clone())
-                            .resource_kind(ResourceKind::Field)
-                            .data(&proto_field)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Field)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),
@@ -84,7 +83,7 @@ pub async fn create_field(
         "ResourceModifiedEvent"
     )?;
 
-    Ok(Response::new(proto_field))
+    Ok(Response::new(resource.try_into()?))
 }
 
 #[instrument(skip_all)]
@@ -109,8 +108,7 @@ pub async fn get_active_fields(
 
     // may consider caching this as well
     let page = database_request!(
-        Field::select_page_by_prompt_wrapper(
-            &DATABASE_CONFIG,
+        Field::select_page_by_prompt(
             connection,
             &page_request,
             prompt.id().as_str()
@@ -142,8 +140,7 @@ pub async fn get_fields(
     let page_request = data.page_request();
 
     let page = database_request!(
-        Field::select_page_by_prompt_wrapper(
-            &DATABASE_CONFIG,
+        Field::select_page_by_prompt(
             context.connection(),
             &page_request,
             data.prompt.as_str()
@@ -169,7 +166,7 @@ pub async fn get_fields(
 pub async fn update_field(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdateFieldRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoField>> {
     let data = request.into_inner();
     data.validate()?;
@@ -198,18 +195,21 @@ pub async fn update_field(
     invalidate!(fields_by_prompt, format!("prompt-{}", field.prompt()));
 
     let proto_field = ProtoField::from(field);
+    let id  = proto_field.id.clone();
+    let resource = ProtoResource::from(proto_field);
     emit!(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Update)
-                            .id(proto_field.id.clone())
-                            .resource_kind(ResourceKind::Field)
-                            .data(&proto_field)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Field)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),
@@ -218,14 +218,14 @@ pub async fn update_field(
         "ResourceModifiedEvent"
     )?;
 
-    Ok(Response::new(proto_field))
+    Ok(Response::new(resource.try_into()?))
 }
 
 #[instrument(skip_all)]
 pub async fn delete_field(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<DeleteFieldRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<()>> {
     let data = request.into_inner();
 
@@ -238,14 +238,15 @@ pub async fn delete_field(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Delete)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Update)
                             .id(data.id)
-                            .resource_kind(ResourceKind::Field)
-                            .data(&())
+                            .resource_kind(ProtoResourceKind::Field)
+                            .data(&ProtoResource::empty())
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),

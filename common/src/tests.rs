@@ -139,7 +139,7 @@ impl Arbitrary<'_> for CreateFieldRequest {
                     .collect(),
             ),
             field_type: u.int_in_range(0..=6)?,
-            options: Some(crate::proto::FieldOptions::arbitrary(u)?),
+            options: Some(crate::proto::ProtoFieldOptions::arbitrary(u)?),
         })
     }
 }

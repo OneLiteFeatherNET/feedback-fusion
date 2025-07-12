@@ -23,7 +23,7 @@
 use std::time::Duration;
 
 use crate::{broker::FeedbackFusionBrokerDriver, prelude::*};
-use feedback_fusion_common::event::{Event, EventBatch};
+use feedback_fusion_common::proto::{ProtoEvent, ProtoEventBatch};
 use kanal::AsyncReceiver;
 use tokio_retry::strategy::{ExponentialBackoff, jitter};
 
@@ -34,7 +34,7 @@ const BATCH_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub async fn start_loop(
     mut broker: FeedbackFusionBroker,
-    receiver: AsyncReceiver<Event>,
+    receiver: AsyncReceiver<ProtoEvent>,
 ) -> Result<()> {
     let mut batch = Vec::with_capacity(BATCH_SIZE);
 
@@ -92,13 +92,13 @@ pub async fn start_loop(
 
 async fn send_batch(
     driver: &mut Box<dyn FeedbackFusionBrokerDriver>,
-    events: &mut Vec<Event>,
+    events: &mut Vec<ProtoEvent>,
 ) -> Result<()> {
     if events.is_empty() {
         return Ok(());
     }
 
-    let batch = EventBatch {
+    let batch = ProtoEventBatch {
         events: events.to_vec(),
     };
 

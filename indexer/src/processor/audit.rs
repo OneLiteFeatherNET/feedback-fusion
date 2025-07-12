@@ -22,12 +22,13 @@
 
 use crate::prelude::*;
 use feedback_fusion_common::{
+    common::ProtoResourceKind,
     database::{
         DatabaseConnection,
         schema::audit::{AuditAction, AuditResource, AuditVersion},
     },
     database_request,
-    event::{Event, event::EventContent},
+    proto::{ProtoEvent, ProtoResourceModificationOperation, proto_event::EventContent},
 };
 use rbatis::rbdc::DateTime;
 
@@ -44,7 +45,7 @@ struct MaxVersionQuery {
 /// We assume the events are already filtered and are all `ResourceModifiedEvent` variants
 #[instrument(skip_all)]
 pub async fn create_audit_versions(
-    events: &[Event],
+    events: &[ProtoEvent],
     connection: &DatabaseConnection,
 ) -> Result<()> {
     // filter the versions and map them to a correct auditversion
@@ -54,21 +55,16 @@ pub async fn create_audit_versions(
         #[allow(irrefutable_let_patterns)]
         if let EventContent::ResourceModifiedEvent(inner_event) = inner {
             let action = match inner_event.operation() {
-                feedback_fusion_common::event::ResourceModificationOperation::Create => {
-                    AuditAction::Create
-                }
-                feedback_fusion_common::event::ResourceModificationOperation::Update => {
-                    AuditAction::Update
-                }
-                feedback_fusion_common::event::ResourceModificationOperation::Delete => {
-                    AuditAction::Delete
-                }
+                ProtoResourceModificationOperation::Create => AuditAction::Create,
+                ProtoResourceModificationOperation::Update => AuditAction::Update,
+                ProtoResourceModificationOperation::Delete => AuditAction::Delete,
             };
 
             let resource_type = match inner_event.resource_kind() {
-                feedback_fusion_common::event::ResourceKind::Target => AuditResource::Target,
-                feedback_fusion_common::event::ResourceKind::Prompt => AuditResource::Prompt,
-                feedback_fusion_common::event::ResourceKind::Field => AuditResource::Field,
+                ProtoResourceKind::Target => AuditResource::Target,
+                ProtoResourceKind::Prompt => AuditResource::Prompt,
+                ProtoResourceKind::Field => AuditResource::Field,
+                _ => unimplemented!(""),
             };
 
             let created_at = DateTime::from_timestamp(
@@ -85,6 +81,7 @@ pub async fn create_audit_versions(
                 .resource_id(inner_event.id.clone())
                 .data(inner_event.data.as_slice())
                 .created_at(created_at.clone())
+                .made_by(inner_event.made_by.clone())
                 .build();
 
             Some(audit_version)

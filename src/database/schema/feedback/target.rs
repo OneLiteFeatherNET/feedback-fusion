@@ -20,7 +20,8 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
+use crate::{prelude::*, to_date_time};
+use feedback_fusion_common::proto::ProtoTarget;
 use rbatis::rbdc::DateTime;
 
 #[derive(
@@ -47,9 +48,9 @@ pub struct Target {
     created_at: DateTime,
 }
 
-impl From<Target> for feedback_fusion_common::proto::Target {
+impl From<Target> for ProtoTarget {
     fn from(val: Target) -> Self {
-        feedback_fusion_common::proto::Target {
+        ProtoTarget {
             id: val.id,
             name: val.name,
             description: val.description,
@@ -59,8 +60,8 @@ impl From<Target> for feedback_fusion_common::proto::Target {
     }
 }
 
-impl From<feedback_fusion_common::proto::Target> for Target {
-    fn from(val: feedback_fusion_common::proto::Target) -> Self {
+impl From<ProtoTarget> for Target {
+    fn from(val: ProtoTarget) -> Self {
         Target {
             id: val.id,
             name: val.name,
@@ -73,4 +74,4 @@ impl From<feedback_fusion_common::proto::Target> for Target {
 
 crud!(Target {});
 impl_select!(Target {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
-impl_select_page_wrapper!(Target {select_page(query: &str) => "``"});
+impl_select_page!(Target {select_page(query: &str) => "``"});

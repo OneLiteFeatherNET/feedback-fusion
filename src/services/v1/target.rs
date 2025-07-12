@@ -21,13 +21,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use feedback_fusion_common::{
-    event::{
-        Event, EventType, ResourceKind, ResourceModificationOperation, ResourceModifiedEvent,
-        event::EventContent,
-    },
+    common::ProtoResourceKind,
     proto::{
-        CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest,
-        Target as ProtoTarget, TargetPage, UpdateTargetRequest,
+        proto_event::EventContent, CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest, ProtoEvent, ProtoEventType, ProtoResource, ProtoResourceModificationOperation, ProtoResourceModifiedEvent, ProtoTarget, TargetPage, UpdateTargetRequest
     },
 };
 
@@ -41,7 +37,7 @@ use super::FeedbackFusionV1Context;
 pub async fn create_target(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<CreateTargetRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
@@ -56,18 +52,21 @@ pub async fn create_target(
     database_request!(Target::insert(connection, &target).await, "Insert target")?;
 
     let proto_target = ProtoTarget::from(target);
+    let id = proto_target.id.clone();
+    let resource = ProtoResource::from(proto_target);
     emit!(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Create)
-                            .id(proto_target.id.clone())
-                            .resource_kind(ResourceKind::Target)
-                            .data(&proto_target)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Target)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),
@@ -76,7 +75,7 @@ pub async fn create_target(
         "ResourceModifiedEvent"
     )?;
 
-    Ok(Response::new(proto_target))
+    Ok(Response::new(resource.try_into()?))
 }
 
 pub async fn get_target(
@@ -110,8 +109,7 @@ pub async fn get_targets(
 
     // TODO: write translation macro
     let page = database_request!(
-        Target::select_page_wrapper(
-            &DATABASE_CONFIG,
+        Target::select_page(
             connection,
             &page_request,
             data.query.as_str()
@@ -136,7 +134,7 @@ pub async fn get_targets(
 pub async fn update_target(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdateTargetRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
@@ -156,18 +154,21 @@ pub async fn update_target(
     )?;
 
     let proto_target = ProtoTarget::from(target);
+    let id = proto_target.id.clone();
+    let resource = ProtoResource::from(proto_target);
     emit!(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Update)
-                            .id(proto_target.id.clone())
-                            .resource_kind(ResourceKind::Target)
-                            .data(&proto_target)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Target)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),
@@ -176,13 +177,13 @@ pub async fn update_target(
         "ResourceModifiedEvent"
     )?;
 
-    Ok(Response::new(proto_target))
+    Ok(Response::new(resource.try_into()?))
 }
 
 pub async fn delete_target(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<DeleteTargetRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<()>> {
     let data = request.into_inner();
     let connection = context.connection();
@@ -196,14 +197,15 @@ pub async fn delete_target(
         context
             .broker_event_sender()
             .send(
-                Event::builder()
-                    .event_type(EventType::ResourceModified)
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
-                        ResourceModifiedEvent::builder()
-                            .operation(ResourceModificationOperation::Delete)
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
                             .id(data.id)
-                            .resource_kind(ResourceKind::Target)
-                            .data(&())
+                            .resource_kind(ProtoResourceKind::Target)
+                            .data(&ProtoResource::empty())
+                            .made_by(user_context.user().id().clone())
                             .build(),
                     )))
                     .build(),

@@ -3,140 +3,183 @@
 
 ## Table of Contents
 
-- [feedback-fusion-event-v1.proto](#feedback-fusion-event-v1-proto)
-    - [Event](#feedback_fusion_event_v1-Event)
-    - [EventBatch](#feedback_fusion_event_v1-EventBatch)
-    - [ResourceModifiedEvent](#feedback_fusion_event_v1-ResourceModifiedEvent)
+- [common/resource.proto](#common_resource-proto)
+    - [ProtoResourceKind](#common-ProtoResourceKind)
   
-    - [EventType](#feedback_fusion_event_v1-EventType)
-    - [ResourceKind](#feedback_fusion_event_v1-ResourceKind)
-    - [ResourceModificationOperation](#feedback_fusion_event_v1-ResourceModificationOperation)
+- [feedback-fusion-event-v1/event/batch.proto](#feedback-fusion-event-v1_event_batch-proto)
+    - [ProtoEvent](#feedback_fusion_event_v1-ProtoEvent)
+    - [ProtoEventBatch](#feedback_fusion_event_v1-ProtoEventBatch)
   
+    - [ProtoEventType](#feedback_fusion_event_v1-ProtoEventType)
+  
+- [feedback-fusion-event-v1/event/resource_modified.proto](#feedback-fusion-event-v1_event_resource_modified-proto)
+    - [ProtoResourceModifiedEvent](#feedback_fusion_event_v1-ProtoResourceModifiedEvent)
+  
+    - [ProtoResourceModificationOperation](#feedback_fusion_event_v1-ProtoResourceModificationOperation)
+  
+- [feedback-fusion-event-v1/service.proto](#feedback-fusion-event-v1_service-proto)
     - [FeedbackFusionIndexerV1](#feedback_fusion_event_v1-FeedbackFusionIndexerV1)
   
-- [feedback-fusion-v1.proto](#feedback-fusion-v1-proto)
-    - [CheckboxOptions](#feedback_fusion_v1-CheckboxOptions)
-    - [CheckboxResponse](#feedback_fusion_v1-CheckboxResponse)
-    - [CreateFieldRequest](#feedback_fusion_v1-CreateFieldRequest)
-    - [CreatePromptRequest](#feedback_fusion_v1-CreatePromptRequest)
-    - [CreateResourceAuthorizationRequest](#feedback_fusion_v1-CreateResourceAuthorizationRequest)
-    - [CreateResponsesRequest](#feedback_fusion_v1-CreateResponsesRequest)
-    - [CreateResponsesRequest.DataEntry](#feedback_fusion_v1-CreateResponsesRequest-DataEntry)
-    - [CreateTargetRequest](#feedback_fusion_v1-CreateTargetRequest)
+- [feedback-fusion-v1/audit.proto](#feedback-fusion-v1_audit-proto)
+    - [AuditVersionPage](#feedback_fusion_v1-AuditVersionPage)
+    - [GetAuditVersionsRequest](#feedback_fusion_v1-GetAuditVersionsRequest)
+    - [ProtoAuditVersion](#feedback_fusion_v1-ProtoAuditVersion)
+    - [RollbackResourceRequest](#feedback_fusion_v1-RollbackResourceRequest)
+  
+    - [ProtoAuditAction](#feedback_fusion_v1-ProtoAuditAction)
+  
+- [feedback-fusion-v1/export.proto](#feedback-fusion-v1_export-proto)
     - [DataExportRequest](#feedback_fusion_v1-DataExportRequest)
     - [DataExportResponse](#feedback_fusion_v1-DataExportResponse)
-    - [DeleteFieldRequest](#feedback_fusion_v1-DeleteFieldRequest)
-    - [DeletePromptRequest](#feedback_fusion_v1-DeletePromptRequest)
+  
+- [feedback-fusion-v1/authorization.proto](#feedback-fusion-v1_authorization-proto)
+    - [CreateResourceAuthorizationRequest](#feedback_fusion_v1-CreateResourceAuthorizationRequest)
     - [DeleteResourceAuthorizationRequest](#feedback_fusion_v1-DeleteResourceAuthorizationRequest)
-    - [DeleteTargetRequest](#feedback_fusion_v1-DeleteTargetRequest)
     - [ExportResourceAuthorizationsRequest](#feedback_fusion_v1-ExportResourceAuthorizationsRequest)
-    - [Field](#feedback_fusion_v1-Field)
-    - [FieldOptions](#feedback_fusion_v1-FieldOptions)
-    - [FieldPage](#feedback_fusion_v1-FieldPage)
-    - [FieldResponse](#feedback_fusion_v1-FieldResponse)
-    - [FieldResponseList](#feedback_fusion_v1-FieldResponseList)
-    - [GetFieldsRequest](#feedback_fusion_v1-GetFieldsRequest)
-    - [GetPromptRequest](#feedback_fusion_v1-GetPromptRequest)
-    - [GetPromptsRequest](#feedback_fusion_v1-GetPromptsRequest)
     - [GetResourceAuthorizationRequest](#feedback_fusion_v1-GetResourceAuthorizationRequest)
     - [GetResourceAuthorizationsRequest](#feedback_fusion_v1-GetResourceAuthorizationsRequest)
-    - [GetResponsesRequest](#feedback_fusion_v1-GetResponsesRequest)
-    - [GetTargetRequest](#feedback_fusion_v1-GetTargetRequest)
-    - [GetTargetsRequest](#feedback_fusion_v1-GetTargetsRequest)
-    - [NumberOptions](#feedback_fusion_v1-NumberOptions)
-    - [NumberResponse](#feedback_fusion_v1-NumberResponse)
-    - [Prompt](#feedback_fusion_v1-Prompt)
-    - [PromptPage](#feedback_fusion_v1-PromptPage)
-    - [PromptResponse](#feedback_fusion_v1-PromptResponse)
-    - [RangeOptions](#feedback_fusion_v1-RangeOptions)
-    - [RangeResponse](#feedback_fusion_v1-RangeResponse)
-    - [RatingOptions](#feedback_fusion_v1-RatingOptions)
-    - [RatingResponse](#feedback_fusion_v1-RatingResponse)
-    - [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization)
-    - [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData)
+    - [ProtoResourceAuthorization](#feedback_fusion_v1-ProtoResourceAuthorization)
+    - [ProtoResourceAuthorizationData](#feedback_fusion_v1-ProtoResourceAuthorizationData)
     - [ResourceAuthorizationExportResponse](#feedback_fusion_v1-ResourceAuthorizationExportResponse)
     - [ResourceAuthorizationList](#feedback_fusion_v1-ResourceAuthorizationList)
     - [ResourceAuthorizationPage](#feedback_fusion_v1-ResourceAuthorizationPage)
+    - [UpdateResourceAuthorizationRequest](#feedback_fusion_v1-UpdateResourceAuthorizationRequest)
+  
+    - [ProtoAuthorizationGrant](#feedback_fusion_v1-ProtoAuthorizationGrant)
+    - [ProtoAuthorizationType](#feedback_fusion_v1-ProtoAuthorizationType)
+  
+- [feedback-fusion-v1/target.proto](#feedback-fusion-v1_target-proto)
+    - [CreateTargetRequest](#feedback_fusion_v1-CreateTargetRequest)
+    - [DeleteTargetRequest](#feedback_fusion_v1-DeleteTargetRequest)
+    - [GetTargetRequest](#feedback_fusion_v1-GetTargetRequest)
+    - [GetTargetsRequest](#feedback_fusion_v1-GetTargetsRequest)
+    - [ProtoTarget](#feedback_fusion_v1-ProtoTarget)
+    - [TargetPage](#feedback_fusion_v1-TargetPage)
+    - [UpdateTargetRequest](#feedback_fusion_v1-UpdateTargetRequest)
+  
+- [feedback-fusion-v1/response.proto](#feedback-fusion-v1_response-proto)
+    - [CheckboxResponse](#feedback_fusion_v1-CheckboxResponse)
+    - [CreateResponsesRequest](#feedback_fusion_v1-CreateResponsesRequest)
+    - [CreateResponsesRequest.DataEntry](#feedback_fusion_v1-CreateResponsesRequest-DataEntry)
+    - [FieldResponseList](#feedback_fusion_v1-FieldResponseList)
+    - [GetResponsesRequest](#feedback_fusion_v1-GetResponsesRequest)
+    - [NumberResponse](#feedback_fusion_v1-NumberResponse)
+    - [ProtoFieldResponse](#feedback_fusion_v1-ProtoFieldResponse)
+    - [ProtoPromptResponse](#feedback_fusion_v1-ProtoPromptResponse)
+    - [RangeResponse](#feedback_fusion_v1-RangeResponse)
+    - [RatingResponse](#feedback_fusion_v1-RatingResponse)
     - [ResponseData](#feedback_fusion_v1-ResponseData)
     - [ResponsePage](#feedback_fusion_v1-ResponsePage)
     - [ResponsePage.DataEntry](#feedback_fusion_v1-ResponsePage-DataEntry)
-    - [SelectionOptions](#feedback_fusion_v1-SelectionOptions)
     - [SelectionResponse](#feedback_fusion_v1-SelectionResponse)
-    - [Target](#feedback_fusion_v1-Target)
-    - [TargetPage](#feedback_fusion_v1-TargetPage)
-    - [TextOptions](#feedback_fusion_v1-TextOptions)
     - [TextResponse](#feedback_fusion_v1-TextResponse)
-    - [UpdateFieldRequest](#feedback_fusion_v1-UpdateFieldRequest)
-    - [UpdatePromptRequest](#feedback_fusion_v1-UpdatePromptRequest)
-    - [UpdateResourceAuthorizationRequest](#feedback_fusion_v1-UpdateResourceAuthorizationRequest)
-    - [UpdateTargetRequest](#feedback_fusion_v1-UpdateTargetRequest)
     - [UserInfoResponse](#feedback_fusion_v1-UserInfoResponse)
     - [UserInfoResponse.PermissionsEntry](#feedback_fusion_v1-UserInfoResponse-PermissionsEntry)
   
-    - [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant)
-    - [AuthorizationType](#feedback_fusion_v1-AuthorizationType)
-    - [CheckboxStyle](#feedback_fusion_v1-CheckboxStyle)
-    - [FieldType](#feedback_fusion_v1-FieldType)
-    - [ResourceKind](#feedback_fusion_v1-ResourceKind)
-  
+- [feedback-fusion-v1/service.proto](#feedback-fusion-v1_service-proto)
     - [FeedbackFusionV1](#feedback_fusion_v1-FeedbackFusionV1)
     - [PublicFeedbackFusionV1](#feedback_fusion_v1-PublicFeedbackFusionV1)
+  
+- [feedback-fusion-v1/field.proto](#feedback-fusion-v1_field-proto)
+    - [CreateFieldRequest](#feedback_fusion_v1-CreateFieldRequest)
+    - [DeleteFieldRequest](#feedback_fusion_v1-DeleteFieldRequest)
+    - [FieldPage](#feedback_fusion_v1-FieldPage)
+    - [GetFieldsRequest](#feedback_fusion_v1-GetFieldsRequest)
+    - [ProtoCheckboxOptions](#feedback_fusion_v1-ProtoCheckboxOptions)
+    - [ProtoField](#feedback_fusion_v1-ProtoField)
+    - [ProtoFieldOptions](#feedback_fusion_v1-ProtoFieldOptions)
+    - [ProtoNumberOptions](#feedback_fusion_v1-ProtoNumberOptions)
+    - [ProtoRangeOptions](#feedback_fusion_v1-ProtoRangeOptions)
+    - [ProtoRatingOptions](#feedback_fusion_v1-ProtoRatingOptions)
+    - [ProtoSelectionOptions](#feedback_fusion_v1-ProtoSelectionOptions)
+    - [ProtoTextOptions](#feedback_fusion_v1-ProtoTextOptions)
+    - [UpdateFieldRequest](#feedback_fusion_v1-UpdateFieldRequest)
+  
+    - [ProtoCheckboxStyle](#feedback_fusion_v1-ProtoCheckboxStyle)
+    - [ProtoFieldType](#feedback_fusion_v1-ProtoFieldType)
+  
+- [feedback-fusion-v1/prompt.proto](#feedback-fusion-v1_prompt-proto)
+    - [CreatePromptRequest](#feedback_fusion_v1-CreatePromptRequest)
+    - [DeletePromptRequest](#feedback_fusion_v1-DeletePromptRequest)
+    - [GetPromptRequest](#feedback_fusion_v1-GetPromptRequest)
+    - [GetPromptsRequest](#feedback_fusion_v1-GetPromptsRequest)
+    - [PromptPage](#feedback_fusion_v1-PromptPage)
+    - [ProtoPrompt](#feedback_fusion_v1-ProtoPrompt)
+    - [UpdatePromptRequest](#feedback_fusion_v1-UpdatePromptRequest)
+  
+- [feedback-fusion-v1/resource.proto](#feedback-fusion-v1_resource-proto)
+    - [ProtoResource](#feedback_fusion_v1-ProtoResource)
   
 - [Scalar Value Types](#scalar-value-types)
 
 
 
-<a name="feedback-fusion-event-v1-proto"></a>
+<a name="common_resource-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## feedback-fusion-event-v1.proto
+## common/resource.proto
+
+
+ 
+
+
+<a name="common-ProtoResourceKind"></a>
+
+### ProtoResourceKind
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| UNKNOWN | 0 |  |
+| TARGET | 1 |  |
+| PROMPT | 2 |  |
+| FIELD | 3 |  |
+| EXPORT | 4 |  |
+| AUTHORIZE | 5 |  |
+| RESPONSE | 6 |  |
+
+
+ 
+
+ 
+
+ 
 
 
 
-<a name="feedback_fusion_event_v1-Event"></a>
+<a name="feedback-fusion-event-v1_event_batch-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
 
-### Event
+## feedback-fusion-event-v1/event/batch.proto
+
+
+
+<a name="feedback_fusion_event_v1-ProtoEvent"></a>
+
+### ProtoEvent
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| event_type | [EventType](#feedback_fusion_event_v1-EventType) |  |  |
-| resource_modified_event | [ResourceModifiedEvent](#feedback_fusion_event_v1-ResourceModifiedEvent) |  |  |
+| event_type | [ProtoEventType](#feedback_fusion_event_v1-ProtoEventType) |  |  |
+| resource_modified_event | [ProtoResourceModifiedEvent](#feedback_fusion_event_v1-ProtoResourceModifiedEvent) |  |  |
 
 
 
 
 
 
-<a name="feedback_fusion_event_v1-EventBatch"></a>
+<a name="feedback_fusion_event_v1-ProtoEventBatch"></a>
 
-### EventBatch
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| events | [Event](#feedback_fusion_event_v1-Event) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_event_v1-ResourceModifiedEvent"></a>
-
-### ResourceModifiedEvent
+### ProtoEventBatch
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| operation | [ResourceModificationOperation](#feedback_fusion_event_v1-ResourceModificationOperation) |  |  |
-| id | [string](#string) |  |  |
-| resource_kind | [ResourceKind](#feedback_fusion_event_v1-ResourceKind) |  |  |
-| data | [bytes](#bytes) |  |  |
+| events | [ProtoEvent](#feedback_fusion_event_v1-ProtoEvent) | repeated |  |
 
 
 
@@ -145,9 +188,9 @@
  
 
 
-<a name="feedback_fusion_event_v1-EventType"></a>
+<a name="feedback_fusion_event_v1-ProtoEventType"></a>
 
-### EventType
+### ProtoEventType
 
 
 | Name | Number | Description |
@@ -156,23 +199,45 @@
 | RESOURCE_MODIFIED | 1 |  |
 
 
+ 
 
-<a name="feedback_fusion_event_v1-ResourceKind"></a>
+ 
 
-### ResourceKind
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| TARGET | 0 |  |
-| PROMPT | 1 |  |
-| FIELD | 2 |  |
+ 
 
 
 
-<a name="feedback_fusion_event_v1-ResourceModificationOperation"></a>
+<a name="feedback-fusion-event-v1_event_resource_modified-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
 
-### ResourceModificationOperation
+## feedback-fusion-event-v1/event/resource_modified.proto
+
+
+
+<a name="feedback_fusion_event_v1-ProtoResourceModifiedEvent"></a>
+
+### ProtoResourceModifiedEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| operation | [ProtoResourceModificationOperation](#feedback_fusion_event_v1-ProtoResourceModificationOperation) |  |  |
+| id | [string](#string) |  |  |
+| resource_kind | [common.ProtoResourceKind](#common-ProtoResourceKind) |  |  |
+| data | [bytes](#bytes) |  |  |
+| made_by | [string](#string) |  |  |
+
+
+
+
+
+ 
+
+
+<a name="feedback_fusion_event_v1-ProtoResourceModificationOperation"></a>
+
+### ProtoResourceModificationOperation
 
 
 | Name | Number | Description |
@@ -186,6 +251,22 @@
 
  
 
+ 
+
+
+
+<a name="feedback-fusion-event-v1_service-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-event-v1/service.proto
+
+
+ 
+
+ 
+
+ 
+
 
 <a name="feedback_fusion_event_v1-FeedbackFusionIndexerV1"></a>
 
@@ -194,149 +275,122 @@
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| SendBatch | [EventBatch](#feedback_fusion_event_v1-EventBatch) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
+| SendBatch | [ProtoEventBatch](#feedback_fusion_event_v1-ProtoEventBatch) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
 
  
 
 
 
-<a name="feedback-fusion-v1-proto"></a>
+<a name="feedback-fusion-v1_audit-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## feedback-fusion-v1.proto
+## feedback-fusion-v1/audit.proto
 
 
 
-<a name="feedback_fusion_v1-CheckboxOptions"></a>
+<a name="feedback_fusion_v1-AuditVersionPage"></a>
 
-### CheckboxOptions
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| style | [CheckboxStyle](#feedback_fusion_v1-CheckboxStyle) |  |  |
-| default_state | [bool](#bool) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-CheckboxResponse"></a>
-
-### CheckboxResponse
+### AuditVersionPage
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| checked | [bool](#bool) |  |  |
+| page_token | [int32](#int32) |  |  |
+| next_page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| total | [int32](#int32) |  |  |
+| audit_versions | [ProtoAuditVersion](#feedback_fusion_v1-ProtoAuditVersion) | repeated |  |
 
 
 
 
 
 
-<a name="feedback_fusion_v1-CreateFieldRequest"></a>
+<a name="feedback_fusion_v1-GetAuditVersionsRequest"></a>
 
-### CreateFieldRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| prompt | [string](#string) |  |  |
-| title | [string](#string) |  |  |
-| description | [string](#string) | optional |  |
-| field_type | [FieldType](#feedback_fusion_v1-FieldType) |  |  |
-| options | [FieldOptions](#feedback_fusion_v1-FieldOptions) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-CreatePromptRequest"></a>
-
-### CreatePromptRequest
+### GetAuditVersionsRequest
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| target | [string](#string) |  |  |
-| title | [string](#string) |  |  |
-| description | [string](#string) |  |  |
-| active | [bool](#bool) |  |  |
+| page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| resource_id | [string](#string) |  |  |
+| resource_type | [common.ProtoResourceKind](#common-ProtoResourceKind) |  |  |
 
 
 
 
 
 
-<a name="feedback_fusion_v1-CreateResourceAuthorizationRequest"></a>
+<a name="feedback_fusion_v1-ProtoAuditVersion"></a>
 
-### CreateResourceAuthorizationRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| resource_kind | [ResourceKind](#feedback_fusion_v1-ResourceKind) |  |  |
-| resource_id | [string](#string) | repeated |  |
-| authorization_data | [ResourceAuthorizationData](#feedback_fusion_v1-ResourceAuthorizationData) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-CreateResponsesRequest"></a>
-
-### CreateResponsesRequest
+### ProtoAuditVersion
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| data | [CreateResponsesRequest.DataEntry](#feedback_fusion_v1-CreateResponsesRequest-DataEntry) | repeated |  |
-| prompt | [string](#string) |  |  |
+| id | [string](#string) |  |  |
+| resource_id | [string](#string) |  |  |
+| resource_type | [common.ProtoResourceKind](#common-ProtoResourceKind) |  |  |
+| action | [ProtoAuditAction](#feedback_fusion_v1-ProtoAuditAction) |  |  |
+| data | [ProtoResource](#feedback_fusion_v1-ProtoResource) |  |  |
+| version | [int32](#int32) |  |  |
+| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| made_by | [string](#string) |  |  |
 
 
 
 
 
 
-<a name="feedback_fusion_v1-CreateResponsesRequest-DataEntry"></a>
+<a name="feedback_fusion_v1-RollbackResourceRequest"></a>
 
-### CreateResponsesRequest.DataEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| key | [string](#string) |  |  |
-| value | [ResponseData](#feedback_fusion_v1-ResponseData) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-CreateTargetRequest"></a>
-
-### CreateTargetRequest
+### RollbackResourceRequest
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| description | [string](#string) | optional |  |
+| resource_id | [string](#string) |  |  |
+| resource_type | [common.ProtoResourceKind](#common-ProtoResourceKind) |  |  |
+| version | [int32](#int32) |  |  |
 
 
 
+
+
+ 
+
+
+<a name="feedback_fusion_v1-ProtoAuditAction"></a>
+
+### ProtoAuditAction
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| UNKNOWN | 0 |  |
+| CREATE | 1 |  |
+| UPDATE | 2 |  |
+| DELETE | 3 |  |
+
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="feedback-fusion-v1_export-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/export.proto
 
 
 
@@ -369,31 +423,34 @@
 
 
 
+ 
 
-<a name="feedback_fusion_v1-DeleteFieldRequest"></a>
+ 
 
-### DeleteFieldRequest
+ 
+
+ 
+
+
+
+<a name="feedback-fusion-v1_authorization-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/authorization.proto
+
+
+
+<a name="feedback_fusion_v1-CreateResourceAuthorizationRequest"></a>
+
+### CreateResourceAuthorizationRequest
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-DeletePromptRequest"></a>
-
-### DeletePromptRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
+| resource_kind | [common.ProtoResourceKind](#common-ProtoResourceKind) |  |  |
+| resource_id | [string](#string) | repeated |  |
+| authorization_data | [ProtoResourceAuthorizationData](#feedback_fusion_v1-ProtoResourceAuthorizationData) |  |  |
 
 
 
@@ -415,21 +472,6 @@
 
 
 
-<a name="feedback_fusion_v1-DeleteTargetRequest"></a>
-
-### DeleteTargetRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-
-
-
-
-
-
 <a name="feedback_fusion_v1-ExportResourceAuthorizationsRequest"></a>
 
 ### ExportResourceAuthorizationsRequest
@@ -439,149 +481,6 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ids | [string](#string) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-Field"></a>
-
-### Field
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-| prompt | [string](#string) |  |  |
-| title | [string](#string) |  |  |
-| description | [string](#string) | optional |  |
-| field_type | [FieldType](#feedback_fusion_v1-FieldType) |  |  |
-| options | [FieldOptions](#feedback_fusion_v1-FieldOptions) |  |  |
-| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-FieldOptions"></a>
-
-### FieldOptions
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| text | [TextOptions](#feedback_fusion_v1-TextOptions) |  |  |
-| rating | [RatingOptions](#feedback_fusion_v1-RatingOptions) |  |  |
-| checkbox | [CheckboxOptions](#feedback_fusion_v1-CheckboxOptions) |  |  |
-| selection | [SelectionOptions](#feedback_fusion_v1-SelectionOptions) |  |  |
-| range | [RangeOptions](#feedback_fusion_v1-RangeOptions) |  |  |
-| number | [NumberOptions](#feedback_fusion_v1-NumberOptions) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-FieldPage"></a>
-
-### FieldPage
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| page_token | [int32](#int32) |  |  |
-| next_page_token | [int32](#int32) |  |  |
-| page_size | [int32](#int32) |  |  |
-| total | [int32](#int32) |  |  |
-| fields | [Field](#feedback_fusion_v1-Field) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-FieldResponse"></a>
-
-### FieldResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-| response | [string](#string) |  |  |
-| field | [string](#string) |  |  |
-| data | [ResponseData](#feedback_fusion_v1-ResponseData) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-FieldResponseList"></a>
-
-### FieldResponseList
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| data | [FieldResponse](#feedback_fusion_v1-FieldResponse) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-GetFieldsRequest"></a>
-
-### GetFieldsRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| page_token | [int32](#int32) |  |  |
-| page_size | [int32](#int32) |  |  |
-| prompt | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-GetPromptRequest"></a>
-
-### GetPromptRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-GetPromptsRequest"></a>
-
-### GetPromptsRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| page_token | [int32](#int32) |  |  |
-| page_size | [int32](#int32) |  |  |
-| target | [string](#string) |  |  |
 
 
 
@@ -614,24 +513,188 @@
 | page_token | [int32](#int32) |  |  |
 | page_size | [int32](#int32) |  |  |
 | value | [string](#string) | optional |  |
-| authorization_type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) | optional |  |
+| authorization_type | [ProtoAuthorizationType](#feedback_fusion_v1-ProtoAuthorizationType) | optional |  |
 
 
 
 
 
 
-<a name="feedback_fusion_v1-GetResponsesRequest"></a>
+<a name="feedback_fusion_v1-ProtoResourceAuthorization"></a>
 
-### GetResponsesRequest
+### ProtoResourceAuthorization
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| resource_kind | [common.ProtoResourceKind](#common-ProtoResourceKind) |  |  |
+| resource_id | [string](#string) | optional |  |
+| authorization_type | [ProtoAuthorizationType](#feedback_fusion_v1-ProtoAuthorizationType) |  |  |
+| authorization_grant | [ProtoAuthorizationGrant](#feedback_fusion_v1-ProtoAuthorizationGrant) |  |  |
+| value | [string](#string) |  |  |
+| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoResourceAuthorizationData"></a>
+
+### ProtoResourceAuthorizationData
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| type | [ProtoAuthorizationType](#feedback_fusion_v1-ProtoAuthorizationType) |  |  |
+| grant | [ProtoAuthorizationGrant](#feedback_fusion_v1-ProtoAuthorizationGrant) | repeated |  |
+| values | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationExportResponse"></a>
+
+### ResourceAuthorizationExportResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| export | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationList"></a>
+
+### ResourceAuthorizationList
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| authorizations | [ProtoResourceAuthorization](#feedback_fusion_v1-ProtoResourceAuthorization) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ResourceAuthorizationPage"></a>
+
+### ResourceAuthorizationPage
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | page_token | [int32](#int32) |  |  |
+| next_page_token | [int32](#int32) |  |  |
 | page_size | [int32](#int32) |  |  |
-| prompt | [string](#string) |  |  |
+| total | [int32](#int32) |  |  |
+| authorizations | [ProtoResourceAuthorization](#feedback_fusion_v1-ProtoResourceAuthorization) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-UpdateResourceAuthorizationRequest"></a>
+
+### UpdateResourceAuthorizationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| resource_id | [string](#string) | optional |  |
+| authorization_type | [ProtoAuthorizationType](#feedback_fusion_v1-ProtoAuthorizationType) | optional |  |
+| authorization_grant | [ProtoAuthorizationGrant](#feedback_fusion_v1-ProtoAuthorizationGrant) | optional |  |
+| value | [string](#string) | optional |  |
+
+
+
+
+
+ 
+
+
+<a name="feedback_fusion_v1-ProtoAuthorizationGrant"></a>
+
+### ProtoAuthorizationGrant
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| WRITE | 0 |  |
+| READ | 1 |  |
+| List | 2 |  |
+| All | 3 |  |
+
+
+
+<a name="feedback_fusion_v1-ProtoAuthorizationType"></a>
+
+### ProtoAuthorizationType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TYPE_SCOPE | 0 |  |
+| TYPE_GROUP | 1 |  |
+| TYPE_SUBJECT | 2 |  |
+
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="feedback-fusion-v1_target-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/target.proto
+
+
+
+<a name="feedback_fusion_v1-CreateTargetRequest"></a>
+
+### CreateTargetRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+| description | [string](#string) | optional |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-DeleteTargetRequest"></a>
+
+### DeleteTargetRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
 
 
 
@@ -670,17 +733,150 @@
 
 
 
-<a name="feedback_fusion_v1-NumberOptions"></a>
+<a name="feedback_fusion_v1-ProtoTarget"></a>
 
-### NumberOptions
+### ProtoTarget
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| min | [int32](#int32) |  |  |
-| max | [int32](#int32) |  |  |
-| placeholder | [string](#string) |  |  |
+| id | [string](#string) |  |  |
+| name | [string](#string) |  |  |
+| description | [string](#string) | optional |  |
+| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-TargetPage"></a>
+
+### TargetPage
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| next_page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| total | [int32](#int32) |  |  |
+| targets | [ProtoTarget](#feedback_fusion_v1-ProtoTarget) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-UpdateTargetRequest"></a>
+
+### UpdateTargetRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| name | [string](#string) | optional |  |
+| description | [string](#string) | optional |  |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="feedback-fusion-v1_response-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/response.proto
+
+
+
+<a name="feedback_fusion_v1-CheckboxResponse"></a>
+
+### CheckboxResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| checked | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-CreateResponsesRequest"></a>
+
+### CreateResponsesRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| data | [CreateResponsesRequest.DataEntry](#feedback_fusion_v1-CreateResponsesRequest-DataEntry) | repeated |  |
+| prompt | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-CreateResponsesRequest-DataEntry"></a>
+
+### CreateResponsesRequest.DataEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [ResponseData](#feedback_fusion_v1-ResponseData) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-FieldResponseList"></a>
+
+### FieldResponseList
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| data | [ProtoFieldResponse](#feedback_fusion_v1-ProtoFieldResponse) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-GetResponsesRequest"></a>
+
+### GetResponsesRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| prompt | [string](#string) |  |  |
 
 
 
@@ -702,49 +898,27 @@
 
 
 
-<a name="feedback_fusion_v1-Prompt"></a>
+<a name="feedback_fusion_v1-ProtoFieldResponse"></a>
 
-### Prompt
+### ProtoFieldResponse
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | id | [string](#string) |  |  |
-| title | [string](#string) |  |  |
-| description | [string](#string) |  |  |
-| target | [string](#string) |  |  |
-| active | [bool](#bool) |  |  |
-| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| response | [string](#string) |  |  |
+| field | [string](#string) |  |  |
+| data | [ResponseData](#feedback_fusion_v1-ResponseData) |  |  |
 
 
 
 
 
 
-<a name="feedback_fusion_v1-PromptPage"></a>
+<a name="feedback_fusion_v1-ProtoPromptResponse"></a>
 
-### PromptPage
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| page_token | [int32](#int32) |  |  |
-| next_page_token | [int32](#int32) |  |  |
-| page_size | [int32](#int32) |  |  |
-| total | [int32](#int32) |  |  |
-| prompts | [Prompt](#feedback_fusion_v1-Prompt) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-PromptResponse"></a>
-
-### PromptResponse
+### ProtoPromptResponse
 
 
 
@@ -753,22 +927,6 @@
 | id | [string](#string) |  |  |
 | prompt | [string](#string) |  |  |
 | created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-RangeOptions"></a>
-
-### RangeOptions
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| min | [int32](#int32) |  |  |
-| max | [int32](#int32) |  |  |
 
 
 
@@ -791,21 +949,6 @@
 
 
 
-<a name="feedback_fusion_v1-RatingOptions"></a>
-
-### RatingOptions
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| max | [int32](#int32) |  |  |
-
-
-
-
-
-
 <a name="feedback_fusion_v1-RatingResponse"></a>
 
 ### RatingResponse
@@ -815,94 +958,6 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | rating | [int32](#int32) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-ResourceAuthorization"></a>
-
-### ResourceAuthorization
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-| resource_kind | [ResourceKind](#feedback_fusion_v1-ResourceKind) |  |  |
-| resource_id | [string](#string) | optional |  |
-| authorization_type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) |  |  |
-| authorization_grant | [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant) |  |  |
-| value | [string](#string) |  |  |
-| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-ResourceAuthorizationData"></a>
-
-### ResourceAuthorizationData
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) |  |  |
-| grant | [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant) | repeated |  |
-| values | [string](#string) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-ResourceAuthorizationExportResponse"></a>
-
-### ResourceAuthorizationExportResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| export | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-ResourceAuthorizationList"></a>
-
-### ResourceAuthorizationList
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| authorizations | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-ResourceAuthorizationPage"></a>
-
-### ResourceAuthorizationPage
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| page_token | [int32](#int32) |  |  |
-| next_page_token | [int32](#int32) |  |  |
-| page_size | [int32](#int32) |  |  |
-| total | [int32](#int32) |  |  |
-| authorizations | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) | repeated |  |
 
 
 
@@ -964,23 +1019,6 @@
 
 
 
-<a name="feedback_fusion_v1-SelectionOptions"></a>
-
-### SelectionOptions
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| values | [string](#string) | repeated |  |
-| multiple | [bool](#bool) |  |  |
-| combobox | [bool](#bool) |  |  |
-
-
-
-
-
-
 <a name="feedback_fusion_v1-SelectionResponse"></a>
 
 ### SelectionResponse
@@ -996,60 +1034,6 @@
 
 
 
-<a name="feedback_fusion_v1-Target"></a>
-
-### Target
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-| name | [string](#string) |  |  |
-| description | [string](#string) | optional |  |
-| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-TargetPage"></a>
-
-### TargetPage
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| page_token | [int32](#int32) |  |  |
-| next_page_token | [int32](#int32) |  |  |
-| page_size | [int32](#int32) |  |  |
-| total | [int32](#int32) |  |  |
-| targets | [Target](#feedback_fusion_v1-Target) | repeated |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-TextOptions"></a>
-
-### TextOptions
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| placeholder | [string](#string) |  |  |
-| lines | [int32](#int32) |  |  |
-
-
-
-
-
-
 <a name="feedback_fusion_v1-TextResponse"></a>
 
 ### TextResponse
@@ -1059,78 +1043,6 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | text | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-UpdateFieldRequest"></a>
-
-### UpdateFieldRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| options | [FieldOptions](#feedback_fusion_v1-FieldOptions) |  |  |
-| title | [string](#string) | optional |  |
-| description | [string](#string) | optional |  |
-| id | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-UpdatePromptRequest"></a>
-
-### UpdatePromptRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-| active | [bool](#bool) | optional |  |
-| description | [string](#string) | optional |  |
-| title | [string](#string) | optional |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-UpdateResourceAuthorizationRequest"></a>
-
-### UpdateResourceAuthorizationRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-| resource_id | [string](#string) | optional |  |
-| authorization_type | [AuthorizationType](#feedback_fusion_v1-AuthorizationType) | optional |  |
-| authorization_grant | [AuthorizationGrant](#feedback_fusion_v1-AuthorizationGrant) | optional |  |
-| value | [string](#string) | optional |  |
-
-
-
-
-
-
-<a name="feedback_fusion_v1-UpdateTargetRequest"></a>
-
-### UpdateTargetRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| id | [string](#string) |  |  |
-| name | [string](#string) | optional |  |
-| description | [string](#string) | optional |  |
 
 
 
@@ -1169,76 +1081,21 @@
 
  
 
+ 
 
-<a name="feedback_fusion_v1-AuthorizationGrant"></a>
+ 
 
-### AuthorizationGrant
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| WRITE | 0 |  |
-| READ | 1 |  |
-| List | 2 |  |
-| All | 3 |  |
+ 
 
 
 
-<a name="feedback_fusion_v1-AuthorizationType"></a>
+<a name="feedback-fusion-v1_service-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
 
-### AuthorizationType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| TYPE_SCOPE | 0 |  |
-| TYPE_GROUP | 1 |  |
-| TYPE_SUBJECT | 2 |  |
+## feedback-fusion-v1/service.proto
 
 
-
-<a name="feedback_fusion_v1-CheckboxStyle"></a>
-
-### CheckboxStyle
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| NORMAL | 0 |  |
-| SWITCH | 1 |  |
-
-
-
-<a name="feedback_fusion_v1-FieldType"></a>
-
-### FieldType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| TEXT | 0 |  |
-| RATING | 1 |  |
-| CHECKBOX | 2 |  |
-| SELECTION | 3 |  |
-| RANGE | 4 |  |
-| NUMBER | 5 |  |
-
-
-
-<a name="feedback_fusion_v1-ResourceKind"></a>
-
-### ResourceKind
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| RESOURCE_TARGET | 0 |  |
-| RESOURCE_PROMPT | 1 |  |
-| RESOURCE_FIELD | 2 |  |
-| RESOURCE_EXPORT | 3 |  |
-| RESOURCE_AUTHORIZE | 4 |  |
-| RESOURCE_RESPONSE | 5 |  |
-
+ 
 
  
 
@@ -1252,28 +1109,30 @@ uses oidc authentication
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CreateTarget | [CreateTargetRequest](#feedback_fusion_v1-CreateTargetRequest) | [Target](#feedback_fusion_v1-Target) |  |
-| GetTarget | [GetTargetRequest](#feedback_fusion_v1-GetTargetRequest) | [Target](#feedback_fusion_v1-Target) |  |
+| CreateTarget | [CreateTargetRequest](#feedback_fusion_v1-CreateTargetRequest) | [ProtoTarget](#feedback_fusion_v1-ProtoTarget) |  |
+| GetTarget | [GetTargetRequest](#feedback_fusion_v1-GetTargetRequest) | [ProtoTarget](#feedback_fusion_v1-ProtoTarget) |  |
 | GetTargets | [GetTargetsRequest](#feedback_fusion_v1-GetTargetsRequest) | [TargetPage](#feedback_fusion_v1-TargetPage) |  |
-| UpdateTarget | [UpdateTargetRequest](#feedback_fusion_v1-UpdateTargetRequest) | [Target](#feedback_fusion_v1-Target) |  |
+| UpdateTarget | [UpdateTargetRequest](#feedback_fusion_v1-UpdateTargetRequest) | [ProtoTarget](#feedback_fusion_v1-ProtoTarget) |  |
 | DeleteTarget | [DeleteTargetRequest](#feedback_fusion_v1-DeleteTargetRequest) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
-| CreatePrompt | [CreatePromptRequest](#feedback_fusion_v1-CreatePromptRequest) | [Prompt](#feedback_fusion_v1-Prompt) |  |
+| CreatePrompt | [CreatePromptRequest](#feedback_fusion_v1-CreatePromptRequest) | [ProtoPrompt](#feedback_fusion_v1-ProtoPrompt) |  |
 | GetPrompts | [GetPromptsRequest](#feedback_fusion_v1-GetPromptsRequest) | [PromptPage](#feedback_fusion_v1-PromptPage) |  |
-| UpdatePrompt | [UpdatePromptRequest](#feedback_fusion_v1-UpdatePromptRequest) | [Prompt](#feedback_fusion_v1-Prompt) |  |
+| UpdatePrompt | [UpdatePromptRequest](#feedback_fusion_v1-UpdatePromptRequest) | [ProtoPrompt](#feedback_fusion_v1-ProtoPrompt) |  |
 | DeletePrompt | [DeletePromptRequest](#feedback_fusion_v1-DeletePromptRequest) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
-| CreateField | [CreateFieldRequest](#feedback_fusion_v1-CreateFieldRequest) | [Field](#feedback_fusion_v1-Field) |  |
+| CreateField | [CreateFieldRequest](#feedback_fusion_v1-CreateFieldRequest) | [ProtoField](#feedback_fusion_v1-ProtoField) |  |
 | GetFields | [GetFieldsRequest](#feedback_fusion_v1-GetFieldsRequest) | [FieldPage](#feedback_fusion_v1-FieldPage) |  |
-| UpdateField | [UpdateFieldRequest](#feedback_fusion_v1-UpdateFieldRequest) | [Field](#feedback_fusion_v1-Field) |  |
+| UpdateField | [UpdateFieldRequest](#feedback_fusion_v1-UpdateFieldRequest) | [ProtoField](#feedback_fusion_v1-ProtoField) |  |
 | DeleteField | [DeleteFieldRequest](#feedback_fusion_v1-DeleteFieldRequest) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
 | GetResponses | [GetResponsesRequest](#feedback_fusion_v1-GetResponsesRequest) | [ResponsePage](#feedback_fusion_v1-ResponsePage) |  |
 | GetUserInfo | [.google.protobuf.Empty](#google-protobuf-Empty) | [UserInfoResponse](#feedback_fusion_v1-UserInfoResponse) |  |
 | ExportData | [DataExportRequest](#feedback_fusion_v1-DataExportRequest) | [DataExportResponse](#feedback_fusion_v1-DataExportResponse) |  |
 | CreateResourceAuthorization | [CreateResourceAuthorizationRequest](#feedback_fusion_v1-CreateResourceAuthorizationRequest) | [ResourceAuthorizationList](#feedback_fusion_v1-ResourceAuthorizationList) |  |
 | GetResourceAuthorizations | [GetResourceAuthorizationsRequest](#feedback_fusion_v1-GetResourceAuthorizationsRequest) | [ResourceAuthorizationPage](#feedback_fusion_v1-ResourceAuthorizationPage) |  |
-| GetResourceAuthorization | [GetResourceAuthorizationRequest](#feedback_fusion_v1-GetResourceAuthorizationRequest) | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) |  |
-| UpdateResourceAuthorization | [UpdateResourceAuthorizationRequest](#feedback_fusion_v1-UpdateResourceAuthorizationRequest) | [ResourceAuthorization](#feedback_fusion_v1-ResourceAuthorization) |  |
+| GetResourceAuthorization | [GetResourceAuthorizationRequest](#feedback_fusion_v1-GetResourceAuthorizationRequest) | [ProtoResourceAuthorization](#feedback_fusion_v1-ProtoResourceAuthorization) |  |
+| UpdateResourceAuthorization | [UpdateResourceAuthorizationRequest](#feedback_fusion_v1-UpdateResourceAuthorizationRequest) | [ProtoResourceAuthorization](#feedback_fusion_v1-ProtoResourceAuthorization) |  |
 | DeleteResourceAuthorization | [DeleteResourceAuthorizationRequest](#feedback_fusion_v1-DeleteResourceAuthorizationRequest) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
 | ExportResourceAuthorizations | [ExportResourceAuthorizationsRequest](#feedback_fusion_v1-ExportResourceAuthorizationsRequest) | [ResourceAuthorizationExportResponse](#feedback_fusion_v1-ResourceAuthorizationExportResponse) |  |
+| GetAuditVersions | [GetAuditVersionsRequest](#feedback_fusion_v1-GetAuditVersionsRequest) | [AuditVersionPage](#feedback_fusion_v1-AuditVersionPage) |  |
+| RollbackResource | [RollbackResourceRequest](#feedback_fusion_v1-RollbackResourceRequest) | [.google.protobuf.Empty](#google-protobuf-Empty) |  |
 
 
 <a name="feedback_fusion_v1-PublicFeedbackFusionV1"></a>
@@ -1284,8 +1143,452 @@ does not use oidc authentication
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | GetActiveFields | [GetFieldsRequest](#feedback_fusion_v1-GetFieldsRequest) | [FieldPage](#feedback_fusion_v1-FieldPage) |  |
-| GetPrompt | [GetPromptRequest](#feedback_fusion_v1-GetPromptRequest) | [Prompt](#feedback_fusion_v1-Prompt) |  |
-| CreateResponses | [CreateResponsesRequest](#feedback_fusion_v1-CreateResponsesRequest) | [PromptResponse](#feedback_fusion_v1-PromptResponse) |  |
+| GetPrompt | [GetPromptRequest](#feedback_fusion_v1-GetPromptRequest) | [ProtoPrompt](#feedback_fusion_v1-ProtoPrompt) |  |
+| CreateResponses | [CreateResponsesRequest](#feedback_fusion_v1-CreateResponsesRequest) | [ProtoPromptResponse](#feedback_fusion_v1-ProtoPromptResponse) |  |
+
+ 
+
+
+
+<a name="feedback-fusion-v1_field-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/field.proto
+
+
+
+<a name="feedback_fusion_v1-CreateFieldRequest"></a>
+
+### CreateFieldRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| prompt | [string](#string) |  |  |
+| title | [string](#string) |  |  |
+| description | [string](#string) | optional |  |
+| field_type | [ProtoFieldType](#feedback_fusion_v1-ProtoFieldType) |  |  |
+| options | [ProtoFieldOptions](#feedback_fusion_v1-ProtoFieldOptions) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-DeleteFieldRequest"></a>
+
+### DeleteFieldRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-FieldPage"></a>
+
+### FieldPage
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| next_page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| total | [int32](#int32) |  |  |
+| fields | [ProtoField](#feedback_fusion_v1-ProtoField) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-GetFieldsRequest"></a>
+
+### GetFieldsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| prompt | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoCheckboxOptions"></a>
+
+### ProtoCheckboxOptions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| style | [ProtoCheckboxStyle](#feedback_fusion_v1-ProtoCheckboxStyle) |  |  |
+| default_state | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoField"></a>
+
+### ProtoField
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| prompt | [string](#string) |  |  |
+| title | [string](#string) |  |  |
+| description | [string](#string) | optional |  |
+| field_type | [ProtoFieldType](#feedback_fusion_v1-ProtoFieldType) |  |  |
+| options | [ProtoFieldOptions](#feedback_fusion_v1-ProtoFieldOptions) |  |  |
+| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoFieldOptions"></a>
+
+### ProtoFieldOptions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| text | [ProtoTextOptions](#feedback_fusion_v1-ProtoTextOptions) |  |  |
+| rating | [ProtoRatingOptions](#feedback_fusion_v1-ProtoRatingOptions) |  |  |
+| checkbox | [ProtoCheckboxOptions](#feedback_fusion_v1-ProtoCheckboxOptions) |  |  |
+| selection | [ProtoSelectionOptions](#feedback_fusion_v1-ProtoSelectionOptions) |  |  |
+| range | [ProtoRangeOptions](#feedback_fusion_v1-ProtoRangeOptions) |  |  |
+| number | [ProtoNumberOptions](#feedback_fusion_v1-ProtoNumberOptions) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoNumberOptions"></a>
+
+### ProtoNumberOptions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| min | [int32](#int32) |  |  |
+| max | [int32](#int32) |  |  |
+| placeholder | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoRangeOptions"></a>
+
+### ProtoRangeOptions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| min | [int32](#int32) |  |  |
+| max | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoRatingOptions"></a>
+
+### ProtoRatingOptions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| max | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoSelectionOptions"></a>
+
+### ProtoSelectionOptions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| values | [string](#string) | repeated |  |
+| multiple | [bool](#bool) |  |  |
+| combobox | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoTextOptions"></a>
+
+### ProtoTextOptions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| placeholder | [string](#string) |  |  |
+| lines | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-UpdateFieldRequest"></a>
+
+### UpdateFieldRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| options | [ProtoFieldOptions](#feedback_fusion_v1-ProtoFieldOptions) |  |  |
+| title | [string](#string) | optional |  |
+| description | [string](#string) | optional |  |
+| id | [string](#string) |  |  |
+
+
+
+
+
+ 
+
+
+<a name="feedback_fusion_v1-ProtoCheckboxStyle"></a>
+
+### ProtoCheckboxStyle
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| NORMAL | 0 |  |
+| SWITCH | 1 |  |
+
+
+
+<a name="feedback_fusion_v1-ProtoFieldType"></a>
+
+### ProtoFieldType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TEXT | 0 |  |
+| RATING | 1 |  |
+| CHECKBOX | 2 |  |
+| SELECTION | 3 |  |
+| RANGE | 4 |  |
+| NUMBER | 5 |  |
+
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="feedback-fusion-v1_prompt-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/prompt.proto
+
+
+
+<a name="feedback_fusion_v1-CreatePromptRequest"></a>
+
+### CreatePromptRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| target | [string](#string) |  |  |
+| title | [string](#string) |  |  |
+| description | [string](#string) |  |  |
+| active | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-DeletePromptRequest"></a>
+
+### DeletePromptRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-GetPromptRequest"></a>
+
+### GetPromptRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-GetPromptsRequest"></a>
+
+### GetPromptsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| target | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-PromptPage"></a>
+
+### PromptPage
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| page_token | [int32](#int32) |  |  |
+| next_page_token | [int32](#int32) |  |  |
+| page_size | [int32](#int32) |  |  |
+| total | [int32](#int32) |  |  |
+| prompts | [ProtoPrompt](#feedback_fusion_v1-ProtoPrompt) | repeated |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-ProtoPrompt"></a>
+
+### ProtoPrompt
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| title | [string](#string) |  |  |
+| description | [string](#string) |  |  |
+| target | [string](#string) |  |  |
+| active | [bool](#bool) |  |  |
+| created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+| updated_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
+
+
+
+
+
+
+<a name="feedback_fusion_v1-UpdatePromptRequest"></a>
+
+### UpdatePromptRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| active | [bool](#bool) | optional |  |
+| description | [string](#string) | optional |  |
+| title | [string](#string) | optional |  |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="feedback-fusion-v1_resource-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/resource.proto
+
+
+
+<a name="feedback_fusion_v1-ProtoResource"></a>
+
+### ProtoResource
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| unknown | [google.protobuf.Empty](#google-protobuf-Empty) |  |  |
+| target | [ProtoTarget](#feedback_fusion_v1-ProtoTarget) |  |  |
+| prompt | [ProtoPrompt](#feedback_fusion_v1-ProtoPrompt) |  |  |
+| field | [ProtoField](#feedback_fusion_v1-ProtoField) |  |  |
+
+
+
+
+
+ 
+
+ 
+
+ 
 
  
 

@@ -25,7 +25,7 @@ use crate::{
     config::{BrokerConfiguration, FluvioBrokerConfiguration},
     prelude::*,
 };
-use feedback_fusion_common::event::EventBatch;
+use feedback_fusion_common::proto::ProtoEventBatch;
 use fluvio::{Fluvio, Offset, consumer::ConsumerConfigExtBuilder};
 use futures::StreamExt;
 use kanal::{AsyncReceiver, AsyncSender};
@@ -54,7 +54,7 @@ impl FeedbackFusionIndexerBrokerDriver for FluvioBroker {
 
     async fn start_listener(
         &mut self,
-        sender: AsyncSender<EventBatch>,
+        sender: AsyncSender<ProtoEventBatch>,
         _: AsyncSender<()>,
         shutdown_receiver: AsyncReceiver<()>,
     ) -> Result<()> {
@@ -85,7 +85,7 @@ impl FeedbackFusionIndexerBrokerDriver for FluvioBroker {
 
                 if let Some(event) = consumer.next().await {
                     match event {
-                        Ok(record) => match EventBatch::decode(record.value()) {
+                        Ok(record) => match ProtoEventBatch::decode(record.value()) {
                             Ok(batch) => {
                                 sender.send(batch).await.ok();
                             }

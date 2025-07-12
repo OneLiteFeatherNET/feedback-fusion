@@ -21,18 +21,18 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use feedback_fusion_common::{database::DatabaseConnection, event::EventBatch};
+use feedback_fusion_common::{database::DatabaseConnection, proto::ProtoEventBatch};
 use kanal::{AsyncReceiver, AsyncSender};
 
 mod audit;
 
 pub struct FeedbackFusionIndexerProcessor {
     connection: DatabaseConnection,
-    receiver: AsyncReceiver<EventBatch>,
+    receiver: AsyncReceiver<ProtoEventBatch>,
 }
 
 impl FeedbackFusionIndexerProcessor {
-    pub fn initialize(connection: DatabaseConnection, receiver: AsyncReceiver<EventBatch>) -> Self {
+    pub fn initialize(connection: DatabaseConnection, receiver: AsyncReceiver<ProtoEventBatch>) -> Self {
         Self {
             connection,
             receiver,
@@ -88,7 +88,7 @@ impl FeedbackFusionIndexerProcessor {
     }
 
     #[instrument(skip_all)]
-    async fn process(&self, batch: EventBatch) -> Result<()> {
+    async fn process(&self, batch: ProtoEventBatch) -> Result<()> {
         debug!("Processing {} events", batch.events.len());
 
         let grouped_by_type = batch

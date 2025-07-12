@@ -21,7 +21,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use rbatis::RBatis;
+use prost_types::Timestamp;
+use rbatis::{rbdc::DateTime, RBatis};
 use tokio_retry::{
     strategy::{jitter, FibonacciBackoff},
     Retry,
@@ -131,9 +132,6 @@ macro_rules! database_configuration {
                                     }
                                 }).await?;
 
-                                connection.intercepts.clear();
-                                connection.intercepts.push(std::sync::Arc::new(rbatis::plugin::intercept_log::LogInterceptor::new(log::LevelFilter::Debug)));
-
                                 // perform init queries
                                 connection.exec(include_str!(stringify!([<$ident:lower>] .sql)), vec![]).await?;
                             }
@@ -177,32 +175,44 @@ macro_rules! database_request {
     }};
 }
 
-/// rbatis doesnt convert the LIMIT statements for postgres and mssql therefore we need a wrapper
-/// REF: https://rbatis.github.io/rbatis.io/#/v4/?id=macros-select-page
+pub fn date_time_to_timestamp(date_time: DateTime) -> Timestamp {
+    Timestamp::date_time(
+        date_time.year().into(),
+        date_time.mon(),
+        date_time.day(),
+        date_time.hour(),
+        date_time.minute(),
+        date_time.sec(),
+    )
+    .unwrap()
+}
+
 #[macro_export]
-#[allow(clippy::crate_in_macro_def)]
-macro_rules! impl_select_page_wrapper {
-    ($table:path {}) => {
-        impl_select_page_wrapper!($table{select_page() => ""});
-    };
-    ($table:path {$ident:ident ($($arg:ident: $ty:ty $(,)?)*) => $expr:expr}) => {
-        paste!{
-            impl_select_page!($table {$ident($($arg: $ty,)* limit_sql: &str) => $expr});
+macro_rules! to_date_time {
+    ($ident:expr) => {{
+        DateTime::from_timestamp($ident.unwrap().seconds)
+    }};
+}
 
-            impl $table {
-                pub async fn [<$ident _wrapper>](config: &$crate::database::DatabaseConfiguration, executor: &dyn rbatis::executor::Executor, page_request: &dyn rbatis::IPageRequest, $($arg: $ty,)*) -> std::result::Result<rbatis::plugin::page::Page<$table>, rbatis::rbdc::Error> {
-                  let limit = page_request.page_size();
-                  let offset = page_request.offset();
+#[macro_export()]
+macro_rules! save_as_json {
+    ($struct:path, $ident:ident) => {
+        paste! {
+            fn [<serialize_ $ident>]<S>(sub: &$struct, serializer: S) -> std::result::Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                let json_string = serde_json::to_string(sub).map_err(|error| serde::ser::Error::custom(format!("failed to serialize {} as json: {}", stringify!($struct), error)))?;
+                serializer.serialize_str(&json_string)
+            }
 
-                  match config {
-                     $crate::database::DatabaseConfiguration::Postgres(_) => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {} OFFSET {} ", limit, offset).as_str()).await,
-                     $crate::database::DatabaseConfiguration::MSSQL(_) => Self::$ident(executor, page_request, $($arg,)* format!(" ORDER BY id OFFSET {} ROWS FETCH NEXT {} ROWS ONLY", offset, limit).as_str()).await,
-                    #[allow(unreachable_patterns)]
-                    _ => Self::$ident(executor, page_request, $($arg,)* format!(" LIMIT {},{} ", offset, limit).as_str()).await
-                 }
-               }
+            fn [<deserialize_ $ident>]<'de, D>(deserializer: D) -> std::result::Result<$struct, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                let json_string = String::deserialize(deserializer)?;
+                serde_json::from_str(&json_string).map_err(|error| serde::de::Error::custom(format!("failed to deserialize {} from json: {}", stringify!($struct), error)))
             }
         }
-
-    }
+    };
 }

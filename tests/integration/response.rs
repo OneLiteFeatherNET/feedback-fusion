@@ -23,9 +23,9 @@
 use std::collections::HashMap;
 
 use feedback_fusion_common::proto::{
-    response_data::Data, CreateFieldRequest, CreatePromptRequest, CreateResponsesRequest,
-    CreateTargetRequest, FieldOptions, FieldType, GetResponsesRequest, RatingResponse,
-    ResponseData, TextOptions, TextResponse,
+    CreateFieldRequest, CreatePromptRequest, CreateResponsesRequest, CreateTargetRequest,
+    GetResponsesRequest, ProtoFieldOptions, ProtoFieldType, ProtoTextOptions, RatingResponse,
+    ResponseData, TextResponse, response_data::Data,
 };
 use test_log::test;
 
@@ -52,14 +52,16 @@ fn create_field(prompt: String) -> CreateFieldRequest {
         prompt,
         title: "Field".to_owned(),
         description: Some("Description".to_owned()),
-        field_type: FieldType::Text.into(),
-        options: Some(FieldOptions {
-            options: Some(feedback_fusion_common::proto::field_options::Options::Text(
-                TextOptions {
-                    lines: 1,
-                    placeholder: "Placeholder".to_owned(),
-                },
-            )),
+        field_type: ProtoFieldType::Text.into(),
+        options: Some(ProtoFieldOptions {
+            options: Some(
+                feedback_fusion_common::proto::proto_field_options::Options::Text(
+                    ProtoTextOptions {
+                        lines: 1,
+                        placeholder: "Placeholder".to_owned(),
+                    },
+                ),
+            ),
         }),
     }
 }
@@ -145,22 +147,24 @@ async fn test_get() {
         ..Default::default()
     };
     let response = client.get_responses(request).await;
-    assert!(response.is_ok_and(|response| response
-        .into_inner()
-        .data
-        .values()
-        .into_iter()
-        .next()
-        .unwrap()
-        .data
-        .first()
-        .unwrap()
-        .data
-        .eq(&Some(ResponseData {
-            data: Some(feedback_fusion_common::proto::response_data::Data::Text(
-                TextResponse {
-                    text: "text".to_owned(),
-                }
-            ))
-        }))))
+    assert!(response.is_ok_and(|response| {
+        response
+            .into_inner()
+            .data
+            .values()
+            .into_iter()
+            .next()
+            .unwrap()
+            .data
+            .first()
+            .unwrap()
+            .data
+            .eq(&Some(ResponseData {
+                data: Some(feedback_fusion_common::proto::response_data::Data::Text(
+                    TextResponse {
+                        text: "text".to_owned(),
+                    },
+                )),
+            }))
+    }))
 }

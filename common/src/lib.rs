@@ -30,17 +30,60 @@ pub mod observability;
 pub mod tests;
 
 pub mod proto {
+    use crate::proto::proto_resource::Inner;
+    use anyhow::anyhow;
     use validator::Validate;
+
     tonic::include_proto!("feedback_fusion_v1");
-    pub const FILE_DESCRIPTOR_SET: &[u8] =
+    pub const FEEDBACK_FUSION_V1_FILE_DESCRIPTOR_SET: &[u8] =
         tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
+
+    tonic::include_proto!("feedback_fusion_event_v1");
+    pub const FEEDBACK_FUSION_EVENT_V1_FILE_DESCRIPTOR_SET: &[u8] =
+        tonic::include_file_descriptor_set!("feedback-fusion-event-v1-descriptor");
+
+    macro_rules! proto_resource_binding {
+        ($proto:path, $variant:ident) => {
+            impl From<$proto> for ProtoResource {
+                fn from(value: $proto) -> Self {
+                    Self {
+                        inner: Some(Inner::$variant(value)),
+                    }
+                }
+            }
+
+            impl TryInto<$proto> for ProtoResource {
+                type Error = anyhow::Error;
+
+                fn try_into(self) -> Result<$proto, Self::Error> {
+                    if let Some(inner) = self.inner {
+                        match inner {
+                            Inner::$variant(data) => Ok(data),
+                            other => Err(anyhow!("Expected $variant inner type, got {other:?}")),
+                        }
+                    } else {
+                        Err(anyhow!("Missing inner resource data"))
+                    }
+                }
+            }
+        };
+    }
+
+    proto_resource_binding!(ProtoTarget, Target);
+    proto_resource_binding!(ProtoPrompt, Prompt);
+    proto_resource_binding!(ProtoField, Field);
+
+    impl ProtoResource {
+        pub fn empty() -> Self {
+            Self {
+                inner: Some(Inner::Unknown(())),
+            }
+        }
+    }
 }
 
-#[allow(clippy::module_inception)]
-pub mod event {
-    tonic::include_proto!("feedback_fusion_event_v1");
-    pub const FILE_DESCRIPTOR_SET: &[u8] =
-        tonic::include_file_descriptor_set!("feedback-fusion-event-v1-descriptor");
+pub mod common {
+    tonic::include_proto!("common");
 }
 
 pub trait PageRequest {
@@ -57,6 +100,7 @@ macro_rules! emit {
 }
 
 pub mod prelude {
+    pub use crate::{database::date_time_to_timestamp, to_date_time};
     pub use anyhow::anyhow;
     pub use derivative::Derivative;
     pub use getset::{Getters, Setters};

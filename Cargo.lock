@@ -1783,6 +1783,7 @@ dependencies = [
  "rbdc-mysql",
  "rbdc-pg",
  "rbs",
+ "regex",
  "serde",
  "serde-inline-default",
  "tokio-retry",

@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum ProtoFieldType {
+  TEXT = 0;
+  RATING = 1;
+  CHECKBOX = 2;
+  SELECTION = 3;
+  RANGE = 4;
+  NUMBER = 5;
+}
+
+message ProtoTextOptions {
+  string placeholder = 1;
+  int32 lines = 2;
+}
+
+message ProtoRatingOptions { int32 max = 1; }
+
+enum ProtoCheckboxStyle {
+  NORMAL = 0;
+  SWITCH = 1;
+}
+
+message ProtoCheckboxOptions {
+  ProtoCheckboxStyle style = 1;
+  bool default_state = 2;
+}
+
+message ProtoSelectionOptions {
+  repeated string values = 1;
+  bool multiple = 2;
+  bool combobox = 3;
+}
+
+message ProtoRangeOptions {
+  int32 min = 1;
+  int32 max = 2;
+}
+
+message ProtoNumberOptions {
+  int32 min = 1;
+  int32 max = 2;
+  string placeholder = 3;
+}
+
+message ProtoFieldOptions {
+  oneof options {
+    ProtoTextOptions text = 5;
+    ProtoRatingOptions rating = 6;
+    ProtoCheckboxOptions checkbox = 7;
+    ProtoSelectionOptions selection = 8;
+    ProtoRangeOptions range = 9;
+    ProtoNumberOptions number = 10;
+  }
+}
+
+message CreateFieldRequest {
+  string prompt = 1;
+  string title = 2;
+  optional string description = 3;
+  ProtoFieldType field_type = 4;
+  ProtoFieldOptions options = 5;
+}
+
+message ProtoField {
+  string id = 1;
+  string prompt = 2;
+  string title = 3;
+  optional string description = 4;
+  ProtoFieldType field_type = 13;
+  ProtoFieldOptions options = 5;
+
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message GetFieldsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  string prompt = 3;
+}
+
+message FieldPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated ProtoField fields = 5;
+}
+
+message UpdateFieldRequest {
+  ProtoFieldOptions options = 1;
+  optional string title = 2;
+  optional string description = 3;
+  string id = 4;
+}
+
+message DeleteFieldRequest { string id = 1; }

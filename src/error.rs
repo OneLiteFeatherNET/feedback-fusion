@@ -59,7 +59,9 @@ pub enum FeedbackFusionError {
     #[error(transparent)]
     BincodeEncodeError(#[from] bincode::error::EncodeError),
     #[error(transparent)]
-    KanalSendError(#[from] kanal::SendError)
+    KanalSendError(#[from] kanal::SendError),
+    #[error(transparent)]
+    ProstDecodeError(#[from] prost::DecodeError)
 }
 
 impl From<ValidationErrors> for FeedbackFusionError {

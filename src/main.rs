@@ -82,7 +82,7 @@ async fn main() {
         debug!("Constructing reflection service");
         let reflection_service = tonic_reflection::server::Builder::configure()
             .register_encoded_file_descriptor_set(
-                feedback_fusion_common::proto::FILE_DESCRIPTOR_SET,
+                feedback_fusion_common::proto::FEEDBACK_FUSION_V1_FILE_DESCRIPTOR_SET,
             )
             .build_v1()
             .unwrap();

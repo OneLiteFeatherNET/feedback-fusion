@@ -30,8 +30,8 @@ use crate::{
     prelude::*,
 };
 use feedback_fusion_common::proto::{
-    CreateResponsesRequest, FieldResponse as ProtoFieldResponse, FieldResponseList,
-    GetResponsesRequest, PromptResponse as ProtoPromptResponse, ResponsePage,
+    CreateResponsesRequest, FieldResponseList, GetResponsesRequest, ProtoFieldResponse,
+    ProtoPromptResponse, ResponsePage,
 };
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::HashMap;
@@ -123,12 +123,9 @@ pub async fn get_responses(
     let page_request = data.page_request();
     let connection = context.connection();
 
-    error!("{:?}", page_request);
-
     // select a page of responses
     let responses = database_request!(
-        PromptResponse::select_page_by_prompt_wrapper(
-            &DATABASE_CONFIG,
+        PromptResponse::select_page_by_prompt(
             connection,
             &page_request,
             data.prompt.as_str()
@@ -137,7 +134,7 @@ pub async fn get_responses(
         "Select responses by prompt"
     )?;
 
-    error!("{:?}", responses);
+    warn!("{:?}", responses);
 
     let records = if responses.total > 0 {
         database_request!(
@@ -169,6 +166,8 @@ pub async fn get_responses(
     } else {
         HashMap::new()
     };
+
+    warn!("{records:?}");
 
     Ok(Response::new(ResponsePage {
         page_token: page_request.page_no().try_into()?,

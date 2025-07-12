@@ -50,6 +50,8 @@ broker = {
       certificate_authority = "./tests/_common/configs/indexer/certificate_authority.crt"
     } 
   }
+
+  batch_interval = 0
 }
 
 preset = {

@@ -13,6 +13,9 @@ test-all: cleanup
   just test mssql
   just test skytable
 
+  # a short sleep to process events
+  sleep 2
+
   cargo llvm-cov report
   cargo llvm-cov report --lcov --output-path coverage.info
 
@@ -24,7 +27,7 @@ init:
 #
 
 check:
-  cargo check --all-features --workspace
+  cargo check --all-features --workspace --tests
 
 clippy:
   cargo clippy --all-features --workspace -- -D warnings
@@ -73,7 +76,8 @@ bench: oidc-server-mock postgres && cleanup
   GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
 
 protoc-docs:
-  docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos  pseudomuto/protoc-gen-doc --doc_opt=markdown,api.md
+	docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos pseudomuto/protoc-gen-doc --proto_path=/protos --doc_opt=markdown,api.md $(find ./proto -name "*.proto" | sed 's|^\./proto/||')
+
 
 #
 # Testing requirements

@@ -22,8 +22,8 @@
 
 use std::path::Path;
 
-use feedback_fusion_common::event::{
-    Event, EventBatch, feedback_fusion_indexer_v1_client::FeedbackFusionIndexerV1Client,
+use feedback_fusion_common::proto::{
+    ProtoEvent, ProtoEventBatch, feedback_fusion_indexer_v1_client::FeedbackFusionIndexerV1Client,
 };
 use fluvio::{
     Fluvio, Offset, RecordKey, TopicProducerConfigBuilder, TopicProducerPool,
@@ -50,7 +50,7 @@ trait FeedbackFusionBrokerDriver: Send + Sync {
 
     async fn start_receiver(&mut self, database: DatabaseConnection) -> Result<()>;
 
-    async fn send_batch(&mut self, batch: EventBatch) -> Result<()>;
+    async fn send_batch(&mut self, batch: ProtoEventBatch) -> Result<()>;
 }
 
 pub struct FluvioBroker {
@@ -115,7 +115,7 @@ impl FeedbackFusionBrokerDriver for FluvioBroker {
             loop {
                 if let Some(event) = consumer.next().await {
                     match event {
-                        Ok(record) => match EventBatch::decode(record.value()) {
+                        Ok(record) => match ProtoEventBatch::decode(record.value()) {
                             Ok(batch) => consumer::handle_batch(batch, &database).await?,
                             Err(error) => error!("Error while decoding batch: {error}"),
                         },
@@ -131,7 +131,7 @@ impl FeedbackFusionBrokerDriver for FluvioBroker {
         Ok(())
     }
 
-    async fn send_batch(&mut self, batch: EventBatch) -> Result<()> {
+    async fn send_batch(&mut self, batch: ProtoEventBatch) -> Result<()> {
         if let Some(producer) = self.producer.as_ref() {
             match producer.send(RecordKey::NULL, batch.encode_to_vec()).await {
                 Ok(_) => Ok(()),
@@ -230,7 +230,7 @@ impl FeedbackFusionBrokerDriver for GRPCBroker {
         Ok(())
     }
 
-    async fn send_batch(&mut self, batch: EventBatch) -> Result<()> {
+    async fn send_batch(&mut self, batch: ProtoEventBatch) -> Result<()> {
         if let Some(client) = self.client.as_mut() {
             match client.send_batch(batch).await {
                 Ok(_) => Ok(()),
@@ -272,7 +272,7 @@ impl FeedbackFusionBroker {
         })
     }
 
-    pub async fn start_loop(mut self, database: DatabaseConnection) -> Result<AsyncSender<Event>> {
+    pub async fn start_loop(mut self, database: DatabaseConnection) -> Result<AsyncSender<ProtoEvent>> {
         // connect the driver to the srver
         self.driver.connect().await?;
 

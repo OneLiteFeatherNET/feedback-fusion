@@ -21,11 +21,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::prelude::*;
-use feedback_fusion_common::event::EventBatch;
+use feedback_fusion_common::proto::ProtoEventBatch;
 
 use crate::prelude::DatabaseConnection;
 
-pub async fn handle_batch(_batch: EventBatch, _database: &DatabaseConnection) -> Result<()> {
+pub async fn handle_batch(_batch: ProtoEventBatch, _database: &DatabaseConnection) -> Result<()> {
     // TODO: use this to clear the L1 Cache
 
     todo!()

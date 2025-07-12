@@ -20,7 +20,8 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, save_as_json, to_date_time};
+use crate::{prelude::*, save_as_json, to_date_time};
+use feedback_fusion_common::proto::{ProtoField, ProtoFieldType, ProtoPrompt};
 use rbatis::rbdc::DateTime;
 
 use super::FieldOptions;
@@ -63,9 +64,9 @@ pub struct Prompt {
     created_at: DateTime,
 }
 
-impl From<Prompt> for feedback_fusion_common::proto::Prompt {
+impl From<Prompt> for ProtoPrompt {
     fn from(val: Prompt) -> Self {
-        feedback_fusion_common::proto::Prompt {
+        ProtoPrompt {
             id: val.id,
             title: val.title,
             description: val.description,
@@ -77,8 +78,8 @@ impl From<Prompt> for feedback_fusion_common::proto::Prompt {
     }
 }
 
-impl From<feedback_fusion_common::proto::Prompt> for Prompt {
-    fn from(val: feedback_fusion_common::proto::Prompt) -> Self {
+impl From<ProtoPrompt> for Prompt {
+    fn from(val: ProtoPrompt) -> Self {
         Prompt {
             id: val.id,
             title: val.title,
@@ -93,7 +94,7 @@ impl From<feedback_fusion_common::proto::Prompt> for Prompt {
 
 crud!(Prompt {});
 impl_select!(Prompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
-impl_select_page_wrapper!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
+impl_select_page!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Encode, Decode)]
 #[serde(rename_all = "lowercase")]
@@ -135,28 +136,28 @@ impl From<FieldType> for i32 {
     }
 }
 
-impl From<FieldType> for feedback_fusion_common::proto::FieldType {
+impl From<FieldType> for ProtoFieldType {
     fn from(val: FieldType) -> Self {
         match val {
-            FieldType::Text => feedback_fusion_common::proto::FieldType::Text,
-            FieldType::Rating => feedback_fusion_common::proto::FieldType::Rating,
-            FieldType::Checkbox => feedback_fusion_common::proto::FieldType::Checkbox,
-            FieldType::Selection => feedback_fusion_common::proto::FieldType::Selection,
-            FieldType::Range => feedback_fusion_common::proto::FieldType::Range,
-            FieldType::Number => feedback_fusion_common::proto::FieldType::Number,
+            FieldType::Text => ProtoFieldType::Text,
+            FieldType::Rating => ProtoFieldType::Rating,
+            FieldType::Checkbox => ProtoFieldType::Checkbox,
+            FieldType::Selection => ProtoFieldType::Selection,
+            FieldType::Range => ProtoFieldType::Range,
+            FieldType::Number => ProtoFieldType::Number,
         }
     }
 }
 
-impl From<feedback_fusion_common::proto::FieldType> for FieldType {
-    fn from(val: feedback_fusion_common::proto::FieldType) -> Self {
+impl From<ProtoFieldType> for FieldType {
+    fn from(val: ProtoFieldType) -> Self {
         match val {
-            feedback_fusion_common::proto::FieldType::Text => FieldType::Text,
-            feedback_fusion_common::proto::FieldType::Rating => FieldType::Rating,
-            feedback_fusion_common::proto::FieldType::Checkbox => FieldType::Checkbox,
-            feedback_fusion_common::proto::FieldType::Selection => FieldType::Selection,
-            feedback_fusion_common::proto::FieldType::Range => FieldType::Range,
-            feedback_fusion_common::proto::FieldType::Number => FieldType::Number,
+            ProtoFieldType::Text => FieldType::Text,
+            ProtoFieldType::Rating => FieldType::Rating,
+            ProtoFieldType::Checkbox => FieldType::Checkbox,
+            ProtoFieldType::Selection => FieldType::Selection,
+            ProtoFieldType::Range => FieldType::Range,
+            ProtoFieldType::Number => FieldType::Number,
         }
     }
 }
@@ -204,9 +205,9 @@ pub struct Field {
     created_at: DateTime,
 }
 
-impl From<Field> for feedback_fusion_common::proto::Field {
+impl From<Field> for ProtoField {
     fn from(val: Field) -> Self {
-        feedback_fusion_common::proto::Field {
+        ProtoField {
             id: val.id,
             title: val.title,
             description: val.description,
@@ -219,7 +220,7 @@ impl From<Field> for feedback_fusion_common::proto::Field {
     }
 }
 
-impl TryInto<Field> for feedback_fusion_common::proto::Field {
+impl TryInto<Field> for ProtoField {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<Field> {
@@ -238,4 +239,4 @@ impl TryInto<Field> for feedback_fusion_common::proto::Field {
 
 crud!(Field {});
 impl_select!(Field {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
-impl_select_page_wrapper!(Field {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
+impl_select_page!(Field {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});

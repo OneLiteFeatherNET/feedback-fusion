@@ -22,8 +22,8 @@
 
 use std::path::Path;
 
-use feedback_fusion_common::event::{
-    EventBatch,
+use feedback_fusion_common::proto::{
+    ProtoEventBatch,
     feedback_fusion_indexer_v1_server::{FeedbackFusionIndexerV1, FeedbackFusionIndexerV1Server},
 };
 use kanal::{AsyncReceiver, AsyncSender};
@@ -42,7 +42,7 @@ const ADDRESS: &str = "0.0.0.0:7000";
 
 #[derive(Clone)]
 pub struct GRPCBroker {
-    sender: Option<AsyncSender<EventBatch>>,
+    sender: Option<AsyncSender<ProtoEventBatch>>,
     config: GRPCBrokerConfiguration,
 }
 
@@ -51,7 +51,7 @@ impl FeedbackFusionIndexerV1 for GRPCBroker {
     #[instrument(skip_all)]
     async fn send_batch(
         &self,
-        request: Request<EventBatch>,
+        request: Request<ProtoEventBatch>,
     ) -> std::result::Result<Response<()>, Status> {
         let batch = request.into_inner();
 
@@ -91,7 +91,7 @@ impl FeedbackFusionIndexerBrokerDriver for GRPCBroker {
 
     async fn start_listener(
         &mut self,
-        sender: AsyncSender<EventBatch>,
+        sender: AsyncSender<ProtoEventBatch>,
         shutdown_sender: AsyncSender<()>,
         shutdown_receiver: AsyncReceiver<()>,
     ) -> Result<()> {
@@ -119,7 +119,7 @@ impl FeedbackFusionIndexerBrokerDriver for GRPCBroker {
         debug!("Constructing reflection service");
         let reflection_service = tonic_reflection::server::Builder::configure()
             .register_encoded_file_descriptor_set(
-                feedback_fusion_common::event::FILE_DESCRIPTOR_SET,
+                feedback_fusion_common::proto::FEEDBACK_FUSION_EVENT_V1_FILE_DESCRIPTOR_SET,
             )
             .build_v1()
             .unwrap();

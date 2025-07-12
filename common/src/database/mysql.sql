@@ -62,3 +62,16 @@ CREATE TABLE IF NOT EXISTS resource_authorization (
   updated_at  TIMESTAMP(3),
   created_at  TIMESTAMP(3)
 );
+
+CREATE TABLE IF NOT EXISTS audit_version (
+  id                  VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
+  resource_type       VARCHAR(255) NOT NULL,
+  resource_id         VARCHAR(32) NOT NULL,
+  data                BLOB NOT NULL,
+  made_by             VARCHAR(32) NOT NULL,
+  action              VARCHAR(32) NOT NULL,
+  version             VARCHAR(32) NOT NULL,
+  created_at          DATETIME(3),
+  FOREIGN KEY (made_by) REFERENCES oidc_user(id)
+);
+

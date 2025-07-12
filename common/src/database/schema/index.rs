@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{impl_select_page_wrapper, prelude::*};
+use crate::{prelude::*};
 use rbatis::rbdc::DateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -50,4 +50,4 @@ pub struct IndexEntry {
 }
 
 crud!(IndexEntry {});
-impl_select_page_wrapper!(IndexComponent { select_page() => "``" });
+impl_select_page!(IndexComponent { select_page() => "``" });

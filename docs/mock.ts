@@ -1,11 +1,12 @@
 import { http, HttpResponse } from "msw";
 import { Timestamp } from "../lib/src/google/protobuf/timestamp";
-import { Prompt, CheckboxStyle, FieldPage, FieldType } from "../lib/src/feedback-fusion-v1";
 import {
   BinaryWriteOptions,
   BinaryWriter,
   IBinaryWriter,
 } from "@protobuf-ts/runtime";
+import { ProtoPrompt } from "../lib/src/feedback-fusion-v1/prompt.ts";
+import { ProtoFieldType, FieldPage, ProtoCheckboxStyle } from "../lib/src/feedback-fusion-v1/field.ts";
 
 // https://lucas-levin.com/code/blog/mocking-grpc-web-requests-for-integration-testing
 function createGrpcResponse<Message>(
@@ -82,7 +83,7 @@ export default [
           updatedAt: Timestamp.now(),
           createdAt: Timestamp.now(),
         },
-        Prompt.internalBinaryWrite,
+        ProtoPrompt.internalBinaryWrite,
       );
     },
   ),
@@ -101,7 +102,7 @@ export default [
               "id": "text",
               "prompt": "prompt",
               "title": "Text",
-              "fieldType": FieldType.TEXT,
+              "fieldType": ProtoFieldType.TEXT,
               "description": "description",
               "options": {
                 "options": {
@@ -119,7 +120,7 @@ export default [
               "id": "textarea",
               "prompt": "prompt",
               "title": "Textarea",
-              "fieldType": FieldType.TEXT,
+              "fieldType": ProtoFieldType.TEXT,
               "description": "description",
               "options": {
                 "options": {
@@ -138,7 +139,7 @@ export default [
               "id": "rating",
               "prompt": "prompt",
               "title": "Rating",
-              "fieldType": FieldType.RATING,
+              "fieldType": ProtoFieldType.RATING,
               "description": "description",
               "options": {
                 "options": {
@@ -155,7 +156,7 @@ export default [
             {
               "id": "checkbox",
               "prompt": "prompt",
-              "fieldType": FieldType.CHECKBOX,
+              "fieldType": ProtoFieldType.CHECKBOX,
               "title": "Checkbox",
               "description": "description",
               "options": {
@@ -163,7 +164,7 @@ export default [
                   "oneofKind": "checkbox",
                   checkbox: {
                     "defaultState": true,
-                    "style": CheckboxStyle.NORMAL,
+                    "style": ProtoCheckboxStyle.NORMAL,
                   },
 
                 }
@@ -174,7 +175,7 @@ export default [
             {
               "id": "switch",
               "prompt": "prompt",
-              "fieldType": FieldType.CHECKBOX,
+              "fieldType": ProtoFieldType.CHECKBOX,
               "title": "Switch",
               "description": "description",
               "options": {
@@ -182,7 +183,7 @@ export default [
                   "oneofKind": "checkbox",
                   checkbox: {
                     "defaultState": true,
-                    "style": CheckboxStyle.SWITCH,
+                    "style": ProtoCheckboxStyle.SWITCH,
                   },
 
                 }
@@ -195,7 +196,7 @@ export default [
               "id": "selection",
               "prompt": "prompt",
               "title": "Selection",
-              "fieldType": FieldType.SELECTION,
+              "fieldType": ProtoFieldType.SELECTION,
               "description": "description",
               "options": {
                 "options": {
@@ -215,7 +216,7 @@ export default [
               "id": "combobox",
               "title": "Combobox",
               "prompt": "prompt",
-              "fieldType": FieldType.SELECTION,
+              "fieldType": ProtoFieldType.SELECTION,
               "description": "description",
               "options": {
                 "options": {
@@ -236,7 +237,7 @@ export default [
               "id": "range",
               "title": "Range",
               "prompt": "prompt",
-              "fieldType": FieldType.RANGE,
+              "fieldType": ProtoFieldType.RANGE,
               "options": {
                 "options": {
                   "oneofKind": "range",
@@ -254,7 +255,7 @@ export default [
               "id": "number",
               "prompt": "prompt",
               "title": "Number",
-              "fieldType": FieldType.NUMBER,
+              "fieldType": ProtoFieldType.NUMBER,
               "description": "description",
               "options": {
                 "options": {

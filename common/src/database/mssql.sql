@@ -80,3 +80,20 @@ BEGIN
         created_at   DATETIME
     );
 END;
+
+IF NOT EXISTS (
+    SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'audit_version'
+)
+BEGIN
+    CREATE TABLE audit_version (
+        id                  VARCHAR(32)    NOT NULL PRIMARY KEY,
+        resource_type       VARCHAR(255)   NOT NULL,
+        resource_id         VARCHAR(32)    NOT NULL,
+        data                VARBINARY(MAX) NOT NULL,
+        made_by             VARCHAR(32)    NOT NULL  REFERENCES oidc_user(id),
+        action              VARCHAR(32)    NOT NULL,
+        version             VARCHAR(32)    NOT NULL,
+        created_at          DATETIME2(3),
+    );
+END;
+

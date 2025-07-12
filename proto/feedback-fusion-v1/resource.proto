@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+import "feedback-fusion-v1/field.proto";
+import "feedback-fusion-v1/prompt.proto";
+import "feedback-fusion-v1/target.proto";
+import "google/protobuf/empty.proto";
+
+message ProtoResource {
+  oneof inner {
+    google.protobuf.Empty unknown = 1;
+    ProtoTarget target = 2;
+    ProtoPrompt prompt = 3;
+    ProtoField field = 4;
+  }
+}

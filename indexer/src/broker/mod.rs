@@ -25,7 +25,7 @@ use crate::{
     config::{BrokerConfiguration, CONFIG},
     prelude::*,
 };
-use feedback_fusion_common::event::EventBatch;
+use feedback_fusion_common::proto::ProtoEventBatch;
 use kanal::{AsyncReceiver, AsyncSender};
 
 pub mod fluvio;
@@ -39,7 +39,7 @@ pub trait FeedbackFusionIndexerBrokerDriver: Send + Sync {
 
     async fn start_listener(
         &mut self,
-        sender: AsyncSender<EventBatch>,
+        sender: AsyncSender<ProtoEventBatch>,
         shutdown_sender: AsyncSender<()>,
         shutdown_receiver: AsyncReceiver<()>,
     ) -> Result<()>;
@@ -75,7 +75,7 @@ impl FeedbackFusionIndexerBroker {
         &mut self,
         shutdown_sender: AsyncSender<()>,
         shutdown_receiver: AsyncReceiver<()>,
-    ) -> Result<AsyncReceiver<EventBatch>> {
+    ) -> Result<AsyncReceiver<ProtoEventBatch>> {
         // create a new channel so we can send events to the producer
         let (sender, receiver) = kanal::unbounded_async();
 

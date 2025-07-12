@@ -21,28 +21,26 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{database::schema::user::UserContext, prelude::*};
-use feedback_fusion_common::{
-    event::Event,
-    proto::{
-        CreateFieldRequest, CreatePromptRequest, CreateResourceAuthorizationRequest,
-        CreateResponsesRequest, CreateTargetRequest, DataExportRequest, DataExportResponse,
-        DeleteFieldRequest, DeletePromptRequest, DeleteResourceAuthorizationRequest,
-        DeleteTargetRequest, ExportResourceAuthorizationsRequest, Field as ProtoField, FieldPage,
-        GetFieldsRequest, GetPromptRequest, GetPromptsRequest, GetResourceAuthorizationRequest,
-        GetResourceAuthorizationsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
-        Prompt as ProtoPrompt, PromptPage, PromptResponse,
-        ResourceAuthorization as ProtoResourceAuthorization, ResourceAuthorizationExportResponse,
-        ResourceAuthorizationList, ResourceAuthorizationPage, ResponsePage, Target as ProtoTarget,
-        TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateResourceAuthorizationRequest,
-        UpdateTargetRequest, UserInfoResponse, feedback_fusion_v1_server::FeedbackFusionV1,
-        public_feedback_fusion_v1_server::PublicFeedbackFusionV1,
-    },
+use feedback_fusion_common::proto::{
+    AuditVersionPage, CreateFieldRequest, CreatePromptRequest, CreateResourceAuthorizationRequest,
+    CreateResponsesRequest, CreateTargetRequest, DataExportRequest, DataExportResponse,
+    DeleteFieldRequest, DeletePromptRequest, DeleteResourceAuthorizationRequest,
+    DeleteTargetRequest, ExportResourceAuthorizationsRequest, FieldPage, GetAuditVersionsRequest,
+    GetFieldsRequest, GetPromptRequest, GetPromptsRequest, GetResourceAuthorizationRequest,
+    GetResourceAuthorizationsRequest, GetResponsesRequest, GetTargetRequest, GetTargetsRequest,
+    PromptPage, ProtoEvent, ProtoField, ProtoPrompt, ProtoPromptResponse,
+    ProtoResourceAuthorization, ProtoTarget, ResourceAuthorizationExportResponse,
+    ResourceAuthorizationList, ResourceAuthorizationPage, ResponsePage, RollbackResourceRequest,
+    TargetPage, UpdateFieldRequest, UpdatePromptRequest, UpdateResourceAuthorizationRequest,
+    UpdateTargetRequest, UserInfoResponse, feedback_fusion_v1_server::FeedbackFusionV1,
+    public_feedback_fusion_v1_server::PublicFeedbackFusionV1,
 };
 use kanal::AsyncSender;
 use openidconnect::core::CoreClient;
 use std::borrow::Cow;
 use tonic::{Response, Status};
 
+pub mod audit;
 pub mod authorization;
 pub mod export;
 pub mod field;
@@ -57,7 +55,7 @@ pub struct FeedbackFusionV1Context<'a> {
     pub connection: DatabaseConnection,
     pub client: CoreClient,
     pub permission_matrix: PermissionMatrix<'a>,
-    pub broker_event_sender: AsyncSender<Event>,
+    pub broker_event_sender: AsyncSender<ProtoEvent>,
 }
 
 #[derive(Getters)]
@@ -71,6 +69,14 @@ macro_rules! handler {
     ($handler:path, $self:ident, $request:ident, $endpoint:path, $permission:path) => {
         handler!($handler, $self, $request, $endpoint { EndpointScopeSelector::All }, $permission)
     };
+    ($handler:path, $self:ident, $request:ident, off) => {{
+        match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection, &$self.permission_matrix).await {
+            Ok(context) => {
+                handler!($handler, $self, $request, context)
+            }
+            Err(error) => Err(error.into()),
+        }
+    }};
     ($handler:path, $self:ident, $request:ident, $endpoint:path $inner:block, $permission:path) => {{
         match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection, &$self.permission_matrix).await {
             Ok(context) => {
@@ -418,6 +424,22 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
             Permission::List
         )
     }
+
+    #[instrument(skip_all)]
+    async fn get_audit_versions(
+        &self,
+        request: Request<GetAuditVersionsRequest>,
+    ) -> std::result::Result<Response<AuditVersionPage>, Status> {
+        handler!(audit::get_audit_versions, self, request, off)
+    }
+
+    #[instrument(skip_all)]
+    async fn rollback_resource(
+        &self,
+        request: Request<RollbackResourceRequest>,
+    ) -> std::result::Result<Response<()>, Status> {
+        handler!(audit::rollback_resource, self, request, off)
+    }
 }
 
 #[async_trait::async_trait]
@@ -442,7 +464,7 @@ impl PublicFeedbackFusionV1 for PublicFeedbackFusionV1Context {
     async fn create_responses(
         &self,
         request: Request<CreateResponsesRequest>,
-    ) -> std::result::Result<Response<PromptResponse>, Status> {
+    ) -> std::result::Result<Response<ProtoPromptResponse>, Status> {
         handler!(response::create_responses, self, request)
     }
 }

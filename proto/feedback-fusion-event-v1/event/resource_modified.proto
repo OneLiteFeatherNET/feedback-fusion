@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package feedback_fusion_event_v1;
+
+import "common/resource.proto";
+
+enum ProtoResourceModificationOperation {
+  CREATE = 0;
+  UPDATE = 1;
+  DELETE = 2;
+}
+
+message ProtoResourceModifiedEvent {
+  ProtoResourceModificationOperation operation = 1;
+  string id = 2;
+  common.ProtoResourceKind resource_kind = 3;
+  bytes data = 4;
+  string made_by = 5;
+}
