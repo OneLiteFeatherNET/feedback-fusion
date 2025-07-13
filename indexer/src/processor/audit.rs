@@ -37,7 +37,7 @@ use rbatis::rbdc::DateTime;
 struct MaxVersionQuery {
     resource_id: String,
     resource_type: AuditResource,
-    max_version: String,
+    max_version: u32,
 }
 
 /// Create the audit versions for the given events.
@@ -137,7 +137,7 @@ pub async fn create_audit_versions(
         result = vec![MaxVersionQuery {
             resource_type: AuditResource::Target,
             resource_id: "".to_owned(),
-            max_version: "0".to_owned(),
+            max_version: 0,
         }]
     }
 
@@ -170,7 +170,7 @@ pub async fn create_audit_versions(
                         {
                             is_match = true;
 
-                            latest_version.max_version.parse().unwrap()
+                            latest_version.max_version
                         } else {
                             0
                         }

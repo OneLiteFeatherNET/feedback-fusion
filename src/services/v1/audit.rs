@@ -119,7 +119,7 @@ pub async fn rollback_resource(
     {
         // try to fetch the rollback version
         let version: Vec<AuditVersion> = database_request!(
-            AuditVersion::select_by_map(connection, value!{ "resource_id": data.resource_id, "resource_type": data.resource_type, "version": data.version }).await,
+            AuditVersion::select_by_map(connection, value!{ "resource_id": data.resource_id, "resource_type": resource_kind, "version": data.version }).await,
             "Fetch the rollback data"
         )?;
 

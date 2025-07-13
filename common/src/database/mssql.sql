@@ -1,4 +1,3 @@
-
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'target')
 BEGIN
     CREATE TABLE target (
@@ -92,7 +91,7 @@ BEGIN
         data                VARBINARY(MAX) NOT NULL,
         made_by             VARCHAR(32)    NOT NULL  REFERENCES oidc_user(id),
         action              VARCHAR(32)    NOT NULL,
-        version             VARCHAR(32)    NOT NULL,
+        version             INT            NOT NULL,
         created_at          DATETIME2(3),
     );
 END;

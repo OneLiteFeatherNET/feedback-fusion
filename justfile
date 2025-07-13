@@ -12,6 +12,7 @@ test-all: cleanup
   just test mysql
   just test mssql
   just test skytable
+  just test fluvio
 
   cargo llvm-cov report
   cargo llvm-cov report --lcov --output-path coverage.info
@@ -47,10 +48,10 @@ build-all DOCKERFILE="./Dockerfile":
 backend TYPE=DEFAULT_TEST:
   FEEDBACK_FUSION_CONFIG="./tests/_common/configs/indexer/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin indexer --no-report > ./target/feedback-fusion-indexer.log 2>&1 &
 
-  while ! nc -z localhost 7000; do \
+  while ! nc -z localhost 3000; do \
     sleep 1; \
   done
-  @echo "Application ready"
+  @echo "Indexer ready"
 
   FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin feedback-fusion --no-report > ./target/feedback-fusion.log 2>&1 &
 
@@ -64,7 +65,7 @@ stop-backend:
     kill -2 $PID; \
   fi
 
-  -@PID=$(lsof -t -i:7000) && if [ -n "$PID" ]; then \
+  -@PID=$(lsof -t -i:3000) && if [ -n "$PID" ]; then \
     kill -2 $PID; \
   fi
 
@@ -104,6 +105,19 @@ protoc-docs:
 @skytable: postgres
   docker run -p 2003:2003 --entrypoint skyd --rm --name skytable -d skytable/skytable --auth-root-password=passwordpassword --endpoint=tcp@0.0.0.0:2003
 
+@fluvio: postgres
+  fluvio cluster start
+
+  fluvio topic create feedback-fusion 
+
+@stop-fluvio:
+  #!/usr/bin/expect -f
+
+  spawn fluvio cluster delete
+  expect "Please type the cluster name to confirm:"
+  send "local\r"
+  expect eof
+
 # 
 # Testing
 #
@@ -114,6 +128,7 @@ protoc-docs:
   -just stop-backend
   -docker rm -f skytable > /dev/null 2>&1
   -docker network rm {{DOCKER_NETWORK}} > /dev/null 2>&1
+  -just stop-fluvio
 
 unittest:
   FEEDBACK_FUSION_CONFIG="./tests/_common/configs/postgres.hcl" cargo llvm-cov --bin feedback-fusion --no-report -- --nocapture

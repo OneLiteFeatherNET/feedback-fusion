@@ -29,14 +29,11 @@ use tokio_retry::strategy::{ExponentialBackoff, jitter};
 
 use crate::broker::FeedbackFusionBroker;
 
-const BATCH_SIZE: usize = 10;
-const BATCH_TIMEOUT: Duration = Duration::from_secs(10);
-
 pub async fn start_loop(
     mut broker: FeedbackFusionBroker,
     receiver: AsyncReceiver<ProtoEvent>,
 ) -> Result<()> {
-    let mut batch = Vec::with_capacity(BATCH_SIZE);
+    let mut batch = Vec::with_capacity(*CONFIG.broker().max_batch_size() as usize);
 
     loop {
         let first_event = match receiver.recv().await {
@@ -48,9 +45,9 @@ pub async fn start_loop(
         };
         batch.push(first_event);
 
-        let timeout = tokio::time::sleep(BATCH_TIMEOUT);
+        let timeout = tokio::time::sleep(Duration::from_millis(*CONFIG.broker().batch_interval() as u64));
         tokio::pin!(timeout);
-        while batch.len() < BATCH_SIZE {
+        while batch.len() < *CONFIG.broker().max_batch_size() as usize {
             tokio::select! {
                 biased;
 

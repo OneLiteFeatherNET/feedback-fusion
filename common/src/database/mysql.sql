@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS audit_version (
   data                BLOB NOT NULL,
   made_by             VARCHAR(32) NOT NULL,
   action              VARCHAR(32) NOT NULL,
-  version             VARCHAR(32) NOT NULL,
+  version             INT UNSIGNED NOT NULL,
   created_at          DATETIME(3),
   FOREIGN KEY (made_by) REFERENCES oidc_user(id)
 );

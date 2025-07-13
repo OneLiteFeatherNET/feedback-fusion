@@ -43,6 +43,7 @@ use rbatis::rbdc::DateTime;
     PartialOrd,
     Ord,
 )]
+#[serde(rename_all = "lowercase")]
 pub enum ResourceKind {
     Target,
     Prompt,

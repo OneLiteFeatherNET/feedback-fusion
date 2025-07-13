@@ -28,16 +28,22 @@ use crate::{
     prelude::*,
     processor::FeedbackFusionIndexerProcessor,
 };
+use axum::{Router, routing::get};
 use feedback_fusion_common::database::DatabaseConnection;
+use tokio::net::TcpListener;
 
 mod broker;
 mod config;
 mod error;
 mod processor;
 
+const HEALTHCHECK_ADDRESS: &str = "0.0.0.0:3000";
+
 #[tokio::main]
 async fn main() {
-    rustls::crypto::aws_lc_rs::default_provider().install_default().unwrap();
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .unwrap();
     lazy_static::initialize(&CONFIG);
 
     feedback_fusion_common::observability::otlp::init_tracing(CONFIG.otlp());
@@ -62,8 +68,22 @@ async fn main() {
     let processor =
         FeedbackFusionIndexerProcessor::initialize(connection, broker_event_batch_receiver);
     processor
-        .start_worker(shutdown_sender.clone(), shutdown_receiver)
+        .start_worker(shutdown_sender.clone(), shutdown_receiver.clone())
         .await;
+
+    // start a axum server to serve a healthcheck
+    tokio::spawn(async move {
+        let router = Router::new().route("/", get(|| async { "OK" }));
+        let listener = TcpListener::bind(HEALTHCHECK_ADDRESS).await.unwrap();
+        axum::serve(listener, router)
+            .with_graceful_shutdown(async move {
+                shutdown_receiver.recv().await.ok();
+
+                info!("Got shotdown signal, gracefully stopping gRPC server");
+            })
+            .await
+            .unwrap();
+    });
 
     debug!("Trying to listen for graceful shutdown");
     match tokio::signal::ctrl_c().await {

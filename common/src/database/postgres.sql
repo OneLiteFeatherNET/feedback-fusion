@@ -65,6 +65,6 @@ CREATE TABLE IF NOT EXISTS audit_version (
   data                BYTEA NOT NULL, 
   made_by             VARCHAR(32) REFERENCES oidc_user(id) NOT NULL,
   action              VARCHAR(32) NOT NULL,
-  version             VARCHAR(32) NOT NULL,
+  version             INTEGER NOT NULL,
   created_at  TIMESTAMP(3)
 );

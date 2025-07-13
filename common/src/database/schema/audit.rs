@@ -77,7 +77,10 @@ pub struct AuditVersion {
 }
 
 crud!(AuditVersion {});
-impl_select_page!(AuditVersion { select_page_by_resource_type_and_resource_id(resource_type: &impl Serialize, resource_id: &str) => "`WHERE resource_type = #{resource_type} resource_id = #{resource_id}`" });
+impl_select_page!(AuditVersion { select_page_by_resource_type_and_resource_id(resource_type: &impl Serialize, resource_id: &str) => "
+        `WHERE resource_type = #{resource_type} AND resource_id = #{resource_id}`
+    if do_count == flase:
+        `ORDER BY version DESC`" });
 
 impl From<&AuditResource> for ProtoResourceKind {
     fn from(value: &AuditResource) -> Self {
