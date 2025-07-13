@@ -123,15 +123,11 @@ jobs:
       - name: Install FluvioCLI
         run: |
           curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
-          export PATH=${PATH}:~/.fluvio/bin:~/.fvm/bin
-          echo $PATH
-          ls ~/.fluvio -R
-          ls ~/.fvm -R
-          fluvio || true
-          which fluvio || true
 
       - name: Tests
-        run: just fluvio
+        run: |
+          export PATH=${PATH}:~/.fluvio/bin:~/.fvm/bin
+          just fluvio
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
