@@ -76,10 +76,11 @@ jobs:
       - name: Install FluvioCLI
         run: |
           curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
-          export PATH=${PATH}:~/.fluvio/bin:~/.fvm/bin
 
       - name: Tests
-        run: just test-all 
+        run: |
+          export PATH=${PATH}:~/.fluvio/bin:~/.fvm/bin
+          just test-all
 
   docker:
     needs: [tests]
