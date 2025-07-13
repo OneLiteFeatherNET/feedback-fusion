@@ -25,7 +25,11 @@ use std::borrow::Cow;
 use async_recursion::async_recursion;
 use strum_macros::{Display, IntoStaticStr};
 
-use crate::{authorization::{get_target_ids_by_field_ids, get_target_ids_by_prompt_ids}, prelude::*};
+use crate::{
+    authorization::{get_target_ids_by_field_ids, get_target_ids_by_prompt_ids},
+    database::schema::authorization::ResourceKind,
+    prelude::*,
+};
 
 /// This limits the access to the specified endpoint to the given scope.
 ///
@@ -58,6 +62,19 @@ pub enum EndpointScopeSelector<'a> {
 impl Default for EndpointScopeSelector<'_> {
     fn default() -> Self {
         Self::All
+    }
+}
+
+impl<'a> EndpointScopeSelector<'a> {
+    pub fn with_resource_kind(self, resource_kind: &ResourceKind) -> Endpoint<'a> {
+        match resource_kind {
+            ResourceKind::Target => Endpoint::Target(self),
+            ResourceKind::Prompt => Endpoint::Prompt(self),
+            ResourceKind::Field => Endpoint::Field(self),
+            ResourceKind::Response => Endpoint::Response(self),
+            ResourceKind::Export => Endpoint::Export(self),
+            ResourceKind::Authorize => Endpoint::Authorize(None),
+        }
     }
 }
 

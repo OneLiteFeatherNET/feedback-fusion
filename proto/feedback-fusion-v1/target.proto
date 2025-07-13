@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+import "google/protobuf/timestamp.proto";
+
+message ProtoTarget {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message GetTargetsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  string query = 3;
+}
+
+message TargetPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated ProtoTarget targets = 5;
+}
+
+message CreateTargetRequest {
+  string name = 1;
+  optional string description = 2;
+}
+
+message GetTargetRequest { string id = 1; }
+
+message UpdateTargetRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
+}
+
+message DeleteTargetRequest { string id = 1; }

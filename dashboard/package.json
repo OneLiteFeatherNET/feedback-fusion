@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "protoc": "npx protoc --ts_out composables --ts_opt=server_none --ts_opt=long_type_string --proto_path ../proto ../proto/feedback-fusion-v1.proto",
+    "protoc": "find ../proto/feedback-fusion-v1 ../proto/common -name '*.proto' | xargs protoc --ts_out composables --ts_opt=server_none --ts_opt=long_type_string --proto_path=../proto --proto_path=../proto/common",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",

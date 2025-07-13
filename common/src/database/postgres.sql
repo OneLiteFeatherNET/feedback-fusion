@@ -57,3 +57,14 @@ CREATE TABLE IF NOT EXISTS resource_authorization (
   updated_at  TIMESTAMP(3),
   created_at  TIMESTAMP(3)
 );
+
+CREATE TABLE IF NOT EXISTS audit_version (
+  id                  VARCHAR(32) UNIQUE NOT NULL,
+  resource_type       VARCHAR(255) NOT NULL,
+  resource_id         VARCHAR(32) NOT NULL,
+  data                BYTEA NOT NULL, 
+  made_by             VARCHAR(32) REFERENCES oidc_user(id) NOT NULL,
+  action              VARCHAR(32) NOT NULL,
+  version             INTEGER NOT NULL,
+  created_at  TIMESTAMP(3)
+);

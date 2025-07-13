@@ -22,7 +22,7 @@
 
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { CheckboxStyle } from "../feedback-fusion-v1";
+import { ProtoCheckboxStyle } from "../feedback-fusion-v1/field";
 
 @customElement("feedback-fusion-field-checkbox")
 export class FeedbackFusionFieldCheckbox extends LitElement {
@@ -86,7 +86,7 @@ export class FeedbackFusionFieldCheckbox extends LitElement {
 
   render() {
     return html`
-      ${this.options.style === CheckboxStyle.NORMAL ? html`
+      ${this.options.style === ProtoCheckboxStyle.NORMAL ? html`
         <input type="checkbox" value=${this.value} @change=${this.onChange} />
       `: html `
         <label>

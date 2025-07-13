@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - uses: extractions/setup-just@v2
-        
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v4
 
       - uses: extractions/setup-just@v2
-        
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -120,8 +120,14 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install FluvioCLI
+        run: |
+          curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
+
       - name: Tests
-        run: just test-all 
+        run: |
+          export PATH=${PATH}:~/.fluvio/bin:~/.fvm/bin
+          just test-all
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

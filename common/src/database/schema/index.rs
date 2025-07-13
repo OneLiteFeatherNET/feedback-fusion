@@ -20,5 +20,34 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#[cfg(feature = "otlp")]
-pub mod otlp;
+use crate::{prelude::*};
+use rbatis::rbdc::DateTime;
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
+pub enum IndexComponent {
+    Target,
+    Prompt,
+    Field,
+}
+
+#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
+#[derivative(PartialEq)]
+#[get = "pub"]
+#[set = "pub"]
+#[builder(field_defaults(setter(into)))]
+pub struct IndexEntry {
+    #[builder(default_code = r#"nanoid::nanoid!()"#)]
+    id: String,
+    key: String,
+    key_type: IndexComponent,
+    value: String,
+    value_type: IndexComponent,
+    #[derivative(PartialEq = "ignore")]
+    #[builder(default_code = r#"DateTime::utc()"#)]
+    created_at: DateTime,
+}
+
+crud!(IndexEntry {});
+impl_select_page!(IndexComponent { select_page() => "``" });

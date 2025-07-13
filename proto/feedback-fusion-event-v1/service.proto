@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package feedback_fusion_event_v1;
+
+import "feedback-fusion-event-v1/event/batch.proto";
+import "google/protobuf/empty.proto";
+
+service FeedbackFusionIndexerV1 {
+  rpc SendBatch(ProtoEventBatch) returns (google.protobuf.Empty);
+}

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+message DataExportRequest {
+  repeated string targets = 1;
+}
+
+message DataExportResponse {
+  string export = 1;
+}

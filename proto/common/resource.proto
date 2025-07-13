@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package common;
+
+enum ProtoResourceKind {
+  UNKNOWN = 0;
+  TARGET = 1;
+  PROMPT = 2;
+  FIELD = 3;
+  EXPORT = 4;
+  AUTHORIZE = 5;
+  RESPONSE = 6;
+}

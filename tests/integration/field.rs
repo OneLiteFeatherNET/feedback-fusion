@@ -21,9 +21,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use feedback_fusion_common::proto::{
-    CheckboxOptions, CreateFieldRequest, CreatePromptRequest, CreateTargetRequest,
-    DeleteFieldRequest, FieldOptions, FieldType, GetFieldsRequest, NumberOptions, RangeOptions,
-    RatingOptions, SelectionOptions, TextOptions, UpdateFieldRequest,
+    CreateFieldRequest, CreatePromptRequest, CreateTargetRequest, DeleteFieldRequest,
+    GetFieldsRequest, ProtoCheckboxOptions, ProtoFieldOptions, ProtoFieldType, ProtoNumberOptions,
+    ProtoRangeOptions, ProtoRatingOptions, ProtoSelectionOptions, ProtoTextOptions,
+    UpdateFieldRequest,
 };
 use test_log::test;
 
@@ -50,14 +51,16 @@ fn create_field(prompt: String) -> CreateFieldRequest {
         prompt,
         title: "Field".to_owned(),
         description: Some("Description".to_owned()),
-        field_type: FieldType::Text.into(),
-        options: Some(FieldOptions {
-            options: Some(feedback_fusion_common::proto::field_options::Options::Text(
-                TextOptions {
-                    lines: 1,
-                    placeholder: "Placeholder".to_owned(),
-                },
-            )),
+        field_type: ProtoFieldType::Text.into(),
+        options: Some(ProtoFieldOptions {
+            options: Some(
+                feedback_fusion_common::proto::proto_field_options::Options::Text(
+                    ProtoTextOptions {
+                        lines: 1,
+                        placeholder: "Placeholder".to_owned(),
+                    },
+                ),
+            ),
         }),
     }
 }
@@ -99,8 +102,8 @@ macro_rules! type_tests {
                         prompt,
                         title: "Field $name".to_owned(),
                         description: Some("Description".to_owned()),
-                        field_type: FieldType::$type.into(),
-                        options: Some(FieldOptions {
+                        field_type: ProtoFieldType::$type.into(),
+                        options: Some(ProtoFieldOptions {
                             options: Some($options),
                         }),
                     }
@@ -184,40 +187,46 @@ macro_rules! type_tests {
 type_tests!(
     (
         Text,
-        feedback_fusion_common::proto::field_options::Options::Text(TextOptions {
+        feedback_fusion_common::proto::proto_field_options::Options::Text(ProtoTextOptions {
             lines: 1,
             placeholder: "Placeholder".to_owned(),
         })
     ),
     (
         Rating,
-        feedback_fusion_common::proto::field_options::Options::Rating(RatingOptions { max: 5 })
+        feedback_fusion_common::proto::proto_field_options::Options::Rating(ProtoRatingOptions {
+            max: 5
+        })
     ),
     (
         Checkbox,
-        feedback_fusion_common::proto::field_options::Options::Checkbox(CheckboxOptions {
-            default_state: false,
-            ..Default::default()
-        })
+        feedback_fusion_common::proto::proto_field_options::Options::Checkbox(
+            ProtoCheckboxOptions {
+                default_state: false,
+                ..Default::default()
+            }
+        )
     ),
     (
         Selection,
-        feedback_fusion_common::proto::field_options::Options::Selection(SelectionOptions {
-            multiple: false,
-            combobox: false,
-            values: vec!["Foo".to_owned()]
-        })
+        feedback_fusion_common::proto::proto_field_options::Options::Selection(
+            ProtoSelectionOptions {
+                multiple: false,
+                combobox: false,
+                values: vec!["Foo".to_owned()]
+            }
+        )
     ),
     (
         Range,
-        feedback_fusion_common::proto::field_options::Options::Range(RangeOptions {
+        feedback_fusion_common::proto::proto_field_options::Options::Range(ProtoRangeOptions {
             min: 5,
             max: 10
         })
     ),
     (
         Number,
-        feedback_fusion_common::proto::field_options::Options::Number(NumberOptions {
+        feedback_fusion_common::proto::proto_field_options::Options::Number(ProtoNumberOptions {
             min: 5,
             max: 10,
             placeholder: "Placeholder".to_owned()
@@ -242,12 +251,14 @@ async fn test_delete() {
         ..Default::default()
     };
     let response = client.get_fields(request).await;
-    assert!(response.is_ok_and(|response| response
-        .into_inner()
-        .fields
-        .iter()
-        .find(|f| f.eq(&&field))
-        .is_none()));
+    assert!(response.is_ok_and(|response| {
+        response
+            .into_inner()
+            .fields
+            .iter()
+            .find(|f| f.eq(&&field))
+            .is_none()
+    }));
 
     let field = client
         .create_field(create_field(prompt.id.clone()))

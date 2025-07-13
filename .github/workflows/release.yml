@@ -73,8 +73,14 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install FluvioCLI
+        run: |
+          curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
+
       - name: Tests
-        run: just test-all 
+        run: |
+          export PATH=${PATH}:~/.fluvio/bin:~/.fvm/bin
+          just test-all
 
   docker:
     needs: [tests]

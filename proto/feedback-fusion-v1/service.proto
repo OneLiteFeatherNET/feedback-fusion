@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+import "feedback-fusion-v1/audit.proto";
+import "feedback-fusion-v1/authorization.proto";
+import "feedback-fusion-v1/export.proto";
+import "feedback-fusion-v1/field.proto";
+import "feedback-fusion-v1/prompt.proto";
+import "feedback-fusion-v1/response.proto";
+import "feedback-fusion-v1/target.proto";
+import "google/protobuf/empty.proto";
+
+// uses oidc authentication
+service FeedbackFusionV1 {
+  rpc CreateTarget(CreateTargetRequest) returns (ProtoTarget);
+  rpc GetTarget(GetTargetRequest) returns (ProtoTarget);
+  rpc GetTargets(GetTargetsRequest) returns (TargetPage);
+  rpc UpdateTarget(UpdateTargetRequest) returns (ProtoTarget);
+  rpc DeleteTarget(DeleteTargetRequest) returns (google.protobuf.Empty);
+
+  rpc CreatePrompt(CreatePromptRequest) returns (ProtoPrompt);
+  rpc GetPrompts(GetPromptsRequest) returns (PromptPage);
+  rpc UpdatePrompt(UpdatePromptRequest) returns (ProtoPrompt);
+  rpc DeletePrompt(DeletePromptRequest) returns (google.protobuf.Empty);
+
+  rpc CreateField(CreateFieldRequest) returns (ProtoField);
+  rpc GetFields(GetFieldsRequest) returns (FieldPage);
+  rpc UpdateField(UpdateFieldRequest) returns (ProtoField);
+  rpc DeleteField(DeleteFieldRequest) returns (google.protobuf.Empty);
+
+  rpc GetResponses(GetResponsesRequest) returns (ResponsePage);
+
+  rpc GetUserInfo(google.protobuf.Empty) returns (UserInfoResponse);
+
+  rpc ExportData(DataExportRequest) returns (DataExportResponse);
+
+  rpc CreateResourceAuthorization(CreateResourceAuthorizationRequest) returns (ResourceAuthorizationList);
+  rpc GetResourceAuthorizations(GetResourceAuthorizationsRequest) returns (ResourceAuthorizationPage);
+  rpc GetResourceAuthorization(GetResourceAuthorizationRequest) returns (ProtoResourceAuthorization);
+  rpc UpdateResourceAuthorization(UpdateResourceAuthorizationRequest) returns (ProtoResourceAuthorization);
+  rpc DeleteResourceAuthorization(DeleteResourceAuthorizationRequest) returns (google.protobuf.Empty);
+  rpc ExportResourceAuthorizations(ExportResourceAuthorizationsRequest) returns (ResourceAuthorizationExportResponse);
+
+  rpc GetAuditVersions(GetAuditVersionsRequest) returns (AuditVersionPage);
+  rpc RollbackResource(RollbackResourceRequest) returns (google.protobuf.Empty);
+}
+
+// does not use oidc authentication
+service PublicFeedbackFusionV1 {
+  rpc GetActiveFields(GetFieldsRequest) returns (FieldPage);
+  rpc GetPrompt(GetPromptRequest) returns (ProtoPrompt);
+  rpc CreateResponses(CreateResponsesRequest) returns (ProtoPromptResponse);
+}
