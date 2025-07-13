@@ -9,96 +9,96 @@ on:
       - main
 
 jobs:
-  # dashboard_build:
-  #   name: dashboard-build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout sources
-  #       uses: actions/checkout@v4
-  #
-  #     - uses: extractions/setup-just@v2
-  #
-  #     - name: Setup Node
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "22"
-  #
-  #     - name: Setup pnpm
-  #       uses: pnpm/action-setup@v4
-  #       with:
-  #         version: 9
-  #
-  #     - name: Dashboard build
-  #       run: just dashboard
-  #
-  # lib_build:
-  #   name: lib-build 
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout sources
-  #       uses: actions/checkout@v4
-  #
-  #     - uses: extractions/setup-just@v2
-  #
-  #     - name: Setup Node
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "22"
-  #
-  #     - name: Setup pnpm
-  #       uses: pnpm/action-setup@v4
-  #       with:
-  #         version: 9
-  #
-  #     - name: Lib build
-  #       run: just lib
-  #
-  # check:
-  #   name: check
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Install toolchain
-  #       uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         rustflags: "" 
-  #
-  #     - name: Checkout Sources
-  #       uses: actions/checkout@v4
-  #
-  #     - uses: extractions/setup-just@v2
-  #
-  #     - name: Install Protoc
-  #       uses: arduino/setup-protoc@v3
-  #       with:
-  #         repo-token: ${{ secrets.GITHUB_TOKEN }}
-  #
-  #     - name: Run check
-  #       run: just check
-  #
-  # clippy:
-  #   name: clippy
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Install toolchain
-  #       uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         rustflags: "" 
-  #
-  #     - name: Checkout Sources
-  #       uses: actions/checkout@v4
-  #
-  #     - uses: extractions/setup-just@v2
-  #
-  #     - name: Install Protoc
-  #       uses: arduino/setup-protoc@v3
-  #       with:
-  #         repo-token: ${{ secrets.GITHUB_TOKEN }}
-  #
-  #     - name: Run clippy
-  #       run: just clippy 
+  dashboard_build:
+    name: dashboard-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Dashboard build
+        run: just dashboard
+
+  lib_build:
+    name: lib-build 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Lib build
+        run: just lib
+
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: "" 
+
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run check
+        run: just check
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: "" 
+
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - uses: extractions/setup-just@v2
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run clippy
+        run: just clippy 
 
   test:
-    # needs: [clippy, check]
+    needs: [clippy, check]
     name: tests
     runs-on: ubuntu-latest
     steps:
@@ -127,7 +127,7 @@ jobs:
       - name: Tests
         run: |
           export PATH=${PATH}:~/.fluvio/bin:~/.fvm/bin
-          just fluvio
+          just test
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
