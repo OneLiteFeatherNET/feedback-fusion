@@ -92,20 +92,21 @@ impl From<&AuditResource> for ProtoResourceKind {
     }
 }
 
-impl TryInto<AuditResource> for ProtoResourceKind {
-    type Error = anyhow::Error;
-
-    fn try_into(self) -> Result<AuditResource, Self::Error> {
-        match self {
-            ProtoResourceKind::Target => Ok(AuditResource::Target),
-            ProtoResourceKind::Prompt => Ok(AuditResource::Prompt),
-            ProtoResourceKind::Field => Ok(AuditResource::Field),
-            other => Err(anyhow!(
-                "Got currently unsupported resource kind {other:?} while parsing AuditResource"
-            )),
-        }
-    }
-}
+// unused
+// impl TryInto<AuditResource> for ProtoResourceKind {
+//     type Error = anyhow::Error;
+//
+//     fn try_into(self) -> Result<AuditResource, Self::Error> {
+//         match self {
+//             ProtoResourceKind::Target => Ok(AuditResource::Target),
+//             ProtoResourceKind::Prompt => Ok(AuditResource::Prompt),
+//             ProtoResourceKind::Field => Ok(AuditResource::Field),
+//             other => Err(anyhow!(
+//                 "Got currently unsupported resource kind {other:?} while parsing AuditResource"
+//             )),
+//         }
+//     }
+// }
 
 impl From<&AuditAction> for ProtoAuditAction {
     fn from(value: &AuditAction) -> Self {
@@ -117,43 +118,45 @@ impl From<&AuditAction> for ProtoAuditAction {
     }
 }
 
-impl TryInto<AuditAction> for ProtoAuditAction {
-    type Error = anyhow::Error;
+// unused
+// impl TryInto<AuditAction> for ProtoAuditAction {
+//     type Error = anyhow::Error;
+//
+//     fn try_into(self) -> Result<AuditAction, Self::Error> {
+//         match self {
+//             Self::Create => Ok(AuditAction::Create),
+//             Self::Update => Ok(AuditAction::Update),
+//             Self::Delete => Ok(AuditAction::Delete),
+//             Self::Unknown => Err(anyhow!("Got UNKNOWN AuditAction")),
+//         }
+//     }
+// }
 
-    fn try_into(self) -> Result<AuditAction, Self::Error> {
-        match self {
-            Self::Create => Ok(AuditAction::Create),
-            Self::Update => Ok(AuditAction::Update),
-            Self::Delete => Ok(AuditAction::Delete),
-            Self::Unknown => Err(anyhow!("Got UNKNOWN AuditAction")),
-        }
-    }
-}
-
-impl TryInto<AuditVersion> for ProtoAuditVersion {
-    type Error = anyhow::Error;
-
-    fn try_into(self) -> Result<AuditVersion, Self::Error> {
-        Ok(AuditVersion {
-            id: self.id,
-            resource_id: self.resource_id,
-            data: self
-                .data
-                .ok_or(anyhow!("Missing data on ProtoAuditVersion"))?
-                .encode_to_vec()
-                .into(),
-            resource_type: ProtoResourceKind::try_from(self.resource_type)
-                .unwrap_or(ProtoResourceKind::Unknown)
-                .try_into()?,
-            action: ProtoAuditAction::try_from(self.action)
-                .unwrap_or(ProtoAuditAction::Unknown)
-                .try_into()?,
-            version: self.version as u32,
-            made_by: self.made_by,
-            created_at: to_date_time!(self.created_at),
-        })
-    }
-}
+// currently not required
+// impl TryInto<AuditVersion> for ProtoAuditVersion {
+//     type Error = anyhow::Error;
+//
+//     fn try_into(self) -> Result<AuditVersion, Self::Error> {
+//         Ok(AuditVersion {
+//             id: self.id,
+//             resource_id: self.resource_id,
+//             data: self
+//                 .data
+//                 .ok_or(anyhow!("Missing data on ProtoAuditVersion"))?
+//                 .encode_to_vec()
+//                 .into(),
+//             resource_type: ProtoResourceKind::try_from(self.resource_type)
+//                 .unwrap_or(ProtoResourceKind::Unknown)
+//                 .try_into()?,
+//             action: ProtoAuditAction::try_from(self.action)
+//                 .unwrap_or(ProtoAuditAction::Unknown)
+//                 .try_into()?,
+//             version: self.version as u32,
+//             made_by: self.made_by,
+//             created_at: to_date_time!(self.created_at),
+//         })
+//     }
+// }
 
 impl TryInto<ProtoAuditVersion> for AuditVersion {
     type Error = prost::DecodeError;
