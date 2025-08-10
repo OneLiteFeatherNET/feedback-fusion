@@ -20,10 +20,10 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{prelude::*};
+use crate::prelude::*;
 use rbatis::rbdc::DateTime;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, PartialOrd, Hash, Eq)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 pub enum IndexComponent {
@@ -32,7 +32,19 @@ pub enum IndexComponent {
     Field,
 }
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
+#[derive(
+    Deserialize,
+    Serialize,
+    Clone,
+    Derivative,
+    Debug,
+    Getters,
+    Setters,
+    TypedBuilder,
+    PartialOrd,
+    Hash,
+    Eq,
+)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
@@ -40,7 +52,7 @@ pub enum IndexComponent {
 pub struct IndexEntry {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
-    key: String,
+    key_value: String,
     key_type: IndexComponent,
     value: String,
     value_type: IndexComponent,

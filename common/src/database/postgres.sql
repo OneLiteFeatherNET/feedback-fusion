@@ -68,3 +68,12 @@ CREATE TABLE IF NOT EXISTS audit_version (
   version             INTEGER NOT NULL,
   created_at  TIMESTAMP(3)
 );
+
+CREATE TABLE IF NOT EXISTS index_entry (
+  id                  VARCHAR(32) UNIQUE NOT NULL,
+  key_type            VARCHAR(255) NOT NULL,
+  key_value           VARCHAR(255) NOT NULL,
+  value_type          VARCHAR(255) NOT NULL, 
+  value               VARCHAR(255),
+  created_at          TIMESTAMP(3)
+);

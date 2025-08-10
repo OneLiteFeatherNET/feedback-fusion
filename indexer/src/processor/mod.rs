@@ -25,6 +25,7 @@ use feedback_fusion_common::{database::DatabaseConnection, proto::ProtoEventBatc
 use kanal::{AsyncReceiver, AsyncSender};
 
 mod audit;
+mod index;
 
 pub struct FeedbackFusionIndexerProcessor {
     connection: DatabaseConnection,
@@ -32,7 +33,10 @@ pub struct FeedbackFusionIndexerProcessor {
 }
 
 impl FeedbackFusionIndexerProcessor {
-    pub fn initialize(connection: DatabaseConnection, receiver: AsyncReceiver<ProtoEventBatch>) -> Self {
+    pub fn initialize(
+        connection: DatabaseConnection,
+        receiver: AsyncReceiver<ProtoEventBatch>,
+    ) -> Self {
         Self {
             connection,
             receiver,
@@ -114,6 +118,9 @@ impl FeedbackFusionIndexerProcessor {
                     );
                     // create the audit version
                     audit::create_audit_versions(events.as_slice(), &self.connection).await?;
+
+                    // maintain the index
+                    index::maintain_index(events.as_slice(), &self.connection).await?;
                 }
                 // UNKNOWN
                 _ => {}
