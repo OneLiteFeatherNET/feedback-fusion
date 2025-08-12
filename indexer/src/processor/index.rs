@@ -34,7 +34,8 @@ use feedback_fusion_common::{
 };
 use gxhash::{HashMap, HashMapExt};
 use prost::Message;
-use rbatis::{rbatis_codegen::IntoSql, rbdc::DateTime};
+use rbatis::{executor::Executor, rbatis_codegen::IntoSql, rbdc::DateTime};
+use rbs::{Value, value};
 
 use crate::prelude::*;
 
@@ -151,6 +152,9 @@ pub async fn maintain_index(events: &[ProtoEvent], connection: &DatabaseConnecti
     let mut entries_by_resource: HashMap<(IndexComponent, String), Vec<IndexEntry>> =
         HashMap::new();
 
+    // this will store all key cominations that we need to delete from the index
+    let mut pending_deletion: Vec<Value> = Vec::new();
+
     // we will now iterate through the entries with ascending timestamp
     index_entries
         .into_iter()
@@ -158,6 +162,10 @@ pub async fn maintain_index(events: &[ProtoEvent], connection: &DatabaseConnecti
             ProtoResourceModificationOperation::Delete => {
                 // on a Delete we will just delete the key if it does exist
                 entries_by_resource.remove(&key);
+
+                // and ad it to the pending deletion list
+                pending_deletion.push(value!(key.0));
+                pending_deletion.push(value!(key.1));
             }
             _ => {
                 entries_by_resource.insert(key, entries);
@@ -180,9 +188,12 @@ pub async fn maintain_index(events: &[ProtoEvent], connection: &DatabaseConnecti
         })
         .collect_vec();
 
+    // start the transaction
+    let transaction = feedback_fusion_common::database::transaction(connection).await?;
+
     if !prompts.is_empty() {
         let prompts_to_target = database_request!(
-            prompt_to_target(connection, prompts.as_slice()).await,
+            prompt_to_target(&transaction, prompts.as_slice()).await,
             "Select target ids"
         )?;
         prompts_to_target.into_iter().for_each(|result| {
@@ -208,14 +219,30 @@ pub async fn maintain_index(events: &[ProtoEvent], connection: &DatabaseConnecti
         });
     }
 
+    // delete the items marked for deletion
+    if !pending_deletion.is_empty() {
+        let selector = (0..pending_deletion.len())
+            .map(|_| "(key_type = ? AND key_value = ?)")
+            .collect_vec()
+            .join(" OR ");
+
+        let query = format!("DELETE FROM index_entry WHERE {selector}");
+        database_request!(
+            transaction.query(&query, pending_deletion).await,
+            "Remove deleted resources from index"
+        )?;
+    }
+
     // now we can save all the entries
     let entries = entries_by_resource.into_values().flatten().collect_vec();
     if !entries.is_empty() {
         database_request!(
-            IndexEntry::insert_batch(connection, entries.as_slice(), entries.len() as u64).await,
+            IndexEntry::insert_batch(&transaction, entries.as_slice(), entries.len() as u64).await,
             "Insert entries"
         )?;
     }
+
+    transaction.commit().await?;
 
     Ok(())
 }

@@ -22,7 +22,7 @@
 
 use crate::prelude::*;
 use prost_types::Timestamp;
-use rbatis::{rbdc::DateTime, RBatis};
+use rbatis::{executor::RBatisTxExecutorGuard, rbdc::DateTime, RBatis};
 use tokio_retry::{
     strategy::{jitter, FibonacciBackoff},
     Retry,
@@ -215,4 +215,15 @@ macro_rules! save_as_json {
             }
         }
     };
+}
+
+pub async fn transaction(connection: &DatabaseConnection) -> anyhow::Result<RBatisTxExecutorGuard> {
+    let transaction = connection.acquire_begin().await?;
+    let transaction = transaction.defer_async(|tx| async move {
+        if !tx.done() {
+            let _ = tx.rollback().await;
+        }
+    });
+
+    Ok(transaction)
 }

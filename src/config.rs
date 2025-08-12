@@ -316,13 +316,7 @@ pub fn read_permission_matrix<'a>(
 
 pub async fn sync_preset(connection: &DatabaseConnection) -> Result<()> {
     if let Some(preset) = CONFIG.preset() {
-        let transaction = connection.acquire_begin().await?;
-        let transaction = transaction.defer_async(|tx| async move {
-            if !tx.done() {
-                let _ = tx.rollback().await;
-            }
-        });
-
+        let transaction = feedback_fusion_common::database::transaction(connection).await?;
         for target in preset.clone().targets.into_iter() {
             sync_target(target, &transaction).await?;
         }

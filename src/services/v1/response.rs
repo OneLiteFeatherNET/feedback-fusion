@@ -43,12 +43,7 @@ pub async fn create_responses(
 ) -> Result<Response<ProtoPromptResponse>> {
     let data = request.into_inner();
     // start transaction
-    let transaction = context.connection().acquire_begin().await?;
-    let transaction = transaction.defer_async(|tx| async move {
-        if !tx.done() {
-            let _ = tx.rollback().await;
-        }
-    });
+    let transaction = feedback_fusion_common::database::transaction(context.connection()).await?;
 
     // fetch the fields of the prompt
     let fields = fields_by_prompt(context.connection(), data.prompt.as_str()).await?;
@@ -125,12 +120,8 @@ pub async fn get_responses(
 
     // select a page of responses
     let responses = database_request!(
-        PromptResponse::select_page_by_prompt(
-            connection,
-            &page_request,
-            data.prompt.as_str()
-        )
-        .await,
+        PromptResponse::select_page_by_prompt(connection, &page_request, data.prompt.as_str())
+            .await,
         "Select responses by prompt"
     )?;
 
