@@ -168,7 +168,7 @@ pub async fn update_prompt(
                     .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
                         ProtoResourceModifiedEvent::builder()
-                            .operation(ProtoResourceModificationOperation::Create)
+                            .operation(ProtoResourceModificationOperation::Update)
                             .id(id)
                             .resource_kind(ProtoResourceKind::Prompt)
                             .data(&resource)
@@ -205,7 +205,7 @@ pub async fn delete_prompt(
                     .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
                         ProtoResourceModifiedEvent::builder()
-                            .operation(ProtoResourceModificationOperation::Create)
+                            .operation(ProtoResourceModificationOperation::Delete)
                             .id(data.id)
                             .resource_kind(ProtoResourceKind::Prompt)
                             .data(&ProtoResource::empty())

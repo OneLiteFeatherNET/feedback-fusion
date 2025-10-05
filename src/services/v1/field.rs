@@ -205,7 +205,7 @@ pub async fn update_field(
                     .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
                         ProtoResourceModifiedEvent::builder()
-                            .operation(ProtoResourceModificationOperation::Create)
+                            .operation(ProtoResourceModificationOperation::Update)
                             .id(id)
                             .resource_kind(ProtoResourceKind::Field)
                             .data(&resource)
@@ -242,7 +242,7 @@ pub async fn delete_field(
                     .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
                         ProtoResourceModifiedEvent::builder()
-                            .operation(ProtoResourceModificationOperation::Update)
+                            .operation(ProtoResourceModificationOperation::Delete)
                             .id(data.id)
                             .resource_kind(ProtoResourceKind::Field)
                             .data(&ProtoResource::empty())

@@ -20,9 +20,13 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use feedback_fusion_common::proto::{
-    CreatePromptRequest, CreateTargetRequest, DeletePromptRequest, GetPromptRequest,
-    GetPromptsRequest, UpdatePromptRequest,
+use feedback_fusion_common::{
+    proto::{
+        CreatePromptRequest, CreateTargetRequest, DeletePromptRequest, GetPromptRequest,
+        GetPromptsRequest, UpdatePromptRequest,
+    },
+    tests::VerifyAudit,
+    verify_audit_exists,
 };
 use test_log::test;
 
@@ -57,6 +61,9 @@ async fn test_create() {
     let request = create_prompt(target.id.clone());
     let response = client.create_prompt(request).await;
     assert!(response.is_ok());
+    let inner = response.unwrap().into_inner();
+
+    verify_audit_exists!(client, inner, Prompt, Create);
 }
 
 #[test(tokio::test)]
@@ -86,12 +93,14 @@ async fn test_get() {
         ..Default::default()
     };
     let response = client.get_prompts(request).await;
-    assert!(response.is_ok_and(|response| response
-        .into_inner()
-        .prompts
-        .iter()
-        .find(|p| p.eq(&&prompt))
-        .is_some()));
+    assert!(response.is_ok_and(|response| {
+        response
+            .into_inner()
+            .prompts
+            .iter()
+            .find(|p| p.eq(&&prompt))
+            .is_some()
+    }));
 }
 
 #[test(tokio::test)]
@@ -151,6 +160,8 @@ async fn test_update() {
     assert_eq!(&false, &response.active);
     assert_eq!("Done", response.title.as_str());
     assert_eq!("Well", response.description.as_str());
+
+    verify_audit_exists!(client, response, Prompt, Update);
 }
 
 #[test(tokio::test)]
@@ -180,12 +191,14 @@ async fn test_delete() {
         ..Default::default()
     };
     let response = client.get_prompts(request).await;
-    assert!(response.is_ok_and(|response| response
-        .into_inner()
-        .prompts
-        .iter()
-        .find(|p| p.eq(&&prompt))
-        .is_none()));
+    assert!(response.is_ok_and(|response| {
+        response
+            .into_inner()
+            .prompts
+            .iter()
+            .find(|p| p.eq(&&prompt))
+            .is_none()
+    }));
 
     let prompt = client
         .create_prompt(create_prompt(target.id.clone()))
@@ -216,4 +229,6 @@ async fn test_delete() {
         inner.prompts.iter().find(|t| t.eq(&&prompt)).is_none()
             && inner.prompts.iter().find(|t| t.eq(&&prompt2)).is_some()
     }));
+
+    verify_audit_exists!(client, prompt, Prompt, Delete);
 }

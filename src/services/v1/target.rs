@@ -164,7 +164,7 @@ pub async fn update_target(
                     .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
                         ProtoResourceModifiedEvent::builder()
-                            .operation(ProtoResourceModificationOperation::Create)
+                            .operation(ProtoResourceModificationOperation::Update)
                             .id(id)
                             .resource_kind(ProtoResourceKind::Target)
                             .data(&resource)
@@ -201,7 +201,7 @@ pub async fn delete_target(
                     .event_type(ProtoEventType::ResourceModified)
                     .event_content(Some(EventContent::ResourceModifiedEvent(
                         ProtoResourceModifiedEvent::builder()
-                            .operation(ProtoResourceModificationOperation::Create)
+                            .operation(ProtoResourceModificationOperation::Delete)
                             .id(data.id)
                             .resource_kind(ProtoResourceKind::Target)
                             .data(&ProtoResource::empty())

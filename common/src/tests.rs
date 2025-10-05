@@ -28,7 +28,13 @@ use openidconnect::{
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
 
-use crate::proto::CreateFieldRequest;
+use crate::{
+    common::ProtoResourceKind,
+    proto::{
+        proto_resource::Inner, AuditVersionPage, CreateFieldRequest, ProtoAuditAction, ProtoField,
+        ProtoPrompt, ProtoTarget,
+    },
+};
 
 lazy_static! {
     pub static ref GRPC_ENDPOINT: String = std::env::var("GRPC_ENDPOINT").unwrap();
@@ -105,8 +111,6 @@ macro_rules! connect {
         .parse()
         .unwrap();
 
-        println!("{:?}", token);
-
         let scope_client =
             $crate::proto::feedback_fusion_v1_client::FeedbackFusionV1Client::with_interceptor(
                 channel,
@@ -142,4 +146,129 @@ impl Arbitrary<'_> for CreateFieldRequest {
             options: Some(crate::proto::ProtoFieldOptions::arbitrary(u)?),
         })
     }
+}
+
+pub trait VerifyAudit {
+    #[allow(clippy::result_unit_err)]
+    fn verify_audit_matches(
+        &self,
+        versions: AuditVersionPage,
+        operation: ProtoAuditAction,
+    ) -> Result<(), ()>
+    where
+        Self: Sized;
+}
+
+macro_rules! implement_verify_audit {
+    ($proto_resource:path, $resource:ident, $($validator:ident $(,)?)+) => {
+        impl VerifyAudit for $proto_resource {
+            fn verify_audit_matches(&self, versions: AuditVersionPage, operation: ProtoAuditAction) -> Result<(), ()>
+            where
+                Self: Sized,
+            {
+                if versions
+                    .audit_versions
+                    .iter()
+                    // verify the metadata matches for all entries
+                    .map(|version| {
+                        assert_eq!(version.resource_id.as_str(), self.id.as_str());
+                        assert_eq!(version.resource_type, ProtoResourceKind::$resource as i32);
+                        assert!(version.data.is_some());
+
+                        version
+                    })
+                    // filter for the operation
+                    .filter(|version| version.action().eq(&operation))
+                    // now we try to find a audit version matching the data
+                    .find(|version| {
+                        let data = version.data.as_ref().unwrap();
+
+                        if data.inner.is_some() {
+                            let inner = data.inner.as_ref().unwrap();
+
+                            if operation.eq(&ProtoAuditAction::Delete) {
+                                return true;
+                            }
+
+                            // verify the inner value
+                            if matches!(inner, Inner::$resource(_)) {
+                                if let Inner::$resource(version) = inner {
+                                   $(
+                                        self.$validator.eq(&version.$validator) &&
+                                    )*
+                                    true
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        }
+                    }).is_some() {
+                        Ok(())
+                    } else {
+                        Err(())
+                    }
+
+            }
+        }
+    };
+}
+
+implement_verify_audit!(ProtoTarget, Target, id, name, description, updated_at);
+implement_verify_audit!(
+    ProtoPrompt,
+    Prompt,
+    id,
+    title,
+    description,
+    target,
+    active,
+    updated_at
+);
+implement_verify_audit!(
+    ProtoField,
+    Field,
+    id,
+    prompt,
+    title,
+    description,
+    options,
+    field_type,
+    updated_at
+);
+
+#[macro_export]
+macro_rules! verify_audit_exists {
+    ($client:ident, $inner:ident, $resource:ident, $action:ident) => {{
+        let retry_strategy = tokio_retry::strategy::FibonacciBackoff::from_millis(1000)
+            .map(tokio_retry::strategy::jitter)
+            .take(5);
+        let result = tokio_retry::Retry::spawn(retry_strategy, move || {
+            let mut client = $client.clone();
+            let inner = $inner.clone();
+
+            async move {
+                let audit_versions = client
+                    .get_audit_versions(feedback_fusion_common::proto::GetAuditVersionsRequest {
+                        page_size: 100,
+                        page_token: 1,
+                        resource_id: inner.id.clone(),
+                        resource_type: feedback_fusion_common::common::ProtoResourceKind::$resource
+                            as i32,
+                    })
+                    .await
+                    .map_err(|_| ())?;
+
+                inner.verify_audit_matches(
+                    audit_versions.into_inner(),
+                    feedback_fusion_common::proto::ProtoAuditAction::$action,
+                )
+            }
+        })
+        .await;
+        assert!(result.is_ok());
+    }};
 }

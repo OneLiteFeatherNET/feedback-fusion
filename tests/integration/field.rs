@@ -20,11 +20,15 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use feedback_fusion_common::proto::{
-    CreateFieldRequest, CreatePromptRequest, CreateTargetRequest, DeleteFieldRequest,
-    GetFieldsRequest, ProtoCheckboxOptions, ProtoFieldOptions, ProtoFieldType, ProtoNumberOptions,
-    ProtoRangeOptions, ProtoRatingOptions, ProtoSelectionOptions, ProtoTextOptions,
-    UpdateFieldRequest,
+use feedback_fusion_common::{
+    proto::{
+        CreateFieldRequest, CreatePromptRequest, CreateTargetRequest, DeleteFieldRequest,
+        GetFieldsRequest, ProtoCheckboxOptions, ProtoFieldOptions, ProtoFieldType,
+        ProtoNumberOptions, ProtoRangeOptions, ProtoRatingOptions, ProtoSelectionOptions,
+        ProtoTextOptions, UpdateFieldRequest,
+    },
+    tests::VerifyAudit,
+    verify_audit_exists,
 };
 use test_log::test;
 
@@ -127,6 +131,9 @@ macro_rules! type_tests {
 
                     let response = client.create_field([<create_ $type:lower _field>](prompt.id.clone())).await;
                     assert!(response.is_ok());
+
+                    let inner = response.unwrap().into_inner();
+                    verify_audit_exists!(client, inner, Field, Create);
                 }
 
                 #[test(tokio::test)]
@@ -177,7 +184,9 @@ macro_rules! type_tests {
                     let response = response.unwrap().into_inner();
                     assert_eq!(&field.id, &response.id);
                     assert_eq!("Well", response.title.as_str());
-                    assert_eq!("Done", response.description.unwrap().as_str());
+                    assert_eq!("Done", response.description.as_ref().unwrap().as_str());
+
+                    verify_audit_exists!(client, response, Field, Update);
                 }
             )*
         }
@@ -289,4 +298,6 @@ async fn test_delete() {
         inner.fields.iter().find(|t| t.eq(&&field)).is_none()
             && inner.fields.iter().find(|t| t.eq(&&field2)).is_some()
     }));
+
+    verify_audit_exists!(client, field, Field, Delete);
 }
