@@ -48,7 +48,7 @@ build-all DOCKERFILE="./Dockerfile":
 backend TYPE=DEFAULT_TEST:
   FEEDBACK_FUSION_CONFIG="./tests/_common/configs/indexer/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin indexer --no-report > ./target/feedback-fusion-indexer.log 2>&1 &
 
-  while ! nc -z localhost 3000; do \
+  while ! nc -z localhost 8080; do \
     sleep 1; \
   done
   @echo "Indexer ready"
@@ -65,7 +65,7 @@ stop-backend:
     kill -2 $PID; \
   fi
 
-  -@PID=$(lsof -t -i:3000) && if [ -n "$PID" ]; then \
+  -@PID=$(lsof -t -i:8080) && if [ -n "$PID" ]; then \
     kill -2 $PID; \
   fi
 

@@ -37,7 +37,7 @@ mod config;
 mod error;
 mod processor;
 
-const HEALTHCHECK_ADDRESS: &str = "0.0.0.0:3000";
+const HEALTHCHECK_ADDRESS: &str = "0.0.0.0:8080";
 
 #[tokio::main]
 async fn main() {
