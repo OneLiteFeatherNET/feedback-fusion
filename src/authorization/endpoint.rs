@@ -47,9 +47,11 @@ use crate::{
     Serialize,
     Ord,
     PartialOrd,
+    Default
 )]
 pub enum EndpointScopeSelector<'a> {
     /// unscoped access
+    #[default]
     All,
     /// access only for a specific id
     Specific(Cow<'a, str>),
@@ -57,12 +59,6 @@ pub enum EndpointScopeSelector<'a> {
     Multiple(Vec<Cow<'a, str>>),
     /// custom wildcard format
     Wildcard(Cow<'a, str>),
-}
-
-impl Default for EndpointScopeSelector<'_> {
-    fn default() -> Self {
-        Self::All
-    }
 }
 
 impl<'a> EndpointScopeSelector<'a> {

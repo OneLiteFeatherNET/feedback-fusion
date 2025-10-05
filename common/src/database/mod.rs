@@ -194,7 +194,7 @@ macro_rules! to_date_time {
     }};
 }
 
-#[macro_export()]
+#[macro_export]
 macro_rules! save_as_json {
     ($struct:path, $ident:ident) => {
         paste! {
