@@ -21,12 +21,7 @@
  *
  */
 
-use feedback_fusion_common::proto::{ProtoResource, proto_resource::Inner};
-
-use crate::{
-    database::schema::feedback::{Field, Prompt, Target},
-    error::FeedbackFusionError,
-};
+use crate::database::schema::feedback::{Field, Prompt, Target};
 
 pub mod schema;
 
@@ -36,40 +31,3 @@ pub enum Resource {
     Prompt(Prompt),
     Field(Field),
 }
-
-impl TryInto<Resource> for ProtoResource {
-    type Error = FeedbackFusionError;
-
-    fn try_into(self) -> Result<Resource, Self::Error> {
-        if let Some(inner) = self.inner {
-            match inner {
-                Inner::Target(target) => Ok(Resource::Target(Target::from(target))),
-                Inner::Prompt(prompt) => Ok(Resource::Prompt(Prompt::from(prompt))),
-                Inner::Field(field) => Ok(Resource::Field(field.try_into()?)),
-                unknown => Err(FeedbackFusionError::BadRequest(format!(
-                    "Got unknown inner resource {unknown:?} while parsing resource"
-                ))),
-            }
-        } else {
-            Err(FeedbackFusionError::BadRequest(
-                "Missing inner resource data".to_owned(),
-            ))
-        }
-    }
-}
-
-macro_rules! proto_resource_from_type {
-    ($type:path, $variant:ident) => {
-        impl From<$type> for ProtoResource {
-            fn from(value: $type) -> Self {
-                Self {
-                    inner: Some(Inner::$variant(value.into())),
-                }
-            }
-        }
-    };
-}
-
-proto_resource_from_type!(Target, Target);
-proto_resource_from_type!(Prompt, Prompt);
-proto_resource_from_type!(Field, Field);
