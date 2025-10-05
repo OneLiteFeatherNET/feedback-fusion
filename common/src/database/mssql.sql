@@ -96,3 +96,14 @@ BEGIN
     );
 END;
 
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'index_entry')
+BEGIN
+    CREATE TABLE index_entry (
+        id          VARCHAR(32)    NOT NULL PRIMARY KEY,
+        key_type    VARCHAR(255) NOT NULL,
+        key_value   VARCHAR(255) NOT NULL,
+        value_type  VARCHAR(255) NOT NULL,
+        value       VARCHAR(255),
+        created_at  DATETIME2(3)
+    );
+END;

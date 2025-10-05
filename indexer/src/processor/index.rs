@@ -126,15 +126,27 @@ pub async fn maintain_index(events: &[ProtoEvent], connection: &DatabaseConnecti
 
                 match ProtoResource::decode(inner_event.data.as_slice()) {
                     Ok(resource) => {
-                        let entries = resource.make_entries(inner_event);
+                        // filter unknowns and other invalid data
+                        if resource.inner.is_none()
+                            || resource
+                                .inner
+                                .as_ref()
+                                .is_some_and(|variant| variant.eq(&Inner::Unknown(())))
+                        {
+                            warn!("Received invalid resource: {resource:?}. Parent is event {inner_event:?}");
 
-                        Some((
-                            created_at,
-                            inner_event.operation(),
-                            // TODO: get rid of this clone
-                            (key_type, inner_event.id.clone()),
-                            entries,
-                        ))
+                            None
+                        } else {
+                            let entries = resource.make_entries(inner_event);
+
+                            Some((
+                                created_at,
+                                inner_event.operation(),
+                                // TODO: get rid of this clone
+                                (key_type, inner_event.id.clone()),
+                                entries,
+                            ))
+                        }
                     }
                     Err(error) => {
                         error!("Error while decoding resource bytes: {error:?}");
@@ -163,7 +175,7 @@ pub async fn maintain_index(events: &[ProtoEvent], connection: &DatabaseConnecti
                 // on a Delete we will just delete the key if it does exist
                 entries_by_resource.remove(&key);
 
-                // and ad it to the pending deletion list
+                // and add it to the pending deletion list
                 pending_deletion.push(value!(key.0));
                 pending_deletion.push(value!(key.1));
             }

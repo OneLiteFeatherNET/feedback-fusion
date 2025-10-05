@@ -75,3 +75,11 @@ CREATE TABLE IF NOT EXISTS audit_version (
   FOREIGN KEY (made_by) REFERENCES oidc_user(id)
 );
 
+CREATE TABLE IF NOT EXISTS index_entry (
+  id                  VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
+  key_type            VARCHAR(255) NOT NULL,
+  key_value           VARCHAR(255) NOT NULL,
+  value_type          VARCHAR(255) NOT NULL,
+  value               VARCHAR(255),
+  created_at          DATETIME(3)
+);
