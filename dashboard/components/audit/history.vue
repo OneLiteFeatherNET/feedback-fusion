@@ -17,6 +17,7 @@
         <slot :versions="versions.auditVersions">
           <v-expansion-panels>
             <v-expansion-panel
+              color="primary"
               v-for="version in versions.auditVersions"
               :key="version.id"
             >
@@ -41,6 +42,10 @@
                   </v-col>
                 </v-row>
               </template>
+
+              <v-expansion-panel-text>
+                <AuditEntry :entry="version" />
+              </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
         </slot>

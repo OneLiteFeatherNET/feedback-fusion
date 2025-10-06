@@ -24,9 +24,11 @@ use std::collections::HashMap;
 
 use crate::prelude::*;
 use aliri::jwt::CoreClaims;
-use openidconnect::{core::CoreUserInfoClaims, AccessToken};
+use openidconnect::{AccessToken, core::CoreUserInfoClaims};
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Encode, Decode)]
+#[derive(
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Encode, Decode,
+)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
@@ -65,8 +67,12 @@ impl User {
                 .sub()
                 .ok_or(FeedbackFusionError::Unauthorized)?
                 .to_string();
+            let preferred_username = claims.preferred_username();
 
-            Ok(Self::builder().id(&sub).username(&sub).build())
+            Ok(Self::builder()
+                .id(&sub)
+                .username(preferred_username)
+                .build())
         } else {
             let user_info: CoreUserInfoClaims = client
                 .user_info(access_token, None)

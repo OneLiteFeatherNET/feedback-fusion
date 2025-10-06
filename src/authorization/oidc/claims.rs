@@ -44,11 +44,16 @@ pub struct OIDCClaims {
     scope: Scope,
     groups: Vec<String>,
     is_application: bool,
+    preferred_username: String,
 }
 
 impl OIDCClaims {
     pub fn is_application(&self) -> bool {
         self.is_application
+    }
+
+    pub fn preferred_username(&self) -> &str {
+        self.preferred_username.as_str()
     }
 }
 
@@ -74,7 +79,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
     where
         V: MapAccess<'de>,
     {
-        let mut sub = None;
+        let mut sub: Option<jwt::Subject> = None;
         let mut iss = None;
         let mut iat = None;
         let mut aud = None;
@@ -83,6 +88,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
         let mut scope = None;
         let mut groups = None;
         let mut is_application = false;
+        let mut preferred_username = None;
 
         while let Some(key) = map.next_key::<String>()? {
             match key.as_str() {
@@ -111,6 +117,9 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
                 "scope" => {
                     scope = Some(map.next_value()?);
                 }
+                "preferred_username" => {
+                    preferred_username = Some(map.next_value()?);
+                }
                 _ if key.as_str() == CONFIG.oidc().group_claim().as_str() => {
                     groups = Some(map.next_value()?);
                 }
@@ -127,6 +136,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
         let exp = exp.ok_or_else(|| serde::de::Error::missing_field("exp"))?;
         let scope = scope.unwrap_or(Scope::empty());
         let groups = groups.unwrap_or_default();
+        let preferred_username = preferred_username.unwrap_or(sub.to_string());
 
         Ok(OIDCClaims {
             is_application,
@@ -138,6 +148,7 @@ impl<'de> Visitor<'de> for OIDCClaimsVisitor {
             exp,
             scope,
             groups,
+            preferred_username,
         })
     }
 }

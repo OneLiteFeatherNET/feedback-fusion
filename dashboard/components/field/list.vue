@@ -19,6 +19,17 @@
               :subtitle="$t(`field.type.${field.fieldType}`)"
             >
               <template #append>
+                <v-icon
+                  class="mr-4"
+                  icon="mdi-history"
+                  color="warning"
+                  @click.stop="
+                    router.push(
+                      localePath(`${route.path}/field/${field.id}/audit`),
+                    )
+                  "
+                />
+
                 <FormConfirm
                   :message="t('field.delete')"
                   :action="deleteField(field.id)"
@@ -71,7 +82,16 @@
 </template>
 
 <script setup lang="ts">
-import { useNuxtApp, ref, onMounted, watch, useI18n } from "#imports";
+import {
+  useNuxtApp,
+  ref,
+  onMounted,
+  watch,
+  useI18n,
+  useRoute,
+  useLocalePath,
+  useRouter,
+} from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 import { useAuthorizationStore } from "~/composables/authorization";
 import { numberToKind } from "~/composables/convert";
@@ -85,6 +105,9 @@ const props = defineProps({
 const { $feedbackFusion } = useNuxtApp();
 const { t } = useI18n();
 const authorization = useAuthorizationStore();
+const route = useRoute();
+const localePath = useLocalePath();
+const router = useRouter();
 
 const fields = ref(undefined);
 const creation = ref({});
