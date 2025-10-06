@@ -97,7 +97,10 @@
       "0": "Unknown",
       "1": "Create",
       "2": "Update",
-      "3": "Delete"
-    }
+      "3": "Delete",
+      "4": "Rollback"
+    },
+    "rollback": "Rollback",
+    "confirmRollback": "Are you sure you want to Rollback to this version? Rollback history won't be lost this rollback will be listed as a further 'ROLLBACK' action in the audit log."
   }
 }

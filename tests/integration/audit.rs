@@ -28,6 +28,8 @@ use feedback_fusion_common::{
         CreateTargetRequest, GetAuditVersionsRequest, GetTargetRequest, RollbackResourceRequest,
         UpdateTargetRequest, proto_resource::Inner,
     },
+    tests::VerifyAudit,
+    verify_audit_exists,
 };
 use test_log::test;
 
@@ -145,5 +147,7 @@ async fn test_rollback() {
         .into_inner();
 
     assert_eq!(target.name.as_str(), "Target");
-    assert_eq!(target.description.unwrap().as_str(), "Description");
+    assert_eq!(target.description.as_ref().unwrap().as_str(), "Description");
+
+    verify_audit_exists!(client, target, Target, Rollback);
 }

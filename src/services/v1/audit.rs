@@ -24,9 +24,14 @@ use std::borrow::Cow;
 
 use feedback_fusion_common::{
     common::ProtoResourceKind,
-    database::schema::audit::{select_audit_version_page_by_resource_type_and_resource_id, AuditVersion},
+    database::schema::audit::{
+        AuditVersion, select_audit_version_page_by_resource_type_and_resource_id,
+    },
     proto::{
-        proto_resource::Inner, AuditVersionPage, GetAuditVersionsRequest, ProtoAuditVersion, ProtoResource, RollbackResourceRequest
+        AuditVersionPage, GetAuditVersionsRequest, ProtoAuditVersion, ProtoEvent, ProtoEventType,
+        ProtoField, ProtoPrompt, ProtoResource, ProtoResourceModificationOperation,
+        ProtoResourceModifiedEvent, ProtoTarget, RollbackResourceRequest,
+        proto_event::EventContent, proto_resource::Inner,
     },
 };
 use prost::Message;
@@ -127,10 +132,16 @@ pub async fn rollback_resource(
             let resource = ProtoResource::decode(version.data.into_inner().as_slice())?;
 
             if let Some(inner) = resource.inner {
+                let resource_kind: ProtoResourceKind;
+                let resource: ProtoResource;
+                let id: String;
+
                 match inner {
-                    Inner::Unknown(()) => Err(FeedbackFusionError::BadRequest(
-                        "Can't rollback to a delete version".to_owned(),
-                    )),
+                    Inner::Unknown(()) => {
+                        return Err(FeedbackFusionError::BadRequest(
+                            "Can't rollback to a delete version".to_owned(),
+                        ));
+                    }
                     Inner::Target(proto_target) => {
                         let target = Target::from(proto_target);
                         database_request!(
@@ -139,7 +150,9 @@ pub async fn rollback_resource(
                             "Rollback target"
                         )?;
 
-                        Ok(Response::new(()))
+                        id = target.id().clone();
+                        resource = ProtoResource::from(ProtoTarget::from(target));
+                        resource_kind = ProtoResourceKind::Target;
                     }
                     Inner::Prompt(proto_prompt) => {
                         let prompt = Prompt::from(proto_prompt);
@@ -149,7 +162,9 @@ pub async fn rollback_resource(
                             "Rollback prompt"
                         )?;
 
-                        Ok(Response::new(()))
+                        id = prompt.id().clone();
+                        resource = ProtoResource::from(ProtoPrompt::from(prompt));
+                        resource_kind = ProtoResourceKind::Prompt;
                     }
                     Inner::Field(proto_field) => {
                         let field = TryInto::<Field>::try_into(proto_field)?;
@@ -159,9 +174,34 @@ pub async fn rollback_resource(
                             "Rollback field"
                         )?;
 
-                        Ok(Response::new(()))
+                        id = field.id().clone();
+                        resource = ProtoResource::from(ProtoField::from(field));
+                        resource_kind = ProtoResourceKind::Field;
                     }
                 }
+
+                emit!(
+                    context
+                        .broker_event_sender()
+                        .send(
+                            ProtoEvent::builder()
+                                .event_type(ProtoEventType::ResourceModified)
+                                .event_content(Some(EventContent::ResourceModifiedEvent(
+                                    ProtoResourceModifiedEvent::builder()
+                                        .operation(ProtoResourceModificationOperation::Rollback)
+                                        .id(id)
+                                        .resource_kind(resource_kind)
+                                        .data(&resource)
+                                        .made_by(user_context.user().id().clone())
+                                        .build(),
+                                )))
+                                .build(),
+                        )
+                        .await,
+                    "ResourceModifiedEvent"
+                )?;
+
+                Ok(Response::new(()))
             } else {
                 Err(FeedbackFusionError::BadRequest(
                     "Missing inner resource data".to_owned(),

@@ -44,7 +44,7 @@
               </template>
 
               <v-expansion-panel-text>
-                <AuditEntry :entry="version" />
+                <AuditEntry @rollback="fetchPage(1)" :entry="version" />
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
@@ -108,7 +108,7 @@ onMounted(async () => {
     return router.push("/");
   }
 
-  await fetchPage(1);
+  await fetchPage(pageToken.value);
 });
 
 const actionColor = (action: number) => {
@@ -119,6 +119,8 @@ const actionColor = (action: number) => {
       return "text-warning";
     case ProtoAuditAction.DELETE:
       return "text-danger";
+    case ProtoAuditAction.ROLLBACK:
+      return "text-warning";
     default:
       return "text-danger";
   }

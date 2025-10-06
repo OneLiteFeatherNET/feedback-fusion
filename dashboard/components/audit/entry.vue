@@ -21,12 +21,37 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
+
+    <FormConfirm
+      :message="t('audit.confirmRollback')"
+      :action="rollback"
+      v-if="!isRecursive"
+    >
+      <template #default="{ props }">
+        <v-btn
+          color="warning"
+          variant="text"
+          v-bind="props"
+          class="mt-12 float-right"
+        >
+          {{ $t("audit.rollback") }}
+        </v-btn>
+      </template>
+    </FormConfirm>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, onMounted } from "#imports";
+import {
+  defineProps,
+  ref,
+  onMounted,
+  useI18n,
+  defineEmits,
+  useNuxtApp,
+} from "#imports";
 import { ProtoAuditVersion } from "~/composables/feedback-fusion-v1/audit";
+import { useRpcOptions } from "~/composables/grpc";
 
 const props = defineProps({
   entry: ProtoAuditVersion,
@@ -35,6 +60,10 @@ const props = defineProps({
     default: false,
   },
 });
+const emit = defineEmits(["rollback"]);
+
+const { t } = useI18n();
+const { $feedbackFusion } = useNuxtApp();
 
 const listableFields = ref([]);
 const toRecurse = ref([]);
@@ -67,4 +96,10 @@ onMounted(() => {
       !["createdAt", "updatedAt"].includes(key),
   );
 });
+
+const rollback = async () => {
+  await $feedbackFusion
+    .rollbackResource(props.entry, useRpcOptions())
+    .then(() => emit("rollback"));
+};
 </script>

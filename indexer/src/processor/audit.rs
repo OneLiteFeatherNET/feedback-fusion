@@ -58,6 +58,7 @@ pub async fn create_audit_versions(
                 ProtoResourceModificationOperation::Create => AuditAction::Create,
                 ProtoResourceModificationOperation::Update => AuditAction::Update,
                 ProtoResourceModificationOperation::Delete => AuditAction::Delete,
+                ProtoResourceModificationOperation::Rollback => AuditAction::Rollback,
             };
 
             let resource_type = match inner_event.resource_kind() {

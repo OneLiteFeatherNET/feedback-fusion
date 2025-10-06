@@ -46,6 +46,7 @@ pub enum AuditAction {
     Create,
     Update,
     Delete,
+    Rollback,
 }
 
 #[derive(
@@ -123,6 +124,7 @@ impl From<&AuditAction> for ProtoAuditAction {
             AuditAction::Create => Self::Create,
             AuditAction::Update => Self::Update,
             AuditAction::Delete => Self::Delete,
+            AuditAction::Rollback => Self::Rollback,
         }
     }
 }

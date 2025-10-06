@@ -19,6 +19,7 @@ enum ProtoAuditAction {
   CREATE = 1;
   UPDATE = 2;
   DELETE = 3;
+  ROLLBACK = 4;
 }
 
 message ProtoAuditVersion {

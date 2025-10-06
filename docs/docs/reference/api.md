@@ -248,6 +248,7 @@
 | CREATE | 0 |  |
 | UPDATE | 1 |  |
 | DELETE | 2 |  |
+| ROLLBACK | 3 |  |
 
 
  
@@ -380,6 +381,7 @@
 | CREATE | 1 |  |
 | UPDATE | 2 |  |
 | DELETE | 3 |  |
+| ROLLBACK | 4 |  |
 
 
  
