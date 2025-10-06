@@ -18,7 +18,8 @@
     "cancel": "Cancel",
     "save": "Save",
     "required": "required",
-    "copy": "Copy"
+    "copy": "Copy",
+    "audit": "Audit log"
   },
   "iam": {
     "title": "Authorizations",
@@ -89,5 +90,14 @@
   },
   "export": {
     "title": "Preset export"
+  },
+  "audit": {
+    "title": "Audit log",
+    "action": {
+      "0": "Unknown",
+      "1": "Create",
+      "2": "Update",
+      "3": "Delete"
+    }
   }
 }

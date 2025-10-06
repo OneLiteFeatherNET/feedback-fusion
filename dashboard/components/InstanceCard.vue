@@ -34,6 +34,10 @@
           </template>
         </FormEdit>
 
+        <v-btn color="warning" text :to="localePath(`${route.path}/audit`)">
+          {{ $t("form.audit") }}
+        </v-btn>
+
         <v-spacer />
 
         <FormConfirm
@@ -55,7 +59,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, defineProps, useRouter } from "#imports";
+import {
+  onMounted,
+  ref,
+  defineProps,
+  useRouter,
+  useLocalePath,
+  useRoute,
+} from "#imports";
 import { useAuthorizationStore } from "~/composables/authorization";
 
 const props = defineProps({
@@ -70,6 +81,8 @@ const props = defineProps({
 
 const authorization = useAuthorizationStore();
 const router = useRouter();
+const localePath = useLocalePath();
+const route = useRoute();
 
 const instance = ref(undefined);
 const editInstance = ref(undefined);

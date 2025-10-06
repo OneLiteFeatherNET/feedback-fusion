@@ -2,18 +2,14 @@
   <v-menu rounded>
     <template #activator="{ props }">
       <v-btn icon v-bind="props">
-        <v-avatar color="secondary">
-          {{ user.userName[0] }}
-        </v-avatar>
+        <UserAvatar :username="user.userName" />
       </v-btn>
     </template>
 
     <v-card>
       <v-card-text>
         <div class="text-center">
-          <v-avatar color="secondary">
-            {{ user.userName[0] }}
-          </v-avatar>
+          <UserAvatar :username="user.userName" />
 
           <h3>
             {{ user.userName }}

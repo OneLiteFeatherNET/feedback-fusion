@@ -28,6 +28,9 @@
   
     - [ProtoAuditAction](#feedback_fusion_v1-ProtoAuditAction)
   
+- [feedback-fusion-v1/user.proto](#feedback-fusion-v1_user-proto)
+    - [ProtoUser](#feedback_fusion_v1-ProtoUser)
+  
 - [feedback-fusion-v1/export.proto](#feedback-fusion-v1_export-proto)
     - [DataExportRequest](#feedback_fusion_v1-DataExportRequest)
     - [DataExportResponse](#feedback_fusion_v1-DataExportResponse)
@@ -340,7 +343,7 @@
 | data | [ProtoResource](#feedback_fusion_v1-ProtoResource) |  |  |
 | version | [int32](#int32) |  |  |
 | created_at | [google.protobuf.Timestamp](#google-protobuf-Timestamp) |  |  |
-| made_by | [string](#string) |  |  |
+| made_by | [ProtoUser](#feedback_fusion_v1-ProtoUser) |  |  |
 
 
 
@@ -378,6 +381,38 @@
 | UPDATE | 2 |  |
 | DELETE | 3 |  |
 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="feedback-fusion-v1_user-proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## feedback-fusion-v1/user.proto
+
+
+
+<a name="feedback_fusion_v1-ProtoUser"></a>
+
+### ProtoUser
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [string](#string) |  |  |
+| username | [string](#string) |  |  |
+
+
+
+
+
+ 
 
  
 

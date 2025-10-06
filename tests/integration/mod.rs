@@ -21,10 +21,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 mod audit;
-// mod authentication;
-// mod authorization;
-// mod field;
-// mod prompt;
-// mod response;
-// mod target;
-// mod user;
+mod authentication;
+mod authorization;
+mod field;
+mod prompt;
+mod response;
+mod target;
+mod user;
