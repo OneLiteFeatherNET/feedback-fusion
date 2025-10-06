@@ -386,7 +386,7 @@ impl From<PromptResponse> for ProtoPromptResponse {
         ProtoPromptResponse {
             id: value.id,
             prompt: value.prompt,
-            created_at: Some(date_time_to_timestamp(value.created_at)),
+            created_at: Some(date_time_to_timestamp(&value.created_at)),
         }
     }
 }

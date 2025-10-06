@@ -4,6 +4,7 @@ package feedback_fusion_v1;
 
 import "common/resource.proto";
 import "feedback-fusion-v1/resource.proto";
+import "feedback-fusion-v1/user.proto";
 import "google/protobuf/timestamp.proto";
 
 message GetAuditVersionsRequest {
@@ -28,7 +29,7 @@ message ProtoAuditVersion {
   ProtoResource data = 5;
   int32 version = 6;
   google.protobuf.Timestamp created_at = 7;
-  string made_by = 8;
+  ProtoUser made_by = 8;
 }
 
 message AuditVersionPage {

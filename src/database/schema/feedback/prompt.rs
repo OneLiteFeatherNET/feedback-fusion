@@ -72,8 +72,8 @@ impl From<Prompt> for ProtoPrompt {
             description: val.description,
             target: val.target,
             active: val.active,
-            updated_at: Some(date_time_to_timestamp(val.updated_at)),
-            created_at: Some(date_time_to_timestamp(val.created_at)),
+            updated_at: Some(date_time_to_timestamp(&val.updated_at)),
+            created_at: Some(date_time_to_timestamp(&val.created_at)),
         }
     }
 }
@@ -214,8 +214,8 @@ impl From<Field> for ProtoField {
             prompt: val.prompt,
             field_type: val.field_type.into(),
             options: Some(val.options.into()),
-            updated_at: Some(date_time_to_timestamp(val.updated_at)),
-            created_at: Some(date_time_to_timestamp(val.created_at)),
+            updated_at: Some(date_time_to_timestamp(&val.updated_at)),
+            created_at: Some(date_time_to_timestamp(&val.created_at)),
         }
     }
 }

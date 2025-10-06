@@ -175,8 +175,8 @@ impl From<ResourceAuthorization> for ProtoResourceAuthorization {
             authorization_type: value.authorization_type.into(),
             authorization_grant: value.authorization_grant.into(),
             value: value.authorization_value,
-            updated_at: Some(date_time_to_timestamp(value.updated_at)),
-            created_at: Some(date_time_to_timestamp(value.created_at)),
+            updated_at: Some(date_time_to_timestamp(&value.updated_at)),
+            created_at: Some(date_time_to_timestamp(&value.created_at)),
         }
     }
 }

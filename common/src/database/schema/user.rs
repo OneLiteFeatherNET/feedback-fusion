@@ -1,9 +1,9 @@
-//SPDX-FileCopyrightText: 2024 OneLiteFeatherNet
+//SPDX-FileCopyrightText: 2025 OneLiteFeatherNet
 //SPDX-License-Identifier: MIT
 
 //MIT License
 
-// Copyright (c) 2024 OneLiteFeatherNet
+// Copyright (c) 2025 OneLiteFeatherNet
 
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 //associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -20,11 +20,23 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-mod audit;
-// mod authentication;
-// mod authorization;
-// mod field;
-// mod prompt;
-// mod response;
-// mod target;
-// mod user;
+use std::fmt::Debug;
+
+use crate::{prelude::*, proto::ProtoUser};
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct WithUser<T> {
+    #[serde(flatten)]
+    pub inner: T,
+    pub oidc_user_id: String,
+    pub oidc_user_username: String,
+}
+
+impl<T> WithUser<T> {
+    pub fn proto_user(&self) -> Option<ProtoUser> {
+        Some(ProtoUser {
+            id: self.oidc_user_id.clone(),
+            username: self.oidc_user_username.clone(),
+        })
+    }
+}

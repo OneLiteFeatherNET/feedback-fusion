@@ -22,11 +22,15 @@
 
 use crate::{
     common::ProtoResourceKind,
+    database::schema::user::WithUser,
     prelude::*,
     proto::{ProtoAuditAction, ProtoAuditVersion, ProtoResource},
 };
 use prost::Message;
-use rbatis::rbdc::{Bytes, DateTime};
+use rbatis::{
+    pysql_select_page,
+    rbdc::{Bytes, DateTime},
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[serde(rename_all = "lowercase")]
@@ -77,10 +81,15 @@ pub struct AuditVersion {
 }
 
 crud!(AuditVersion {});
-impl_select_page!(AuditVersion { select_page_by_resource_type_and_resource_id(resource_type: &impl Serialize, resource_id: &str) => "
-        `WHERE resource_type = #{resource_type} AND resource_id = #{resource_id}`
-    if do_count == flase:
-        `ORDER BY version DESC`" });
+pysql_select_page!(select_audit_version_page_by_resource_type_and_resource_id(resource_type: &impl Serialize, resource_id: &str) -> WithUser<AuditVersion> => "
+    `SELECT `
+    if do_count == true:
+        `COUNT(1) FROM audit_version `
+    if do_count == false:
+        `audit_version.*, oidc_user.id AS oidc_user_id, oidc_user.username AS oidc_user_username FROM audit_version JOIN oidc_user ON oidc_user.id = made_by `
+    `WHERE resource_type = #{resource_type} AND resource_id = #{resource_id} `
+    if do_count == false:
+        `ORDER BY version DESC`");
 
 impl From<&AuditResource> for ProtoResourceKind {
     fn from(value: &AuditResource) -> Self {
@@ -158,19 +167,19 @@ impl From<&AuditAction> for ProtoAuditAction {
 //     }
 // }
 
-impl TryInto<ProtoAuditVersion> for AuditVersion {
+impl TryInto<ProtoAuditVersion> for WithUser<AuditVersion> {
     type Error = prost::DecodeError;
 
     fn try_into(self) -> Result<ProtoAuditVersion, Self::Error> {
         Ok(ProtoAuditVersion {
-            id: self.id,
-            resource_id: self.resource_id,
-            data: Some(ProtoResource::decode(self.data.into_inner().as_slice())?),
-            resource_type: Into::<ProtoResourceKind>::into(&self.resource_type).into(),
-            action: Into::<ProtoAuditAction>::into(&self.action).into(),
-            version: self.version as i32,
-            made_by: self.made_by,
-            created_at: Some(date_time_to_timestamp(self.created_at)),
+            made_by: self.proto_user(),
+            id: self.inner.id,
+            resource_id: self.inner.resource_id,
+            data: Some(ProtoResource::decode(self.inner.data.as_ref())?),
+            resource_type: Into::<ProtoResourceKind>::into(&self.inner.resource_type).into(),
+            action: Into::<ProtoAuditAction>::into(&self.inner.action).into(),
+            version: self.inner.version as i32,
+            created_at: Some(date_time_to_timestamp(&self.inner.created_at)),
         })
     }
 }

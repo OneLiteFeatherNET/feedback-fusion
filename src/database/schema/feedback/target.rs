@@ -54,8 +54,8 @@ impl From<Target> for ProtoTarget {
             id: val.id,
             name: val.name,
             description: val.description,
-            updated_at: Some(date_time_to_timestamp(val.updated_at)),
-            created_at: Some(date_time_to_timestamp(val.created_at)),
+            updated_at: Some(date_time_to_timestamp(&val.updated_at)),
+            created_at: Some(date_time_to_timestamp(&val.created_at)),
         }
     }
 }

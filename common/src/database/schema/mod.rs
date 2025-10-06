@@ -22,3 +22,4 @@
 
 pub mod audit;
 pub mod index;
+pub mod user;

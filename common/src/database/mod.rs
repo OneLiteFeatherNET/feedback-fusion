@@ -175,7 +175,7 @@ macro_rules! database_request {
     }};
 }
 
-pub fn date_time_to_timestamp(date_time: DateTime) -> Timestamp {
+pub fn date_time_to_timestamp(date_time: &DateTime) -> Timestamp {
     Timestamp::date_time(
         date_time.year().into(),
         date_time.mon(),

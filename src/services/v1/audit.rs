@@ -24,10 +24,9 @@ use std::borrow::Cow;
 
 use feedback_fusion_common::{
     common::ProtoResourceKind,
-    database::schema::audit::AuditVersion,
+    database::schema::audit::{select_audit_version_page_by_resource_type_and_resource_id, AuditVersion},
     proto::{
-        AuditVersionPage, GetAuditVersionsRequest, ProtoAuditVersion, ProtoResource,
-        RollbackResourceRequest, proto_resource::Inner,
+        proto_resource::Inner, AuditVersionPage, GetAuditVersionsRequest, ProtoAuditVersion, ProtoResource, RollbackResourceRequest
     },
 };
 use prost::Message;
@@ -68,7 +67,7 @@ pub async fn get_audit_versions(
         // now we know for sure that the user is authorized and therefore we now can select the
         // page
         let audit_versions = database_request!(
-            AuditVersion::select_page_by_resource_type_and_resource_id(
+            select_audit_version_page_by_resource_type_and_resource_id(
                 connection,
                 &page_request,
                 &resource_kind,
