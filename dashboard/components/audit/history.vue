@@ -44,7 +44,7 @@
               </template>
 
               <v-expansion-panel-text>
-                <AuditEntry @rollback="fetchPage(1)" :entry="version" />
+                <AuditEntry @rollback="onRollback" :entry="version" />
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
@@ -62,6 +62,7 @@ import {
   ref,
   watch,
   useNuxtApp,
+  useRoute,
 } from "#imports";
 import { useAuthorizationStore } from "~/composables/authorization";
 import { useRpcOptions } from "~/composables/grpc";
@@ -77,6 +78,7 @@ const props = defineProps({
 const { $feedbackFusion } = useNuxtApp();
 const authorization = useAuthorizationStore();
 const router = useRouter();
+const route = useRoute();
 const versions = ref(undefined);
 const pageToken = ref(1);
 
@@ -124,5 +126,20 @@ const actionColor = (action: number) => {
     default:
       return "text-danger";
   }
+};
+
+// on rollback we want to get back to the modified resource and therefore have to leave the audit log
+const onRollback = () => {
+  const segments = route.path.split("/");
+  // remove the last segment
+  segments.pop();
+
+  // for fields we have to pop another 2
+  if (props.endpoint == "Field") {
+    segments.pop();
+    segments.pop();
+  }
+
+  router.push(segments.join("/"));
 };
 </script>
