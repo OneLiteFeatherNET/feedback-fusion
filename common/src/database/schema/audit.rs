@@ -82,12 +82,14 @@ pub struct AuditVersion {
 }
 
 crud!(AuditVersion {});
+// yea we actually have to use lowercase select here as rbatis for some reason doesnt accept
+// uppercase in the page interceptor...
 pysql_select_page!(select_audit_version_page_by_resource_type_and_resource_id(resource_type: &impl Serialize, resource_id: &str) -> WithUser<AuditVersion> => "
-    `SELECT `
+    `select `
     if do_count == true:
-        `COUNT(1) FROM audit_version `
+        `COUNT(1) from audit_version `
     if do_count == false:
-        `audit_version.*, oidc_user.id AS oidc_user_id, oidc_user.username AS oidc_user_username FROM audit_version JOIN oidc_user ON oidc_user.id = made_by `
+        `audit_version.*, oidc_user.id AS oidc_user_id, oidc_user.username AS oidc_user_username from audit_version JOIN oidc_user ON oidc_user.id = made_by `
     `WHERE resource_type = #{resource_type} AND resource_id = #{resource_id} `
     if do_count == false:
         `ORDER BY version DESC`");

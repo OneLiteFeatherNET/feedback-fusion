@@ -49,6 +49,13 @@
             </v-expansion-panel>
           </v-expansion-panels>
         </slot>
+
+        <v-pagination
+          class="mt-4"
+          v-if="versions && versions.total > versions.pageSize"
+          v-model="pageToken"
+          :length="Math.ceil(versions.total / versions.pageSize)"
+        />
       </v-card-text>
     </v-card>
   </div>

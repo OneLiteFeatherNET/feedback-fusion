@@ -125,8 +125,6 @@ pub async fn get_responses(
         "Select responses by prompt"
     )?;
 
-    warn!("{:?}", responses);
-
     let records = if responses.total > 0 {
         database_request!(
             field_responses(
@@ -157,8 +155,6 @@ pub async fn get_responses(
     } else {
         HashMap::new()
     };
-
-    warn!("{records:?}");
 
     Ok(Response::new(ResponsePage {
         page_token: page_request.page_no().try_into()?,
