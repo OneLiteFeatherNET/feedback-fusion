@@ -76,7 +76,21 @@ onMounted(() => {
     // load the data
     data.value = props.entry.data.inner[type];
   } else {
-    data.value = props.entry;
+    // as we could be stuck in an enum variant (which we dont want to fully expand) we have to check wether we have only 1 value
+    // and wether this value does contain variant fixing
+    let current = props.entry;
+    const keys = Object.keys(current);
+    if (keys.length === 1) {
+      // check wether the subobject is a variant
+      const capsulated = current[keys[0]];
+      const oneofKind = capsulated.oneofKind;
+
+      if (oneofKind !== undefined) {
+        current = capsulated[oneofKind];
+      }
+    }
+
+    data.value = current;
   }
 
   // collect all the keys from the data
