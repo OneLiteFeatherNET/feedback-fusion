@@ -104,7 +104,7 @@ const fetchPage = async (pageToken: number) => {
 };
 
 watch(
-  () => pageToken,
+  () => pageToken.value,
   async (pageToken: number) => {
     await fetchPage(pageToken);
   },
