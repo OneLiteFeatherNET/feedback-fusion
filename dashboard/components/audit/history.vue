@@ -44,7 +44,11 @@
               </template>
 
               <v-expansion-panel-text>
-                <AuditEntry @rollback="onRollback" :entry="version" />
+                <AuditEntry
+                  @rollback="onRollback"
+                  :entry="version"
+                  :endpoint="endpoint"
+                />
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>

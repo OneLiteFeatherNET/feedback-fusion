@@ -25,7 +25,7 @@
     <FormConfirm
       :message="t('audit.confirmRollback')"
       :action="rollback"
-      v-if="!isRecursive"
+      v-if="!isRecursive && authorization.hasPermission(endpoint, 'Write')"
     >
       <template #default="{ props }">
         <v-btn
@@ -52,6 +52,7 @@ import {
 } from "#imports";
 import { ProtoAuditVersion } from "~/composables/feedback-fusion-v1/audit";
 import { useRpcOptions } from "~/composables/grpc";
+import { useAuthorizationStore } from "~/composables/authorization";
 
 const props = defineProps({
   entry: ProtoAuditVersion,
@@ -59,11 +60,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  endpoint: String,
 });
 const emit = defineEmits(["rollback"]);
 
 const { t } = useI18n();
 const { $feedbackFusion } = useNuxtApp();
+const authorization = useAuthorizationStore();
 
 const listableFields = ref([]);
 const toRecurse = ref([]);
