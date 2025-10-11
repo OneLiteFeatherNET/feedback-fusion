@@ -1,4 +1,6 @@
-FROM --platform=linux/amd64 rust:slim AS build
+FROM --platform=$BUILDPLATFORM rust:slim AS build
+ARG BUILDPLATFORM
+ARG TARGETARCH
 
 COPY ./rust-toolchain.toml ./rust-toolchain.toml
 
@@ -10,8 +12,6 @@ RUN apt-get update \
 
 WORKDIR build
 
-ARG features=all-databases,otlp,caching-skytable
-
 COPY ./.cargo ./.cargo
 COPY ./Cargo.toml . 
 COPY ./Cargo.lock .
@@ -21,13 +21,13 @@ COPY ./codegen ./codegen
 COPY ./fuzz ./fuzz
 COPY ./benches ./benches
 COPY ./src ./src
+COPY ./indexer ./indexer
 
-ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
-        cargo build --release --target aarch64-unknown-linux-gnu --features $features; \
+        cargo build --bin feedback-fusion --release --target aarch64-unknown-linux-gnu; \
         mv target/aarch64-unknown-linux-gnu/release/feedback-fusion target/release/feedback-fusion; \
     else \
-        cargo build --release --features $features; \
+        cargo build --bin feedback-fusion --release; \
     fi
 
 FROM gcr.io/distroless/cc-debian12
