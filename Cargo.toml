@@ -43,7 +43,7 @@ opentelemetry-semantic-conventions = { version = "0.16.0", optional = true }
 opentelemetry-http = { version = "0.13.0", optional = true }
 paste = "1.0.14"
 prost-types = "0.13.0"
-rbatis = "=4.5.33"
+rbatis = "=4.6.12"
 rayon = "1.10.0"
 rbdc-pg = { version = "4.5.17", optional = true }
 rbdc-mysql = { version = "4.5.17", optional = true }
