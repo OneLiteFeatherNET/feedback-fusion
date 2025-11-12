@@ -92,7 +92,7 @@ pysql_select_page!(select_audit_version_page_by_resource_type_and_resource_id(re
         `audit_version.*, oidc_user.id AS oidc_user_id, oidc_user.username AS oidc_user_username from audit_version JOIN oidc_user ON oidc_user.id = made_by `
     `WHERE resource_type = #{resource_type} AND resource_id = #{resource_id} `
     if do_count == false:
-        `ORDER BY version DESC`");
+        `order by version DESC`");
 
 impl From<&AuditResource> for ProtoResourceKind {
     fn from(value: &AuditResource) -> Self {
