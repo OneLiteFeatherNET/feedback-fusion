@@ -2,14 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "feedback-fusion-dashboard.fullname" . }}
+  name: {{ include "feedback-fusion.fullname" . }}
   labels:
-    {{- include "feedback-fusion-dashboard.labels" . | nindent 4 }}
+    {{- include "feedback-fusion.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.dashboard.replicaCount }}
   selector:
     matchLabels:
-      {{- include "feedback-fusion-dashboard.selectorLabels" . | nindent 6 }}
+      {{- include "feedback-fusion.selectorLabels" . | nindent 6 }}
+      onelitefeather.net/feedback-fusion-component: dashboard
   template:
     metadata:
       {{- with .Values.dashboard.podAnnotations }}
@@ -17,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "feedback-fusion-dashboard.labels" . | nindent 8 }}
+        {{- include "feedback-fusion.labels" . | nindent 8 }}
         {{- with .Values.dashboard.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -26,7 +27,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "feedback-fusion-dashboard.serviceAccountName" . }}
+      serviceAccountName: {{ include "feedback-fusion.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.dashboard.podSecurityContext | nindent 8 }}
       containers:
@@ -48,7 +49,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.feedbackFusion.dashboard.config.secret }}
-      volumes:
+      volumes: 
         {{- with .Values.dashboard.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

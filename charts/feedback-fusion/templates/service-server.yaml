@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "feedback-fusion.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.api.service.type }}
+  type: {{ .Values.server.service.type }}
   ports:
     - port: 8000
       targetPort: grpc
@@ -13,3 +13,4 @@ spec:
       name: grpc
   selector:
     {{- include "feedback-fusion.selectorLabels" . | nindent 4 }}
+    onelitefeather.net/feedback-fusion-component: server

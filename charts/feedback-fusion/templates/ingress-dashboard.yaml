@@ -1,20 +1,20 @@
-{{- if .Values.api.ingress.enabled -}}
+{{- if .Values.dashboard.ingress.enabled -}}
 {{- $fullName := include "feedback-fusion.fullname" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-dashboard
   labels:
     {{- include "feedback-fusion.labels" . | nindent 4 }}
-  {{- with .Values.api.ingress.annotations }}
+  {{- with .Values.dashboard.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  ingressClassName: {{ .Values.api.ingress.className }}
-  {{- if .Values.api.ingress.tls }}
+  ingressClassName: {{ .Values.dashboard.ingress.className }}
+  {{- if .Values.dashboard.ingress.tls }}
   tls:
-    {{- range .Values.api.ingress.tls }}
+    {{- range .Values.dashboard.ingress.tls }}
     - hosts:
         {{- range .hosts }}
         - {{ . | quote }}
@@ -23,7 +23,7 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.api.ingress.hosts }}
+    {{- range .Values.dashboard.ingress.hosts }}
     - host: {{ .host | quote }}
       http:
         paths:
@@ -32,9 +32,9 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $fullName }}
+                name: {{ $fullName }}-dashboard
                 port:
-                  number: 8000
+                  number: 3000
           {{- end }}
     {{- end }}
 {{- end }}
