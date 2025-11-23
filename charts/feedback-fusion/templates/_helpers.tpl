@@ -11,10 +11,10 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "feedback-fusion.fullname" -}}
-{{- if .Values.api.fullnameOverride }}
-{{- .Values.api.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- if .Values.server.fullnameOverride }}
+{{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.api.nameOverride }}
+{{- $name := default .Chart.Name .Values.server.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -54,9 +54,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "feedback-fusion.serviceAccountName" -}}
-{{- if .Values.api.serviceAccount.create }}
-{{- default (include "feedback-fusion.fullname" .) .Values.api.serviceAccount.name }}
+{{- if .Values.server.serviceAccount.create }}
+{{- default (include "feedback-fusion.fullname" .) .Values.server.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.api.serviceAccount.name }}
+{{- default "default" .Values.server.serviceAccount.name }}
 {{- end }}
 {{- end }}
