@@ -20,16 +20,100 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::derive_ord_xor_partial_ord)]
+#![allow(clippy::derived_hash_with_manual_eq)]
+
+pub mod database;
+pub mod observability;
 #[cfg(feature = "arbitrary")]
 pub mod tests;
 
 pub mod proto {
+    use crate::proto::proto_resource::Inner;
+    use anyhow::anyhow;
     use validator::Validate;
+
     tonic::include_proto!("feedback_fusion_v1");
-    pub const FILE_DESCRIPTOR_SET: &[u8] =
+    pub const FEEDBACK_FUSION_V1_FILE_DESCRIPTOR_SET: &[u8] =
         tonic::include_file_descriptor_set!("feedback-fusion-v1-descriptor");
+
+    tonic::include_proto!("feedback_fusion_event_v1");
+    pub const FEEDBACK_FUSION_EVENT_V1_FILE_DESCRIPTOR_SET: &[u8] =
+        tonic::include_file_descriptor_set!("feedback-fusion-event-v1-descriptor");
+
+    macro_rules! proto_resource_binding {
+        ($proto:path, $variant:ident) => {
+            impl From<$proto> for ProtoResource {
+                fn from(value: $proto) -> Self {
+                    Self {
+                        inner: Some(Inner::$variant(value)),
+                    }
+                }
+            }
+
+            impl TryInto<$proto> for ProtoResource {
+                type Error = anyhow::Error;
+
+                fn try_into(self) -> Result<$proto, Self::Error> {
+                    if let Some(inner) = self.inner {
+                        match inner {
+                            Inner::$variant(data) => Ok(data),
+                            other => Err(anyhow!("Expected $variant inner type, got {other:?}")),
+                        }
+                    } else {
+                        Err(anyhow!("Missing inner resource data"))
+                    }
+                }
+            }
+        };
+    }
+
+    proto_resource_binding!(ProtoTarget, Target);
+    proto_resource_binding!(ProtoPrompt, Prompt);
+    proto_resource_binding!(ProtoField, Field);
+
+    impl ProtoResource {
+        pub fn empty() -> Self {
+            Self {
+                inner: Some(Inner::Unknown(())),
+            }
+        }
+    }
+}
+
+pub mod common {
+    tonic::include_proto!("common");
 }
 
 pub trait PageRequest {
     fn page_request(&self) -> rbatis::plugin::page::PageRequest;
+}
+
+#[macro_export]
+macro_rules! emit {
+    ($expr: expr, $title: expr) => {{
+        let span = info_span!(concat!("Emit event: ", $title));
+
+        async { $expr }.instrument(span).await
+    }};
+}
+
+pub mod prelude {
+    pub use crate::{database::date_time_to_timestamp, to_date_time};
+    pub use anyhow::anyhow;
+    pub use derivative::Derivative;
+    pub use getset::{Getters, Setters};
+    pub use itertools::Itertools;
+    pub use lazy_static::lazy_static;
+    pub use paste::paste;
+    pub use rbatis::{
+        crud, impl_insert, impl_select, impl_select_page, impled, plugin::page::Page, py_sql,
+        rbdc::JsonV, IPageRequest,
+    };
+    pub use rbs::value;
+    pub use serde::{Deserialize, Serialize};
+    pub use serde_inline_default::serde_inline_default;
+    pub use tracing::{debug, error, info, info_span, instrument, warn, Instrument};
+    pub use typed_builder::TypedBuilder;
 }

@@ -24,40 +24,29 @@ use crate::{
     database::schema::feedback::{Field, Prompt},
     prelude::*,
 };
-#[cfg(feature = "caching-skytable")]
 use bb8::ManageConnection;
-#[cfg(feature = "caching-skytable")]
 use cached::IOCachedAsync;
-#[cfg(feature = "caching-skytable")]
 use chrono::Utc;
 use feedback_fusion_codegen::dynamic_cache;
 
-#[cfg(feature = "caching-skytable")]
 use gxhash::GxHasher;
-#[cfg(feature = "caching-skytable")]
 use skytable::{
     aio::TcpConnection,
     pool::{ConnectionMgrTcp, ConnectionMgrTls},
     query, ClientResult, Pipeline, Query, Response,
 };
 
-#[cfg(feature = "caching-skytable")]
 use std::hash::{Hash, Hasher};
-#[cfg(feature = "caching-skytable")]
 use std::{
     fmt::{Debug, Display},
     marker::PhantomData,
     ops::DerefMut,
     time::Duration,
 };
-#[cfg(feature = "caching-skytable")]
 use thiserror::Error;
-#[cfg(feature = "caching-skytable")]
 use tokio::io::{AsyncRead, AsyncWrite};
-#[cfg(feature = "caching-skytable")]
 use tracing::{instrument, Instrument};
 
-#[cfg(feature = "caching-skytable")]
 #[instrument(skip_all)]
 pub fn derive_cache_key<K: Hash>(k: &K) -> String {
     let mut hasher = GxHasher::default();
@@ -67,7 +56,6 @@ pub fn derive_cache_key<K: Hash>(k: &K) -> String {
 }
 
 // may publish this as crate or submit as pr for cached
-#[cfg(feature = "caching-skytable")]
 pub struct SkytableCacheBuilder<'a, K, V> {
     username: &'a str,
     password: &'a str,
@@ -80,11 +68,10 @@ pub struct SkytableCacheBuilder<'a, K, V> {
     _phantom: PhantomData<(K, V)>,
 }
 
-#[cfg(feature = "caching-skytable")]
 impl<'a, K, V> SkytableCacheBuilder<'a, K, V>
 where
     K: Display,
-    V: Encode + Decode,
+    V: Encode + Decode<V>,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -146,7 +133,6 @@ where
     }
 }
 
-#[cfg(feature = "caching-skytable")]
 pub struct SkytableTlsCacheBuilder<'a, K, V> {
     username: &'a str,
     password: &'a str,
@@ -160,11 +146,10 @@ pub struct SkytableTlsCacheBuilder<'a, K, V> {
     _phantom: PhantomData<(K, V)>,
 }
 
-#[cfg(feature = "caching-skytable")]
 impl<'a, K, V> SkytableTlsCacheBuilder<'a, K, V>
 where
     K: Hash,
-    V: Encode + Decode,
+    V: Encode + Decode<()>,
 {
     pub fn new(host: &'a str, port: u16, username: &'a str, password: &'a str) -> Self {
         Self {
@@ -234,7 +219,6 @@ where
     }
 }
 
-#[cfg(feature = "caching-skytable")]
 #[derive(Error, Debug)]
 pub enum SkytableCacheError {
     #[error(transparent)]
@@ -247,7 +231,6 @@ pub enum SkytableCacheError {
     PoolError(String),
 }
 
-#[cfg(feature = "caching-skytable")]
 impl<E> From<bb8::RunError<E>> for SkytableCacheError
 where
     E: Debug,
@@ -257,7 +240,6 @@ where
     }
 }
 
-#[cfg(feature = "caching-skytable")]
 #[derive(Clone, Query, Response)]
 struct CachedSkytableValue {
     pub ckey: String,
@@ -265,14 +247,12 @@ struct CachedSkytableValue {
     pub ttl: i64,
 }
 
-#[cfg(feature = "caching-skytable")]
 impl CachedSkytableValue {
     fn new(ckey: String, cvalue: Vec<u8>, ttl: i64) -> Self {
         Self { ckey, cvalue, ttl }
     }
 }
 
-#[cfg(feature = "caching-skytable")]
 pub struct SkytableCache<'a, C: ManageConnection, K, V> {
     space: &'a str,
     model: &'a str,
@@ -282,7 +262,6 @@ pub struct SkytableCache<'a, C: ManageConnection, K, V> {
     _phantom: PhantomData<(K, V)>,
 }
 
-#[cfg(feature = "caching-skytable")]
 impl<C, I, S, K, V> SkytableCache<'_, C, K, V>
 where
     S: AsyncRead + AsyncWrite + Send + Sync + Unpin,
@@ -309,7 +288,6 @@ where
     }
 }
 
-#[cfg(feature = "caching-skytable")]
 #[async_trait::async_trait]
 impl<C, I, S, K, V> IOCachedAsync<K, V> for SkytableCache<'_, C, K, V>
 where
@@ -317,7 +295,7 @@ where
     I: DerefMut<Target = TcpConnection<S>> + Send + Sync,
     C: ManageConnection<Connection = I> + Send + Sync,
     K: Hash + std::fmt::Debug + Send + Sync,
-    V: Encode + Decode + Send + Sync,
+    V: Encode + Decode<()> + Send + Sync,
 {
     type Error = SkytableCacheError;
 
@@ -447,7 +425,7 @@ pub async fn fetch_prompt(connection: &DatabaseConnection, id: &str) -> Result<O
 #[dynamic_cache(ttl = "300", key = r#"format!('fields-{}', prompt)"#)]
 pub async fn fields_by_prompt(connection: &DatabaseConnection, prompt: &str) -> Result<Vec<Field>> {
     let result = database_request!(
-        Field::select_by_column(connection, "prompt", prompt).await,
+        Field::select_by_map(connection, value!{"prompt": prompt}).await,
         "Select fields by prompt"
     )?;
 

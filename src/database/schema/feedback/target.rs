@@ -20,11 +20,12 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, to_date_time};
+use crate::{prelude::*, to_date_time};
+use feedback_fusion_common::proto::ProtoTarget;
 use rbatis::rbdc::DateTime;
 
 #[derive(
-    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate, Encode, Decode
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
@@ -39,26 +40,28 @@ pub struct Target {
     description: Option<String>,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
+    #[bincode(with_serde)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
+    #[bincode(with_serde)]
     created_at: DateTime,
 }
 
-impl From<Target> for feedback_fusion_common::proto::Target {
+impl From<Target> for ProtoTarget {
     fn from(val: Target) -> Self {
-        feedback_fusion_common::proto::Target {
+        ProtoTarget {
             id: val.id,
             name: val.name,
             description: val.description,
-            updated_at: Some(date_time_to_timestamp(val.updated_at)),
-            created_at: Some(date_time_to_timestamp(val.created_at)),
+            updated_at: Some(date_time_to_timestamp(&val.updated_at)),
+            created_at: Some(date_time_to_timestamp(&val.created_at)),
         }
     }
 }
 
-impl From<feedback_fusion_common::proto::Target> for Target {
-    fn from(val: feedback_fusion_common::proto::Target) -> Self {
+impl From<ProtoTarget> for Target {
+    fn from(val: ProtoTarget) -> Self {
         Target {
             id: val.id,
             name: val.name,
@@ -71,4 +74,4 @@ impl From<feedback_fusion_common::proto::Target> for Target {
 
 crud!(Target {});
 impl_select!(Target {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
-impl_select_page_wrapper!(Target {select_page(query: &str) => "``"});
+impl_select_page!(Target {select_page(query: &str) => "``"});

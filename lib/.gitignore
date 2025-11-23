@@ -20,6 +20,8 @@
 /dist/
 /out-tsc/
 
+src/common
+src/feedback-fusion-v1
 src/feedback-fusion-v1.ts
 src/feedback-fusion-v1.client.ts
 src/google

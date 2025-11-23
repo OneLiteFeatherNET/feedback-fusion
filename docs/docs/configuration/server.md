@@ -223,3 +223,34 @@ preset = {
   ]
 }
 ```
+
+## Broker Configuration
+
+**Important**: The broker configuration requires exactly one driver to be configured.
+You must choose either the `fluvio` driver or the `grpc` driver - configuring both simultaneously is not supported. The configuration below shows the gRPC driver setup.
+
+```hcl
+broker = {
+  grpc = {
+    endpoint = "https://grpc.example.com"
+    tls = {
+      key                      = "/path/to/key.pem"
+      certificate              = "/path/to/certificate.pem"
+      certificate_authority    = "/path/to/ca.pem"
+    }
+  }
+  max_batch_size = 10
+  batch_interval = 1000
+}
+```
+
+### Broker Configuration Reference
+
+| Parameter | Description | Default | Data Type |
+|-----------|-------------|---------|-----------|
+| fluvio | Fluvio broker driver configuration | N/A | Object |
+| grpc | gRPC broker driver configuration | N/A | Object |
+| max_batch_size | Maximum batch size for message processing | 10 | Integer |
+| batch_interval | Batch interval in milliseconds | 1000 | Integer |
+
+For more detailed information about broker configuration options, see [Broker configuration](/docs/broker).

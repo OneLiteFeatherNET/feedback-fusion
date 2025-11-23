@@ -19,6 +19,17 @@
               :subtitle="$t(`field.type.${field.fieldType}`)"
             >
               <template #append>
+                <v-icon
+                  class="mr-4"
+                  icon="mdi-history"
+                  color="warning"
+                  @click.stop="
+                    router.push(
+                      localePath(`${route.path}/field/${field.id}/audit`),
+                    )
+                  "
+                />
+
                 <FormConfirm
                   :message="t('field.delete')"
                   :action="deleteField(field.id)"
@@ -71,11 +82,20 @@
 </template>
 
 <script setup lang="ts">
-import { useNuxtApp, ref, onMounted, watch, useI18n } from "#imports";
+import {
+  useNuxtApp,
+  ref,
+  onMounted,
+  watch,
+  useI18n,
+  useRoute,
+  useLocalePath,
+  useRouter,
+} from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 import { useAuthorizationStore } from "~/composables/authorization";
 import { numberToKind } from "~/composables/convert";
-import { FieldType } from "~/composables/feedback-fusion-v1";
+import { ProtoFieldType } from "~/composables/feedback-fusion-v1/field";
 
 const props = defineProps({
   target: String,
@@ -85,6 +105,9 @@ const props = defineProps({
 const { $feedbackFusion } = useNuxtApp();
 const { t } = useI18n();
 const authorization = useAuthorizationStore();
+const route = useRoute();
+const localePath = useLocalePath();
+const router = useRouter();
 
 const fields = ref(undefined);
 const creation = ref({});
@@ -108,7 +131,7 @@ const editFields = ref([
     type: "number",
     min: 1,
     max: 255,
-    if: () => creation.value.fieldType === FieldType.TEXT,
+    if: () => creation.value.fieldType === ProtoFieldType.TEXT,
   },
   {
     name: "options.placeholder",
@@ -116,8 +139,8 @@ const editFields = ref([
     required: true,
     type: "text",
     if: () =>
-      creation.value.fieldType === FieldType.NUMBER ||
-      creation.value.fieldType === FieldType.TEXT,
+      creation.value.fieldType === ProtoFieldType.NUMBER ||
+      creation.value.fieldType === ProtoFieldType.TEXT,
   },
   {
     name: "options.min",
@@ -125,30 +148,30 @@ const editFields = ref([
     type: "number",
     required: true,
     if: () =>
-      creation.value.fieldType === FieldType.NUMBER ||
-      creation.value.fieldType === FieldType.RANGE,
+      creation.value.fieldType === ProtoFieldType.NUMBER ||
+      creation.value.fieldType === ProtoFieldType.RANGE,
   },
   {
     name: "options.max",
     label: t("field.options.max"),
     type: "number",
     if: () =>
-      creation.value.fieldType === FieldType.NUMBER ||
-      creation.value.fieldType === FieldType.RANGE ||
-      creation.value.fieldType === FieldType.RATING,
+      creation.value.fieldType === ProtoFieldType.NUMBER ||
+      creation.value.fieldType === ProtoFieldType.RANGE ||
+      creation.value.fieldType === ProtoFieldType.RATING,
   },
   {
     name: "options.defaultState",
     label: t("field.options.defaultState"),
     type: "switch",
-    if: () => creation.value.fieldType === FieldType.CHECKBOX,
+    if: () => creation.value.fieldType === ProtoFieldType.CHECKBOX,
   },
   {
     name: "options.style",
     label: t("field.options.style"),
     type: "select",
     required: true,
-    if: () => creation.value.fieldType === FieldType.CHECKBOX,
+    if: () => creation.value.fieldType === ProtoFieldType.CHECKBOX,
     items: Array.from({ length: 2 }, (_, i) => ({
       title: t(`field.checkboxStyle.${i}`),
       value: i,
@@ -158,13 +181,13 @@ const editFields = ref([
     name: "options.multiple",
     label: t("field.options.multiple"),
     type: "switch",
-    if: () => creation.value.fieldType === FieldType.SELECTION,
+    if: () => creation.value.fieldType === ProtoFieldType.SELECTION,
   },
   {
     name: "options.combobox",
     label: t("field.options.combobox"),
     type: "switch",
-    if: () => creation.value.fieldType === FieldType.SELECTION,
+    if: () => creation.value.fieldType === ProtoFieldType.SELECTION,
   },
   {
     name: "options.values",
@@ -172,7 +195,7 @@ const editFields = ref([
     type: "combobox",
     multiple: true,
     items: [],
-    if: () => creation.value.fieldType === FieldType.SELECTION,
+    if: () => creation.value.fieldType === ProtoFieldType.SELECTION,
   },
 ]);
 

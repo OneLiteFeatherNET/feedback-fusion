@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package feedback_fusion_event_v1;
+
+import "feedback-fusion-event-v1/event/resource_modified.proto";
+import "google/protobuf/timestamp.proto";
+
+message ProtoEventBatch {
+  repeated ProtoEvent events = 1;
+}
+
+enum ProtoEventType {
+  UNKNOWN = 0;
+  RESOURCE_MODIFIED = 1;
+}
+
+message ProtoEvent {
+  google.protobuf.Timestamp created_at = 1;
+  ProtoEventType event_type = 2;
+
+  oneof event_content {
+    ProtoResourceModifiedEvent resource_modified_event = 3;
+  }
+}

@@ -24,13 +24,14 @@ use std::collections::HashMap;
 
 use crate::prelude::*;
 use aliri::jwt::CoreClaims;
-use openidconnect::{core::CoreUserInfoClaims, AccessToken};
+use openidconnect::{AccessToken, core::CoreUserInfoClaims};
 
-#[derive(Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder)]
+#[derive(
+    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Encode, Decode,
+)]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 #[builder(field_defaults(setter(into)))]
 pub struct User {
     id: String,
@@ -66,8 +67,12 @@ impl User {
                 .sub()
                 .ok_or(FeedbackFusionError::Unauthorized)?
                 .to_string();
+            let preferred_username = claims.preferred_username();
 
-            Ok(Self::builder().id(&sub).username(&sub).build())
+            Ok(Self::builder()
+                .id(&sub)
+                .username(preferred_username)
+                .build())
         } else {
             let user_info: CoreUserInfoClaims = client
                 .user_info(access_token, None)
@@ -81,9 +86,8 @@ impl User {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, Getters, PartialEq)]
+#[derive(Deserialize, Serialize, Clone, Debug, Getters, PartialEq, Encode, Decode)]
 #[get = "pub"]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct UserContext {
     pub user: User,
     pub authorizations: HashMap<String, bool>,

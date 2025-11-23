@@ -20,9 +20,13 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use feedback_fusion_common::proto::{
-    CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest,
-    UpdateTargetRequest,
+use feedback_fusion_common::{
+    proto::{
+        CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest,
+        UpdateTargetRequest,
+    },
+    tests::VerifyAudit,
+    verify_audit_exists,
 };
 use test_log::test;
 
@@ -41,7 +45,10 @@ async fn test_create() {
 
     let request = create_request();
     let response = client.create_target(request).await;
-    assert!(response.is_ok())
+    assert!(response.is_ok());
+
+    let inner = response.unwrap().into_inner();
+    verify_audit_exists!(client, inner, Target, Create);
 }
 
 #[test(tokio::test)]
@@ -58,7 +65,9 @@ async fn test_get() {
         id: target.id.clone(),
     };
     let response = client.get_target(request).await;
-    assert!(response.is_ok_and(|response| response.into_inner().eq(&target)));
+    assert!(response.is_ok());
+    let inner = response.unwrap().into_inner();
+    assert!(inner.eq(&target));
 }
 
 #[test(tokio::test)]
@@ -94,6 +103,8 @@ async fn test_update() {
     assert_eq!(target.id.as_str(), response.id.as_str());
     assert_eq!("Well", response.name.as_str());
     assert_eq!(Some("Changed".to_owned()), response.description);
+
+    verify_audit_exists!(client, response, Target, Update);
 }
 
 #[test(tokio::test)]
@@ -114,12 +125,14 @@ async fn test_delete() {
 
     let request = GetTargetsRequest::default();
     let response = client.get_targets(request).await;
-    assert!(response.is_ok_and(|response| response
-        .into_inner()
-        .targets
-        .iter()
-        .find(|t| t.eq(&&target))
-        .is_none()));
+    assert!(response.is_ok_and(|response| {
+        response
+            .into_inner()
+            .targets
+            .iter()
+            .find(|t| t.eq(&&target))
+            .is_none()
+    }));
 
     let target = client
         .create_target(create_request())
@@ -149,5 +162,9 @@ async fn test_delete() {
         id: target2.id.clone(),
     };
     let response = client.get_target(request).await;
-    assert!(response.is_ok_and(|response| response.into_inner().eq(&target2)));
+    assert!(response.is_ok());
+    let response = response.unwrap().into_inner();
+    assert!(response.eq(&target2));
+
+    verify_audit_exists!(client, target, Target, Delete);
 }

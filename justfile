@@ -12,6 +12,7 @@ test-all: cleanup
   just test mysql
   just test mssql
   just test skytable
+  just test fluvio
 
   cargo llvm-cov report
   cargo llvm-cov report --lcov --output-path coverage.info
@@ -24,28 +25,24 @@ init:
 #
 
 check:
-  cargo check --all-features
+  cargo check --all-features --workspace --tests
 
 clippy:
-  cargo clippy --all-features -- -D warnings
-
-#
-# Docker
-#
-
-build PLATFORM=LOCAL_PLATFORM DOCKERFILE="./Dockerfile":
-  @echo "building for {{PLATFORM}}"
-  docker buildx build -t {{LOCAL_DOCKER_IMAGE}} --platform {{PLATFORM}} -f {{DOCKERFILE}} --load .
-
-build-all DOCKERFILE="./Dockerfile":
-  just build linux/arm64,linux/amd64 {{DOCKERFILE}}
+  cargo clippy --all-features --workspace -- -D warnings
 
 #
 # Backend
 #
 
 backend TYPE=DEFAULT_TEST:
-  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --no-report > ./target/feedback-fusion.log 2>&1 &
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/indexer/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin indexer --no-report > ./target/feedback-fusion-indexer.log 2>&1 &
+
+  while ! nc -z localhost 8080; do \
+    sleep 1; \
+  done
+  @echo "Indexer ready"
+
+  FEEDBACK_FUSION_CONFIG="./tests/_common/configs/{{TYPE}}.hcl" RUST_LOG=DEBUG cargo llvm-cov run --bin feedback-fusion --no-report > ./target/feedback-fusion.log 2>&1 &
 
   while ! nc -z localhost 8000; do \
     sleep 1; \
@@ -53,7 +50,11 @@ backend TYPE=DEFAULT_TEST:
   @echo "Application ready"
 
 stop-backend:
-  @PID=$(lsof -t -i:8000) && if [ -n "$PID" ]; then \
+  -@PID=$(lsof -t -i:8000) && if [ -n "$PID" ]; then \
+    kill -2 $PID; \
+  fi
+
+  -@PID=$(lsof -t -i:8080) && if [ -n "$PID" ]; then \
     kill -2 $PID; \
   fi
 
@@ -62,7 +63,8 @@ bench: oidc-server-mock postgres && cleanup
   GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
 
 protoc-docs:
-  docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos  pseudomuto/protoc-gen-doc --doc_opt=markdown,api.md
+	docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos pseudomuto/protoc-gen-doc --proto_path=/protos --doc_opt=markdown,api.md $(find ./proto -name "*.proto" | sed 's|^\./proto/||')
+
 
 #
 # Testing requirements
@@ -92,6 +94,19 @@ protoc-docs:
 @skytable: postgres
   docker run -p 2003:2003 --entrypoint skyd --rm --name skytable -d skytable/skytable --auth-root-password=passwordpassword --endpoint=tcp@0.0.0.0:2003
 
+@fluvio: postgres
+  fluvio cluster start
+
+  fluvio topic create feedback-fusion 
+
+@stop-fluvio:
+  #!/usr/bin/expect -f
+
+  spawn fluvio cluster delete
+  expect "Please type the cluster name to confirm:"
+  send "local\r"
+  expect eof
+
 # 
 # Testing
 #
@@ -102,18 +117,22 @@ protoc-docs:
   -just stop-backend
   -docker rm -f skytable > /dev/null 2>&1
   -docker network rm {{DOCKER_NETWORK}} > /dev/null 2>&1
+  -just stop-fluvio
 
 unittest:
   FEEDBACK_FUSION_CONFIG="./tests/_common/configs/postgres.hcl" cargo llvm-cov --bin feedback-fusion --no-report -- --nocapture
 
 integration:
-  OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo llvm-cov --no-report --no-fail-fast --test integration_test || (cat ./target/feedback-fusion.log; just stop-backend; cargo llvm-cov report; exit 1)
+  OIDC_PROVIDER="http://localhost:5151" OIDC_CLIENT_ID="client" OIDC_CLIENT_SECRET="secret" RUST_LOG="INFO" GRPC_ENDPOINT="http://localhost:8000" cargo llvm-cov --no-report --no-fail-fast --test integration_test
 
 test TYPE=DEFAULT_TEST: cleanup oidc-server-mock
   just {{TYPE}}
   @if [ "{{TYPE}}" = "mariadb" ]; then just backend mysql; else just backend {{TYPE}}; fi
 
   just integration
+
+  # a short sleep to process events
+  sleep 2
 
   just stop-backend
   -docker rm -f database > /dev/null 2>&1

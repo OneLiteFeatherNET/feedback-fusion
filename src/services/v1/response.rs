@@ -30,8 +30,8 @@ use crate::{
     prelude::*,
 };
 use feedback_fusion_common::proto::{
-    CreateResponsesRequest, FieldResponse as ProtoFieldResponse, FieldResponseList,
-    GetResponsesRequest, PromptResponse as ProtoPromptResponse, ResponsePage,
+    CreateResponsesRequest, FieldResponseList, GetResponsesRequest, ProtoFieldResponse,
+    ProtoPromptResponse, ResponsePage,
 };
 use rbatis::rbatis_codegen::IntoSql;
 use std::collections::HashMap;
@@ -43,12 +43,7 @@ pub async fn create_responses(
 ) -> Result<Response<ProtoPromptResponse>> {
     let data = request.into_inner();
     // start transaction
-    let transaction = context.connection().acquire_begin().await?;
-    let mut transaction = transaction.defer_async(|mut tx| async move {
-        if !tx.done {
-            let _ = tx.rollback().await;
-        }
-    });
+    let transaction = feedback_fusion_common::database::transaction(context.connection()).await?;
 
     // fetch the fields of the prompt
     let fields = fields_by_prompt(context.connection(), data.prompt.as_str()).await?;
@@ -123,20 +118,12 @@ pub async fn get_responses(
     let page_request = data.page_request();
     let connection = context.connection();
 
-    error!("{:?}", page_request);
-
     // select a page of responses
     let responses = database_request!(
-        PromptResponse::select_page_by_prompt_wrapper(
-            connection,
-            &page_request,
-            data.prompt.as_str()
-        )
-        .await,
+        PromptResponse::select_page_by_prompt(connection, &page_request, data.prompt.as_str())
+            .await,
         "Select responses by prompt"
     )?;
-
-    error!("{:?}", responses);
 
     let records = if responses.total > 0 {
         database_request!(

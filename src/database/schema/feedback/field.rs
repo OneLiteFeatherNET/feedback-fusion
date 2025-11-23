@@ -20,13 +20,17 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, save_as_json, to_date_time};
+use crate::{prelude::*, save_as_json, to_date_time};
+use feedback_fusion_common::proto::{
+    ProtoCheckboxOptions, ProtoCheckboxStyle, ProtoFieldOptions, ProtoFieldResponse,
+    ProtoNumberOptions, ProtoPromptResponse, ProtoRangeOptions, ProtoRatingOptions,
+    ProtoSelectionOptions, ProtoTextOptions,
+};
 use rbatis::rbdc::DateTime;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Encode, Decode)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub enum FieldOptions {
     Text(TextOptions),
     Rating(RatingOptions),
@@ -36,66 +40,76 @@ pub enum FieldOptions {
     Number(NumberOptions),
 }
 
-impl From<FieldOptions> for feedback_fusion_common::proto::FieldOptions {
+impl From<FieldOptions> for ProtoFieldOptions {
     fn from(value: FieldOptions) -> Self {
         match value {
             FieldOptions::Text(options) => Self {
-                options: Some(feedback_fusion_common::proto::field_options::Options::Text(
-                    options.into(),
-                )),
+                options: Some(
+                    feedback_fusion_common::proto::proto_field_options::Options::Text(
+                        options.into(),
+                    ),
+                ),
             },
             FieldOptions::Rating(options) => Self {
                 options: Some(
-                    feedback_fusion_common::proto::field_options::Options::Rating(options.into()),
+                    feedback_fusion_common::proto::proto_field_options::Options::Rating(
+                        options.into(),
+                    ),
                 ),
             },
             FieldOptions::Checkbox(options) => Self {
                 options: Some(
-                    feedback_fusion_common::proto::field_options::Options::Checkbox(options.into()),
+                    feedback_fusion_common::proto::proto_field_options::Options::Checkbox(
+                        options.into(),
+                    ),
                 ),
             },
             FieldOptions::Selection(options) => Self {
                 options: Some(
-                    feedback_fusion_common::proto::field_options::Options::Selection(
+                    feedback_fusion_common::proto::proto_field_options::Options::Selection(
                         options.into(),
                     ),
                 ),
             },
             FieldOptions::Range(options) => Self {
                 options: Some(
-                    feedback_fusion_common::proto::field_options::Options::Range(options.into()),
+                    feedback_fusion_common::proto::proto_field_options::Options::Range(
+                        options.into(),
+                    ),
                 ),
             },
             FieldOptions::Number(options) => Self {
                 options: Some(
-                    feedback_fusion_common::proto::field_options::Options::Number(options.into()),
+                    feedback_fusion_common::proto::proto_field_options::Options::Number(
+                        options.into(),
+                    ),
                 ),
             },
         }
     }
 }
 
-impl TryInto<FieldOptions> for feedback_fusion_common::proto::FieldOptions {
+impl TryInto<FieldOptions> for ProtoFieldOptions {
     type Error = FeedbackFusionError;
     fn try_into(self) -> Result<FieldOptions> {
         if let Some(options) = self.options {
             Ok(match options {
-                feedback_fusion_common::proto::field_options::Options::Text(options) => {
+                feedback_fusion_common::proto::proto_field_options::Options::Text(options) => {
                     FieldOptions::Text(options.try_into()?)
                 }
-                feedback_fusion_common::proto::field_options::Options::Rating(options) => {
+                feedback_fusion_common::proto::proto_field_options::Options::Rating(options) => {
                     FieldOptions::Rating(options.try_into()?)
                 }
-                feedback_fusion_common::proto::field_options::Options::Checkbox(options) => {
+                feedback_fusion_common::proto::proto_field_options::Options::Checkbox(options) => {
                     FieldOptions::Checkbox(options.try_into()?)
                 }
-                feedback_fusion_common::proto::field_options::Options::Selection(options) => {
+                feedback_fusion_common::proto::proto_field_options::Options::Selection(options) => {
                     FieldOptions::Selection(options.into())
                 }
-                feedback_fusion_common::proto::field_options::Options::Range(options) => {
+                feedback_fusion_common::proto::proto_field_options::Options::Range(options) => {
                     FieldOptions::Range(options.try_into()?)
                 }
-                feedback_fusion_common::proto::field_options::Options::Number(options) => {
+                feedback_fusion_common::proto::proto_field_options::Options::Number(options) => {
                     FieldOptions::Number(options.try_into()?)
                 }
             })
@@ -107,9 +121,10 @@ impl TryInto<FieldOptions> for feedback_fusion_common::proto::FieldOptions {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate, Encode, Decode,
+)]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct TextOptions {
     /// the input placeholder
     #[validate(length(max = 255))]
@@ -119,16 +134,16 @@ pub struct TextOptions {
     lines: u8,
 }
 
-impl From<TextOptions> for feedback_fusion_common::proto::TextOptions {
-    fn from(value: TextOptions) -> feedback_fusion_common::proto::TextOptions {
-        feedback_fusion_common::proto::TextOptions {
+impl From<TextOptions> for ProtoTextOptions {
+    fn from(value: TextOptions) -> ProtoTextOptions {
+        ProtoTextOptions {
             placeholder: value.placeholder,
             lines: value.lines.into(),
         }
     }
 }
 
-impl TryInto<TextOptions> for feedback_fusion_common::proto::TextOptions {
+impl TryInto<TextOptions> for ProtoTextOptions {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<TextOptions> {
@@ -143,23 +158,24 @@ fn default_lines() -> u8 {
     1
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate, Encode, Decode,
+)]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct RatingOptions {
     /// the best rating (determines how many stars / points are shown in the frontend)
     max: u8,
 }
 
-impl From<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
-    fn from(value: RatingOptions) -> feedback_fusion_common::proto::RatingOptions {
-        feedback_fusion_common::proto::RatingOptions {
+impl From<RatingOptions> for ProtoRatingOptions {
+    fn from(value: RatingOptions) -> ProtoRatingOptions {
+        ProtoRatingOptions {
             max: value.max.into(),
         }
     }
 }
 
-impl TryInto<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
+impl TryInto<RatingOptions> for ProtoRatingOptions {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<RatingOptions> {
@@ -169,9 +185,8 @@ impl TryInto<RatingOptions> for feedback_fusion_common::proto::RatingOptions {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Encode, Decode)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub enum CheckboxStyle {
     Switch,
     Normal,
@@ -200,44 +215,45 @@ impl TryFrom<i32> for CheckboxStyle {
     }
 }
 
-impl From<CheckboxStyle> for feedback_fusion_common::proto::CheckboxStyle {
-    fn from(value: CheckboxStyle) -> feedback_fusion_common::proto::CheckboxStyle {
+impl From<CheckboxStyle> for ProtoCheckboxStyle {
+    fn from(value: CheckboxStyle) -> ProtoCheckboxStyle {
         match value {
-            CheckboxStyle::Switch => feedback_fusion_common::proto::CheckboxStyle::Switch,
-            CheckboxStyle::Normal => feedback_fusion_common::proto::CheckboxStyle::Normal,
+            CheckboxStyle::Switch => ProtoCheckboxStyle::Switch,
+            CheckboxStyle::Normal => ProtoCheckboxStyle::Normal,
         }
     }
 }
 
-impl From<feedback_fusion_common::proto::CheckboxStyle> for CheckboxStyle {
-    fn from(value: feedback_fusion_common::proto::CheckboxStyle) -> CheckboxStyle {
+impl From<ProtoCheckboxStyle> for CheckboxStyle {
+    fn from(value: ProtoCheckboxStyle) -> CheckboxStyle {
         match value {
-            feedback_fusion_common::proto::CheckboxStyle::Switch => CheckboxStyle::Switch,
-            feedback_fusion_common::proto::CheckboxStyle::Normal => CheckboxStyle::Normal,
+            ProtoCheckboxStyle::Switch => CheckboxStyle::Switch,
+            ProtoCheckboxStyle::Normal => CheckboxStyle::Normal,
         }
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate, Encode, Decode,
+)]
 #[builder(field_defaults(setter(into)))]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct CheckboxOptions {
     /// the default state of the checkbox
     default_state: bool,
     style: CheckboxStyle,
 }
 
-impl From<CheckboxOptions> for feedback_fusion_common::proto::CheckboxOptions {
-    fn from(value: CheckboxOptions) -> feedback_fusion_common::proto::CheckboxOptions {
-        feedback_fusion_common::proto::CheckboxOptions {
+impl From<CheckboxOptions> for ProtoCheckboxOptions {
+    fn from(value: CheckboxOptions) -> ProtoCheckboxOptions {
+        ProtoCheckboxOptions {
             default_state: value.default_state,
             style: value.style.into(),
         }
     }
 }
 
-impl TryInto<CheckboxOptions> for feedback_fusion_common::proto::CheckboxOptions {
+impl TryInto<CheckboxOptions> for ProtoCheckboxOptions {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<CheckboxOptions> {
@@ -248,9 +264,10 @@ impl TryInto<CheckboxOptions> for feedback_fusion_common::proto::CheckboxOptions
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate, Encode, Decode,
+)]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct SelectionOptions {
     /// all possible selections
     values: Vec<String>,
@@ -262,9 +279,9 @@ pub struct SelectionOptions {
     combobox: bool,
 }
 
-impl From<SelectionOptions> for feedback_fusion_common::proto::SelectionOptions {
+impl From<SelectionOptions> for ProtoSelectionOptions {
     fn from(value: SelectionOptions) -> Self {
-        feedback_fusion_common::proto::SelectionOptions {
+        ProtoSelectionOptions {
             values: value.values,
             multiple: value.multiple,
             combobox: value.combobox,
@@ -272,8 +289,8 @@ impl From<SelectionOptions> for feedback_fusion_common::proto::SelectionOptions 
     }
 }
 
-impl From<feedback_fusion_common::proto::SelectionOptions> for SelectionOptions {
-    fn from(value: feedback_fusion_common::proto::SelectionOptions) -> Self {
+impl From<ProtoSelectionOptions> for SelectionOptions {
+    fn from(value: ProtoSelectionOptions) -> Self {
         SelectionOptions {
             values: value.values,
             multiple: value.multiple,
@@ -282,9 +299,10 @@ impl From<feedback_fusion_common::proto::SelectionOptions> for SelectionOptions 
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate, Encode, Decode,
+)]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct RangeOptions {
     /// the min value
     #[serde(default)]
@@ -293,16 +311,16 @@ pub struct RangeOptions {
     max: u8,
 }
 
-impl From<RangeOptions> for feedback_fusion_common::proto::RangeOptions {
+impl From<RangeOptions> for ProtoRangeOptions {
     fn from(value: RangeOptions) -> Self {
-        feedback_fusion_common::proto::RangeOptions {
+        ProtoRangeOptions {
             min: value.min.into(),
             max: value.max.into(),
         }
     }
 }
 
-impl TryInto<RangeOptions> for feedback_fusion_common::proto::RangeOptions {
+impl TryInto<RangeOptions> for ProtoRangeOptions {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<RangeOptions> {
@@ -313,9 +331,10 @@ impl TryInto<RangeOptions> for feedback_fusion_common::proto::RangeOptions {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate)]
+#[derive(
+    Deserialize, Serialize, Clone, Debug, PartialEq, TypedBuilder, Validate, Encode, Decode,
+)]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct NumberOptions {
     /// the min value
     #[serde(default)]
@@ -326,9 +345,9 @@ pub struct NumberOptions {
     placeholder: String,
 }
 
-impl From<NumberOptions> for feedback_fusion_common::proto::NumberOptions {
+impl From<NumberOptions> for ProtoNumberOptions {
     fn from(value: NumberOptions) -> Self {
-        feedback_fusion_common::proto::NumberOptions {
+        ProtoNumberOptions {
             min: value.min.into(),
             max: value.max.into(),
             placeholder: value.placeholder,
@@ -336,7 +355,7 @@ impl From<NumberOptions> for feedback_fusion_common::proto::NumberOptions {
     }
 }
 
-impl TryInto<NumberOptions> for feedback_fusion_common::proto::NumberOptions {
+impl TryInto<NumberOptions> for ProtoNumberOptions {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<NumberOptions> {
@@ -362,18 +381,18 @@ pub struct PromptResponse {
     created_at: DateTime,
 }
 
-impl From<PromptResponse> for feedback_fusion_common::proto::PromptResponse {
+impl From<PromptResponse> for ProtoPromptResponse {
     fn from(value: PromptResponse) -> Self {
-        feedback_fusion_common::proto::PromptResponse {
+        ProtoPromptResponse {
             id: value.id,
             prompt: value.prompt,
-            created_at: Some(date_time_to_timestamp(value.created_at)),
+            created_at: Some(date_time_to_timestamp(&value.created_at)),
         }
     }
 }
 
-impl From<feedback_fusion_common::proto::PromptResponse> for PromptResponse {
-    fn from(value: feedback_fusion_common::proto::PromptResponse) -> Self {
+impl From<ProtoPromptResponse> for PromptResponse {
+    fn from(value: ProtoPromptResponse) -> Self {
         PromptResponse {
             id: value.id,
             prompt: value.prompt,
@@ -383,7 +402,7 @@ impl From<feedback_fusion_common::proto::PromptResponse> for PromptResponse {
 }
 
 crud!(PromptResponse {});
-impl_select_page_wrapper!(PromptResponse {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
+impl_select_page!(PromptResponse {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
 
 save_as_json!(FieldData, data);
 
@@ -403,9 +422,9 @@ pub struct FieldResponse {
     data: FieldData,
 }
 
-impl From<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
+impl From<FieldResponse> for ProtoFieldResponse {
     fn from(value: FieldResponse) -> Self {
-        feedback_fusion_common::proto::FieldResponse {
+        ProtoFieldResponse {
             id: value.id,
             response: value.response,
             field: value.field,
@@ -414,7 +433,7 @@ impl From<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
     }
 }
 
-impl TryInto<FieldResponse> for feedback_fusion_common::proto::FieldResponse {
+impl TryInto<FieldResponse> for ProtoFieldResponse {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<FieldResponse> {

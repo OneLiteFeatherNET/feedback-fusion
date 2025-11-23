@@ -23,12 +23,13 @@
 import { css, html, LitElement } from "lit";
 import { msg, updateWhenLocaleChanges } from "@lit/localize";
 import { customElement, property } from "lit/decorators.js";
-import { Field, Prompt } from "../feedback-fusion-v1.js";
 import { localized } from "@lit/localize";
-import { PublicFeedbackFusionV1Client } from "../feedback-fusion-v1.client.js";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import "./Field.js";
 import { setLocale } from "../locales.js";
+import { PublicFeedbackFusionV1Client } from "../feedback-fusion-v1/service.client.js";
+import { ProtoField } from "../feedback-fusion-v1/field.js";
+import { ProtoPrompt } from "../feedback-fusion-v1/prompt.js";
 
 @customElement("feedback-fusion-prompt")
 @localized()
@@ -161,7 +162,7 @@ export class FeedbackFusionPrompt extends LitElement {
   error: boolean = false;
 
   @property({ attribute: false })
-  fields: Field[] = [];
+  fields: ProtoField[] = [];
 
   @property({ attribute: false })
   finished: boolean = false;
@@ -170,7 +171,7 @@ export class FeedbackFusionPrompt extends LitElement {
   open: boolean = true;
 
   @property({ attribute: false })
-  prompt: Prompt | undefined;
+  prompt: ProtoPrompt | undefined;
 
   @property({ attribute: false })
   totalFieldPages = 1;

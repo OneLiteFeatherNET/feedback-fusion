@@ -24,7 +24,10 @@ use feedback_fusion_common::proto::{DataExportRequest, DataExportResponse};
 use v1::FeedbackFusionV1Context;
 
 use crate::{
-    database::schema::{feedback::{Field, Prompt, Target}, user::UserContext},
+    database::schema::{
+        feedback::{Field, Prompt, Target},
+        user::UserContext,
+    },
     prelude::*,
 };
 
@@ -37,25 +40,26 @@ pub async fn export_data(
     let connection = context.connection();
 
     let targets: Vec<Target> = database_request!(
-        Target::select_in_column(connection, "id", data.targets.as_slice()).await,
+        Target::select_by_map(connection, value! {"id": data.targets.as_slice()}).await,
         "Fetch Targets"
     )?;
 
     let prompts: Vec<Prompt> = database_request!(
-        Prompt::select_in_column(connection, "target", data.targets.as_slice()).await,
+        Prompt::select_by_map(connection, value! {"target": data.targets.as_slice()}).await,
         "Fetch Prompts"
     )?;
 
     let fields: Vec<Field> = if !prompts.is_empty() {
         database_request!(
-            Field::select_in_column(
+            Field::select_by_map(
                 connection,
-                "prompt",
+                value! {"prompt":
                 prompts
                     .iter()
                     .map(|prompt| prompt.id())
                     .collect::<Vec<_>>()
                     .as_slice()
+                }
             )
             .await,
             "Fetch Fields"

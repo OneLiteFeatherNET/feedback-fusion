@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+import "common/resource.proto";
+import "feedback-fusion-v1/resource.proto";
+import "feedback-fusion-v1/user.proto";
+import "google/protobuf/timestamp.proto";
+
+message GetAuditVersionsRequest {
+  int32 page_token = 1;
+  int32 page_size = 2;
+  string resource_id = 3;
+  common.ProtoResourceKind resource_type = 4;
+}
+
+enum ProtoAuditAction {
+  UNKNOWN = 0;
+  CREATE = 1;
+  UPDATE = 2;
+  DELETE = 3;
+  ROLLBACK = 4;
+}
+
+message ProtoAuditVersion {
+  string id = 1;
+  string resource_id = 2;
+  common.ProtoResourceKind resource_type = 3;
+  ProtoAuditAction action = 4;
+  ProtoResource data = 5;
+  int32 version = 6;
+  google.protobuf.Timestamp created_at = 7;
+  ProtoUser made_by = 8;
+}
+
+message AuditVersionPage {
+  int32 page_token = 1;
+  int32 next_page_token = 2;
+  int32 page_size = 3;
+  int32 total = 4;
+
+  repeated ProtoAuditVersion audit_versions = 5;
+}
+
+message RollbackResourceRequest {
+  string resource_id = 2;
+  common.ProtoResourceKind resource_type = 3;
+  int32 version = 6;
+}

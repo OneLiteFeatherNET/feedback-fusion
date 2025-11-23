@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package feedback_fusion_v1;
+
+message ProtoUser {
+  string id = 1;
+  string username = 2;
+}

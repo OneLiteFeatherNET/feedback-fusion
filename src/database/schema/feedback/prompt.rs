@@ -20,19 +20,29 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::date_time_to_timestamp, prelude::*, save_as_json, to_date_time};
+use crate::{prelude::*, save_as_json, to_date_time};
+use feedback_fusion_common::proto::{ProtoField, ProtoFieldType, ProtoPrompt};
 use rbatis::rbdc::DateTime;
 
 use super::FieldOptions;
 
 #[derive(
-    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+    Deserialize,
+    Serialize,
+    Clone,
+    Derivative,
+    Debug,
+    Getters,
+    Setters,
+    TypedBuilder,
+    Validate,
+    Encode,
+    Decode,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct Prompt {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -46,30 +56,30 @@ pub struct Prompt {
     active: bool,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     created_at: DateTime,
 }
 
-impl From<Prompt> for feedback_fusion_common::proto::Prompt {
+impl From<Prompt> for ProtoPrompt {
     fn from(val: Prompt) -> Self {
-        feedback_fusion_common::proto::Prompt {
+        ProtoPrompt {
             id: val.id,
             title: val.title,
             description: val.description,
             target: val.target,
             active: val.active,
-            updated_at: Some(date_time_to_timestamp(val.updated_at)),
-            created_at: Some(date_time_to_timestamp(val.created_at)),
+            updated_at: Some(date_time_to_timestamp(&val.updated_at)),
+            created_at: Some(date_time_to_timestamp(&val.created_at)),
         }
     }
 }
 
-impl From<feedback_fusion_common::proto::Prompt> for Prompt {
-    fn from(val: feedback_fusion_common::proto::Prompt) -> Self {
+impl From<ProtoPrompt> for Prompt {
+    fn from(val: ProtoPrompt) -> Self {
         Prompt {
             id: val.id,
             title: val.title,
@@ -84,11 +94,10 @@ impl From<feedback_fusion_common::proto::Prompt> for Prompt {
 
 crud!(Prompt {});
 impl_select!(Prompt {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
-impl_select_page_wrapper!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
+impl_select_page!(Prompt {select_page_by_target(target: &str) => "`WHERE target = #{target}`"});
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Encode, Decode)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub enum FieldType {
     Text,
     Rating,
@@ -127,28 +136,28 @@ impl From<FieldType> for i32 {
     }
 }
 
-impl From<FieldType> for feedback_fusion_common::proto::FieldType {
+impl From<FieldType> for ProtoFieldType {
     fn from(val: FieldType) -> Self {
         match val {
-            FieldType::Text => feedback_fusion_common::proto::FieldType::Text,
-            FieldType::Rating => feedback_fusion_common::proto::FieldType::Rating,
-            FieldType::Checkbox => feedback_fusion_common::proto::FieldType::Checkbox,
-            FieldType::Selection => feedback_fusion_common::proto::FieldType::Selection,
-            FieldType::Range => feedback_fusion_common::proto::FieldType::Range,
-            FieldType::Number => feedback_fusion_common::proto::FieldType::Number,
+            FieldType::Text => ProtoFieldType::Text,
+            FieldType::Rating => ProtoFieldType::Rating,
+            FieldType::Checkbox => ProtoFieldType::Checkbox,
+            FieldType::Selection => ProtoFieldType::Selection,
+            FieldType::Range => ProtoFieldType::Range,
+            FieldType::Number => ProtoFieldType::Number,
         }
     }
 }
 
-impl From<feedback_fusion_common::proto::FieldType> for FieldType {
-    fn from(val: feedback_fusion_common::proto::FieldType) -> Self {
+impl From<ProtoFieldType> for FieldType {
+    fn from(val: ProtoFieldType) -> Self {
         match val {
-            feedback_fusion_common::proto::FieldType::Text => FieldType::Text,
-            feedback_fusion_common::proto::FieldType::Rating => FieldType::Rating,
-            feedback_fusion_common::proto::FieldType::Checkbox => FieldType::Checkbox,
-            feedback_fusion_common::proto::FieldType::Selection => FieldType::Selection,
-            feedback_fusion_common::proto::FieldType::Range => FieldType::Range,
-            feedback_fusion_common::proto::FieldType::Number => FieldType::Number,
+            ProtoFieldType::Text => FieldType::Text,
+            ProtoFieldType::Rating => FieldType::Rating,
+            ProtoFieldType::Checkbox => FieldType::Checkbox,
+            ProtoFieldType::Selection => FieldType::Selection,
+            ProtoFieldType::Range => FieldType::Range,
+            ProtoFieldType::Number => FieldType::Number,
         }
     }
 }
@@ -156,13 +165,22 @@ impl From<feedback_fusion_common::proto::FieldType> for FieldType {
 save_as_json!(FieldOptions, options);
 
 #[derive(
-    Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Validate,
+    Deserialize,
+    Serialize,
+    Clone,
+    Derivative,
+    Debug,
+    Getters,
+    Setters,
+    TypedBuilder,
+    Validate,
+    Encode,
+    Decode,
 )]
 #[derivative(PartialEq)]
 #[get = "pub"]
 #[set = "pub"]
 #[builder(field_defaults(setter(into)))]
-#[cfg_attr(feature = "caching-skytable", derive(Encode, Decode))]
 pub struct Field {
     #[builder(default_code = r#"nanoid::nanoid!()"#)]
     id: String,
@@ -179,30 +197,30 @@ pub struct Field {
     options: FieldOptions,
     #[builder(default_code = r#"DateTime::utc()"#)]
     #[derivative(PartialEq = "ignore")]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     updated_at: DateTime,
     #[derivative(PartialEq = "ignore")]
     #[builder(default_code = r#"DateTime::utc()"#)]
-    #[cfg_attr(feature = "caching-skytable", bincode(with_serde))]
+    #[bincode(with_serde)]
     created_at: DateTime,
 }
 
-impl From<Field> for feedback_fusion_common::proto::Field {
+impl From<Field> for ProtoField {
     fn from(val: Field) -> Self {
-        feedback_fusion_common::proto::Field {
+        ProtoField {
             id: val.id,
             title: val.title,
             description: val.description,
             prompt: val.prompt,
             field_type: val.field_type.into(),
             options: Some(val.options.into()),
-            updated_at: Some(date_time_to_timestamp(val.updated_at)),
-            created_at: Some(date_time_to_timestamp(val.created_at)),
+            updated_at: Some(date_time_to_timestamp(&val.updated_at)),
+            created_at: Some(date_time_to_timestamp(&val.created_at)),
         }
     }
 }
 
-impl TryInto<Field> for feedback_fusion_common::proto::Field {
+impl TryInto<Field> for ProtoField {
     type Error = FeedbackFusionError;
 
     fn try_into(self) -> Result<Field> {
@@ -221,4 +239,4 @@ impl TryInto<Field> for feedback_fusion_common::proto::Field {
 
 crud!(Field {});
 impl_select!(Field {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"});
-impl_select_page_wrapper!(Field {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});
+impl_select_page!(Field {select_page_by_prompt(prompt: &str) => "`WHERE prompt = #{prompt}`"});

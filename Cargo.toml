@@ -8,65 +8,66 @@ license = "MIT"
 feedback_fusion_common = { path = "./common" }
 feedback_fusion_codegen = { path = "./codegen" }
 
+anyhow = "1.0.98"
 aliri = "0.6.3"
 aliri_clock = "0.1.4"
 aliri_oauth2 = { version = "0.10.1", features = ["rustls-tls"] }
 aliri_tower = "0.6.0"
 aliri_traits = "0.1.1"
+axum = "0.8.4"
 async-recursion = "1.1.1"
 async-trait = "0.1.80"
-bincode = { version = "2.0.0-rc.3", features = ["serde"], optional = true }
-bb8 = { version = "0.8.5", optional = true }
+bincode = { version = "2.0.1", features = ["serde"] }
+bb8 = { version = "0.8.5" }
 cached = { version = "0.53.0", features = ["async", "proc_macro"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 dashmap = { version = "6.1.0", features = ["rayon"] }
 derivative = "2.2.0"
 envy = "0.4.2"
+fluvio = "0.50.1"
 futures = "0.3.30"
 getset = "0.1.2"
 gxhash = "3.4.1"
 hcl-rs = "0.18.5"
 http = "1.2.0"
 itertools = "0.13.0"
-kanal = "0.1.0-pre8"
+kanal = "0.1.1"
 lazy_static = "1.4.0"
 log = "0.4.22"
 nanoid = "0.4.0"
 openidconnect = "3.5.0"
-openssl = { version = "0.10.68", features = ["vendored"] }
-opentelemetry = { version = "0.24.0", optional = true }
-opentelemetry_sdk = { version = "0.24.0", optional = true, features = [
-  "rt-tokio",
-] }
-opentelemetry-otlp = { version = "0.17.0", optional = true }
-opentelemetry-semantic-conventions = { version = "0.16.0", optional = true }
-opentelemetry-http = { version = "0.13.0", optional = true }
 paste = "1.0.14"
+prost = "0.13.0"
 prost-types = "0.13.0"
-rbatis = "=4.5.33"
+rustls = "0.23.29"
+rbatis = "4.6.8"
 rayon = "1.10.0"
-rbdc-pg = { version = "4.5.17", optional = true }
-rbdc-mysql = { version = "4.5.17", optional = true }
-rbdc-mssql = { version = "4.5.7", optional = true }
-rbs = "4.5.13"
+rbdc-pg = "4.6.1"
+rbdc-mysql = "4.6.0"
+rbdc-mssql = "4.6.1"
+rbs = "4.5.2"
 serde = { version = "1.0.197", features = ["derive"] }
 serde-inline-default = "0.2.3"
 serde_json = "1.0.115"
 serde-this-or-that = { git = "https://github.com/Randoooom/serde-this-or-that.git", branch = "feature/bool-signed" }
-skytable = { version = "0.8.10", optional = true }
+skytable = { version = "=0.8.10" }
 strum = "0.26.3"
 strum_macros = "0.26.4"
 thiserror = "2.0.0"
-tonic = "0.12.0"
-tonic-health = "0.12.0"
-tonic-reflection = "0.12.0"
-tonic-web = "0.12.0"
+tonic = { version = "0.13.0", features = ["tls-aws-lc"] }
+tonic-health = "0.13.0"
+tonic-reflection = "0.13.0"
+tonic-web = "0.13.0"
 tokio = { version = "1.37.0", features = ["full"] }
 tower = "0.5.0"
 tokio-retry = "0.3"
-tower-http = { version = "0.5.2", features = ["trace", "validate-request"] }
+tower-http = { version = "0.5.2", features = [
+  "trace",
+  "validate-request",
+  "cors",
+] }
 tracing = "0.1.39"
-tracing-opentelemetry = { version = "0.25.0", optional = true }
+tracing-opentelemetry = { version = "0.25.0" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 typed-builder = "0.20.0"
 validator = { version = "0.18", features = ["derive"] }
@@ -82,26 +83,13 @@ reqwest = { version = "0.12.3", features = ["json"] }
 test-log = "0.2.15"
 feedback_fusion_common = { path = "./common", features = ["arbitrary"] }
 
-[features]
-default = ["all-databases", "otlp", "caching-skytable"]
-
-caching-skytable = ["skytable", "bb8", "bincode"]
-otlp = [
-  "opentelemetry",
-  "opentelemetry-otlp",
-  "opentelemetry-semantic-conventions",
-  "opentelemetry_sdk",
-  "opentelemetry-http",
-  "tracing-opentelemetry",
-]
-all-databases = ["postgres", "mysql", "mssql"]
-postgres = ["rbdc-pg"]
-mysql = ["rbdc-mysql"]
-mssql = ["rbdc-mssql"]
+[[bin]]
+name = "indexer"
+path = "./indexer/src/main.rs"
 
 [[bench]]
 name = "grpc"
 harness = false
 
 [workspace]
-members = [".", "fuzz", "common", "codegen"]
+members = [".", "fuzz", "common", "codegen", "indexer"]

@@ -1,6 +1,0 @@
-DROP TABLE IF EXISTS field_response;
-DROP TABLE IF EXISTS prompt_response;
-DROP TABLE IF EXISTS field;
-DROP TABLE IF EXISTS prompt;
-DROP TABLE IF EXISTS target;
-

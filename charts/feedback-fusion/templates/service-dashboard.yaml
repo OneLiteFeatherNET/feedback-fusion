@@ -1,0 +1,18 @@
+{{- if .Values.dashboard.enabled  }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "feedback-fusion.fullname" . }}-dashboard
+  labels:
+    {{- include "feedback-fusion.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.dashboard.service.type }}
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "feedback-fusion.selectorLabels" . | nindent 4 }}
+    onelitefeather.net/feedback-fusion-component: dashboard
+{{- end }}

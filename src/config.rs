@@ -22,16 +22,15 @@
  */
 
 use dashmap::{DashMap, DashSet};
+use feedback_fusion_common::observability::OTLPConfiguration;
+use fluvio::FluvioClusterConfig;
 use rbatis::executor::Executor;
 use serde_inline_default::serde_inline_default;
 use strum_macros::{Display, EnumIter, IntoStaticStr};
 use wildcard::Wildcard;
 
 use crate::{
-    database::{
-        DatabseConfigurationScheme,
-        schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
-    },
+    database::schema::feedback::{Field, FieldOptions, FieldType, Prompt, Target},
     prelude::*,
 };
 
@@ -73,7 +72,7 @@ pub type PermissionMatrix<'a> = DashMap<PermissionMatrixKey<'a>, PermissionMatri
 lazy_static! {
     pub static ref CONFIG: Config<'static> = read_config().unwrap();
     pub static ref DATABASE_CONFIG: DatabaseConfiguration =
-        DatabaseConfiguration::extract().unwrap();
+        DatabaseConfiguration::extract(CONFIG.database()).unwrap();
     pub static ref ENDPOINTS: [Endpoint<'static>; 6] = [
         Endpoint::Target(EndpointScopeSelector::default()),
         Endpoint::Prompt(EndpointScopeSelector::default()),
@@ -95,10 +94,10 @@ lazy_static! {
 pub struct Config<'a> {
     cache: Option<CacheConfiguration>,
     oidc: OIDCConfiguration<'a>,
-    #[cfg(feature = "otlp")]
     otlp: Option<OTLPConfiguration>,
     preset: Option<PresetConfig>,
-    database: DatabseConfigurationScheme,
+    database: DatabaseConfigurationScheme,
+    broker: BrokerConfiguration,
 }
 
 #[derive(Deserialize, Debug, Clone, Getters)]
@@ -170,13 +169,40 @@ pub struct OIDCConfiguration<'a> {
     group_claim: String,
 }
 
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct GRPCBrokerDriverConfiguration {
+    endpoint: String,
+    tls: GRPCBrokerDriverTLSConfiguration,
+}
+
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct GRPCBrokerDriverTLSConfiguration {
+    key: String,
+    certificate: String,
+    certificate_authority: String,
+}
+
 #[serde_inline_default]
 #[derive(Deserialize, Debug, Clone, Getters)]
 #[get = "pub"]
-pub struct OTLPConfiguration {
-    endpoint: String,
+pub struct FluvioBrokerDriverConfiguration {
+    fluvio: FluvioClusterConfig,
     #[serde_inline_default("feedback-fusion".to_owned())]
-    service_name: String,
+    topic: String,
+}
+
+#[serde_inline_default]
+#[derive(Deserialize, Debug, Clone, Getters)]
+#[get = "pub"]
+pub struct BrokerConfiguration {
+    fluvio: Option<FluvioBrokerDriverConfiguration>,
+    grpc: Option<GRPCBrokerDriverConfiguration>,
+    #[serde_inline_default(10)]
+    max_batch_size: u8,
+    #[serde_inline_default(1000)]
+    batch_interval: u32,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
@@ -290,13 +316,7 @@ pub fn read_permission_matrix<'a>(
 
 pub async fn sync_preset(connection: &DatabaseConnection) -> Result<()> {
     if let Some(preset) = CONFIG.preset() {
-        let transaction = connection.acquire_begin().await?;
-        let mut transaction = transaction.defer_async(|mut tx| async move {
-            if !tx.done {
-                let _ = tx.rollback().await;
-            }
-        });
-
+        let transaction = feedback_fusion_common::database::transaction(connection).await?;
         for target in preset.clone().targets.into_iter() {
             sync_target(target, &transaction).await?;
         }
@@ -317,7 +337,7 @@ macro_rules! update_otherwise_create {
                     data.[<set_ $field>]($data.$field);
                 )*
 
-                $path::update_by_column($transaction, &data, "id").await?;
+                $path::update_by_map($transaction, &data, value!{"id": data.id()}).await?;
             } else {
                 $path::insert(
                     $transaction,
@@ -341,7 +361,7 @@ macro_rules! update_otherwise_create {
                     data.[<set_ $field>]($data.$field);
                 )*
 
-                $path::update_by_column($transaction, &data, "id").await?;
+                $path::update_by_map($transaction, &data, value!{"id": data.id()}).await?;
             } else {
                 $path::insert(
                     $transaction,

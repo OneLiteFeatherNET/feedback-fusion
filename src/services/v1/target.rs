@@ -20,9 +20,11 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use feedback_fusion_common::proto::{
-    CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest,
-    Target as ProtoTarget, TargetPage, UpdateTargetRequest,
+use feedback_fusion_common::{
+    common::ProtoResourceKind,
+    proto::{
+        proto_event::EventContent, CreateTargetRequest, DeleteTargetRequest, GetTargetRequest, GetTargetsRequest, ProtoEvent, ProtoEventType, ProtoResource, ProtoResourceModificationOperation, ProtoResourceModifiedEvent, ProtoTarget, TargetPage, UpdateTargetRequest
+    },
 };
 
 use crate::{
@@ -35,7 +37,7 @@ use super::FeedbackFusionV1Context;
 pub async fn create_target(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<CreateTargetRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
@@ -49,7 +51,31 @@ pub async fn create_target(
     // create the target
     database_request!(Target::insert(connection, &target).await, "Insert target")?;
 
-    Ok(Response::new(target.into()))
+    let proto_target = ProtoTarget::from(target);
+    let id = proto_target.id.clone();
+    let resource = ProtoResource::from(proto_target);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Create)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Target)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(resource.try_into()?))
 }
 
 pub async fn get_target(
@@ -83,7 +109,12 @@ pub async fn get_targets(
 
     // TODO: write translation macro
     let page = database_request!(
-        Target::select_page_wrapper(connection, &page_request, data.query.as_str()).await,
+        Target::select_page(
+            connection,
+            &page_request,
+            data.query.as_str()
+        )
+        .await,
         "Select targets by query"
     )?;
 
@@ -103,7 +134,7 @@ pub async fn get_targets(
 pub async fn update_target(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<UpdateTargetRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<ProtoTarget>> {
     let data = request.into_inner();
     data.validate()?;
@@ -118,23 +149,70 @@ pub async fn update_target(
     target.set_description(data.description.or(target.description().clone()));
 
     database_request!(
-        Target::update_by_column(connection, &target, "id").await,
+        Target::update_by_map(connection, &target, value! {"id": target.id()}).await,
         "Update target"
     )?;
-    Ok(Response::new(target.into()))
+
+    let proto_target = ProtoTarget::from(target);
+    let id = proto_target.id.clone();
+    let resource = ProtoResource::from(proto_target);
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Update)
+                            .id(id)
+                            .resource_kind(ProtoResourceKind::Target)
+                            .data(&resource)
+                            .made_by(user_context.user().id().clone())
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
+    Ok(Response::new(resource.try_into()?))
 }
 
 pub async fn delete_target(
     context: &FeedbackFusionV1Context<'_>,
     request: Request<DeleteTargetRequest>,
-    _user_context: UserContext,
+    user_context: UserContext,
 ) -> Result<Response<()>> {
     let data = request.into_inner();
     let connection = context.connection();
 
     database_request!(
-        Target::delete_by_column(connection, "id", data.id.as_str()).await,
+        Target::delete_by_map(connection, value! {"id": &data.id}).await,
         "Delete target by id"
     )?;
+
+    emit!(
+        context
+            .broker_event_sender()
+            .send(
+                ProtoEvent::builder()
+                    .event_type(ProtoEventType::ResourceModified)
+                    .event_content(Some(EventContent::ResourceModifiedEvent(
+                        ProtoResourceModifiedEvent::builder()
+                            .operation(ProtoResourceModificationOperation::Delete)
+                            .id(data.id)
+                            .resource_kind(ProtoResourceKind::Target)
+                            .data(&ProtoResource::empty())
+                            .made_by(user_context.user().id().clone())
+                            .build(),
+                    )))
+                    .build(),
+            )
+            .await,
+        "ResourceModifiedEvent"
+    )?;
+
     Ok(Response::new(()))
 }

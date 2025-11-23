@@ -43,7 +43,7 @@ services:
       USERS_CONFIGURATION_INLINE: |
         [
           {
-            "SubjectId":"1",
+            "SubjectId":"12345",
             "Username":"username",
             "Password":"password",
             "Claims": [

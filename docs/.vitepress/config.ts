@@ -19,6 +19,7 @@ export default defineConfig({
           {
             text: "Configuration", items: [
               { text: "Server", link: "/docs/configuration/server" },
+              { text: "Indexer", link: "/docs/configuration/indexer" },
               { text: "Dashboard", link: "/docs/configuration/dashboard" }
             ]
           },
@@ -35,6 +36,7 @@ export default defineConfig({
             ]
           },
           { text: "Caching", link: "/docs/caching" },
+          { text: "Broker", link: "/docs/broker" },
           {
             text: "Frontend Library", link: "/docs/frontend-library", items: [
               { text: "Prompt", link: "/docs/frontend-library/prompt" },

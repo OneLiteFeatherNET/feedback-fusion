@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "feedback-fusion.fullname" . }}-indexer
+  labels:
+    {{- include "feedback-fusion.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.indexer.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "feedback-fusion.selectorLabels" . | nindent 6 }}
+      onelitefeather.net/feedback-fusion-component: indexer
+  template:
+    metadata:
+      {{- with .Values.indexer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "feedback-fusion.labels" . | nindent 8 }}
+        {{- with .Values.indexer.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "feedback-fusion.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.indexer.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-indexer
+          securityContext:
+            {{- toYaml .Values.indexer.securityContext | nindent 12 }}
+          image: "{{ .Values.indexer.image.repository }}:{{ .Values.indexer.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.indexer.image.pullPolicy }}
+          ports:
+            - name: health
+              containerPort: 8080 
+              protocol: TCP
+            - name: grpc
+              containerPort: 7000 
+              protocol: TCP
+          env:
+            - name: RUST_LOG 
+              value: {{ .Values.feedbackFusion.log }}
+            - name: FEEDBACK_FUSION_CONFIG
+              value: /etc/config/config.hcl
+          livenessProbe:
+            {{- toYaml .Values.indexer.livenessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.indexer.startupProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.indexer.resources | nindent 12 }}
+          volumeMounts:
+            {{- with .Values.indexer.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+            - name: {{ .Values.feedbackFusion.config.secret }}
+              mountPath: /etc/config
+      volumes:
+        {{- with .Values.indexer.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+
+        - name: {{ .Values.feedbackFusion.config.secret }}
+          secret:
+            secretName: {{ .Values.feedbackFusion.config.secret }}
+      {{- with .Values.indexer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.indexer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.indexer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

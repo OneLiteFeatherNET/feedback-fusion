@@ -235,9 +235,7 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
     let expanded = quote! {
         #vis #sig {
             // check if the user did configure skytable
-            #[cfg(feature = "caching-skytable")]
             let config = CONFIG.cache();
-            #[cfg(feature = "caching-skytable")]
             if config.is_some() && config.as_ref().unwrap().skytable().is_some() {
                 // now check if the user did configure tls
                 match config.as_ref().unwrap().skytable().as_ref().unwrap().certificate() {
@@ -254,17 +252,12 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
                 // otherwise use timed in memory caching
                 #memory(#(#args),*).await
             }
-
-            #[cfg(not(feature = "caching-skytable"))]
-            #memory(#(#args),*).await
         }
 
         #vis async fn #invalidate(key: String) -> Result<()> {
             use cached::Cached;
             // check if the user did configure skytable
-            #[cfg(feature = "caching-skytable")]
             let config = CONFIG.cache();
-            #[cfg(feature = "caching-skytable")]
             if config.is_some() && config.as_ref().unwrap().skytable().is_some() {
                 // now check if the user did configure tls
                 match config.as_ref().unwrap().skytable().as_ref().unwrap().certificate() {
@@ -281,10 +274,6 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
                 // otherwise use timed in memory caching
                 #memory_static.lock().await.cache_remove(&key);
             }
-
-            #[cfg(not(feature = "caching-skytable"))]
-            #memory_static.lock().await.cache_remove(&key);
-
 
             Ok(())
         }
@@ -304,7 +293,6 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
         }
 
         // create the skytable tls function
-        #[cfg(feature = "caching-skytable")]
         #[cached::proc_macro::io_cached(
             map_error = r##"|e| FeedbackFusionError::ConfigurationError(format!("{:?}", e))"##,
             ty = #skytable_tls_type,
@@ -316,7 +304,6 @@ pub fn dynamic_cache(arguments: TokenStream, input: TokenStream) -> TokenStream 
         }
 
         // create the skytable function
-        #[cfg(feature = "caching-skytable")]
         #[cached::proc_macro::io_cached(
             map_error = r##"|e| FeedbackFusionError::ConfigurationError(format!("{:?}", e))"##,
             ty = #skytable_type,
