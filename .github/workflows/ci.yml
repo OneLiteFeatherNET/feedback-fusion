@@ -28,6 +28,11 @@ jobs:
         with:
           version: 9
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Dashboard build
         run: just dashboard
 
@@ -49,6 +54,11 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lib build
         run: just lib

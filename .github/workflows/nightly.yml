@@ -146,6 +146,11 @@ jobs:
         with:
           version: 8
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Update paths 
         working-directory: docs/.vitepress
         run: |
