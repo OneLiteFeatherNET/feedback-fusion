@@ -36,6 +36,7 @@ lazy_static = "1.4.0"
 log = "0.4.22"
 nanoid = "0.4.0"
 openidconnect = "3.5.0"
+openssl = { version = "0.10.75", features = ["vendored"] }
 paste = "1.0.14"
 prost = "0.13.0"
 prost-types = "0.13.0"
