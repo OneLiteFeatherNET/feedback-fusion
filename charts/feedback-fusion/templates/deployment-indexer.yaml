@@ -17,6 +17,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        onelitefeather.net/feedback-fusion-component: indexer
         {{- include "feedback-fusion.labels" . | nindent 8 }}
         {{- with .Values.indexer.podLabels }}
         {{- toYaml . | nindent 8 }}

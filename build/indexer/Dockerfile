@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM rust:slim AS build
+FROM --platform=$BUILDPLATFORM rust:slim-bookworm AS build
 ARG BUILDPLATFORM
 ARG TARGETARCH
 
