@@ -95,7 +95,8 @@ jobs:
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          rustflags: "" 
+          rustflags: ""
+          components: clippy
 
       - uses: extractions/setup-just@v2
 
