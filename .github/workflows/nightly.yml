@@ -10,13 +10,13 @@ jobs:
     name: check
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           rustflags: "" 
-
-      - name: Checkout Sources
-        uses: actions/checkout@v4
 
       - uses: extractions/setup-just@v2
 
@@ -32,13 +32,13 @@ jobs:
     name: clippy
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           rustflags: "" 
-
-      - name: Checkout Sources
-        uses: actions/checkout@v4
 
       - uses: extractions/setup-just@v2
 
