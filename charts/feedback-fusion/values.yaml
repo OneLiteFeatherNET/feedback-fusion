@@ -249,12 +249,14 @@ indexer:
     #   memory: 128Mi
 
   livenessProbe:
-    grpc:
-      port: 8000
+    httpGet:
+      port: 8080
+      path: /
     periodSeconds: 5
   startupProbe:
-    grpc:
-      port: 8000
+    httpGet:
+      port: 8080
+      path: /
     periodSeconds: 2
     failureThreshold: 10
 

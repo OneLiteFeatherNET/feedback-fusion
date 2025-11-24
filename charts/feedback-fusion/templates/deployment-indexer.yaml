@@ -59,16 +59,16 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
 
-            - name: {{ .Values.feedbackFusion.config.secret }}
+            - name: {{ .Values.feedbackFusion.indexer.config.secret }}
               mountPath: /etc/config
       volumes:
         {{- with .Values.indexer.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
 
-        - name: {{ .Values.feedbackFusion.config.secret }}
+        - name: {{ .Values.feedbackFusion.indexer.config.secret }}
           secret:
-            secretName: {{ .Values.feedbackFusion.config.secret }}
+            secretName: {{ .Values.feedbackFusion.indexer.config.secret }}
       {{- with .Values.indexer.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
