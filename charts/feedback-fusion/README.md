@@ -56,7 +56,8 @@ helm install feedback-fusion feedback-fusion/feedback-fusion
 | indexer.image.pullPolicy | string | `"IfNotPresent"` | pull policy |
 | indexer.image.repository | string | `"ghcr.io/onelitefeathernet/feedback-fusion-indexer"` | image repository |
 | indexer.image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
-| indexer.livenessProbe.grpc.port | int | `8000` |  |
+| indexer.livenessProbe.httpGet.path | string | `"/"` |  |
+| indexer.livenessProbe.httpGet.port | int | `8080` |  |
 | indexer.livenessProbe.periodSeconds | int | `5` |  |
 | indexer.nodeSelector | object | `{}` |  |
 | indexer.podAnnotations | object | `{}` | annotatiosn to attach to the pod |
@@ -67,7 +68,8 @@ helm install feedback-fusion feedback-fusion/feedback-fusion
 | indexer.securityContext | object | `{}` | security context |
 | indexer.service.type | string | `"ClusterIP"` | service type |
 | indexer.startupProbe.failureThreshold | int | `10` |  |
-| indexer.startupProbe.grpc.port | int | `8000` |  |
+| indexer.startupProbe.httpGet.path | string | `"/"` |  |
+| indexer.startupProbe.httpGet.port | int | `8080` |  |
 | indexer.startupProbe.periodSeconds | int | `2` |  |
 | indexer.tolerations | list | `[]` |  |
 | indexer.volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
