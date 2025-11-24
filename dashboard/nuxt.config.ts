@@ -43,7 +43,7 @@ export default defineNuxtConfig({
     providers: {
       oidc: {
         pkce: false,
-        validateAccessToken: true,
+        validateAccessToken: false,
         scope:
           process.env.NODE_ENV == "development"
             ? ["openid", "profile", "test"]
