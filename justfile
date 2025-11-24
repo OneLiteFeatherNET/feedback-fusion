@@ -190,12 +190,14 @@ dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
   just backend postgres
   just generate dashboard
   NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
-    FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
-    FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL="http://localhost:5151/connect/token" \
-    FEEDBACK_FUSION_OIDC_CLIENT_ID="client" \
-    FEEDBACK_FUSION_OIDC_CLIENT_SECRET="secret" \
-    FEEDBACK_FUSION_OIDC_REDIRECT_URL="http://localhost:3000/auth/oidc/callback" \
-    FEEDBACK_FUSION_OIDC_PROVIDER_DISCOVERY_URL="http://localhost:5151/.well-known/openid-configuration" \
+    NUXT_OIDC_PROVIDERS_OIDC_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
+    NUXT_OIDC_PROVIDERS_OIDC_TOKEN_URL="http://localhost:5151/connect/token" \
+    NUXT_OIDC_PROVIDERS_OIDC_CLIENT_ID="client" \
+    NUXT_PUBLIC_OIDC_SCOPES="profile,openid,test" \
+    NUXT_OIDC_PROVIDERS_OIDC_CLIENT_SECRET="secret" \
+    NUXT_OIDC_PROVIDERS_OIDC_REDIRECT_URI="http://localhost:3000/auth/oidc/callback" \
+    NUXT_OIDC_PROVIDERS_OIDC_OPEN_ID_CONFIGURATION="http://localhost:5151/.well-known/openid-configuration" \
+    NUXT_PUBLIC_OIDC_PROVIDER="oidc" \
     pnpm run -C dashboard dev
 
 #

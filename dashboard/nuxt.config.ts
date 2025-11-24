@@ -42,26 +42,25 @@ export default defineNuxtConfig({
     },
     providers: {
       oidc: {
-        pkce: false,
-        validateAccessToken: false,
-        scope:
-          process.env.NODE_ENV == "development"
-            ? ["openid", "profile", "test"]
-            : ["openid", "profile"],
-        tokenRequestType: "form-urlencoded",
+        validateAccessToken: true,
+        validateIdToken: true,
+        skipAccessTokenParsing: false,
+        scope: process.env.NUXT_PUBLIC_OIDC_SCOPES?.split(",") || [
+          "openid",
+          "profile",
+        ],
         exposeAccessToken: true,
         exposeIdToken: true,
-        authorizationUrl:
-          process.env.FEEDBACK_FUSION_OIDC_PROVIDER_AUTHORIZATION_URL,
-        tokenUrl: process.env.FEEDBACK_FUSION_OIDC_PROVIDER_TOKEN_URL,
-        // @ts-expect-error idk why
-        openIdConfiguration:
-          process.env.FEEDBACK_FUSION_OIDC_PROVIDER_DISCOVERY_URL,
-        redirectUri: process.env.FEEDBACK_FUSION_OIDC_REDIRECT_URL!,
-        clientId: process.env.FEEDBACK_FUSION_OIDC_CLIENT_ID,
-        clientSecret: process.env.FEEDBACK_FUSION_OIDC_CLIENT_SECRET,
-        optionalClaims: ["groups"],
+        redirectUri: "",
+        clientId: "",
+        clientSecret: "",
+        optionalClaims: [],
         userNameClaim: "preferred_username",
+        tokenUrl: "",
+        authorizationUrl: "",
+        tokenRequestType: "form-urlencoded",
+        // @ts-ignore
+        openIdConfiguration: "",
       },
     },
   },
