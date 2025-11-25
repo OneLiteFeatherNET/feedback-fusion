@@ -14,7 +14,7 @@
   "dependencies": {
     "@nuxtjs/color-mode": "^3.5.2",
     "@nuxtjs/i18n": "^9.1.1",
-    "@onelitefeathernet/feedback-fusion": "link:../lib",
+    "@onelitefeathernet/feedback-fusion": "workspace:*",
     "@pinia/nuxt": "0.9.0",
     "@protobuf-ts/grpcweb-transport": "^2.9.4",
     "@protobuf-ts/plugin": "^2.9.4",
@@ -23,6 +23,7 @@
     "@types/node": "^22.10.5",
     "clipboardy": "^4.0.0",
     "nuxt": "^3.15.0",
+    "nuxt-auth-utils": "git+https://github.com/larsrickert/nuxt-auth-utils.git#909a33b521fc0305a7022623476f9d6937d3668e",
     "nuxt-oidc-auth": "^0.18.0",
     "nuxt-shiki": "0.3.0",
     "pinia": "^2.3.0",

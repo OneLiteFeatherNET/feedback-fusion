@@ -9,13 +9,13 @@ repos:
         types: [rust]
       - id: helm
         name: Helm docs
-        entry: sh -c "just helm && git add charts docs"
+        entry: sh -c "just helm && git add charts packages/docs"
         language: system
         pass_filenames: false
         always_run: true
       - id: proto
         name: Proto docs
-        entry: sh -c "just protoc-docs && git add docs"
+        entry: sh -c "just protoc-docs && git add packages/docs"
         language: system
         pass_filenames: false
         always_run: true

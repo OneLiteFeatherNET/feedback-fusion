@@ -63,7 +63,7 @@ bench: oidc-server-mock postgres && cleanup
   GRPC_ENDPOINT=http://localhost:8000 OIDC_CLIENT_ID=client OIDC_CLIENT_SECRET=secret OIDC_PROVIDER=http://localhost:5151 cargo bench
 
 protoc-docs:
-	docker run --rm -v ./docs/docs/reference:/out -v ./proto:/protos pseudomuto/protoc-gen-doc --proto_path=/protos --doc_opt=markdown,api.md $(find ./proto -name "*.proto" | sed 's|^\./proto/||')
+	docker run --rm -v ./packages/docs/docs/reference:/out -v ./proto:/protos pseudomuto/protoc-gen-doc --proto_path=/protos --doc_opt=markdown,api.md $(find ./proto -name "*.proto" | sed 's|^\./proto/||')
 
 
 #
@@ -144,47 +144,47 @@ fuzz:
 # Lib & Docs
 #
 
-pnpm PACKAGE:
-  pnpm i -C {{PACKAGE}}
+bun PACKAGE:
+  bun i --cwd {{PACKAGE}}
 
 generate PACKAGE:
-  pnpm run -C {{PACKAGE}} protoc
+  bun run --cwd {{PACKAGE}} protoc
 
 lint PACKAGE:
-  pnpm run -C {{PACKAGE}} lint
+  bun run --cwd {{PACKAGE}} lint
 
 lib-dev:
-  just pnpm docs
-  just pnpm lib
+  just bun docs
+  just bun lib
 
   just generate lib
-  pnpm run -C lib dev
+  bun run --cwd packages/lib dev
 
 lib:
-  just pnpm lib
+  just bun lib
   just generate lib
 
-  pnpm run -C lib build
+  bun run --cwd packages/lib build
 
 translations:
-  pnpm run -C lib translations:extract
-  pnpm run -C lib translations:build
+  bun run --cwd packages/lib translations:extract
+  bun run --cwd packages/lib translations:build
 
 docs:
   just lib
-  just pnpm docs
+  just bun docs
   
-  pnpm run -C docs docs:build
+  bun run --cwd packages/docs docs:build
 
 #
 # Dashboard
 #
 
 dashboard: lib
-  just pnpm dashboard
+  just bun dashboard
   just generate dashboard
 
-  pnpm run -C dashboard build
+  bun run --cwd packages/dashboard build
 
 dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
   just backend postgres
@@ -198,7 +198,7 @@ dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
     NUXT_OIDC_PROVIDERS_OIDC_REDIRECT_URI="http://localhost:3000/auth/oidc/callback" \
     NUXT_OIDC_PROVIDERS_OIDC_OPEN_ID_CONFIGURATION="http://localhost:5151/.well-known/openid-configuration" \
     NUXT_PUBLIC_OIDC_PROVIDER="oidc" \
-    pnpm run -C dashboard dev
+    bun run --cwd packages/dashboard dev
 
 #
 # Helm
@@ -206,7 +206,7 @@ dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
 
 helm:
   cd charts/feedback-fusion && helm-docs
-  cp charts/feedback-fusion/README.md docs/docs/deployment/helm.md
+  cp charts/feedback-fusion/README.md packages/docs/docs/deployment/helm.md
 
 #
 # Releases
@@ -232,9 +232,9 @@ release-server LEVEL:
 release-dashboard LEVEL:
   just prepare-release
 
-  just post-prepare-release dashboard-$(pnpm version -C dashboard --no-git-tag-version {{LEVEL}} | sed 's/^v//')
+  just post-prepare-release dashboard-$(bun version --cwd packages/dashboard --no-git-tag-version {{LEVEL}} | sed 's/^v//')
 
 release-lib LEVEL:
   just prepare-release
 
-  just post-prepare-release dashboard-$(pnpm version -C lib --no-git-tag-version {{LEVEL}}| sed 's/^v//')
+  just post-prepare-release dashboard-$(bun version --cwd packages/lib --no-git-tag-version {{LEVEL}}| sed 's/^v//')

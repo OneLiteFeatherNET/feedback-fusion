@@ -24,7 +24,7 @@
       "test"
     ],
     "RedirectUris": [
-      "http://localhost:3000/auth/oidc/callback"
+      "http://localhost:3000/api/auth/callback/oauth"
     ],
     "RequirePkce": false
   },

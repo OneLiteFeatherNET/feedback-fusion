@@ -17,3 +17,4 @@ debug/
 .sqllsrc.json
 
 coverage.info
+node_modules/
