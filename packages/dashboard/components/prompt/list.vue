@@ -83,7 +83,7 @@ const fetchPage = async (pageToken: number) => {
   prompts.value = await $feedbackFusion
     .getPrompts(
       { pageToken, pageSize: 10, target: props.target },
-      useRpcOptions(),
+      await useRpcOptions(),
     )
     .then((value) => value.response);
 };
@@ -101,7 +101,7 @@ onMounted(async () => {
 
 const create = async () => {
   await $feedbackFusion
-    .createPrompt({ ...creation.value, target: props.target }, useRpcOptions())
+    .createPrompt({ ...creation.value, target: props.target }, await useRpcOptions())
     .then((value) => value.response);
 
   await fetchPage(1);

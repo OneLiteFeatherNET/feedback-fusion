@@ -218,7 +218,7 @@ const fetchPage = async (pageToken: number) => {
   fields.value = await $feedbackFusion
     .getFields(
       { pageToken, pageSize: 10, prompt: props.prompt },
-      useRpcOptions(),
+      await useRpcOptions(),
     )
     .then((value) => value.response);
 };
@@ -262,7 +262,7 @@ const create = async () => {
       ...creation.value,
       prompt: props.prompt,
     },
-    useRpcOptions(),
+    await useRpcOptions(),
   );
 
   await fetchPage(1);
@@ -287,14 +287,14 @@ const editField = (field: any) => {
 const edit = async () => {
   convert();
 
-  await $feedbackFusion.updateField(creation.value, useRpcOptions());
+  await $feedbackFusion.updateField(creation.value, await useRpcOptions());
 
   await fetchPage(1);
   creation.value = {};
 };
 
 const deleteField = (id: string) => async () => {
-  await $feedbackFusion.deleteField({ id }, useRpcOptions());
+  await $feedbackFusion.deleteField({ id }, await useRpcOptions());
 
   await fetchPage(1);
 };

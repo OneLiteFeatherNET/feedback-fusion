@@ -11,14 +11,14 @@
         <v-spacer />
 
         <LayoutTheme class="mr-4" />
-        <LayoutProfile v-if="loggedIn" />
+        <LayoutProfile v-if="session" />
       </v-row>
     </v-container>
   </v-app-bar>
 </template>
 
 <script setup lang="ts">
-import { useOidcAuth } from "#imports";
+import { oidcClient } from "~/composables/authorization";
 
-const { loggedIn } = useOidcAuth();
+const { data: session } = await oidcClient.useSession(useFetch);
 </script>

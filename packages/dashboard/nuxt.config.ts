@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
 export default defineNuxtConfig({
+  experimental: { appManifest: false },
   app: {
     head: {
       charset: "utf-8",
@@ -16,7 +17,6 @@ export default defineNuxtConfig({
   modules: [
     "vuetify-nuxt-module",
     "@nuxtjs/i18n",
-    "nuxt-oidc-auth",
     "@pinia/nuxt",
     "@nuxtjs/color-mode",
     "nuxt-shiki",
@@ -35,39 +35,14 @@ export default defineNuxtConfig({
   build: {
     transpile: ["@onelitefeathernet/feedback-fusion"],
   },
-  oidc: {
-    middleware: {
-      globalMiddlewareEnabled: true,
-      customLoginPage: true,
-    },
-    providers: {
-      oidc: {
-        validateAccessToken: true,
-        validateIdToken: true,
-        skipAccessTokenParsing: false,
-        scope: process.env.NUXT_PUBLIC_OIDC_SCOPES?.split(",") || [
-          "openid",
-          "profile",
-        ],
-        exposeAccessToken: true,
-        exposeIdToken: true,
-        redirectUri: "",
-        clientId: "",
-        clientSecret: "",
-        optionalClaims: [],
-        userNameClaim: "preferred_username",
-        tokenUrl: "",
-        authorizationUrl: "",
-        tokenRequestType: "form-urlencoded",
-        // @ts-ignore
-        openIdConfiguration: "",
-      },
-    },
-  },
   runtimeConfig: {
     public: {
       feedbackFusionEndpoint: "NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT",
     },
+    clientId: "",
+    clientSecret: "",
+    oidcDiscovery: "",
+    scope: "openid profile",
   },
   vuetify: {
     vuetifyOptions: {

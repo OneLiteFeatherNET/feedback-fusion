@@ -21,10 +21,11 @@
       "api:feedback-fusion",
       "openid",
       "profile",
-      "test"
+      "test",
+      "email"
     ],
     "RedirectUris": [
-      "http://localhost:3000/api/auth/callback/oauth"
+      "http://localhost:3000/api/auth/oauth2/callback/oidc"
     ],
     "RequirePkce": false
   },

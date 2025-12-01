@@ -145,13 +145,13 @@ fuzz:
 #
 
 bun PACKAGE:
-  bun i --cwd {{PACKAGE}}
+  bun i --cwd packages/{{PACKAGE}}
 
 generate PACKAGE:
-  bun run --cwd {{PACKAGE}} protoc
+  bun run --cwd packages/{{PACKAGE}} protoc
 
 lint PACKAGE:
-  bun run --cwd {{PACKAGE}} lint
+  bun run --cwd packages/{{PACKAGE}} lint
 
 lib-dev:
   just bun docs
@@ -190,14 +190,11 @@ dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
   just backend postgres
   just generate dashboard
   NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
-    NUXT_OIDC_PROVIDERS_OIDC_AUTHORIZATION_URL="http://localhost:5151/connect/authorize" \
-    NUXT_OIDC_PROVIDERS_OIDC_TOKEN_URL="http://localhost:5151/connect/token" \
-    NUXT_OIDC_PROVIDERS_OIDC_CLIENT_ID="client" \
-    NUXT_PUBLIC_OIDC_SCOPES="profile,openid,test" \
-    NUXT_OIDC_PROVIDERS_OIDC_CLIENT_SECRET="secret" \
-    NUXT_OIDC_PROVIDERS_OIDC_REDIRECT_URI="http://localhost:3000/auth/oidc/callback" \
-    NUXT_OIDC_PROVIDERS_OIDC_OPEN_ID_CONFIGURATION="http://localhost:5151/.well-known/openid-configuration" \
-    NUXT_PUBLIC_OIDC_PROVIDER="oidc" \
+    NUXT_AUTH_SECRET=secret \
+    NUXT_CLIENT_ID=client \
+    NUXT_CLIENT_SECRET=secret \
+    NUXT_OIDC_DISCOVERY=http://localhost:5151/.well-known/openid-configuration \
+    NUXT_SCOPE="openid profile test email" \
     bun run --cwd packages/dashboard dev
 
 #

@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, useRuntimeConfig, ref, computed } from "#imports";
+import { useRuntimeConfig, ref, computed } from "#imports";
 import "@onelitefeathernet/feedback-fusion";
 import { useTheme } from "vuetify";
 

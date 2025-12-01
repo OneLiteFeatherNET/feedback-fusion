@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref } from "#imports";
+import { ref } from "#imports";
 
 const props = defineProps({
   action: Function,

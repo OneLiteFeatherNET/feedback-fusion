@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, computed } from "#imports";
+import { ref, computed } from "#imports";
 import { disabled } from "~/composables/form";
 
 const props = defineProps({

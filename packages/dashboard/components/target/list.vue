@@ -102,7 +102,7 @@ const creationFields = ref([
 
 const fetchPage = async (pageToken: number) => {
   targets.value = await $feedbackFusion
-    .getTargets({ pageToken, pageSize: 10 }, useRpcOptions())
+    .getTargets({ pageToken, pageSize: 10 }, await useRpcOptions())
     .then((value) => value.response);
 };
 
@@ -119,7 +119,7 @@ onMounted(async () => {
 
 const create = async () => {
   await $feedbackFusion
-    .createTarget(creation.value, useRpcOptions())
+    .createTarget(creation.value, await useRpcOptions())
     .then((value) => value.response);
 
   await fetchPage(1);

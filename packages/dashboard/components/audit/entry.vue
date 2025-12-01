@@ -43,11 +43,9 @@
 
 <script setup lang="ts">
 import {
-  defineProps,
   ref,
   onMounted,
   useI18n,
-  defineEmits,
   useNuxtApp,
 } from "#imports";
 import { ProtoAuditVersion } from "~/composables/feedback-fusion-v1/audit";
@@ -116,7 +114,7 @@ onMounted(() => {
 
 const rollback = async () => {
   await $feedbackFusion
-    .rollbackResource(props.entry, useRpcOptions())
+    .rollbackResource(props.entry, await useRpcOptions())
     .then(() => emit("rollback"));
 };
 </script>

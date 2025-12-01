@@ -49,6 +49,10 @@ import {
 } from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 
+definePageMeta({
+  auth: true,
+});
+
 const localePath = useLocalePath();
 const route = useRoute();
 const router = useRouter();
@@ -97,19 +101,19 @@ const editFields = ref([
 
 const fetch = async () => {
   return await $publicFeedbackFusion
-    .getPrompt({ id: route.params.prompt }, useRpcOptions())
+    .getPrompt({ id: route.params.prompt }, await useRpcOptions())
     .then((value) => value.response);
 };
 
 const deletePrompt = (id) => async () => {
   await $feedbackFusion
-    .deletePrompt({ id }, useRpcOptions())
+    .deletePrompt({ id }, await useRpcOptions())
     .then(() => router.push(localePath(`/target/${route.params.target}`)));
 };
 
 const edit = (prompt) => async () => {
   return await $feedbackFusion
-    .updatePrompt(prompt, useRpcOptions())
+    .updatePrompt(prompt, await useRpcOptions())
     .then((value) => value.response);
 };
 </script>

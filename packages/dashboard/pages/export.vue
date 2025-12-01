@@ -5,11 +5,7 @@
     </v-card-title>
 
     <v-card-text v-if="exported">
-      <Shiki
-        lang="hcl"
-        :code="exported"
-        :highlightOptions="highlightOptions"
-      />
+      <Shiki lang="hcl" :code="exported" :highlightOptions="highlightOptions" />
     </v-card-text>
 
     <v-card-actions v-if="exported">
@@ -35,6 +31,10 @@ import { useAuthorizationStore } from "~/composables/authorization";
 import { useTheme } from "vuetify";
 import clipboard from "clipboardy";
 
+definePageMeta({
+  auth: true,
+});
+
 const authorization = useAuthorizationStore();
 const { $feedbackFusion } = useNuxtApp();
 const route = useRoute();
@@ -52,7 +52,7 @@ onMounted(async () => {
   }
 
   exported.value = await $feedbackFusion
-    .exportData({ targets: route.query.targets }, useRpcOptions())
+    .exportData({ targets: route.query.targets }, await useRpcOptions())
     .then((value) => value.response.export);
 });
 

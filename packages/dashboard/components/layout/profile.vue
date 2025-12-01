@@ -2,23 +2,23 @@
   <v-menu rounded>
     <template #activator="{ props }">
       <v-btn icon v-bind="props">
-        <UserAvatar :username="user.userName" />
+        <UserAvatar :username="session.user.name" />
       </v-btn>
     </template>
 
     <v-card>
       <v-card-text>
         <div class="text-center">
-          <UserAvatar :username="user.userName" />
+          <UserAvatar :username="session.user.name" />
 
           <h3>
-            {{ user.userName }}
+            {{ session.user.name }}
           </h3>
         </div>
 
         <v-divider class="mt-2 mb-2" />
 
-        <v-btn @click="logout()" variant="text" rounded>
+        <v-btn @click="oidcClient.signOut" variant="text" rounded>
           {{ $t("navigation.logout") }}
         </v-btn>
       </v-card-text>
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { useOidcAuth } from "#imports";
+import { oidcClient } from "~/composables/authorization";
 
-const { user, logout } = useOidcAuth();
+const { data: session } = await oidcClient.useSession(useFetch);
 </script>

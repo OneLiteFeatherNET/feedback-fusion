@@ -33,6 +33,10 @@ import {
 } from "#imports";
 import { useRpcOptions } from "~/composables/grpc";
 
+definePageMeta({
+  auth: true,
+});
+
 const route = useRoute();
 const router = useRouter();
 const { $feedbackFusion } = useNuxtApp();
@@ -66,19 +70,19 @@ const editFields = ref([
 
 const fetch = async () => {
   return await $feedbackFusion
-    .getTarget({ id: route.params.target }, useRpcOptions())
+    .getTarget({ id: route.params.target }, await useRpcOptions())
     .then((value) => value.response);
 };
 
 const deleteTarget = (id) => async () => {
   await $feedbackFusion
-    .deleteTarget({ id }, useRpcOptions())
+    .deleteTarget({ id }, await useRpcOptions())
     .then(() => router.push("/"));
 };
 
 const edit = (target) => async () => {
   return await $feedbackFusion
-    .updateTarget(target, useRpcOptions())
+    .updateTarget(target, await useRpcOptions())
     .then((value) => value.response);
 };
 </script>

@@ -6,7 +6,11 @@
       </v-card-title>
 
       <v-card-text class="mt-4 mb-4">
-        <v-btn @click="login('oidc')" block color="primary">
+        <v-btn
+          @click="oidcClient.signIn.oauth2({ providerId: 'oidc' })"
+          block
+          color="primary"
+        >
           {{ $t("login.oidc") }}
         </v-btn>
       </v-card-text>
@@ -15,9 +19,13 @@
 </template>
 
 <script setup lang="ts">
-import { useOidcAuth } from "#imports";
+import { oidcClient } from "~/composables/authorization";
 
-const { login } = useOidcAuth();
+definePageMeta({
+  auth: {
+    only: "guest"
+  }
+})
 </script>
 
 <style lang="scss" scoped>

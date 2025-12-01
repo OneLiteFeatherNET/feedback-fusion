@@ -62,7 +62,6 @@
 import {
   onMounted,
   ref,
-  defineProps,
   useRouter,
   useLocalePath,
   useRoute,
@@ -88,8 +87,6 @@ const instance = ref(undefined);
 const editInstance = ref(undefined);
 
 onMounted(async () => {
-  await authorization.fetch();
-
   if (!authorization.hasPermission(props.endpoint, "Read")) {
     return router.push("/");
   }

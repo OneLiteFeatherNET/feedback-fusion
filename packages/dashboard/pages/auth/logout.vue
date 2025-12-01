@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { useOidcAuth } from "#imports";
+import { oidcClient } from "~/composables/authorization";
 
-const { logout } = useOidcAuth();
-
-logout();
+oidcClient.signOut();
 </script>

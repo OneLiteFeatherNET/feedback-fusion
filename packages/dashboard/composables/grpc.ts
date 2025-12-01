@@ -1,7 +1,8 @@
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 
-export const useRpcOptions = (): RpcOptions => {
-  const { user } = useOidcAuth();
+export const useRpcOptions = async (): Promise<RpcOptions> => {
+  const store = useAuthorizationStore();
+  const token = await store.getAccessToken();
 
   return {
     // https://github.com/timostamm/protobuf-ts/blob/main/MANUAL.md#rpc-options
@@ -12,7 +13,7 @@ export const useRpcOptions = (): RpcOptions => {
             options.meta = {};
           }
 
-          options.meta["Authorization"] = `Bearer ${user.value!.accessToken}`;
+          options.meta["Authorization"] = `Bearer ${token}`;
           return next(method, input, options);
         },
       },

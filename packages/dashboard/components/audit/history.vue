@@ -67,7 +67,6 @@
 
 <script setup lang="ts">
 import {
-  defineProps,
   onMounted,
   useRouter,
   ref,
@@ -102,7 +101,7 @@ const fetchPage = async (pageToken: number) => {
         resourceId: props.id,
         resourceType: props.kind,
       },
-      useRpcOptions(),
+      await useRpcOptions(),
     )
     .then((value) => value.response);
 };
@@ -115,8 +114,6 @@ watch(
 );
 
 onMounted(async () => {
-  await authorization.fetch();
-
   if (!authorization.hasPermission(props.endpoint, "Read")) {
     return router.push("/");
   }
