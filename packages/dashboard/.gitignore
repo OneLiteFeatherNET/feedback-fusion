@@ -23,8 +23,8 @@ logs
 .env.*
 !.env.example
 
-composables/feedback-fusion-v1.ts
-composables/feedback-fusion-v1.client.ts
-composables/google
-composables/common
-composables/feedback-fusion-v1
+app/composables/feedback-fusion-v1.ts
+app/composables/feedback-fusion-v1.client.ts
+app/composables/google
+app/composables/common
+app/composables/feedback-fusion-v1

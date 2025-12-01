@@ -13,6 +13,10 @@
 import { ref, useRoute, useLocalePath } from "#imports";
 import { ProtoResourceKind } from "~/composables/common/resource";
 
+definePageMeta({
+  auth: true,
+});
+
 const route = useRoute();
 const localePath = useLocalePath();
 

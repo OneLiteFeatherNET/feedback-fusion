@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "protoc": "find ../../proto/feedback-fusion-v1 ../../proto/common -name '*.proto' | xargs protoc --ts_out composables --ts_opt=server_none --ts_opt=long_type_string --proto_path=../../proto --proto_path=../../proto/common",
+    "protoc": "find ../../proto/feedback-fusion-v1 ../../proto/common -name '*.proto' | xargs protoc --ts_out app/composables --ts_opt=server_none --ts_opt=long_type_string --proto_path=../../proto --proto_path=../../proto/common",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -23,7 +23,7 @@
     "@types/node": "^22.19.1",
     "better-auth": "^1.4.4",
     "clipboardy": "^4.0.0",
-    "nuxt": "^3.20.1",
+    "nuxt": "^4.0.0",
     "nuxt-shiki": "0.3.0",
     "pinia": "^3.0.4",
     "vue": "latest",

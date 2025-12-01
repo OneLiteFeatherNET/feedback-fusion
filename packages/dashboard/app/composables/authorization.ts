@@ -17,7 +17,7 @@ export const useAuthorizationStore = defineStore("authorization", () => {
     const { $feedbackFusion } = useNuxtApp();
 
     await $feedbackFusion
-      .getUserInfo({}, useRpcOptions())
+      .getUserInfo({}, await useRpcOptions())
       .then((value: any) => {
         permissions.value = value.response.permissions;
       });
@@ -78,4 +78,3 @@ export const useAuthorizationStore = defineStore("authorization", () => {
 export const oidcClient = createAuthClient({
   plugins: [genericOAuthClient()],
 });
-

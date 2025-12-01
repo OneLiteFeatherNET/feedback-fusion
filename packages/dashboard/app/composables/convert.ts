@@ -1,4 +1,4 @@
-import { ProtoFieldType } from "./feedback-fusion-v1/field.ts";
+import { ProtoFieldType } from "./feedback-fusion-v1/field.js";
 
 export const numberToKind = (value: number) => {
   switch (value) {

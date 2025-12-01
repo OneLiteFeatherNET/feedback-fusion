@@ -18,7 +18,7 @@ const changeTheme = () => {
 };
 
 const syncTheme = () => {
-  theme.global.name.value = colorMode.value;
+  theme.change(colorMode.value);
 };
 
 if (process.client) {

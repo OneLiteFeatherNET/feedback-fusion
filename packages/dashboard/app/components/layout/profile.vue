@@ -18,7 +18,7 @@
 
         <v-divider class="mt-2 mb-2" />
 
-        <v-btn @click="oidcClient.signOut" variant="text" rounded>
+        <v-btn @click="logout" variant="text" rounded>
           {{ $t("navigation.logout") }}
         </v-btn>
       </v-card-text>
@@ -27,7 +27,17 @@
 </template>
 
 <script setup lang="ts">
-import { oidcClient } from "~/composables/authorization";
+import { useRouter } from "#imports";
+import { oidcClient, useAuthorizationStore } from "~/composables/authorization";
 
 const { data: session } = await oidcClient.useSession(useFetch);
+const store = useAuthorizationStore();
+const router = useRouter();
+
+async function logout() {
+  await oidcClient.signOut();
+
+  store.logout();
+  router.push("/auth/login");
+}
 </script>
