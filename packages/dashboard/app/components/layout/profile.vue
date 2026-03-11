@@ -27,17 +27,26 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "#imports";
-import { oidcClient, useAuthorizationStore } from "~/composables/authorization";
+import { navigateTo } from "#imports";
+import {
+  useOIDCClient,
+  useAuthorizationStore,
+  useAuthSession,
+} from "~/composables/authorization";
 
-const { data: session } = await oidcClient.useSession(useFetch);
+const { session } = await useAuthSession();
 const store = useAuthorizationStore();
-const router = useRouter();
+const oidcClient = useOIDCClient();
 
 async function logout() {
-  await oidcClient.signOut();
-
   store.logout();
-  router.push("/auth/login");
+
+  await oidcClient.signOut({
+    fetchOptions: {
+      onSuccess: () => {
+        navigateTo("/auth/login");
+      },
+    },
+  });
 }
 </script>

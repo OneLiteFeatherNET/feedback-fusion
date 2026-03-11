@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { oidcClient } from "~/composables/authorization";
+import { useAuthSession } from "~/composables/authorization";
 
-const { data: session } = await oidcClient.useSession(useFetch);
+const { session } = await useAuthSession();
 </script>

@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS field_response (
 );
 
 CREATE TABLE IF NOT EXISTS oidc_user (
-  id          VARCHAR(32) UNIQUE NOT NULL,
+  id          VARCHAR(255) UNIQUE NOT NULL,
   username    VARCHAR(255) NOT NULL,
   updated_at  TIMESTAMP,
   created_at  TIMESTAMP

@@ -70,7 +70,7 @@ macro_rules! handler {
         handler!($handler, $self, $request, $endpoint { EndpointScopeSelector::All }, $permission)
     };
     ($handler:path, $self:ident, $request:ident, off) => {{
-        match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection, &$self.permission_matrix).await {
+        match UserContext::get_otherwise_fetch(&$request, &$self.connection, &$self.permission_matrix).await {
             Ok(context) => {
                 handler!($handler, $self, $request, context)
             }
@@ -78,7 +78,7 @@ macro_rules! handler {
         }
     }};
     ($handler:path, $self:ident, $request:ident, $endpoint:path $inner:block, $permission:path) => {{
-        match UserContext::get_otherwise_fetch(&$request, &$self.client, &$self.connection, &$self.permission_matrix).await {
+        match UserContext::get_otherwise_fetch(&$request, &$self.connection, &$self.permission_matrix).await {
             Ok(context) => {
                 if let Err(error) = context
                     .authorize(&$self.connection, &$endpoint(async $inner.await), &$permission)
@@ -311,13 +311,8 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
         &self,
         request: Request<()>,
     ) -> std::result::Result<Response<UserInfoResponse>, Status> {
-        match UserContext::get_otherwise_fetch(
-            &request,
-            &self.client,
-            &self.connection,
-            self.permission_matrix(),
-        )
-        .await
+        match UserContext::get_otherwise_fetch(&request, &self.connection, self.permission_matrix())
+            .await
         {
             Ok(context) => match user::get_user_info(self, request, context).await {
                 Ok(response) => Ok(response),

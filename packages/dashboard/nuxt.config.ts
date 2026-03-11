@@ -12,7 +12,7 @@ export default defineNuxtConfig({
       viewport: "width=device-width, initial-scale=1",
     },
   },
-  compatibilityDate: "2024-04-03",
+  compatibilityDate: "2025-12-02",
   devtools: { enabled: true },
   modules: [
     "vuetify-nuxt-module",
@@ -43,6 +43,7 @@ export default defineNuxtConfig({
     clientSecret: "",
     oidcDiscovery: "",
     scope: "openid profile",
+    origin: "",
   },
   vuetify: {
     vuetifyOptions: {

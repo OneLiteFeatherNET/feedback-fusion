@@ -28,7 +28,7 @@ check:
   cargo check --all-features --workspace --tests
 
 clippy:
-  cargo clippy --all-features --workspace -- -D warnings
+  cargo clippy --all-features --workspace --exclude feedback-fusion-fuzz -- -D warnings
 
 #
 # Backend
@@ -194,7 +194,10 @@ dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
     NUXT_CLIENT_ID=client \
     NUXT_CLIENT_SECRET=secret \
     NUXT_OIDC_DISCOVERY=http://localhost:5151/.well-known/openid-configuration \
+    NUXT_ORIGIN=http://localhost:3000 \
     NUXT_SCOPE="openid profile test email" \
+    BETTER_AUTH_SECRET="secret" \
+    BETTER_AUTH_URL="http://localhost:3000" \
     bun run --cwd packages/dashboard dev
 
 #

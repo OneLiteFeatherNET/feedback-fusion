@@ -19,13 +19,15 @@
 </template>
 
 <script setup lang="ts">
-import { oidcClient } from "~/composables/authorization";
+import { useOIDCClient } from "~/composables/authorization";
 
 definePageMeta({
   auth: {
-    only: "guest"
-  }
-})
+    only: "guest",
+  },
+});
+
+const oidcClient = useOIDCClient();
 </script>
 
 <style lang="scss" scoped>

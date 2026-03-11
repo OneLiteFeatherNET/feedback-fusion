@@ -59,7 +59,7 @@ END;
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'oidc_user')
 BEGIN
     CREATE TABLE oidc_user (
-        id          VARCHAR(32)    NOT NULL PRIMARY KEY,
+        id          VARCHAR(255)   NOT NULL PRIMARY KEY,
         username    VARCHAR(255)   NOT NULL,
         updated_at  DATETIME,
         created_at  DATETIME

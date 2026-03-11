@@ -6,12 +6,10 @@ interface PermissionMatrix {
 }
 
 export const useAuthorizationStore = defineStore("authorization", () => {
+  const fetchedPermissions = ref(false);
   const permissions = ref({} as PermissionMatrix);
-  const session = ref<
-    Awaited<ReturnType<typeof oidcClient.useSession>>["data"] | undefined
-  >();
+  const session = ref(undefined);
   const accessToken = ref<string | undefined>();
-  const loggedIn = computed(() => !!session.value);
 
   async function fetchPermissions() {
     const { $feedbackFusion } = useNuxtApp();
@@ -20,26 +18,29 @@ export const useAuthorizationStore = defineStore("authorization", () => {
       .getUserInfo({}, await useRpcOptions())
       .then((value: any) => {
         permissions.value = value.response.permissions;
+        fetchedPermissions.value = true;
       });
   }
 
   async function fetchSession() {
-    await oidcClient.useSession(useFetch).then(({ data }) => {
-      session.value = data.value;
+    await useAuthSession().then((value) => {
+      session.value = value.session.value;
     });
   }
 
   async function fetchAccessToken() {
-    await oidcClient.getAccessToken({ providerId: "oidc" }).then(({ data }) => {
-      accessToken.value = data?.accessToken;
-    });
+    await useOIDCClient()
+      .getAccessToken({ providerId: "oidc" })
+      .then(({ data }) => {
+        accessToken.value = data?.accessToken;
+      });
   }
 
   async function hasPermission(
     endpoint: string,
     action: string,
   ): Promise<boolean> {
-    if (Object.keys(permissions.value).length === 0) {
+    if (!fetchedPermissions) {
       await fetchPermissions();
     }
     return permissions.value[`${endpoint}::${action}`] ?? false;
@@ -49,6 +50,7 @@ export const useAuthorizationStore = defineStore("authorization", () => {
     permissions.value = {};
     session.value = undefined;
     accessToken.value = undefined;
+    fetchedPermissions.value = false;
   }
 
   async function getAccessToken() {
@@ -63,7 +65,6 @@ export const useAuthorizationStore = defineStore("authorization", () => {
 
   return {
     permissions: readonly(permissions),
-    loggedIn,
     accessToken: readonly(accessToken),
     fetchPermissions,
     fetchSession,
@@ -75,6 +76,42 @@ export const useAuthorizationStore = defineStore("authorization", () => {
   };
 });
 
-export const oidcClient = createAuthClient({
-  plugins: [genericOAuthClient()],
-});
+export const useOIDCClient = () =>
+  createAuthClient({
+    plugins: [genericOAuthClient()],
+    baseURL: useRequestURL().origin,
+  });
+
+// A workaround for https://github.com/better-auth/better-auth/issues/5358
+// Create a wrapper for useFetch that strips the origin from URLs
+// This fixes the SSR hydration issue with BetterAuth and Nuxt
+const relativeFetch = ((url: string, opts?: any) => {
+  try {
+    if (url.startsWith("http")) {
+      url = new URL(url).pathname;
+    }
+  } catch {}
+  return useFetch(url, opts);
+}) as any;
+
+export async function useAuthSession() {
+  const { data, isPending, error } =
+    await useOIDCClient().useSession(relativeFetch);
+
+  return {
+    session: data, // rename data to session, should no long be undefined
+    isPending,
+    error,
+  };
+}
+
+export async function getAuthSession() {
+  const { data, isPending, error } =
+    await useOIDCClient().getSession(relativeFetch);
+
+  return {
+    session: data, // rename data to session, should no long be undefined
+    isPending,
+    error,
+  };
+}

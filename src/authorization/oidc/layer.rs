@@ -76,7 +76,9 @@ impl From<Authority> for OIDCErrorHandler {
 impl OnJwtError for OIDCErrorHandler {
     type Body = Body;
 
-    fn on_jwt_invalid(&self, _error: aliri::error::JwtVerifyError) -> Response<Self::Body> {
+    fn on_jwt_invalid(&self, error: aliri::error::JwtVerifyError) -> Response<Self::Body> {
+        debug!("JWT verification failed: {error:?}");
+
         Status::unauthenticated("unauthenticated").into_http()
     }
 

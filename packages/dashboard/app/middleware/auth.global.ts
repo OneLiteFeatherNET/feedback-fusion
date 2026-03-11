@@ -1,5 +1,3 @@
-import { oidcClient } from "~/composables/authorization";
-
 type AuthenticationMiddlewareOptions =
   | false
   | {
@@ -24,9 +22,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return;
   }
 
-  const store = useAuthorizationStore();
-  const session = await store.getSession();
-  const loggedIn = !!session;
+  const session = import.meta.client
+    ? await getAuthSession().then(({ session }) => ({ value: session }))
+    : await useAuthSession().then(({ session }) => session);
+  const loggedIn = !!session.value;
 
   if (options.only === "guest" && loggedIn && to.path !== "/") {
     return navigateTo("/");

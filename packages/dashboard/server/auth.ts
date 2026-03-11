@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { genericOAuth, username } from "better-auth/plugins";
 
 export const auth = betterAuth({
+  trustedOrigins: [useRuntimeConfig().origin as string],
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     cookieCache: {
