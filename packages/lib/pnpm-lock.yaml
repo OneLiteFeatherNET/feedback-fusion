@@ -13,7 +13,7 @@ importers:
         version: 0.12.2
       '@protobuf-ts/grpcweb-transport':
         specifier: ^2.9.4
-        version: 2.11.0
+        version: 2.11.1
       '@protobuf-ts/runtime':
         specifier: ^2.9.4
         version: 2.11.0
@@ -443,8 +443,8 @@ packages:
   '@parse5/tools@0.3.0':
     resolution: {integrity: sha512-zxRyTHkqb7WQMV8kTNBKWb1BeOFUKXBXTBWuxg9H9hfvQB3IwP6Iw2U75Ia5eyRxPNltmY7E8YAlz6zWwUnjKg==}
 
-  '@protobuf-ts/grpcweb-transport@2.11.0':
-    resolution: {integrity: sha512-tTra0dPTQFSwEiSkM6q5nVfW35xOOh2NfYEdLfEPoCsKLgl5q9W5dd41t0ovDeI6CTae3SFOZqAqKeKO6g/cjg==}
+  '@protobuf-ts/grpcweb-transport@2.11.1':
+    resolution: {integrity: sha512-1W4utDdvOB+RHMFQ0soL4JdnxjXV+ddeGIUg08DvZrA8Ms6k5NN6GBFU2oHZdTOcJVpPrDJ02RJlqtaoCMNBtw==}
 
   '@protobuf-ts/plugin@2.11.0':
     resolution: {integrity: sha512-Y+p4Axrk3thxws4BVSIO+x4CKWH2c8k3K+QPrp6Oq8agdsXPL/uwsMTIdpTdXIzTaUEZFASJL9LU56pob5GTHg==}
@@ -457,8 +457,14 @@ packages:
   '@protobuf-ts/runtime-rpc@2.11.0':
     resolution: {integrity: sha512-g/oMPym5LjVyCc3nlQc6cHer0R3CyleBos4p7CjRNzdKuH/FlRXzfQYo6EN5uv8vLtn7zEK9Cy4YBKvHStIaag==}
 
+  '@protobuf-ts/runtime-rpc@2.11.1':
+    resolution: {integrity: sha512-4CqqUmNA+/uMz00+d3CYKgElXO9VrEbucjnBFEjqI4GuDrEQ32MaI3q+9qPBvIGOlL4PmHXrzM32vBPWRhQKWQ==}
+
   '@protobuf-ts/runtime@2.11.0':
     resolution: {integrity: sha512-DfpRpUiNvPC3Kj48CmlU4HaIEY1Myh++PIumMmohBAk8/k0d2CkxYxJfPyUAxfuUfl97F4AvuCu1gXmfOG7OJQ==}
+
+  '@protobuf-ts/runtime@2.11.1':
+    resolution: {integrity: sha512-KuDaT1IfHkugM2pyz+FwiY80ejWrkH1pAtOBOZFuR6SXEFTsnb/jiQWQ1rCIrcKx2BtyxnxW6BWwsVSA/Ie+WQ==}
 
   '@thepassle/axobject-query@4.0.0':
     resolution: {integrity: sha512-/LHo+2jOdxs2WtbGocr3/lDSzsnjgCV6DSoBf4Y1Q0D24Hu67NPWuneoJimfHu5auqqSWi1fAvtln2013VxVqg==}
@@ -2393,10 +2399,10 @@ snapshots:
     dependencies:
       parse5: 7.1.2
 
-  '@protobuf-ts/grpcweb-transport@2.11.0':
+  '@protobuf-ts/grpcweb-transport@2.11.1':
     dependencies:
-      '@protobuf-ts/runtime': 2.11.0
-      '@protobuf-ts/runtime-rpc': 2.11.0
+      '@protobuf-ts/runtime': 2.11.1
+      '@protobuf-ts/runtime-rpc': 2.11.1
 
   '@protobuf-ts/plugin@2.11.0':
     dependencies:
@@ -2415,7 +2421,13 @@ snapshots:
     dependencies:
       '@protobuf-ts/runtime': 2.11.0
 
+  '@protobuf-ts/runtime-rpc@2.11.1':
+    dependencies:
+      '@protobuf-ts/runtime': 2.11.1
+
   '@protobuf-ts/runtime@2.11.0': {}
+
+  '@protobuf-ts/runtime@2.11.1': {}
 
   '@thepassle/axobject-query@4.0.0':
     dependencies:
