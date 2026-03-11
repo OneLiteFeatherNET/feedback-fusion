@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS audit_version (
   resource_type       VARCHAR(255) NOT NULL,
   resource_id         VARCHAR(32) NOT NULL,
   data                BLOB NOT NULL,
-  made_by             VARCHAR(32) NOT NULL,
+  made_by             VARCHAR(255) NOT NULL,
   action              VARCHAR(32) NOT NULL,
   version             INT UNSIGNED NOT NULL,
   created_at          DATETIME(3),
