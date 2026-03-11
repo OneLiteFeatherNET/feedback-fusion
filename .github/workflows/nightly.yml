@@ -76,7 +76,7 @@ jobs:
 
       - name: Install FluvioCLI
         run: |
-          curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
+          curl -fsS https://raw.githubusercontent.com/fluvio-community/fluvio/master/install.sh | FVM_VERSION=dev bash
 
       - name: Tests
         run: |
