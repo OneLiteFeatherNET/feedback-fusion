@@ -24,7 +24,6 @@ use arbitrary::Arbitrary;
 use lazy_static::lazy_static;
 use openidconnect::{
     core::{CoreClient, CoreProviderMetadata},
-    reqwest::async_http_client,
     ClientId, ClientSecret, IssuerUrl, OAuth2TokenResponse, Scope,
 };
 
@@ -34,6 +33,7 @@ use crate::{
         proto_resource::Inner, AuditVersionPage, CreateFieldRequest, ProtoAuditAction, ProtoField,
         ProtoPrompt, ProtoTarget,
     },
+    OPENID_CLIENT,
 };
 
 lazy_static! {
@@ -43,7 +43,7 @@ lazy_static! {
 #[allow(unused)]
 pub async fn authenticate(scope: &str, client_id: &str, client_secret: &str) -> String {
     let issuer = IssuerUrl::new(std::env::var("OIDC_PROVIDER").unwrap()).unwrap();
-    let metadata = CoreProviderMetadata::discover_async(issuer, async_http_client)
+    let metadata = CoreProviderMetadata::discover_async(issuer, &*OPENID_CLIENT)
         .await
         .unwrap();
     let client = CoreClient::from_provider_metadata(
@@ -54,8 +54,9 @@ pub async fn authenticate(scope: &str, client_id: &str, client_secret: &str) -> 
 
     let token_response = client
         .exchange_client_credentials()
+        .unwrap()
         .add_scope(Scope::new(scope.to_string()))
-        .request_async(async_http_client)
+        .request_async(&*OPENID_CLIENT)
         .await
         .unwrap();
 

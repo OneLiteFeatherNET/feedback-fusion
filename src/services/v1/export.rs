@@ -32,7 +32,7 @@ use crate::{
 };
 
 pub async fn export_data(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<DataExportRequest>,
     _user_context: UserContext,
 ) -> Result<Response<DataExportResponse>> {

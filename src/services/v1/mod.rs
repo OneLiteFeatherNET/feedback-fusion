@@ -20,7 +20,7 @@
 //DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{database::schema::user::UserContext, prelude::*};
+use crate::{authorization::oidc::OIDCClient, database::schema::user::UserContext, prelude::*};
 use feedback_fusion_common::proto::{
     AuditVersionPage, CreateFieldRequest, CreatePromptRequest, CreateResourceAuthorizationRequest,
     CreateResponsesRequest, CreateTargetRequest, DataExportRequest, DataExportResponse,
@@ -36,7 +36,6 @@ use feedback_fusion_common::proto::{
     public_feedback_fusion_v1_server::PublicFeedbackFusionV1,
 };
 use kanal::AsyncSender;
-use openidconnect::core::CoreClient;
 use std::borrow::Cow;
 use tonic::{Response, Status};
 
@@ -51,10 +50,9 @@ pub mod user;
 
 #[derive(Getters)]
 #[get = "pub"]
-pub struct FeedbackFusionV1Context<'a> {
+pub struct FeedbackFusionV1Context {
     pub connection: DatabaseConnection,
-    pub client: CoreClient,
-    pub permission_matrix: PermissionMatrix<'a>,
+    pub client: OIDCClient,
     pub broker_event_sender: AsyncSender<ProtoEvent>,
 }
 
@@ -70,7 +68,7 @@ macro_rules! handler {
         handler!($handler, $self, $request, $endpoint { EndpointScopeSelector::All }, $permission)
     };
     ($handler:path, $self:ident, $request:ident, off) => {{
-        match UserContext::get_otherwise_fetch(&$request, &$self.connection, &$self.permission_matrix).await {
+        match UserContext::get_otherwise_fetch(&$request, &$self.connection).await {
             Ok(context) => {
                 handler!($handler, $self, $request, context)
             }
@@ -78,7 +76,7 @@ macro_rules! handler {
         }
     }};
     ($handler:path, $self:ident, $request:ident, $endpoint:path $inner:block, $permission:path) => {{
-        match UserContext::get_otherwise_fetch(&$request, &$self.connection, &$self.permission_matrix).await {
+        match UserContext::get_otherwise_fetch(&$request, &$self.connection).await {
             Ok(context) => {
                 if let Err(error) = context
                     .authorize(&$self.connection, &$endpoint(async $inner.await), &$permission)
@@ -109,7 +107,7 @@ macro_rules! handler {
 // may consider to divide the service into its parts, but as of now this wouldn't be a real
 // enhacement
 #[async_trait::async_trait]
-impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
+impl FeedbackFusionV1 for FeedbackFusionV1Context {
     #[instrument(skip_all)]
     async fn create_target(
         &self,
@@ -311,7 +309,7 @@ impl FeedbackFusionV1 for FeedbackFusionV1Context<'static> {
         &self,
         request: Request<()>,
     ) -> std::result::Result<Response<UserInfoResponse>, Status> {
-        match UserContext::get_otherwise_fetch(&request, &self.connection, self.permission_matrix())
+        match UserContext::get_otherwise_fetch(&request, &self.connection)
             .await
         {
             Ok(context) => match user::get_user_info(self, request, context).await {

@@ -36,7 +36,7 @@ use validator::Validate;
 
 #[instrument(skip_all)]
 pub async fn create_prompt(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<CreatePromptRequest>,
     user_context: UserContext,
 ) -> Result<Response<ProtoPrompt>> {
@@ -100,7 +100,7 @@ pub async fn get_prompt(
 
 #[instrument(skip_all)]
 pub async fn get_prompts(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<GetPromptsRequest>,
     _user_context: UserContext,
 ) -> Result<Response<PromptPage>> {
@@ -133,7 +133,7 @@ pub async fn get_prompts(
 
 #[instrument(skip_all)]
 pub async fn update_prompt(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<UpdatePromptRequest>,
     user_context: UserContext,
 ) -> Result<Response<ProtoPrompt>> {
@@ -186,7 +186,7 @@ pub async fn update_prompt(
 
 #[instrument(skip_all)]
 pub async fn delete_prompt(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<DeletePromptRequest>,
     user_context: UserContext,
 ) -> Result<Response<()>> {

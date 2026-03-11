@@ -38,7 +38,7 @@ use feedback_fusion_common::{
 
 #[instrument(skip_all)]
 pub async fn create_field(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<CreateFieldRequest>,
     user_context: UserContext,
 ) -> Result<Response<ProtoField>> {
@@ -132,7 +132,7 @@ pub async fn get_active_fields(
 
 #[instrument(skip_all)]
 pub async fn get_fields(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<GetFieldsRequest>,
     _user_context: UserContext,
 ) -> Result<Response<FieldPage>> {
@@ -164,7 +164,7 @@ pub async fn get_fields(
 
 #[instrument(skip_all)]
 pub async fn update_field(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<UpdateFieldRequest>,
     user_context: UserContext,
 ) -> Result<Response<ProtoField>> {
@@ -223,7 +223,7 @@ pub async fn update_field(
 
 #[instrument(skip_all)]
 pub async fn delete_field(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<DeleteFieldRequest>,
     user_context: UserContext,
 ) -> Result<Response<()>> {

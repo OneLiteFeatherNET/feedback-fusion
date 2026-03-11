@@ -24,10 +24,19 @@
 #![allow(clippy::derive_ord_xor_partial_ord)]
 #![allow(clippy::derived_hash_with_manual_eq)]
 
+use openidconnect::reqwest;
+
 pub mod database;
 pub mod observability;
 #[cfg(feature = "arbitrary")]
 pub mod tests;
+
+lazy_static::lazy_static! {
+    pub static ref OPENID_CLIENT: reqwest::Client = reqwest::ClientBuilder::new()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
+}
 
 pub mod proto {
     use crate::proto::proto_resource::Inner;

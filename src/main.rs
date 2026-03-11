@@ -54,7 +54,7 @@ async fn main() {
     lazy_static::initialize(&CONFIG);
 
     // init the tracing subscriber with the `RUST_LOG` env filter if otlp is disabled
-    feedback_fusion_common::observability::otlp::init_tracing(CONFIG.otlp());
+    let tracing_provider = feedback_fusion_common::observability::otlp::init_tracing(CONFIG.otlp());
 
     debug!("Reading DatabaseConfig");
     lazy_static::initialize(&DATABASE_CONFIG);
@@ -98,10 +98,6 @@ async fn main() {
         let service = FeedbackFusionV1Context {
             connection: connection.clone(),
             client,
-            permission_matrix: config::read_permission_matrix(
-                CONFIG.oidc().scopes(),
-                CONFIG.oidc().groups(),
-            ),
             broker_event_sender,
         };
         let service = tower::ServiceBuilder::new()
@@ -147,7 +143,9 @@ async fn main() {
     info!("Received shutdown signal... shutting down...");
     sender.send(()).await.unwrap();
 
-    feedback_fusion_common::observability::otlp::shutdown_tracing();
+    if let Some(provider) = tracing_provider {
+        provider.shutdown().ok();
+    }
 }
 
 pub mod prelude {

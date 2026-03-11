@@ -47,7 +47,7 @@ use crate::{
 
 #[instrument(skip_all)]
 pub async fn get_audit_versions(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<GetAuditVersionsRequest>,
     user_context: UserContext,
 ) -> Result<Response<AuditVersionPage>> {
@@ -100,7 +100,7 @@ pub async fn get_audit_versions(
 
 #[instrument(skip_all)]
 pub async fn rollback_resource(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<RollbackResourceRequest>,
     user_context: UserContext,
 ) -> Result<Response<()>> {

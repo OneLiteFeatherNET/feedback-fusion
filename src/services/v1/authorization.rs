@@ -43,7 +43,7 @@ use v1::FeedbackFusionV1Context;
 use wildcard::Wildcard;
 
 pub async fn create_resource_authorization(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<CreateResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ResourceAuthorizationList>> {
@@ -112,7 +112,7 @@ pub async fn create_resource_authorization(
 }
 
 pub async fn get_resource_authorization(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<GetResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ProtoResourceAuthorization>> {
@@ -132,7 +132,7 @@ pub async fn get_resource_authorization(
 }
 
 pub async fn get_resource_authorizations(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<GetResourceAuthorizationsRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ResourceAuthorizationPage>> {
@@ -156,7 +156,7 @@ pub async fn get_resource_authorizations(
 }
 
 pub async fn update_resource_authorization(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<UpdateResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ProtoResourceAuthorization>> {
@@ -198,7 +198,7 @@ pub async fn update_resource_authorization(
 }
 
 pub async fn delete_resource_authorization(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<DeleteResourceAuthorizationRequest>,
     _user_context: UserContext,
 ) -> Result<Response<()>> {
@@ -409,7 +409,7 @@ pub struct Export<'a> {
 }
 
 pub async fn export_resource_authorizations(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<ExportResourceAuthorizationsRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ResourceAuthorizationExportResponse>> {
