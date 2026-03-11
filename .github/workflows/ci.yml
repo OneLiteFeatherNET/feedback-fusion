@@ -23,10 +23,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -50,10 +47,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
