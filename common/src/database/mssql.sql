@@ -59,7 +59,7 @@ END;
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'oidc_user')
 BEGIN
     CREATE TABLE oidc_user (
-        id          VARCHAR(32)    NOT NULL PRIMARY KEY,
+        id          VARCHAR(255)   NOT NULL PRIMARY KEY,
         username    VARCHAR(255)   NOT NULL,
         updated_at  DATETIME,
         created_at  DATETIME
@@ -89,7 +89,7 @@ BEGIN
         resource_type       VARCHAR(255)   NOT NULL,
         resource_id         VARCHAR(32)    NOT NULL,
         data                VARBINARY(MAX) NOT NULL,
-        made_by             VARCHAR(32)    NOT NULL  REFERENCES oidc_user(id),
+        made_by             VARCHAR(255)    NOT NULL  REFERENCES oidc_user(id),
         action              VARCHAR(32)    NOT NULL,
         version             INT            NOT NULL,
         created_at          DATETIME2(3),

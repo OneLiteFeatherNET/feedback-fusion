@@ -48,8 +48,18 @@ services:
             "Password":"password",
             "Claims": [
               {
+                "Type": "name",
+                "Value": "User Name",
+                "ValueType": "string"
+              },
+              {
                 "Type": "preferred_username",
                 "Value": "username",
+                "ValueType": "string"
+              },
+              {
+                "Type": "email",
+                "Value": "username@some.value",
                 "ValueType": "string"
               },
               {

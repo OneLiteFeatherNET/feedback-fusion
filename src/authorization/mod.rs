@@ -25,8 +25,6 @@ pub mod oidc;
 
 use aliri::jwt::CoreClaims;
 use aliri_oauth2::{HasScope, scope::ScopeTokenRef};
-use http::header::AUTHORIZATION;
-use openidconnect::{AccessToken, core::CoreClient};
 use rbatis::rbatis_codegen::IntoSql;
 use std::{
     borrow::Cow,
@@ -48,7 +46,6 @@ impl UserContext {
     #[instrument(skip_all)]
     pub async fn get_otherwise_fetch<'a, T>(
         request: &Request<T>,
-        client: &CoreClient,
         connection: &DatabaseConnection,
         matrix: &PermissionMatrix<'a>,
     ) -> Result<Self> {
@@ -64,14 +61,6 @@ impl UserContext {
             ))?
             .to_string();
 
-        let bearer = request
-            .metadata()
-            .get(AUTHORIZATION.as_str())
-            .unwrap()
-            .to_str()
-            .unwrap();
-        let access_token = AccessToken::new(bearer.split(" ").last().unwrap().to_string());
-
         let scopes = claims.scope().iter().collect();
         let mut groups: BTreeSet<&String> = claims.groups().iter().collect();
 
@@ -84,7 +73,7 @@ impl UserContext {
         match get_user_context(connection, subject.as_str(), &scopes, &groups, matrix).await {
             Ok(context) => Ok(context),
             Err(FeedbackFusionError::OIDCError(_)) => {
-                let user = User::fetch(access_token, client, claims).await?;
+                let user = User::fetch(claims).await?;
 
                 // TODO: cleanup with new cache implementation for auithentication
 

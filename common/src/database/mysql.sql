@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS field_response (
 );
 
 CREATE TABLE IF NOT EXISTS oidc_user (
-  id          VARCHAR(32) UNIQUE NOT NULL PRIMARY KEY,
+  id          VARCHAR(255) UNIQUE NOT NULL PRIMARY KEY,
   username    VARCHAR(255) NOT NULL,
   updated_at  TIMESTAMP(3),
   created_at  TIMESTAMP(3)
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS audit_version (
   resource_type       VARCHAR(255) NOT NULL,
   resource_id         VARCHAR(32) NOT NULL,
   data                BLOB NOT NULL,
-  made_by             VARCHAR(32) NOT NULL,
+  made_by             VARCHAR(255) NOT NULL,
   action              VARCHAR(32) NOT NULL,
   version             INT UNSIGNED NOT NULL,
   created_at          DATETIME(3),

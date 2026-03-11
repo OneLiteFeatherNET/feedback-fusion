@@ -179,12 +179,14 @@ dashboard:
       port: 3000
       path: /
     periodSeconds: 5
+    timeoutSeconds: 3
   startupProbe:
     httpGet:
       port: 3000
       path: /
     periodSeconds: 2
     failureThreshold: 10
+    timeoutSeconds: 3
 
   # -- Additional volumes on the output Deployment definition.
   volumes: []

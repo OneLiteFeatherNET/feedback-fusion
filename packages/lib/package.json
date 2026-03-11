@@ -1,0 +1,90 @@
+{
+  "name": "@onelitefeathernet/feedback-fusion",
+  "description": "Webcomponent feedback-fusion following open-wc recommendations",
+  "license": "MIT",
+  "author": "OneLiteFeatherNet",
+  "version": "0.1.4",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
+  "exports": {
+    ".": {
+      "browser": "./dist/src/index.min.js",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "analyze": "cem analyze --litelement",
+    "protoc": "find ../../proto/feedback-fusion-v1 ../../proto/common -name '*.proto' | xargs protoc --ts_out src --ts_opt=server_none --ts_opt=long_type_string --proto_path=../../proto --proto_path=../../proto/common",
+    "build": "pnpm run protoc && tsc && esbuild dist/src/index.js --bundle --minify --sourcemap --outfile=dist/src/index.min.js",
+    "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
+    "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
+    "prepare": "husky",
+    "dev": "pnpm run protoc && concurrently \"tsc --watch\" \"cd ../docs && pnpm run docs:dev\" ",
+    "translations:extract": "lit-localize extract",
+    "translations:build": "lit-localize build"
+  },
+  "dependencies": {
+    "@lit/localize": "^0.12.1",
+    "@protobuf-ts/grpcweb-transport": "^2.9.4",
+    "@protobuf-ts/runtime": "^2.9.4",
+    "@protobuf-ts/runtime-rpc": "^2.9.4",
+    "lit": "^3.1.4"
+  },
+  "devDependencies": {
+    "@custom-elements-manifest/analyzer": "^0.10.2",
+    "@lit/localize-tools": "^0.8.0",
+    "@open-wc/eslint-config": "^12.0.3",
+    "@protobuf-ts/plugin": "^2.9.4",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
+    "concurrently": "^9.0.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.2",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.3"
+  },
+  "customElements": "custom-elements.json",
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "@open-wc",
+      "prettier"
+    ],
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error"
+      ],
+      "import/no-unresolved": "off",
+      "import/extensions": [
+        "error",
+        "always",
+        {
+          "ignorePackages": true
+        }
+      ]
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "avoid"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "files": [
+    "dist/**/*"
+  ]
+}

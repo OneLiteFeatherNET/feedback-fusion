@@ -48,7 +48,7 @@ FeedbackFusion is licensed under the MIT License.
 
 - just
 - pre-commit
-- pnpm
+- bun
 - helm
 - cargo
 - docker

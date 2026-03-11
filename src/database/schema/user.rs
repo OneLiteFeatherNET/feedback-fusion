@@ -24,7 +24,6 @@ use std::collections::HashMap;
 
 use crate::prelude::*;
 use aliri::jwt::CoreClaims;
-use openidconnect::{AccessToken, core::CoreUserInfoClaims};
 
 #[derive(
     Deserialize, Serialize, Clone, Derivative, Debug, Getters, Setters, TypedBuilder, Encode, Decode,
@@ -41,27 +40,23 @@ pub struct User {
 crud!(User {}, "oidc_user");
 impl_select!(User {select_by_id(id: &str) -> Option => "`WHERE id = #{id}`"}, "oidc_user");
 
-impl From<CoreUserInfoClaims> for User {
-    fn from(claims: CoreUserInfoClaims) -> Self {
-        Self::builder()
-            .id(claims.subject().to_string())
-            .username(
-                claims
-                    .preferred_username()
-                    .map(|username| username.to_string())
-                    .unwrap_or_default(),
-            )
-            .build()
+impl TryFrom<&OIDCClaims> for User {
+    type Error = FeedbackFusionError;
+
+    fn try_from(claims: &OIDCClaims) -> std::result::Result<User, Self::Error> {
+        Ok(User::builder()
+            .id(claims
+                .sub()
+                .ok_or(FeedbackFusionError::OIDCError("Missing sub claim".to_string()))?
+                .as_str())
+            .username(claims.preferred_username())
+            .build())
     }
 }
 
 impl User {
     #[instrument(skip_all)]
-    pub async fn fetch(
-        access_token: AccessToken,
-        client: &openidconnect::core::CoreClient,
-        claims: &OIDCClaims,
-    ) -> Result<Self> {
+    pub async fn fetch(claims: &OIDCClaims) -> Result<Self> {
         if claims.is_application() {
             let sub = claims
                 .sub()
@@ -74,14 +69,7 @@ impl User {
                 .username(preferred_username)
                 .build())
         } else {
-            let user_info: CoreUserInfoClaims = client
-                .user_info(access_token, None)
-                .map_err(|error| FeedbackFusionError::OIDCError(error.to_string()))?
-                .request_async(openidconnect::reqwest::async_http_client)
-                .await
-                .map_err(|error| FeedbackFusionError::OIDCError(error.to_string()))?;
-
-            Ok(Self::from(user_info))
+            Ok(Self::try_from(claims)?)
         }
     }
 }

@@ -76,7 +76,7 @@ jobs:
 
       - name: Install FluvioCLI
         run: |
-          curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
+          curl -fsS https://raw.githubusercontent.com/fluvio-community/fluvio/master/install.sh | FVM_VERSION=dev bash
 
       - name: Tests
         run: |
@@ -142,10 +142,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
