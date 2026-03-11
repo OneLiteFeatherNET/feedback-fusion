@@ -190,7 +190,6 @@ dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
   just backend postgres
   just generate dashboard
   NUXT_PUBLIC_FEEDBACK_FUSION_ENDPOINT="http://localhost:8000" \
-    NUXT_AUTH_SECRET=secret \
     NUXT_CLIENT_ID=client \
     NUXT_CLIENT_SECRET=secret \
     NUXT_OIDC_DISCOVERY=http://localhost:5151/.well-known/openid-configuration \
