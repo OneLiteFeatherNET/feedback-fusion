@@ -31,6 +31,7 @@ helm install feedback-fusion feedback-fusion/feedback-fusion
 | dashboard.livenessProbe.httpGet.path | string | `"/"` |  |
 | dashboard.livenessProbe.httpGet.port | int | `3000` |  |
 | dashboard.livenessProbe.periodSeconds | int | `5` |  |
+| dashboard.livenessProbe.timeoutSeconds | int | `3` |  |
 | dashboard.nodeSelector | object | `{}` |  |
 | dashboard.podAnnotations | object | `{}` | annotatiosn to attach to the pod |
 | dashboard.podLabels | object | `{}` | labels to attach to the pod |
@@ -43,6 +44,7 @@ helm install feedback-fusion feedback-fusion/feedback-fusion
 | dashboard.startupProbe.httpGet.path | string | `"/"` |  |
 | dashboard.startupProbe.httpGet.port | int | `3000` |  |
 | dashboard.startupProbe.periodSeconds | int | `2` |  |
+| dashboard.startupProbe.timeoutSeconds | int | `3` |  |
 | dashboard.tolerations | list | `[]` |  |
 | dashboard.volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | dashboard.volumes | list | `[]` | Additional volumes on the output Deployment definition. |
