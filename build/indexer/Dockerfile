@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM rust:slim-bookworm AS build
+FROM --platform=$BUILDPLATFORM rust:slim-trixie AS build
 ARG BUILDPLATFORM
 ARG TARGETARCH
 
@@ -30,7 +30,7 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
         cargo build --bin indexer --release; \
     fi
 
-FROM gcr.io/distroless/cc-debian12
+FROM gcr.io/distroless/cc-debian13
 
 COPY --from=build ./build/target/release/indexer .
 
