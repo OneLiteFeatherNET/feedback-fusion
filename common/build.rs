@@ -25,11 +25,11 @@ use std::path::PathBuf;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
-    tonic_build::configure()
+    tonic_prost_build::configure()
         .compile_protos(&["../proto/common/resource.proto"], &["../proto"])
         .unwrap();
 
-    tonic_build::configure()
+    tonic_prost_build::configure()
         .type_attribute(
             "CreateTargetRequest",
             r#"#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]"#,
@@ -195,13 +195,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .unwrap();
 
-    tonic_build::configure()
-        .type_attribute("ProtoEvent", "#[derive(Eq, Hash, typed_builder::TypedBuilder)]")
+    tonic_prost_build::configure()
+        .type_attribute("ProtoEvent", "#[derive(typed_builder::TypedBuilder)]")
         .type_attribute("ProtoEvent", "#[builder(field_defaults(setter(into)))]")
         .field_attribute("ProtoEvent.created_at", "#[builder(default_code = r#\"Some(prost_types::Timestamp::from(std::time::SystemTime::now()))\"#)]")
         .field_attribute("ProtoEvent.event_type", "#[builder(setter(transform = |event_type: ProtoEventType| event_type as i32))]")
-        .type_attribute("ProtoEvent.event_content", "#[derive(Eq, Hash)]")
-        .type_attribute("ProtoResourceModifiedEvent", "#[derive(Eq, Hash, typed_builder::TypedBuilder)]")
+        .type_attribute("ProtoResourceModifiedEvent", "#[derive(typed_builder::TypedBuilder)]")
         .field_attribute("ProtoResourceModifiedEvent.operation", "#[builder(setter(transform = |operation: ProtoResourceModificationOperation| operation as i32))]")
         .field_attribute("ProtoResourceModifiedEvent.resource_kind", "#[builder(setter(transform = |kind: crate::common::ProtoResourceKind| kind as i32))]")
         .field_attribute("ProtoResourceModifiedEvent.data", "#[builder(setter(transform = |message: &impl prost::Message| {let mut buffer = Vec::new();message.encode(&mut buffer).unwrap();buffer}))]")

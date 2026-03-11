@@ -27,8 +27,9 @@ use aliri::{
     jwt::{self, CoreValidator},
 };
 use aliri_oauth2::Authority;
+use feedback_fusion_common::OPENID_CLIENT;
 use openidconnect::{
-    ClientId, IssuerUrl,
+    ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IssuerUrl,
     core::{CoreClient, CoreJwsSigningAlgorithm, CoreProviderMetadata},
 };
 
@@ -37,17 +38,25 @@ use crate::prelude::*;
 pub mod claims;
 pub mod layer;
 
-pub async fn authority() -> Result<(Authority, CoreClient)> {
+pub type OIDCClient = CoreClient<
+    EndpointSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointMaybeSet,
+    EndpointMaybeSet,
+>;
+
+pub async fn authority() -> Result<(Authority, OIDCClient)> {
     // sadly aliri does not support oidc yet, so we have to do the config stuff manually :(((((
     let issuer = IssuerUrl::new(CONFIG.oidc().provider().clone()).map_err(|error| {
         FeedbackFusionError::ConfigurationError(format!("Invalid discovery url: {error}"))
     })?;
-    let metadata =
-        CoreProviderMetadata::discover_async(issuer, openidconnect::reqwest::async_http_client)
-            .await
-            .map_err(|error| {
-                FeedbackFusionError::ConfigurationError(format!("Invalid oidc endpoint: {error}"))
-            })?;
+    let metadata = CoreProviderMetadata::discover_async(issuer, &*OPENID_CLIENT)
+        .await
+        .map_err(|error| {
+            FeedbackFusionError::ConfigurationError(format!("Invalid oidc endpoint: {error}"))
+        })?;
 
     // extract the jwks
     let jwks_url = metadata.jwks_uri();

@@ -46,7 +46,7 @@ async fn main() {
         .unwrap();
     lazy_static::initialize(&CONFIG);
 
-    feedback_fusion_common::observability::otlp::init_tracing(CONFIG.otlp());
+    let tracing_provider = feedback_fusion_common::observability::otlp::init_tracing(CONFIG.otlp());
 
     // initialize the shutdown channel
     let (shutdown_sender, shutdown_receiver) = kanal::unbounded_async::<()>();
@@ -96,7 +96,9 @@ async fn main() {
     info!("Received shutdown signal... shutting down...");
     shutdown_sender.send(()).await.unwrap();
 
-    feedback_fusion_common::observability::otlp::shutdown_tracing();
+    if let Some(provider) = tracing_provider {
+        provider.shutdown().ok();
+    }
 }
 
 pub mod prelude {

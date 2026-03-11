@@ -25,11 +25,13 @@ pub mod oidc;
 
 use aliri::jwt::CoreClaims;
 use aliri_oauth2::{HasScope, scope::ScopeTokenRef};
+use arc_swap::ArcSwap;
 use rbatis::rbatis_codegen::IntoSql;
 use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap},
     ops::Deref,
+    sync::LazyLock,
 };
 use tonic::Request;
 use wildcard::Wildcard;
@@ -42,12 +44,18 @@ use crate::{
     prelude::*,
 };
 
+static PERMISSION_MATRIX: LazyLock<ArcSwap<PermissionMatrix<'static>>> = LazyLock::new(|| {
+    ArcSwap::from_pointee(crate::config::read_permission_matrix(
+        CONFIG.oidc().scopes(),
+        CONFIG.oidc().groups(),
+    ))
+});
+
 impl UserContext {
     #[instrument(skip_all)]
-    pub async fn get_otherwise_fetch<'a, T>(
+    pub async fn get_otherwise_fetch<T>(
         request: &Request<T>,
         connection: &DatabaseConnection,
-        matrix: &PermissionMatrix<'a>,
     ) -> Result<Self> {
         let claims = request
             .extensions()
@@ -70,6 +78,7 @@ impl UserContext {
             groups.insert(&empty);
         };
 
+        let matrix = &PERMISSION_MATRIX.load();
         match get_user_context(connection, subject.as_str(), &scopes, &groups, matrix).await {
             Ok(context) => Ok(context),
             Err(FeedbackFusionError::OIDCError(_)) => {

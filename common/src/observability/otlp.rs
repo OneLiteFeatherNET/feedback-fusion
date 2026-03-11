@@ -21,10 +21,14 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::{observability::OTLPConfiguration, prelude::*};
-use opentelemetry::{global::{self, shutdown_tracer_provider}, trace::TracerProvider, KeyValue};
+use opentelemetry::{global, trace::TracerProvider, KeyValue};
 use opentelemetry_http::{HeaderExtractor, Request};
-use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
+use opentelemetry_otlp::{SpanExporter, WithExportConfig};
+use opentelemetry_sdk::{
+    propagation::TraceContextPropagator,
+    trace::{BatchSpanProcessor, SdkTracerProvider},
+    Resource,
+};
 use opentelemetry_semantic_conventions::resource::SERVICE_NAME;
 use tower_http::{
     classify::{GrpcErrorsAsFailures, SharedClassifier},
@@ -39,45 +43,51 @@ lazy_static::lazy_static! {
         vec!["traceparent", "x-request-id", "user-agent"];
 }
 
-pub fn init_tracing(config: &Option<OTLPConfiguration>) {
+
+pub fn init_tracing(config: &Option<OTLPConfiguration>) -> Option<SdkTracerProvider> {
     if let Some(config) = config {
         let endpoint = config.endpoint();
 
-        let subscriber = tracing_subscriber::registry()
-            .with(tracing_subscriber::EnvFilter::from_default_env())
-            .with(tracing_subscriber::fmt::layer());
-
         opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
 
-        let tracer_provider = opentelemetry_otlp::new_pipeline()
-            .tracing()
-            .with_exporter(
-                opentelemetry_otlp::new_exporter()
-                    .tonic()
-                    .with_endpoint(endpoint),
-            )
-            .with_trace_config(opentelemetry_sdk::trace::Config::default().with_resource(
-                Resource::new(vec![KeyValue::new(
-                    SERVICE_NAME,
-                    config.service_name().clone(),
-                )]),
-            ))
-            .install_batch(opentelemetry_sdk::runtime::Tokio)
+        let exporter = SpanExporter::builder()
+            .with_tonic()
+            .with_endpoint(endpoint)
+            .build()
             .unwrap();
 
-        let subscriber = subscriber.with(OpenTelemetryLayer::new(
-            tracer_provider.tracer("feedback-fusion"),
-        ));
-        tracing::subscriber::set_global_default(subscriber).ok();
+        let resource = Resource::builder()
+            .with_attribute(KeyValue::new(SERVICE_NAME, config.service_name().clone()))
+            .build();
+
+        let tracer_provider = SdkTracerProvider::builder()
+            .with_span_processor(BatchSpanProcessor::builder(exporter).build())
+            .with_resource(resource)
+            .build();
+
+        let tracer = tracer_provider.tracer("feedback-fusion");
+
+        global::set_tracer_provider(tracer_provider.clone());
+
+        tracing_subscriber::registry()
+            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(tracing_subscriber::fmt::layer())
+            .with(OpenTelemetryLayer::new(tracer))
+            .init();
 
         info!("Initiating tracing with collector {}", endpoint);
+
+        Some(tracer_provider)
     } else {
         tracing_subscriber::registry()
             .with(tracing_subscriber::EnvFilter::from_default_env())
             .with(tracing_subscriber::fmt::layer())
             .init();
+
+        None
     }
 }
+
 
 #[derive(Clone)]
 pub struct MakeFeedbackFusionSpan;
@@ -106,7 +116,7 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
             let context = global::get_text_map_propagator(|propagator| {
                 propagator.extract(&HeaderExtractor(request.headers()))
             });
-            span.set_parent(context);
+            span.set_parent(context).ok();
 
             span
         }
@@ -115,8 +125,4 @@ impl<B> MakeSpan<B> for MakeFeedbackFusionSpan {
 
 pub fn trace_layer() -> TraceLayer<SharedClassifier<GrpcErrorsAsFailures>, MakeFeedbackFusionSpan> {
     TraceLayer::new_for_grpc().make_span_with(MakeFeedbackFusionSpan)
-}
-
-pub fn shutdown_tracing() {
-    shutdown_tracer_provider();
 }

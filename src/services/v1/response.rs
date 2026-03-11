@@ -110,7 +110,7 @@ async fn field_responses(
 
 #[instrument(skip_all)]
 pub async fn get_responses(
-    context: &FeedbackFusionV1Context<'_>,
+    context: &FeedbackFusionV1Context,
     request: Request<GetResponsesRequest>,
     _user_context: UserContext,
 ) -> Result<Response<ResponsePage>> {
