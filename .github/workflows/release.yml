@@ -138,7 +138,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update paths 
-        working-directory: docs/.vitepress
+        working-directory: packages/docs/.vitepress
         run: |
           sed -i "s|/feedback-fusion/|/feedback-fusion/${{ env.VERSION }}/|g" config.ts
           sed -i "s|/feedback-fusion/|/feedback-fusion/${{ env.VERSION }}/|g" theme/index.ts
