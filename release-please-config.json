@@ -1,0 +1,26 @@
+{
+  "packages": {
+    "packages/lib": {
+      "package-name": "lib",
+      "release-type": "node"
+    },
+    "packages/dashboard": {
+      "package_name": "dashboard",
+      "release-type": "node"
+    },
+    ".": {
+      "package-name": "server",
+      "release-type": "rust"
+    },
+    "charts/feedback-fusion": {
+      "package-name": "helm-feedback-fusion",
+      "release-type": "helm"
+    }
+  },
+  "plugins": [
+    "cargo-workspace",
+    "node-workspace"
+  ],
+  "commit-search-depth": 5,
+  "sequential-calls": true
+}
