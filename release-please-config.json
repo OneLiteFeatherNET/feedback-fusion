@@ -1,19 +1,19 @@
 {
   "packages": {
     "packages/lib": {
-      "package-name": "lib",
+      "component": "lib",
       "release-type": "node"
     },
     "packages/dashboard": {
-      "package_name": "dashboard",
+      "component": "dashboard",
       "release-type": "node"
     },
     ".": {
-      "package-name": "server",
+      "component": "server",
       "release-type": "rust"
     },
     "charts/feedback-fusion": {
-      "package-name": "helm-feedback-fusion",
+      "component": "helm-feedback-fusion",
       "release-type": "helm"
     }
   },
