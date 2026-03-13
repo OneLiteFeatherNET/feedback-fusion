@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:22-trixie-slim AS build-ssr
+FROM --platform=linux/amd64 node:24-trixie-slim AS build-ssr
 
 RUN apt-get update \
   && apt-get install -y wget gpg sudo lsb-release just git protobuf-compiler libprotobuf-dev \
