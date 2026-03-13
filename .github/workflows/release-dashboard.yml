@@ -52,7 +52,7 @@ jobs:
 
       - name: Extract version
         run: |
-          VERSION=${GITHUB_REF_NAME#dashboard-}
+          VERSION=${GITHUB_REF_NAME#dashboard-v}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Login into repository
