@@ -1677,7 +1677,7 @@ dependencies = [
 
 [[package]]
 name = "feedback-fusion-fuzz"
-version = "0.0.0"
+version = "0.5.2"
 dependencies = [
  "arbitrary",
  "feedback_fusion_common",
@@ -1689,7 +1689,7 @@ dependencies = [
 
 [[package]]
 name = "feedback-fusion-indexer"
-version = "0.1.0"
+version = "0.5.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1723,7 +1723,7 @@ dependencies = [
 
 [[package]]
 name = "feedback_fusion_codegen"
-version = "0.1.0"
+version = "0.5.2"
 dependencies = [
  "darling 0.23.0",
  "proc-macro2",
@@ -1733,7 +1733,7 @@ dependencies = [
 
 [[package]]
 name = "feedback_fusion_common"
-version = "0.1.0"
+version = "0.5.2"
 dependencies = [
  "anyhow",
  "arbitrary",
