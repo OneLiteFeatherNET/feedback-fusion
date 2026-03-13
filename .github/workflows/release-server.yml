@@ -1,4 +1,4 @@
-name: Release 
+name: Release server 
 
 on:
   push:
@@ -75,9 +75,6 @@ jobs:
 
           - dockerfile: ./build/indexer/Dockerfile
             image: feedback-fusion-indexer
-
-          - dockerfile: ./build/dashboard/Dockerfile
-            image: feedback-fusion-dashboard
 
     steps:
       - name: Checkout Sources

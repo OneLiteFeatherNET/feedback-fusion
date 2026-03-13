@@ -1,26 +1,26 @@
 {
   "packages": {
     "packages/lib": {
-      "package-name": "lib",
+      "component": "lib",
       "release-type": "node"
     },
     "packages/dashboard": {
-      "package_name": "dashboard",
+      "component": "dashboard",
       "release-type": "node"
     },
     ".": {
-      "package-name": "server",
+      "component": "server",
       "release-type": "rust"
     },
     "charts/feedback-fusion": {
-      "package-name": "helm-feedback-fusion",
+      "component": "helm-feedback-fusion",
       "release-type": "helm"
     }
   },
   "plugins": [
-    "cargo-workspace",
-    "node-workspace"
+    {
+      "type": "cargo-workspace"
+    }
   ],
-  "commit-search-depth": 5,
-  "sequential-calls": true
+  "bootstrap-sha": "c59f3fca4fb2109e19e3a4d20766a49464ad5f0f"
 }
