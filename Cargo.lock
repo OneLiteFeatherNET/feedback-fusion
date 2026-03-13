@@ -529,6 +529,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bb8"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "457d7ed3f888dfd2c7af56d4975cade43c622f74bdcddfed6d4352f57acc6310"
+dependencies = [
+ "futures-util",
+ "parking_lot 0.12.5",
+ "portable-atomic",
+ "tokio",
+]
+
+[[package]]
 name = "bigdecimal"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1614,7 +1626,7 @@ dependencies = [
  "async-recursion",
  "async-trait",
  "axum",
- "bb8",
+ "bb8 0.8.6",
  "bincode",
  "cached",
  "chrono",
@@ -3793,6 +3805,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "portable-atomic"
+version = "1.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
+
+[[package]]
 name = "potential_utf"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5202,16 +5220,14 @@ dependencies = [
 
 [[package]]
 name = "skytable"
-version = "0.8.10"
+version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ad7801f368596253646e42e1a11360431d115ab576fffa26e5da08e6ddb9d8d"
+checksum = "189d8a1fbc6887537e289556c6a8c536d0143b277cbad77001a184670e6c2a35"
 dependencies = [
- "async-trait",
- "bb8",
+ "bb8 0.9.1",
  "itoa",
  "native-tls",
  "r2d2",
- "rand 0.8.5",
  "sky-derive",
  "tokio",
  "tokio-native-tls",
