@@ -5,6 +5,10 @@ on:
     tags:
       - "server-*"
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   clippy:
     name: clippy

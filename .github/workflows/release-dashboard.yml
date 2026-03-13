@@ -5,6 +5,10 @@ on:
     tags:
       - "dashboard-*"
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   dashboard_build:
     name: dashboard-build
