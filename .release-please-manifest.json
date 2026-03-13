@@ -1,6 +1,6 @@
 {
-  "packages/lib": "0.1.5",
-  ".": "0.5.1",
-  "packages/dashboard": "0.1.1",
-  "charts/feedback-fusion": "3.5.2"
+  "packages/lib": "0.1.6",
+  ".": "0.5.2",
+  "packages/dashboard": "0.1.2",
+  "charts/feedback-fusion": "3.5.3"
 }
