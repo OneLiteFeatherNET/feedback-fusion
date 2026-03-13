@@ -52,7 +52,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde-inline-default = "1.0.1"
 serde_json = "1.0.149"
 serde-this-or-that = { git = "https://github.com/Randoooom/serde-this-or-that.git", branch = "feature/bool-signed" }
-skytable = { version = "=0.8.10" }
+skytable = { version = "=0.8.12" }
 strum = "0.28.0"
 strum_macros = "0.28.0"
 thiserror = "2.0.18"
