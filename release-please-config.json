@@ -10,7 +10,12 @@
     },
     ".": {
       "component": "server",
-      "release-type": "rust"
+      "release-type": "rust",
+      "exclude-paths": [
+        "packages/lib",
+        "packages/dashboard",
+        "charts/feedback-fusion"
+      ]
     },
     "charts/feedback-fusion": {
       "component": "helm-feedback-fusion",
