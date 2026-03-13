@@ -1,0 +1,26 @@
+{
+  "packages": {
+    "packages/lib": {
+      "component": "lib",
+      "release-type": "node"
+    },
+    "packages/dashboard": {
+      "component": "dashboard",
+      "release-type": "node"
+    },
+    ".": {
+      "component": "server",
+      "release-type": "rust"
+    },
+    "charts/feedback-fusion": {
+      "component": "helm-feedback-fusion",
+      "release-type": "helm"
+    }
+  },
+  "plugins": [
+    {
+      "type": "cargo-workspace"
+    }
+  ],
+  "bootstrap-sha": "c59f3fca4fb2109e19e3a4d20766a49464ad5f0f"
+}

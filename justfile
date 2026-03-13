@@ -206,34 +206,3 @@ dashboard-dev: lib cleanup oidc-server-mock postgres && cleanup
 helm:
   cd charts/feedback-fusion && helm-docs
   cp charts/feedback-fusion/README.md packages/docs/docs/deployment/helm.md
-
-#
-# Releases
-#
-
-prepare-release:
-  git checkout main
-  git pull
-
-post-prepare-release TAG:
-  git checkout -b release/{{TAG}}
-  git add -A 
-  -git commit -m "chore: release {{TAG}}"
-  git push origin -u HEAD 
-
-release-server LEVEL:
-  just prepare-release
-
-  cargo release --no-publish --no-push --no-tag --execute {{LEVEL}} 
-
-  just post-prepare-release server-$(cargo pkgid | sed -n 's/.*#//p')
- 
-release-dashboard LEVEL:
-  just prepare-release
-
-  just post-prepare-release dashboard-$(bun version --cwd packages/dashboard --no-git-tag-version {{LEVEL}} | sed 's/^v//')
-
-release-lib LEVEL:
-  just prepare-release
-
-  just post-prepare-release dashboard-$(bun version --cwd packages/lib --no-git-tag-version {{LEVEL}}| sed 's/^v//')

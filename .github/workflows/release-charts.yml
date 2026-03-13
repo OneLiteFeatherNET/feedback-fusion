@@ -2,10 +2,12 @@ name: Release Charts
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "charts/**"
+    tags:
+      - "helm-*"
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   release:

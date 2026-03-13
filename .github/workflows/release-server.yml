@@ -1,9 +1,13 @@
-name: Release 
+name: Release server 
 
 on:
   push:
     tags:
       - "server-*"
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   clippy:
@@ -75,9 +79,6 @@ jobs:
 
           - dockerfile: ./build/indexer/Dockerfile
             image: feedback-fusion-indexer
-
-          - dockerfile: ./build/dashboard/Dockerfile
-            image: feedback-fusion-dashboard
 
     steps:
       - name: Checkout Sources

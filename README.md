@@ -53,7 +53,6 @@ FeedbackFusion is licensed under the MIT License.
 - cargo
 - docker
 - cargo-llvm-cov
-- cargo-release (only for releases)
 
 ### Setup
 
