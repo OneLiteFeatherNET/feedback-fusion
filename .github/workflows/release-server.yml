@@ -22,6 +22,7 @@ jobs:
         with:
           rustflags: ""
           components: clippy
+          cache: false
 
       - uses: extractions/setup-just@v2
 
@@ -45,6 +46,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           rustflags: "" 
+          cache: false
 
       - uses: extractions/setup-just@v2
 
