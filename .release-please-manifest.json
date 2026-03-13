@@ -1,5 +1,5 @@
 {
-  "packages/lib": "0.1.4",
+  "packages/lib": "0.1.5",
   ".": "0.5.3",
   "packages/dashboard": "0.1.3",
   "charts/feedback-fusion": "3.5.4"
