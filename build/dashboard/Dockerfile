@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:24-trixie-slim AS build-ssr
+FROM --platform=$BUILDPLATFORM node:24-trixie-slim AS build-ssr
 
 RUN apt-get update \
   && apt-get install -y wget gpg sudo lsb-release just git protobuf-compiler libprotobuf-dev \
@@ -14,7 +14,7 @@ Copy ./package.json .
 
 RUN just dashboard
 
-FROM gcr.io/distroless/nodejs22-debian13
+FROM gcr.io/distroless/nodejs24-debian13
 
 COPY --from=build-ssr /build/packages/dashboard/.output/ ./.output
 
