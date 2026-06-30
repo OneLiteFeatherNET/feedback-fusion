@@ -32,7 +32,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde-inline-default = "1.0.1"
 openidconnect = { version = "4.0.1" }
 opentelemetry = { version = "0.31.0" }
-opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
+opentelemetry_sdk = { version = "0.32.1", features = ["rt-tokio"] }
 opentelemetry-otlp = { version = "0.31.0", features = ["grpc-tonic"] }
 opentelemetry-semantic-conventions = { version = "0.31.0" }
 opentelemetry-http = { version = "0.31.0" }
