@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "github>OneLiteFeatherNET/renovate:default(OneLiteFeatherNET/feedback-fusion-maintainers)"
   ]
 }
